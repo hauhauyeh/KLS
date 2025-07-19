@@ -1,0 +1,58 @@
+﻿using KLS.Common;
+using KLS.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KLS.Data.DataContext
+{
+    public class KLSDBContext : DbContext
+    {
+        public KLSDBContext()
+        {
+            Database.SetCommandTimeout(600);
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                var connectionString = Constants.ConnectionString;
+                optionsBuilder.UseSqlServer(connectionString);
+            }
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Holiday>().ToTable("Holidays");
+            modelBuilder.Entity<UserRole>().ToTable("UserRoles");
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<Employee>().ToTable("Employees");
+            modelBuilder.Entity<SystemSetting>().ToTable("SystemSettings");
+
+            modelBuilder.Entity<Payee>().ToTable("Payees");
+            modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
+            modelBuilder.Entity<Payee>().Property(c => c.Id).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+        }
+
+        #region ---DBSET---
+
+        public DbSet<Holiday> Holidays { get; set; }
+
+        public DbSet<UserRole> UserRoles { get; set; }
+
+        public DbSet<Payee> Payees { get; set; }
+
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<Employee> Employees { get; set; }
+
+        #endregion
+    }
+}
