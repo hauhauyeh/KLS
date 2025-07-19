@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IEmployeeRepository : IRepository<Employee>
+    public interface ITermRepository : IRepository<Term>
     {
 
     }

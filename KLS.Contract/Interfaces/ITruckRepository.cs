@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IEmployeeRepository : IRepository<Employee>
+    public interface ITruckRepository : IRepository<Truck>
     {
 
     }
