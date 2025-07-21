@@ -1,13 +1,13 @@
-﻿using KLS.Models;
+﻿using KLS.Contract.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLS.Contract.Interfaces
+namespace KLS.Services.Interfaces
 {
-    public interface IEmployeeRepository : IRepository<Employee>
+    public interface ICustomerService
     {
 
     }

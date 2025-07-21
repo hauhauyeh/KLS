@@ -34,6 +34,10 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<UserRole>().ToTable("UserRoles");
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<Employee>().ToTable("Employees");
+            modelBuilder.Entity<Customer>().ToTable("Customers");
+            modelBuilder.Entity<Vendor>().ToTable("Vendors");
+            modelBuilder.Entity<Term>().ToTable("Temrs");
+            modelBuilder.Entity<Truck>().ToTable("Trucks");
             modelBuilder.Entity<SystemSetting>().ToTable("SystemSettings");
 
             modelBuilder.Entity<Payee>().ToTable("Payees");
@@ -52,6 +56,14 @@ namespace KLS.Data.DataContext
         public DbSet<User> Users { get; set; }
 
         public DbSet<Employee> Employees { get; set; }
+
+        public DbSet<Customer> Customers { get; set; }
+
+        public DbSet<Vendor> Vendors { get; set; }
+
+        public DbSet<Term> Temrs { get; set; }
+
+        public DbSet<Truck> Trucks { get; set; }
 
         #endregion
     }

@@ -46,6 +46,14 @@ namespace KLS.Data.Repositories
 
         public IEmployeeRepository Employees { get { return new EmployeeRepository(DbContext); } }
 
+        public ICustomerRepository Customers { get { return new CustomerRepository(DbContext); } }
+
+        public IVendorRepository Vendors { get { return new VendorRepository(DbContext); } }
+
+        public ITermRepository Terms { get { return new TermRepository(DbContext); } }
+
+        public ITruckRepository Trucks { get { return new TruckRepository(DbContext); } }
+
         public ISystemSettingRepository SystemSettings { get { return new SystemSettingRepository(DbContext); } }
     }
 }

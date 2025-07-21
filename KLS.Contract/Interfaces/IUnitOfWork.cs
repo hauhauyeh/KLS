@@ -20,6 +20,14 @@ namespace KLS.Contract.Interfaces
 
         ISystemSettingRepository SystemSettings { get; }
 
+        ICustomerRepository Customers { get; }
+
+        IVendorRepository Vendors { get; }
+
+        ITermRepository Terms { get; }
+
+        ITruckRepository Trucks { get; }
+
         void Commit();
     }
 }
