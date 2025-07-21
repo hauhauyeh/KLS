@@ -1,17 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class Employee
+    public class EmployeeDTO
     {
         [Key]
         public int PayeeId { get; set; }
+
+        public string? PayeeName { get; set; }
+
+        public string? Address { get; set; }
+
+        public string? City { get; set; }
+
+        public string? State { get; set; }
+
+        public string? ZipCode { get; set; }
+
+        public string? PhoneDesc1 { get; set; }
+
+        public string? Phone1 { get; set; }
+
+        public string? PhoneDesc2 { get; set; }
+
+        public string? Phone2 { get; set; }
+
+        public string? PhoneDesc3 { get; set; }
+
+        public string? Phone3 { get; set; }
+
+        public string? PhoneDesc4 { get; set; }
+
+        public string? Phone4 { get; set; }
+
+        public bool IsClosed { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public string? Notes { get; set; }
+
 
         public string? FirstName { get; set; }
 
@@ -76,5 +108,12 @@ namespace KLS.Models
         public bool IsTextPriceChange { get; set; }
 
         public bool IsService { get; set; }
+
+
+        public string? Username { get; set; }
+
+        public string? Password { get; set; }
+
+        public int RoleId { get; set; }
     }
 }

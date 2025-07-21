@@ -15,6 +15,7 @@
   <ItemGroup>
     <Folder Include="Controllers\Web\" />
     <Folder Include="Hubs\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -76,7 +76,7 @@ namespace KLS.Services
             if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
                 return new LoginResult { Success = false, ErrorMessage = "Password is incorrect" };
 
-            var payee = _employeeService.GetById(user.PayeeId);
+            var payee = _employeeService.GetEmployeeById(user.PayeeId);
             var emp = payee?.Employee;
 
             if (emp == null)
@@ -126,7 +126,7 @@ namespace KLS.Services
             if (user == null)
                 return new LoginResult { Success = false, ErrorMessage = "User info malformed." };
 
-            var payee = _employeeService.GetById(user.PayeeId);
+            var payee = _employeeService.GetEmployeeById(user.PayeeId);
             var emp = payee?.Employee;
 
             if (emp == null)

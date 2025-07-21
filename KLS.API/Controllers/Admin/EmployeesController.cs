@@ -41,7 +41,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var employee = _employeeService.GetEmployeeById(id);
+            var employee = _employeeService.GetById(id);
 
             if (employee == null)
                 return NotFound($"Employee with Id {id} not found.");
@@ -52,18 +52,15 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Employee")]
-        public IActionResult Create([FromBody] Payee payee)
+        public IActionResult Create([FromBody] EmployeeDTO employeeDTO)
         {
-            if (payee.Employee == null)
-                return BadRequest("Employee data is required.");
-
-            if (_employeeService.EmployeeExists(payee))
+            if (_employeeService.EmployeeExists(employeeDTO))
                 return Conflict("Employee name already exists.");
 
-            if (!string.IsNullOrEmpty(payee.User.Username) && _userService.UserNameExists(payee.User.Username, payee.PayeeId))
+            if (!string.IsNullOrEmpty(employeeDTO.Username) && _userService.UserNameExists(employeeDTO.Username, employeeDTO.PayeeId))
                 return Conflict("Username already exists");
 
-            var created = _employeeService.CreateEmployee(payee);
+            var created = _employeeService.CreateEmployee(employeeDTO);
 
             return Ok(created);
         }
@@ -71,18 +68,15 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Employee")]
-        public IActionResult Update([FromBody] Payee payee)
+        public IActionResult Update([FromBody] EmployeeDTO employeeDTO)
         {
-            if (payee.Employee == null)
-                return BadRequest("Employee data is required.");
-
-            if (_employeeService.EmployeeExists(payee))
+            if (_employeeService.EmployeeExists(employeeDTO))
                 return Conflict("Employee name already exists.");
 
-            if (!string.IsNullOrEmpty(payee.User.Username) && _userService.UserNameExists(payee.User.Username, payee.PayeeId))
+            if (!string.IsNullOrEmpty(employeeDTO.Username) && _userService.UserNameExists(employeeDTO.Username, employeeDTO.PayeeId))
                 return Conflict("Username already exists");
 
-            var updated = _employeeService.UpdateEmployee(payee);
+            var updated = _employeeService.UpdateEmployee(employeeDTO);
 
             return Ok(updated);
         }
