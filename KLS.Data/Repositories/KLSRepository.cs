@@ -87,5 +87,33 @@ namespace KLS.Data.Repositories
         {
             this.DbContext.Entry(entity).Reload();
         }
+
+        //public void Delete(T entity)
+        //{
+        //    this.DbContext.Set<T>().Remove(entity);
+        //}
+
+        //public void Delete(int id)
+        //{
+        //    var entity = GetById(id);
+
+        //    if (entity != null)
+        //    {
+        //        Delete(entity);
+        //    }
+        //}
+
+        //public void DeleteBulk(List<int> ids)
+        //{
+        //    foreach (var id in ids)
+        //    {
+        //        var entity = GetById(id);
+
+        //        if (entity != null)
+        //        {
+        //            Delete(entity);
+        //        }
+        //    }
+        //}
     }
 }

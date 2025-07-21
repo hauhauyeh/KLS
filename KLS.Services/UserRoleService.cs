@@ -23,7 +23,7 @@ namespace KLS.Services
                       .ToList();
         }
 
-        public UserRole? GetRoleById(int roleId)
+        public UserRole? GetById(int roleId)
         {
             return Uow.UserRoles.GetById(roleId);
         }
@@ -45,7 +45,7 @@ namespace KLS.Services
 
         public UserRole? UpdateRole(UserRole role)
         {
-            var existing = GetRoleById(role.RoleId);
+            var existing = GetById(role.RoleId);
 
             if (existing == null)
                 return null;

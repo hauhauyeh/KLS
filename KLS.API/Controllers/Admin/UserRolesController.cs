@@ -41,7 +41,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var role = _roleService.GetRoleById(id);
+            var role = _roleService.GetById(id);
 
             if (role == null)
                 return NotFound($"User role with ID {id} not found.");
@@ -80,7 +80,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete User Role")]
         public IActionResult Delete(int id)
         {
-            var existing = _roleService.GetRoleById(id);
+            var existing = _roleService.GetById(id);
 
             if (existing == null)
                 return NotFound($"User role with ID {id} not found.");

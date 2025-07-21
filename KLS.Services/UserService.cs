@@ -34,7 +34,7 @@ namespace KLS.Services
                 .FirstOrDefault();
         }
 
-        public User GetUserById(int userId)
+        public User GetById(int userId)
         {
             return Uow.Users.GetById(userId);
         }
@@ -54,7 +54,7 @@ namespace KLS.Services
 
         public void UpdateToken(User user)
         {
-            var existing = GetUserById(user.UserId);
+            var existing = GetById(user.UserId);
 
             if (existing != null)
             {
@@ -76,7 +76,7 @@ namespace KLS.Services
             if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
                 return new LoginResult { Success = false, ErrorMessage = "Password is incorrect" };
 
-            var payee = _employeeService.GetEmployeeById(user.PayeeId);
+            var payee = _employeeService.GetById(user.PayeeId);
             var emp = payee?.Employee;
 
             if (emp == null)
@@ -98,7 +98,7 @@ namespace KLS.Services
             UpdateToken(user);
 
             var token = _jWTService.GenerateJwtToken(user);
-            var userRole = _roleService.GetRoleById(user.RoleId);
+            var userRole = _roleService.GetById(user.RoleId);
 
             return new LoginResult
             {
@@ -126,7 +126,7 @@ namespace KLS.Services
             if (user == null)
                 return new LoginResult { Success = false, ErrorMessage = "User info malformed." };
 
-            var payee = _employeeService.GetEmployeeById(user.PayeeId);
+            var payee = _employeeService.GetById(user.PayeeId);
             var emp = payee?.Employee;
 
             if (emp == null)
@@ -138,7 +138,7 @@ namespace KLS.Services
 
             var newToken = _jWTService.GenerateJwtToken(user);
 
-            var role = _roleService.GetRoleById(user.RoleId);
+            var role = _roleService.GetById(user.RoleId);
 
             var sortName = string.IsNullOrEmpty(emp.FirstName) || string.IsNullOrEmpty(emp.LastName)
                    ? ""

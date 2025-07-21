@@ -39,7 +39,7 @@ namespace KLS.API.Helpers
 
                         // 🔑 Resolve scoped service correctly
                         var roleService = context.RequestServices.GetRequiredService<IUserRoleService>();
-                        var role = roleService.GetRoleById(user.RoleId);
+                        var role = roleService.GetById(user.RoleId);
 
                         if (role != null)
                         {

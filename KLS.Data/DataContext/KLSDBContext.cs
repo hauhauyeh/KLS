@@ -36,7 +36,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Employee>().ToTable("Employees");
             modelBuilder.Entity<Customer>().ToTable("Customers");
             modelBuilder.Entity<Vendor>().ToTable("Vendors");
-            modelBuilder.Entity<Term>().ToTable("Temrs");
+            modelBuilder.Entity<Term>().ToTable("Terms");
             modelBuilder.Entity<Truck>().ToTable("Trucks");
             modelBuilder.Entity<SystemSetting>().ToTable("SystemSettings");
 

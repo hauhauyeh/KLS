@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace KLS.Models
 {
     public class Customer
     {
+        [Key]
         public int PayeeId { get; set; }
 
         public string? Region { get; set; }

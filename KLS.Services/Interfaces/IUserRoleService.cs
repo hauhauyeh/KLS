@@ -11,7 +11,7 @@ namespace KLS.Services.Interfaces
     {
         IEnumerable<UserRole> GetAllRoles();
 
-        UserRole? GetRoleById(int roleId);
+        UserRole? GetById(int roleId);
 
         bool RoleNameExists(UserRole role);
 

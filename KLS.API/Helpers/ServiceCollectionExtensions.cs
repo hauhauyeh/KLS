@@ -18,6 +18,9 @@ namespace KLS.API.Helpers
             services.AddScoped<IHolidayService, HolidayService>();
             services.AddScoped<IPayeeService, PayeeService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
+            services.AddScoped<ITermService, TermService>();
+            services.AddScoped<ITruckService, TruckService>();
+            services.AddScoped<IVendorService, VendorService>();
 
             return services;
         }

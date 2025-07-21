@@ -30,5 +30,11 @@ namespace KLS.Contract.Interfaces
         void RemoveRange(IEnumerable<int> ids);
 
         void Reload(T entity);
+
+        //void Delete(T entity);
+
+        //void Delete(int id);
+
+        //void DeleteBulk(List<int> ids);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,69 @@ namespace KLS.Services
         public TruckService(IUnitOfWork uow) : base(uow)
         {
 
+        }
+
+        public IQueryable<Truck> GetAllTrucks()
+        {
+            return Uow.Trucks.GetAll().OrderBy(c => c.TruckNumber);
+        }
+
+        public ICollection<Truck> GetActiveTrucks()
+        {
+            return Uow.Trucks.Find(c => c.IsInactive == false).OrderBy(c => c.TruckNumber).ToList();
+        }
+
+        public Truck GetById(int id)
+        {
+            return Uow.Trucks.GetById(id);
+        }
+
+        public bool ExistsNumber(Truck truck)
+        {
+            return Uow.Trucks.Exists(c => c.TruckNumber.ToLower() == truck.TruckNumber.ToLower() && c.TruckId != truck.TruckId);
+        }
+
+        public Truck CreateTruck(Truck truck)
+        {
+            Uow.Trucks.Add(truck);
+            Uow.Commit();
+
+            return truck;
+        }
+
+        public Truck? UpdateTruck(Truck truck)
+        {
+            var existing = GetById(truck.TruckId);
+
+            if (existing != null)
+            {
+                existing.TruckNumber = truck.TruckNumber;
+                existing.TruckName = truck.TruckName;
+                existing.VinNumber = truck.VinNumber;
+                existing.TruckTag = truck.TruckTag;
+                existing.TruckYear = truck.TruckYear;
+                existing.TruckModel = truck.TruckModel;
+                existing.RegExpDate = truck.RegExpDate;
+                existing.InsureProvider = truck.InsureProvider;
+                existing.InsureCoverage = truck.InsureCoverage;
+                existing.OwnLeaseRental = truck.OwnLeaseRental;
+                existing.GPSNumber = truck.GPSNumber;
+                existing.EPassNumber = truck.EPassNumber;
+                existing.Notes = truck.Notes;
+                existing.IsInactive = truck.IsInactive;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Trucks.Update(existing);
+                Uow.Commit();
+            }
+
+            return existing;
+        }
+
+        public void DeleteTruck(int truckId)
+        {
+            Uow.Trucks.RemoveById(truckId);
+            Uow.Commit();
         }
     }
 }

@@ -11,7 +11,7 @@ namespace KLS.Services.Interfaces
     {
         User? CheckEmpUsername(LoginReq loginReq);
 
-        User GetUserById(int userId);
+        User GetById(int userId);
 
         bool UserNameExists(string username, int payeeId);
 
