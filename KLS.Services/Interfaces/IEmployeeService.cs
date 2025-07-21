@@ -11,13 +11,13 @@ namespace KLS.Services.Interfaces
     {
         IEnumerable<Payee> GetAllEmployees();
 
-        Payee? GetEmployeeById(int payeeId);
+        EmployeeDTO? GetById(int payeeId);
 
-        bool EmployeeExists(Payee payee);
+        bool EmployeeExists(EmployeeDTO employeeDTO);
 
-        Payee CreateEmployee(Payee payee);
+        EmployeeDTO CreateEmployee(EmployeeDTO employeeDTO);
 
-        Payee? UpdateEmployee(Payee payee);
+        EmployeeDTO? UpdateEmployee(EmployeeDTO payee);
 
         void DeleteEmployee(int payeeId);
     }
