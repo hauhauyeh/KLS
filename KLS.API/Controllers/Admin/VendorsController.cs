@@ -1,4 +1,5 @@
 ﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,7 @@ namespace KLS.API.Controllers.Admin
             return Ok(_vendorService.GetAllVendors());
         }
 
+
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -43,8 +45,34 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost]
+        [DisplayName("Create Vendor")]
+        public IActionResult CreateVendor([FromBody] VendorDTO vendorDTO)
+        {
+            if (_vendorService.VendorExists(vendorDTO))
+                return Conflict("Vendor name already exists.");
+
+            var created = _vendorService.CreateVendor(vendorDTO);
+
+            return Ok(created);
+        }
+
+
+        [HttpPut]
+        [DisplayName("Update Vendor")]
+        public IActionResult UpdateVendor([FromBody] VendorDTO vendorDTO)
+        {
+            if (_vendorService.VendorExists(vendorDTO))
+                return Conflict("Vendor name already exists.");
+
+            var created = _vendorService.UpdateVendor(vendorDTO);
+
+            return Ok(created);
+        }
+
+
         [HttpDelete("{id}")]
-        [DisplayName("Delete Vendors")]
+        [DisplayName("Delete Vendor")]
         public IActionResult DeleteVendor(int id)
         {
             _vendorService.DeleteVendor(id);

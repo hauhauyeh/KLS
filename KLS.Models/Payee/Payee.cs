@@ -85,7 +85,7 @@ namespace KLS.Models
 
         public Employee? Employee { get; set; }
 
-        //public Customer? Customer { get; set; }
+        public Customer? Customer { get; set; }
 
         public Vendor? Vendor { get; set; }
 

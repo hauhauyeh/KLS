@@ -66,6 +66,7 @@ namespace KLS.Services
             var payee = new Payee();
             payee.InjectFrom(employeeDTO);
             payee.PayeeId = newPayeeId;
+            payee.PayeeType = EnumHelper.PayeeType.E.ToString();
 
             Uow.Payees.Add(payee);
 

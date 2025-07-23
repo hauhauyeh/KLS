@@ -9,5 +9,7 @@ namespace KLS.Common
     public class GlobalKey
     {
         public const string SYS_IPADDRESS = "SYS_IPADDRESS";
+
+        public const string SYS_GOOGLEMAPS_APIKEY = "SYS_GOOGLEMAPS_APIKEY";
     }
 }

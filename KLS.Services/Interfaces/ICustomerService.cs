@@ -1,4 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,16 @@ namespace KLS.Services.Interfaces
 {
     public interface ICustomerService
     {
+        IEnumerable<Payee> GetAllCustomers();
+        
+        Payee? GetById(int payeeId);
 
+        bool CustomerExists(CustomerDTO customerDTO);
+
+        CustomerDTO CreateCustomer(CustomerDTO customerDTO);
+
+        CustomerDTO? UpdateCustomer(CustomerDTO customerDTO);
+
+        void DeleteCustomer(int payeeId);
     }
 }

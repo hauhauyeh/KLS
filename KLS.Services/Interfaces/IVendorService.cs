@@ -13,6 +13,12 @@ namespace KLS.Services.Interfaces
 
         Payee? GetById(int payeeId);
 
+        bool VendorExists(VendorDTO vendorDTO);
+
+        VendorDTO CreateVendor(VendorDTO vendorDTO);
+
+        VendorDTO? UpdateVendor(VendorDTO vendorDTO);
+
         void DeleteVendor(int payeeId);
     }
 }
