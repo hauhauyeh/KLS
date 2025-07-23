@@ -114,12 +114,12 @@ namespace KLS.Models
         
         public bool IsOnlineRegister { get; set; }
 
-        public virtual string FullAddress
-        {
-            get
-            {
-                return Address + ", " + City + ", " + State + ", " + ZipCode;
-            }
-        }
+        //public virtual string FullAddress
+        //{
+        //    get
+        //    {
+        //        return Address + ", " + City + ", " + State + ", " + ZipCode;
+        //    }
+        //}
     }
 }

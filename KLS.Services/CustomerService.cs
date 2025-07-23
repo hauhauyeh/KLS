@@ -66,8 +66,8 @@ namespace KLS.Services
             var customer = Uow.Customers.GetById(customerDTO.PayeeId);
             var existingPayee = Uow.Payees.GetById(customerDTO.PayeeId);
 
-            var mapAPIKey = Uow.SystemSettings.GetBySGKey(GlobalKey.SYS_GOOGLEMAPS_APIKEY);
-            var latlong = GetMapLatLong(customer.FullAddress, mapAPIKey);
+            //var mapAPIKey = Uow.SystemSettings.GetBySGKey(GlobalKey.SYS_GOOGLEMAPS_APIKEY);
+            //var latlong = GetMapLatLong(customer.add, mapAPIKey);
 
             if (customer == null || existingPayee == null)
                 return null;
@@ -143,15 +143,14 @@ namespace KLS.Services
                 customer.CreditLimit = customerDTO.CreditLimit;
                 customer.MinOrder = customerDTO.MinOrder;
 
-                if (latlong != null)
-                {
-                    customer.Lat1 = customerDTO.Lat1;
-                    customer.Long1 = customerDTO.Long1;
-                    customer.PlaceId = customerDTO.PlaceId;
-                    customer.FormatAddress = customerDTO.FormatAddress;
-                    customer.Distance = customerDTO.Distance;
-
-                }
+                //if (latlong != null)
+                //{
+                //    customer.Lat1 = customerDTO.Lat1;
+                //    customer.Long1 = customerDTO.Long1;
+                //    customer.PlaceId = customerDTO.PlaceId;
+                //    customer.FormatAddress = customerDTO.FormatAddress;
+                //    customer.Distance = customerDTO.Distance;
+                //}
 
                 Uow.Customers.Update(customer);
             }

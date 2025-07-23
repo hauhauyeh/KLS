@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface ISystemSettingRepository : IRepository<SystemSetting>
     {
-        string GetBySGKey(string SGKey);
+        
     }
 }
