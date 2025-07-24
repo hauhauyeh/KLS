@@ -54,6 +54,10 @@ namespace KLS.Data.Repositories
 
         public ITruckRepository Trucks { get { return new TruckRepository(DbContext); } }
 
+        public IChartOfAccountTypeRepository ChartOfAccountTypes { get { return new ChartOfAccountTypeRepository(DbContext); } }
+
+        public IChartOfAccountRepository ChartOfAccounts { get { return new ChartOfAccountRepository(DbContext); } }
+
         public ISystemSettingRepository SystemSettings { get { return new SystemSettingRepository(DbContext); } }
     }
 }

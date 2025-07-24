@@ -28,6 +28,10 @@ namespace KLS.Contract.Interfaces
 
         ITruckRepository Trucks { get; }
 
+        IChartOfAccountTypeRepository ChartOfAccountTypes { get; }
+
+        IChartOfAccountRepository ChartOfAccounts { get; }
+
         void Commit();
     }
 }

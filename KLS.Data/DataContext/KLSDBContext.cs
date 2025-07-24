@@ -38,6 +38,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Vendor>().ToTable("Vendors");
             modelBuilder.Entity<Term>().ToTable("Terms");
             modelBuilder.Entity<Truck>().ToTable("Trucks");
+            modelBuilder.Entity<ChartOfAccountType>().ToTable("ChartOfAccountTypes");
+            modelBuilder.Entity<ChartOfAccount>().ToTable("ChartOfAccounts");
             modelBuilder.Entity<SystemSetting>().ToTable("SystemSettings");
 
             modelBuilder.Entity<Payee>().ToTable("Payees");
@@ -64,6 +66,10 @@ namespace KLS.Data.DataContext
         public DbSet<Term> Temrs { get; set; }
 
         public DbSet<Truck> Trucks { get; set; }
+
+        public DbSet<ChartOfAccountType> ChartOfAccountTypes { get; set; }
+
+        public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
 
         #endregion
     }
