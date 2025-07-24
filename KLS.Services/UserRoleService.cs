@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,6 +68,34 @@ namespace KLS.Services
         {
             Uow.UserRoles.RemoveById(roleId);
             Uow.Commit();
+        }
+
+        public bool CheckPermission(int roleId, string endPoint)
+        {
+            var role = GetById(roleId);
+
+            if (!string.IsNullOrEmpty(role.RoleAccess))
+            {
+                var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(role.RoleAccess);
+
+                return permissions.SelectMany(g => g.Controllers.SelectMany(c => c.Actions.Where(a => a.Id.ToLower() == endPoint.ToLower()))).Any();
+            }
+            else
+                return false;
+        }
+
+        public bool CheckMenuPermission(int roleId, string menuName)
+        {
+            var role = GetById(roleId);
+
+            if (!string.IsNullOrEmpty(role.RoleAccess))
+            {
+                var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(role.RoleAccess);
+
+                return permissions.Where(g => g.GroupName.ToLower().Contains(menuName.ToLower())).Any();
+            }
+            else
+                return false;
         }
     }
 }

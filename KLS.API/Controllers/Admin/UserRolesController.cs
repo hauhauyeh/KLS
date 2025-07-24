@@ -90,6 +90,29 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("CheckPermission/{endPoint}")]
+        public IActionResult CheckPermission(string endPoint)
+        {
+            var isAdmin = Convert.ToBoolean(HttpContext.Items["IsAdmin"]);
+
+            if (isAdmin)
+                return Ok(true);
+
+            var roleId = Convert.ToInt32(HttpContext.Items["RoleId"]);
+
+            return Ok(_roleService.CheckPermission(roleId, endPoint));
+        }
+
+
+        [HttpGet("MenuPermission/{menuName}")]
+        public IActionResult MenuPermission(string menuName)
+        {
+            var roleId = Convert.ToInt32(HttpContext.Items["RoleId"]);
+
+            return Ok(_roleService.CheckMenuPermission(roleId, menuName));
+        }
+
         #endregion
     }
 }

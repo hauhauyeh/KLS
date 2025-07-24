@@ -19,7 +19,9 @@ namespace KLS.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int UserId { get; set; }
+
         public int RoleId { get; set; }
+
         public int PayeeId { get; set; }
 
         public string? Username { get; set; }
@@ -29,13 +31,12 @@ namespace KLS.Models
 
         public bool Inactive { get; set; }
 
-        [JsonIgnore]
         public string? RefToken { get; set; }
 
-        [JsonIgnore]
         public DateTime? RefTokenExpire { get; set; }
 
         public DateTime? CreatedAt { get; set; }
+
         public DateTime? UpdatedAt { get; set; }
     }
 }

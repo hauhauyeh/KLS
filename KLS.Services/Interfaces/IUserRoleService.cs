@@ -20,5 +20,9 @@ namespace KLS.Services.Interfaces
         UserRole? UpdateRole(UserRole role);
 
         void DeleteRole(int roleId);
+
+        bool CheckPermission(int roleId, string endPoint);
+
+        bool CheckMenuPermission(int roleId, string menuName);
     }
 }
