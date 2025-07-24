@@ -14,13 +14,15 @@ namespace KLS.API.Helpers
             services.AddScoped<IUserRoleService, UserRoleService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();
             services.AddScoped<IUserService, UserService>();
-            
+
             services.AddScoped<IHolidayService, HolidayService>();
             services.AddScoped<IPayeeService, PayeeService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<ITermService, TermService>();
             services.AddScoped<ITruckService, TruckService>();
             services.AddScoped<IVendorService, VendorService>();
+            services.AddScoped<IChartOfAccountService, ChartOfAccountService>();
+            services.AddScoped<IChartOfAccountTypeService, ChartOfAccountTypeService>();
 
             return services;
         }
