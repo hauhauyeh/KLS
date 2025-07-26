@@ -31,7 +31,7 @@ namespace KLS.Services
         {
             var payee = Uow.Payees.GetById(payeeId);
             var employee = Uow.Employees.GetById(payeeId);
-            var user = Uow.Users.GetById(payeeId);
+            var user = Uow.Users.Find(u => u.PayeeId == payeeId).FirstOrDefault();
 
             if (payee == null && employee == null)
                 return null;
@@ -119,6 +119,7 @@ namespace KLS.Services
             existingPayee.Phone4 = employeeDTO.Phone4;
             existingPayee.IsClosed = employeeDTO.IsClosed;
             existingPayee.StartDate = employeeDTO.StartDate;
+            existingPayee.Balance = employeeDTO.Balance;
             existingPayee.Notes = employeeDTO.Notes;
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
@@ -128,38 +129,38 @@ namespace KLS.Services
 
             if (employee != null)
             {
-                employee.FirstName = employee.FirstName;
-                employee.MiddleName = employee.MiddleName;
-                employee.LastName = employee.LastName;
-                employee.Department = employee.Department;
-                employee.EmploymentType = employee.EmploymentType;
-                employee.SSN = employee.SSN;
-                employee.DOB = employee.DOB;
-                employee.DLN = employee.DLN;
-                employee.PayFreq = employee.PayFreq;
-                employee.HourOrSalary = employee.HourOrSalary;
-                employee.Rate = employee.Rate;
-                employee.SingleOrMarried = employee.SingleOrMarried;
-                employee.W4Exempt = employee.W4Exempt;
-                employee.K401 = employee.K401;
-                employee.IRA = employee.IRA;
-                employee.RothIRA = employee.RothIRA;
-                employee.R1 = employee.R1;
-                employee.R2 = employee.R2;
-                employee.R3 = employee.R3;
-                employee.HealthIns = employee.HealthIns;
-                employee.VisionIns = employee.VisionIns;
-                employee.DentalIns = employee.DentalIns;
-                employee.ChildSup1 = employee.ChildSup1;
-                employee.ChildSup2 = employee.ChildSup2;
-                employee.ChildSup3 = employee.ChildSup3;
-                employee.ChildSup4 = employee.ChildSup4;
-                employee.ChildSup5 = employee.ChildSup5;
-                employee.IsUsePayCheck = employee.IsUsePayCheck;
-                employee.IsRestricted = employee.IsRestricted;
-                employee.IsShowPastDueWarning = employee.IsShowPastDueWarning;
-                employee.IsTextPriceChange = employee.IsTextPriceChange;
-                employee.IsService = employee.IsService;
+                employee.FirstName = employeeDTO.FirstName;
+                employee.MiddleName = employeeDTO.MiddleName;
+                employee.LastName = employeeDTO.LastName;
+                employee.Department = employeeDTO.Department;
+                employee.EmploymentType = employeeDTO.EmploymentType;
+                employee.SSN = employeeDTO.SSN;
+                employee.DOB = employeeDTO.DOB;
+                employee.DLN = employeeDTO.DLN;
+                employee.PayFreq = employeeDTO.PayFreq;
+                employee.HourOrSalary = employeeDTO.HourOrSalary;
+                employee.Rate = employeeDTO.Rate;
+                employee.SingleOrMarried = employeeDTO.SingleOrMarried;
+                employee.W4Exempt = employeeDTO.W4Exempt;
+                employee.K401 = employeeDTO.K401;
+                employee.IRA = employeeDTO.IRA;
+                employee.RothIRA = employeeDTO.RothIRA;
+                employee.R1 = employeeDTO.R1;
+                employee.R2 = employeeDTO.R2;
+                employee.R3 = employeeDTO.R3;
+                employee.HealthIns = employeeDTO.HealthIns;
+                employee.VisionIns = employeeDTO.VisionIns;
+                employee.DentalIns = employeeDTO.DentalIns;
+                employee.ChildSup1 = employeeDTO.ChildSup1;
+                employee.ChildSup2 = employeeDTO.ChildSup2;
+                employee.ChildSup3 = employeeDTO.ChildSup3;
+                employee.ChildSup4 = employeeDTO.ChildSup4;
+                employee.ChildSup5 = employeeDTO.ChildSup5;
+                employee.IsUsePayCheck = employeeDTO.IsUsePayCheck;
+                employee.IsRestricted = employeeDTO.IsRestricted;
+                employee.IsShowPastDueWarning = employeeDTO.IsShowPastDueWarning;
+                employee.IsTextPriceChange = employeeDTO.IsTextPriceChange;
+                employee.IsService = employeeDTO.IsService;
 
                 Uow.Employees.Update(employee);
             }

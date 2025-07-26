@@ -58,6 +58,10 @@ namespace KLS.Data.Repositories
 
         public IChartOfAccountRepository ChartOfAccounts { get { return new ChartOfAccountRepository(DbContext); } }
 
+        public IEmailLogRepository EmailLogs { get { return new EmailLogRepository(DbContext); } }
+
+        public IRecalculationLogRepository RecalculationLogs { get { return new RecalculationLogRepository(DbContext); } }
+
         public ISystemSettingRepository SystemSettings { get { return new SystemSettingRepository(DbContext); } }
     }
 }

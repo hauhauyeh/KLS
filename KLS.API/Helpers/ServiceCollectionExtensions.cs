@@ -23,6 +23,8 @@ namespace KLS.API.Helpers
             services.AddScoped<IVendorService, VendorService>();
             services.AddScoped<IChartOfAccountService, ChartOfAccountService>();
             services.AddScoped<IChartOfAccountTypeService, ChartOfAccountTypeService>();
+            services.AddScoped<IEmailLogService, EmailLogService>();
+            services.AddScoped<IRecalculationLogService, RecalculationLogService>();
 
             return services;
         }

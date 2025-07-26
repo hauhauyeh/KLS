@@ -32,6 +32,10 @@ namespace KLS.Contract.Interfaces
 
         IChartOfAccountRepository ChartOfAccounts { get; }
 
+        IEmailLogRepository EmailLogs { get; }
+
+        IRecalculationLogRepository RecalculationLogs { get; }
+
         void Commit();
     }
 }
