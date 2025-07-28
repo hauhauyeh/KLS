@@ -130,7 +130,7 @@ namespace KLS.Services
         public int GetMaxVendorId()
         {
             var maxId = Uow.Vendors.GetAll().Select(p => (int?)p.PayeeId).Max();
-            return (maxId ?? 100000) + 1;
+            return (maxId ?? 200000) + 1;
         }
     }
 }

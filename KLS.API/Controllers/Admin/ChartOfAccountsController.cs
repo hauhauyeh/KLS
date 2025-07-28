@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "ChartOfAccount Management", GroupName = "Admin")]
     public class ChartOfAccountsController : BaseController
@@ -31,9 +32,9 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Accounts")]
-        public IActionResult GetAllChartOfAccounts([FromQuery] PagingRequest request)
+        public IActionResult GetAllChartOfAccounts()
         {
-            return Ok(_chartOfAccountService.GetAllChartOfAccounts(request));
+            return Ok(_chartOfAccountService.GetAllAccounts());
         }
 
 
@@ -44,22 +45,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("GetActive")]
-        public IActionResult GetActive()
-        {
-            return Ok(_chartOfAccountService.GetActive());
-        }
-
-
         [HttpPost]
         [DisplayName("Create Account")]
         public IActionResult CreateAccount([FromBody] ChartOfAccount chartOfAccount)
         {
             //add @ sign if not exist
-            if (chartOfAccount.AccountCode[0] != '@')
+            if (chartOfAccount?.AccountCode?[0] != '@')
                 chartOfAccount.AccountCode = "@" + chartOfAccount.AccountCode;
 
-            if (_chartOfAccountService.NameExists(chartOfAccount))
+            if (_chartOfAccountService.AcctNameExists(chartOfAccount))
                 return Conflict("Name already exists.");
 
             if (_chartOfAccountService.AcctCodeExists(chartOfAccount))
@@ -76,10 +70,10 @@ namespace KLS.API.Controllers.Admin
         public IActionResult UpdateAccount([FromBody] ChartOfAccount chartOfAccount)
         {
             //add @ sign if not exist
-            if (chartOfAccount.AccountCode[0] != '@')
+            if (chartOfAccount?.AccountCode?[0] != '@')
                 chartOfAccount.AccountCode = "@" + chartOfAccount.AccountCode;
 
-            if (_chartOfAccountService.NameExists(chartOfAccount))
+            if (_chartOfAccountService.AcctNameExists(chartOfAccount))
                 return Conflict("Name already exists.");
 
             if (_chartOfAccountService.AcctCodeExists(chartOfAccount))

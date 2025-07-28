@@ -13,9 +13,9 @@ namespace KLS.Models
             IsCollapsed = true;
         }
 
-        public string? AcctCategory { get; set; }
+        public string? CatName { get; set; }
 
-        public IQueryable<AcctList>? Accounts { get; set; }
+        public IEnumerable<AccountDTO>? Accounts { get; set; }
 
         public bool IsCollapsed { get; set; }
     }

@@ -10,6 +10,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface IChartOfAccountRepository : IRepository<ChartOfAccount>
     {
-        ICollection<ChartAccountList> GetAllChartOfAccounts(PagingRequest request);
+        
     }
 }

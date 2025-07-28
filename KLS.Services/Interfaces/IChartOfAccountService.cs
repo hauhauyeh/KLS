@@ -9,20 +9,18 @@ namespace KLS.Services.Interfaces
 {
     public interface IChartOfAccountService
     {
-        ICollection<ChartAccountList> GetAllChartOfAccounts(PagingRequest request);
+        IEnumerable<ChartAccountList> GetAllAccounts();
 
-        ChartOfAccount? GetById(int id);
+        ChartOfAccount? GetById(int accountId);
 
-        List<AcctList> GetActive();
-
-        bool NameExists(ChartOfAccount account);
+        bool AcctNameExists(ChartOfAccount account);
 
         bool AcctCodeExists(ChartOfAccount account);
 
-        ChartOfAccount CreateAccount(ChartOfAccount chartOfAccount);
+        ChartOfAccount CreateAccount(ChartOfAccount account);
 
-        ChartOfAccount? UpdateAccount(ChartOfAccount chartOfAccount);
+        ChartOfAccount? UpdateAccount(ChartOfAccount account);
 
-        void DeleteAccount(int id);
+        void DeleteAccount(int accountId);
     }
 }

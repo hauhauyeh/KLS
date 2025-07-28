@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace KLS.Models
         }
 
         [Key]
-
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AccountId { get; set; }
 
         public int AccountTypeId { get; set; }
@@ -24,7 +25,7 @@ namespace KLS.Models
 
         public string? AccountNumber { get; set; }
 
-        public bool IsAccountCR { get; set; }
+        public bool IsAccountDebit { get; set; }
 
         public string? AccountCode { get; set; }
 
@@ -42,7 +43,7 @@ namespace KLS.Models
 
         public decimal? OpenBalance { get; set; }
 
-        public bool Inactive { get; set; }
+        public bool IsInactive { get; set; }
 
         public bool IsDefaultAccount { get; set; }
 

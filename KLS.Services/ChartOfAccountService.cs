@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,39 +20,37 @@ namespace KLS.Services
 
         }
 
-        public ICollection<ChartAccountList> GetAllChartOfAccounts(PagingRequest request)
+        public IEnumerable<ChartAccountList> GetAllAccounts()
         {
-            return Uow.ChartOfAccounts.GetAllChartOfAccounts(request);
+            var category = Uow.ChartOfAccountTypes.GetAll();
+            var accounts = Uow.ChartOfAccounts.GetAll();
+
+            var lst = from act in accounts
+                      join cat in category on act.AccountTypeId equals cat.AccountTypeId
+                      orderby cat.CatNumber, cat.CatName
+                      select new AccountDTO
+                      {
+                          CatName = cat.CatName,
+                          AccountType = cat.AccountType,
+                          AccountId = act.AccountId,
+                          AccountCode = act.AccountCode,
+                          AccountName = act.AccountName,
+                          IsInactive = act.IsInactive
+                      };
+
+            return lst.GroupBy(g => g.CatName).Select(c => new ChartAccountList
+            {
+                CatName = c.Key,
+                Accounts = c.ToList()
+            });
         }
 
-        public ChartOfAccount? GetById(int id)
+        public ChartOfAccount? GetById(int accountId)
         {
-            return Uow.ChartOfAccounts.GetById(id);
+            return Uow.ChartOfAccounts.GetById(accountId);
         }
 
-        public List<AcctList> GetAll()
-        {
-            var accounts = Uow.ChartOfAccounts.GetAll().ToList();
-            var accountTypes = Uow.ChartOfAccountTypes.GetAll().ToList();
-
-            return (from c in accounts
-                    join ct in accountTypes on c.AccountTypeId equals ct.AccountTypeId
-                    orderby ct.TypeNumber, c.AccountName
-                    select new AcctList()
-                    {
-                        AcctTypeId = c.AccountTypeId,
-                        AcctCode = c.AccountCode,
-                        AcctName = c.AccountName,
-                        Inactive = c.Inactive
-                    }).ToList();
-        }
-
-        public List<AcctList> GetActive()
-        {
-            return GetAll().Where(c => c.Inactive == false).ToList();
-        }
-
-        public bool NameExists(ChartOfAccount account)
+        public bool AcctNameExists(ChartOfAccount account)
         {
             return Uow.ChartOfAccounts.Exists(c => c.AccountName.ToLower() == account.AccountName.ToLower() && c.AccountId != account.AccountId);
         }
@@ -77,9 +76,9 @@ namespace KLS.Services
                 return null;
 
             existing.AccountName = chartOfAccount.AccountName;
-            existing.IsAccountCR = chartOfAccount.IsAccountCR;
+            existing.IsAccountDebit = chartOfAccount.IsAccountDebit;
             existing.AccountDesc = chartOfAccount.AccountDesc;
-            existing.Inactive = chartOfAccount.Inactive;
+            existing.IsInactive = chartOfAccount.IsInactive;
 
             Uow.ChartOfAccounts.Update(existing);
             Uow.Commit();

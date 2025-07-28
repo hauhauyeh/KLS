@@ -169,7 +169,7 @@ namespace KLS.Services
         public int GetMaxCustomerId()
         {
             var maxId = Uow.Customers.GetAll().Select(p => (int?)p.PayeeId).Max();
-            return (maxId ?? 100000) + 1;
+            return (maxId ?? 300000) + 1;
         }
 
         private static MapLatLong? GetMapLatLong(string Address, string MapsAPIKEY)
