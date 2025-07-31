@@ -22,6 +22,8 @@ namespace KLS.Models
 
         public string? ZipCode { get; set; }
 
+        public string? Country { get; set; }
+
         public string? PhoneDesc1 { get; set; }
 
         public string? Phone1 { get; set; }
@@ -53,6 +55,8 @@ namespace KLS.Models
         public string? Notes { get; set; }
 
         public bool IsClosed { get; set; }
+
+        public string? TermName { get; set; }
 
         public DateTime? StartDate { get; set; }
 

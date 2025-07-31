@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IRecalculationLogRepository : IRepository<RecalculationLog>
+    public interface IGeneralJournalRepository : IRepository<GeneralJournal>
     {
-
+        IQueryable<GeneralJournal> GetAllGeneralJournal(GeneralJournalReq generalJournalReq);
     }
 }

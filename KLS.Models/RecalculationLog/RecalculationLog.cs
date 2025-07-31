@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class RecalculationQAVLog
+    public class RecalculationLog
     {
         [Key]
         public Int64 LogId { get; set; }
 
         public string? ItemCode { get; set; }
 
-        public Int64 TransactionNumber { get; set; }
+        public Int64 TxNum { get; set; }
 
-        public DateOnly TransactionDate { get; set; }
+        public DateOnly TxDate { get; set; }
 
         public bool IsDeleted { get; set; }
     }

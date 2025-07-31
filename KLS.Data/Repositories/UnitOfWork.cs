@@ -62,6 +62,10 @@ namespace KLS.Data.Repositories
 
         public IRecalculationLogRepository RecalculationLogs { get { return new RecalculationLogRepository(DbContext); } }
 
+        public IGeneralJournalRepository GeneralJournals { get { return new GeneralJournalRepository(DbContext); } }
+
+        public IGeneralJournalDetailRepository GeneralJournalDetails { get { return new GeneralJournalDetailRepository(DbContext); } }
+
         public ISystemSettingRepository SystemSettings { get { return new SystemSettingRepository(DbContext); } }
     }
 }

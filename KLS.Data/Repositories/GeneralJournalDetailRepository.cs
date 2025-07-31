@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Data.Repositories
 {
-    public class RecalculationLogRepository : KLSRepository<RecalculationLog>, IRecalculationLogRepository
+    public class GeneralJournalDetailRepository : KLSRepository<GeneralJournalDetail>, IGeneralJournalDetailRepository
     {
-        public RecalculationLogRepository(KLSDBContext dbContext) : base(dbContext)
+        public GeneralJournalDetailRepository(KLSDBContext dbContext) : base(dbContext)
         {
 
         }

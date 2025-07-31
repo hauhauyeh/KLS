@@ -11,7 +11,7 @@ namespace KLS.Services.Interfaces
     {
         IEnumerable<Payee> GetAllVendors();
 
-        Payee? GetById(int payeeId);
+        VendorDTO? GetById(int payeeId);
 
         bool VendorExists(VendorDTO vendorDTO);
 

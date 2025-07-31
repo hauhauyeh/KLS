@@ -16,7 +16,7 @@ namespace KLS.Services
 
         }
 
-        public IQueryable<RecalculationQAVLog> GetAllLogs()
+        public IQueryable<RecalculationLog> GetAllLogs()
         {
             return Uow.RecalculationLogs.GetAll().Take(200);
         }

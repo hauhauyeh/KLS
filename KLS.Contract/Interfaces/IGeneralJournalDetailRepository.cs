@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLS.Services.Interfaces
+namespace KLS.Contract.Interfaces
 {
-    public interface IRecalculationLogService
+    public interface IGeneralJournalDetailRepository : IRepository<GeneralJournalDetail>
     {
-        IQueryable<RecalculationLog> GetAllLogs();
+
     }
 }

@@ -41,7 +41,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ChartOfAccountType>().ToTable("ChartOfAccountTypes");
             modelBuilder.Entity<ChartOfAccount>().ToTable("ChartOfAccounts");
             modelBuilder.Entity<EmailLog>().ToTable("EmailLogs");
-            modelBuilder.Entity<RecalculationQAVLog>().ToTable("RecalculationQAVLogs");
+            modelBuilder.Entity<RecalculationLog>().ToTable("RecalculationLogs");
+            modelBuilder.Entity<GeneralJournal>().ToTable("GeneralJournals");
+            modelBuilder.Entity<GeneralJournalDetail>().ToTable("GeneralJournalDetails");
             modelBuilder.Entity<SystemSetting>().ToTable("SystemSettings");
 
             modelBuilder.Entity<Payee>().ToTable("Payees");
@@ -75,7 +77,11 @@ namespace KLS.Data.DataContext
 
         public DbSet<EmailLogDTO> EmailLogDTO { get; set; }
 
-        public DbSet<RecalculationQAVLog> RecalculationLogs { get; set; }
+        public DbSet<RecalculationLog> RecalculationLogs { get; set; }
+
+        public DbSet<GeneralJournal> GeneralJournals { get; set; }
+
+        public DbSet<GeneralJournalDetail> GeneralJournalDetails { get; set; }
 
         #endregion
     }

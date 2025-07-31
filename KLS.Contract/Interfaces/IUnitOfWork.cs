@@ -36,6 +36,10 @@ namespace KLS.Contract.Interfaces
 
         IRecalculationLogRepository RecalculationLogs { get; }
 
+        IGeneralJournalRepository GeneralJournals { get; }
+
+        IGeneralJournalDetailRepository GeneralJournalDetails { get; }
+
         void Commit();
     }
 }

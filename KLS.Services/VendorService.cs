@@ -22,14 +22,28 @@ namespace KLS.Services
         public IEnumerable<Payee> GetAllVendors()
         {
             return Uow.Payees
-                .GetAll().Include(v => v.Vendor)
+                .Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString()).Include(v => v.Vendor)
                 .OrderByDescending(v => v.PayeeId)
                 .ToList();
         }
 
-        public Payee? GetById(int payeeId)
+        public VendorDTO? GetById(int payeeId)
         {
-            return Uow.Payees.Find(c => c.PayeeId == payeeId).Include(c => c.Vendor).FirstOrDefault();
+            var payee = Uow.Payees.GetById(payeeId);
+            var vendor = Uow.Vendors.GetById(payeeId);
+
+            if (payee == null && vendor == null)
+                return null;
+
+            var vendorDTO = new VendorDTO();
+
+            if (payee != null)
+                vendorDTO.InjectFrom(payee);
+
+            if (vendor != null)
+                vendorDTO.InjectFrom(vendor);
+
+            return vendorDTO;
         }
 
         public bool VendorExists(VendorDTO vendorDTO)
@@ -82,6 +96,8 @@ namespace KLS.Services
             existingPayee.Phone4 = vendorDTO.Phone4;
             existingPayee.IsClosed = vendorDTO.IsClosed;
             existingPayee.StartDate = vendorDTO.StartDate;
+            existingPayee.Balance = vendorDTO.Balance;
+            existingPayee.TermName = vendorDTO.TermName;
             existingPayee.Notes = vendorDTO.Notes;
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
@@ -91,27 +107,27 @@ namespace KLS.Services
 
             if (vendor != null)
             {
-                vendor.PmtCompany = vendor.PmtCompany;
-                vendor.PmtAddress = vendor.PmtAddress;
-                vendor.PmtCity = vendor.PmtCity;
-                vendor.PmtState = vendor.PmtState;
-                vendor.PmtZipCode = vendor.PmtZipCode;
-                vendor.AccountNumber = vendor.AccountNumber;
-                vendor.RoutingNumber = vendor.RoutingNumber;
-                vendor.FreightRate = vendor.FreightRate;
-                vendor.InterestRate = vendor.InterestRate;
-                vendor.PmtSchedule1 = vendor.PmtSchedule1;
-                vendor.PmtSchedule2 = vendor.PmtSchedule2;
-                vendor.AcctCode1 = vendor.AcctCode1;
-                vendor.AcctCode2 = vendor.AcctCode2;
-                vendor.AcctCode3 = vendor.AcctCode3;
-                vendor.AcctCode4 = vendor.AcctCode4;
-                vendor.AcctCode5 = vendor.AcctCode5;
-                vendor.AcctCode6 = vendor.AcctCode6;
-                vendor.AcctCode6 = vendor.AcctCode6;
-                vendor.DefaultPmtMethod = vendor.DefaultPmtMethod;
-                vendor.IsShippingCarrier = vendor.IsShippingCarrier;
-                vendor.IsVisibleToAdmin = vendor.IsVisibleToAdmin;
+                vendor.PmtCompany = vendorDTO.PmtCompany;
+                vendor.PmtAddress = vendorDTO.PmtAddress;
+                vendor.PmtCity = vendorDTO.PmtCity;
+                vendor.PmtState = vendorDTO.PmtState;
+                vendor.PmtZipCode = vendorDTO.PmtZipCode;
+                vendor.AccountNumber = vendorDTO.AccountNumber;
+                vendor.RoutingNumber = vendorDTO.RoutingNumber;
+                vendor.FreightRate = vendorDTO.FreightRate;
+                vendor.InterestRate = vendorDTO.InterestRate;
+                vendor.PmtSchedule1 = vendorDTO.PmtSchedule1;
+                vendor.PmtSchedule2 = vendorDTO.PmtSchedule2;
+                vendor.AcctCode1 = vendorDTO.AcctCode1;
+                vendor.AcctCode2 = vendorDTO.AcctCode2;
+                vendor.AcctCode3 = vendorDTO.AcctCode3;
+                vendor.AcctCode4 = vendorDTO.AcctCode4;
+                vendor.AcctCode5 = vendorDTO.AcctCode5;
+                vendor.AcctCode6 = vendorDTO.AcctCode6;
+                vendor.AcctCode6 = vendorDTO.AcctCode6;
+                vendor.DefaultPmtMethod = vendorDTO.DefaultPmtMethod;
+                vendor.IsShippingCarrier = vendorDTO.IsShippingCarrier;
+                vendor.IsVisibleToAdmin = vendorDTO.IsVisibleToAdmin;
 
                 Uow.Vendors.Update(vendor);
             }

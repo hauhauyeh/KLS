@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Interfaces
 {
-    public interface IRecalculationLogService
+    public interface IGeneralJournalService
     {
-        IQueryable<RecalculationLog> GetAllLogs();
+        PagingResponse<GeneralJournal> GetAllGeneralJournal(GeneralJournalReq generalJournalReq);
     }
 }
