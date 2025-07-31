@@ -9,7 +9,7 @@ namespace KLS.Services.Interfaces
 {
     public interface IChartOfAccountService
     {
-        IEnumerable<ChartAccountList> GetAllAccounts();
+        IEnumerable<ChartAccountTree> GetAccountsTree();
 
         ChartOfAccount? GetById(int accountId);
 

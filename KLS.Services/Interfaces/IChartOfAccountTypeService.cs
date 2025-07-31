@@ -9,6 +9,8 @@ namespace KLS.Services.Interfaces
 {
     public interface IChartOfAccountTypeService
     {
-        
+        IEnumerable<AccountTypeGroup>? GetAllAccountTypes();
+
+        ChartOfAccountType GetById(int typeId);
     }
 }

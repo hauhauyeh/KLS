@@ -16,14 +16,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IChartOfAccountService _chartOfAccountService;
+        private readonly IChartOfAccountTypeService _accountTypeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ChartOfAccountsController(IChartOfAccountService chartOfAccountService)
+        public ChartOfAccountsController(IChartOfAccountService chartOfAccountService, IChartOfAccountTypeService accountTypeService)
         {
             _chartOfAccountService = chartOfAccountService;
+            _accountTypeService = accountTypeService;
         }
 
         #endregion
@@ -32,9 +34,9 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Accounts")]
-        public IActionResult GetAllChartOfAccounts()
+        public IActionResult GetAccountsTree()
         {
-            return Ok(_chartOfAccountService.GetAllAccounts());
+            return Ok(_chartOfAccountService.GetAccountsTree());
         }
 
 
@@ -92,6 +94,13 @@ namespace KLS.API.Controllers.Admin
             _chartOfAccountService.DeleteAccount(id);
 
             return Ok();
+        }
+
+
+        [HttpGet("AccountTypes")]
+        public IActionResult GetAllAccountTypes()
+        {
+            return Ok(_accountTypeService.GetAllAccountTypes());
         }
 
         #endregion

@@ -20,28 +20,40 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<ChartAccountList> GetAllAccounts()
+        public IEnumerable<ChartAccountTree> GetAccountsTree()
         {
             var category = Uow.ChartOfAccountTypes.GetAll();
             var accounts = Uow.ChartOfAccounts.GetAll();
 
-            var lst = from act in accounts
+            var lst = (from act in accounts
                       join cat in category on act.AccountTypeId equals cat.AccountTypeId
                       orderby cat.CatNumber, cat.CatName
-                      select new AccountDTO
+                      select new ChartAccountTree
                       {
                           CatName = cat.CatName,
                           AccountType = cat.AccountType,
                           AccountId = act.AccountId,
                           AccountCode = act.AccountCode,
                           AccountName = act.AccountName,
-                          IsInactive = act.IsInactive
-                      };
+                          IsInactive = act.IsInactive,
+                          ParentAccountId = act.ParentAccountId
+                      }).ToList();
 
-            return lst.GroupBy(g => g.CatName).Select(c => new ChartAccountList
+            return BuildTree(lst, null);
+        }
+
+        private IEnumerable<ChartAccountTree> BuildTree(IEnumerable<ChartAccountTree> accounts, int? parentId)
+        {
+            return accounts.Where(x => x.ParentAccountId == parentId).Select(x => new ChartAccountTree
             {
-                CatName = c.Key,
-                Accounts = c.ToList()
+                AccountId = x.AccountId,
+                AccountType = x.AccountType,
+                CatName = x.CatName,
+                AccountCode = x.AccountCode,
+                AccountName = x.AccountName,
+                ParentAccountId = x.ParentAccountId,
+                IsInactive = x.IsInactive,
+                ChildAccounts = BuildTree(accounts, x.AccountId)
             });
         }
 
@@ -75,10 +87,15 @@ namespace KLS.Services
             if (existing == null)
                 return null;
 
+            existing.AccountTypeId = chartOfAccount.AccountTypeId;
             existing.AccountName = chartOfAccount.AccountName;
-            existing.IsAccountDebit = chartOfAccount.IsAccountDebit;
             existing.AccountDesc = chartOfAccount.AccountDesc;
+            existing.IsAccountDebit = chartOfAccount.IsAccountDebit;
             existing.IsInactive = chartOfAccount.IsInactive;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            if (!existing.IsDefaultAccount)
+                existing.AccountCode = chartOfAccount.AccountCode;
 
             Uow.ChartOfAccounts.Update(existing);
             Uow.Commit();

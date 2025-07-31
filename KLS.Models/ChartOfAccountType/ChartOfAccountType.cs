@@ -14,20 +14,28 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AccountTypeId { get; set; }
 
-        public string? AccountType { get; set; }
+        public string AccountType { get; set; }
 
         public string? TypeNumber { get; set; }
+
+        public string? DetailType { get; set; }
+
+        public string? DetailNumber { get; set; }
 
         public string? CatName { get; set; }
 
         public string? CatNumber { get; set; }
 
-        public string? ReportGrp0 { get; set; }
+        public string? GroupLevel0 { get; set; }
 
-        public string? ReportGrp1 { get; set; }
+        public string? GroupLevel1 { get; set; }
 
-        public string? ReportGrp2 { get; set; }
+        public string? GroupLevel2 { get; set; }
 
-        public string? ReportGrp3 { get; set; }
+        public string? GroupLevel3 { get; set; }
+
+        public bool IsInactive { get; set; }
+
+        public string? Notes { get; set; }
     }
 }
