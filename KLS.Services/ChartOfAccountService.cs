@@ -26,18 +26,18 @@ namespace KLS.Services
             var accounts = Uow.ChartOfAccounts.GetAll();
 
             var lst = (from act in accounts
-                      join cat in category on act.AccountTypeId equals cat.AccountTypeId
-                      orderby cat.CatNumber, cat.CatName
-                      select new ChartAccountTree
-                      {
-                          CatName = cat.CatName,
-                          AccountType = cat.AccountType,
-                          AccountId = act.AccountId,
-                          AccountCode = act.AccountCode,
-                          AccountName = act.AccountName,
-                          IsInactive = act.IsInactive,
-                          ParentAccountId = act.ParentAccountId
-                      }).ToList();
+                       join cat in category on act.AccountTypeId equals cat.AccountTypeId
+                       orderby cat.CatNumber, cat.CatName
+                       select new ChartAccountTree
+                       {
+                           CatName = cat.CatName,
+                           AccountType = cat.AccountType,
+                           AccountId = act.AccountId,
+                           AccountCode = act.AccountCode,
+                           AccountName = act.AccountName,
+                           IsInactive = act.IsInactive,
+                           ParentAccountId = act.ParentAccountId
+                       }).ToList();
 
             return BuildTree(lst, null);
         }
@@ -60,6 +60,16 @@ namespace KLS.Services
         public ChartOfAccount? GetById(int accountId)
         {
             return Uow.ChartOfAccounts.GetById(accountId);
+        }
+
+        public ChartOfAccount? GetByAcctName(string acctname)
+        {
+            return Uow.ChartOfAccounts.Find(c => c.AccountName == acctname && c.IsInactive == false).FirstOrDefault();
+        }
+
+        public ChartOfAccount? GetByAcctCode(string acctcode)
+        {
+            return Uow.ChartOfAccounts.Find(c => c.AccountCode == acctcode && c.IsInactive == false).Include(c => c.AccountType).FirstOrDefault();
         }
 
         public bool AcctNameExists(ChartOfAccount account)
@@ -107,6 +117,16 @@ namespace KLS.Services
         {
             Uow.ChartOfAccounts.RemoveById(id);
             Uow.Commit();
+        }
+
+        public ChartOfAccount? CheckAccount(string search)
+        {
+            var account = GetByAcctCode(search);
+
+            if (account == null)
+                account = GetByAcctName(search);
+
+            return account;
         }
     }
 }

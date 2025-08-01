@@ -50,5 +50,9 @@ namespace KLS.Models
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+
+        [ForeignKey("AccountTypeId")]
+        public virtual ChartOfAccountType? AccountType { get; set; }
     }
 }

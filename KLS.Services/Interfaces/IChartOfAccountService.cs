@@ -22,5 +22,7 @@ namespace KLS.Services.Interfaces
         ChartOfAccount? UpdateAccount(ChartOfAccount account);
 
         void DeleteAccount(int accountId);
+
+        ChartOfAccount? CheckAccount(string search);
     }
 }

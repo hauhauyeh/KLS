@@ -26,6 +26,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IEmailLogService, EmailLogService>();
             services.AddScoped<IRecalculationLogService, RecalculationLogService>();
             services.AddScoped<IGeneralJournalService, GeneralJournalService>();
+            services.AddScoped<ITempGeneralJournalService, TempGeneralJournalService>();
 
             return services;
         }

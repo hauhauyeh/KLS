@@ -40,6 +40,8 @@ namespace KLS.Contract.Interfaces
 
         IGeneralJournalDetailRepository GeneralJournalDetails { get; }
 
+        ITempGeneralJournalRepository TempGeneralJournals { get; }
+
         void Commit();
     }
 }
