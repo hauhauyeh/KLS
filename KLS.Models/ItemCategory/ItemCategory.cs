@@ -1,0 +1,46 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KLS.Models
+{
+    public class ItemCategory
+    {
+        public ItemCategory()
+        {
+            this.CreatedAt = DateTime.UtcNow;
+        }
+
+        [Key]
+        public int CategoryId { get; set; }
+
+        public int? ParentId { get; set; }
+
+        public string? CategoryName { get; set; }
+
+        public string? DisplayName { get; set; }
+
+        public string? ForeignName { get; set; }
+
+        public string? InvoiceName { get; set; }
+
+        public string? Description { get; set; }
+
+        public string? Slug { get; set; }
+
+        public string? ImageUrl { get; set; }
+
+        public bool IsInactive { get; set; }
+
+        public int SortOrder { get; set; }
+
+        public DateTime? CreatedAt { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+    }
+}

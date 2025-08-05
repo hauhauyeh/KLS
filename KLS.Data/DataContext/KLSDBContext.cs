@@ -45,6 +45,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<GeneralJournal>().ToTable("GeneralJournals");
             modelBuilder.Entity<GeneralJournalDetail>().ToTable("GeneralJournalDetails");
             modelBuilder.Entity<TempGeneralJournal>().ToTable("TempGeneralJournals");
+            modelBuilder.Entity<ItemCategory>().ToTable("ItemCategories");
             modelBuilder.Entity<SystemSetting>().ToTable("SystemSettings");
 
             modelBuilder.Entity<Payee>().ToTable("Payees");
@@ -85,6 +86,8 @@ namespace KLS.Data.DataContext
         public DbSet<GeneralJournalDetail> GeneralJournalDetails { get; set; }
 
         public DbSet<TempGeneralJournal> TempGeneralJournals { get; set; }
+
+        public DbSet<ItemCategory> ItemCategories { get; set; }
 
         #endregion
     }

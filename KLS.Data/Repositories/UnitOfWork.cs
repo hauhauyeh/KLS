@@ -68,6 +68,8 @@ namespace KLS.Data.Repositories
 
         public ITempGeneralJournalRepository TempGeneralJournals { get { return new TempGeneralJournalRepository(DbContext); } }
 
+        public IItemCategoryRepository ItemCategories { get { return new ItemCategoryRepository(DbContext); } }
+
         public ISystemSettingRepository SystemSettings { get { return new SystemSettingRepository(DbContext); } }
     }
 }
