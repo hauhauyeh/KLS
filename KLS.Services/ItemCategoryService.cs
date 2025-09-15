@@ -100,25 +100,10 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteItemCategory(int categoryId)
+        public void DeleteCategory(int categoryId)
         {
             Uow.ItemCategories.RemoveById(categoryId);
             Uow.Commit();
         }
-
-        //public void DeleteItemCategory(int categoryId)
-        //{
-        //    var children = Uow.ItemCategories.GetAll()
-        //        .Where(c => c.ParentId == categoryId)
-        //        .ToList();
-
-        //    foreach (var child in children)
-        //    {
-        //        DeleteItemCategory(child.CategoryId);
-        //    }
-
-        //    Uow.ItemCategories.RemoveById(categoryId);
-        //    Uow.Commit();
-        //}
     }
 }

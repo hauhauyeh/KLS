@@ -11,6 +11,7 @@ namespace KLS.Models
     public class EmailLog
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int EmailLogId { get; set; }
 
         public int? PayeeId { get; set; }

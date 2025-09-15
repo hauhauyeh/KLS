@@ -9,11 +9,6 @@ namespace KLS.Models
 {
     public class GeneralJournalDetail
     {
-        public GeneralJournalDetail()
-        {
-            this.CreatedAt = DateTime.UtcNow;
-        }
-
         [Key]
         public int GJDetailId { get; set; }
 
@@ -32,9 +27,5 @@ namespace KLS.Models
         public decimal? CreditAmount { get; set; }
 
         public string? Notes { get; set; }
-
-        public DateTime? CreatedAt { get; set; }
-
-        public DateTime? UpdatedAt { get; set; }
     }
 }

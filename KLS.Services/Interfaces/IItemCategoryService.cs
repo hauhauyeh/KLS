@@ -21,6 +21,6 @@ namespace KLS.Services.Interfaces
 
         ItemCategory UpdateCategory(ItemCategory itemCategory);
 
-        void DeleteItemCategory(int categoryId);
+        void DeleteCategory(int categoryId);
     }
 }

@@ -71,5 +71,17 @@ namespace KLS.Data.Repositories
         public IItemCategoryRepository ItemCategories { get { return new ItemCategoryRepository(DbContext); } }
 
         public ISystemSettingRepository SystemSettings { get { return new SystemSettingRepository(DbContext); } }
+
+        public ITransferFundRepository TransferFunds { get { return new TransferFundRepository(DbContext); } }
+
+        public ITransactionRepository Transactions { get { return new TransactionRepository(DbContext); } }
+
+        public ITransactionDetailRepository TransactionDetails { get { return new TransactionDetailRepository(DbContext); } }
+
+        public ISourceDocTypeRepository SourceDocTypes { get { return new SourceDocTypeRepository(DbContext); } }
+
+        public IItemStorageRepository ItemStorages { get { return new ItemStorageRepository(DbContext); } }
+
+        public ITimesheetRepository Timesheets { get { return new TimesheetRepository(DbContext); } }
     }
 }

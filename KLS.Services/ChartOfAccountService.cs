@@ -69,7 +69,7 @@ namespace KLS.Services
 
         public ChartOfAccount? GetByAcctCode(string acctcode)
         {
-            return Uow.ChartOfAccounts.Find(c => c.AccountCode == acctcode && c.IsInactive == false).Include(c => c.AccountType).FirstOrDefault();
+            return Uow.ChartOfAccounts.Find(c => c.AccountCode == acctcode && c.IsInactive == false).FirstOrDefault();
         }
 
         public bool AcctNameExists(ChartOfAccount account)
@@ -127,6 +127,30 @@ namespace KLS.Services
                 account = GetByAcctName(search);
 
             return account;
+        }
+
+        public IEnumerable<AccountDTO>? SearchAccount(string term)
+        {
+            return Uow.ChartOfAccounts.SearchAccount(term).ToList();
+        }
+
+        public IEnumerable<AccountDTO>? GetBankCashAccounts()
+        {
+            var result = from a in Uow.ChartOfAccounts.GetAll()
+                         join at in Uow.ChartOfAccountTypes.GetAll()
+                             on a.AccountTypeId equals at.AccountTypeId
+                         where at.AccountType == "Bank" || at.AccountType == "Cash"
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             AccountType = at.AccountType,
+                             CatName = at.CatName,
+                             IsInactive = a.IsInactive
+                         };
+
+            return result.ToList();
         }
     }
 }

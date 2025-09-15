@@ -9,7 +9,7 @@ namespace KLS.Services.Interfaces
 {
     public interface IEmployeeService
     {
-        IEnumerable<Payee> GetAllEmployees();
+        IEnumerable<EmployeeList> GetAllEmployees(EmpReq empReq);
 
         EmployeeDTO? GetById(int payeeId);
 
@@ -20,5 +20,7 @@ namespace KLS.Services.Interfaces
         EmployeeDTO? UpdateEmployee(EmployeeDTO payee);
 
         void DeleteEmployee(int payeeId);
+
+        IEnumerable<PayeeSearch>? SearchEmployee(PayeeSearchReq searchReq);
     }
 }

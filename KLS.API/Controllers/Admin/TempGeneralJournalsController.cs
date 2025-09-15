@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -6,22 +7,24 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "TempGeneralJournal Management", GroupName = "Admin")]
+    [Display(Name = "Temp GeneralJournal Management", GroupName = "Admin")]
     public class TempGeneralJournalsController : BaseController
     {
         #region --- Member(s) ---
 
-        private readonly ITempGeneralJournalService _tempGeneralJournalService;
+        private readonly ITempGeneralJournalService _tempGJService;
+        private readonly IChartOfAccountService _accountService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public TempGeneralJournalsController(ITempGeneralJournalService tempGeneralJournalService)
+        public TempGeneralJournalsController(ITempGeneralJournalService tempGJService, IChartOfAccountService accountService)
         {
-            _tempGeneralJournalService = tempGeneralJournalService;
+            _tempGJService = tempGJService;
+            _accountService = accountService;
         }
 
         #endregion
@@ -29,30 +32,33 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        public IActionResult GetAllTempGeneralJournal([FromQuery] TempGeneralJournalReq req)
+        public IActionResult GetTempGJList([FromQuery] TempGJReq tempGJReq)
         {
-            return Ok(_tempGeneralJournalService.GetTempGeneralJournalDetails(req.GJId, req.EmployeeId, req.TempGJId));
+            return Ok(_tempGJService.GetTempGJList(tempGJReq));
         }
 
 
         [HttpPost]
-        public IActionResult CreateTempGeneralJournal([FromBody] TempGeneralJournal tempGeneralJournal)
+        public IActionResult CreateTempGJ([FromBody] TempGeneralJournal tempGJ)
         {
-            return Ok(_tempGeneralJournalService.CreateTempGeneralJournal(tempGeneralJournal));
+            if (_accountService.CheckAccount(tempGJ.AccountCode) == null)
+                return Conflict("Account is not found");
+
+            return Ok(_tempGJService.CreateTempGJ(tempGJ));
         }
 
 
         [HttpPut]
-        public IActionResult UpdateTempGeneralJournal([FromBody] TempGeneralJournal tempGeneralJournal)
+        public IActionResult UpdateTempGJ([FromBody] TempGeneralJournal tempGJ)
         {
-            return Ok(_tempGeneralJournalService.UpdateTempGeneralJournal(tempGeneralJournal));
+            return Ok(_tempGJService.UpdateTempGJ(tempGJ));
         }
 
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteTempGeneralJournal(int id)
+        public IActionResult Delete(int id)
         {
-            _tempGeneralJournalService.DeleteTempGeneralJournal(id);
+            _tempGJService.DeleteTempGJ(id);
             return Ok();
         }
 

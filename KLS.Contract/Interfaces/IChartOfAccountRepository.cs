@@ -10,6 +10,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface IChartOfAccountRepository : IRepository<ChartOfAccount>
     {
-        
+        IQueryable<AccountDTO> SearchAccount(string term);
+
+        CreditDebitAmount GetCrDeAmount(string accountCode, decimal? amount);
     }
 }

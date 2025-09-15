@@ -1,6 +1,8 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Omu.ValueInjecter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,43 +13,86 @@ namespace KLS.Services
 {
     public class TempGeneralJournalService : BaseService, ITempGeneralJournalService
     {
-        private IChartOfAccountService _chartOfAccountService;
+        private IChartOfAccountService _accountService;
 
-        public TempGeneralJournalService(IUnitOfWork uow, IChartOfAccountService chartOfAccountService) : base(uow)
+        public TempGeneralJournalService(IUnitOfWork uow, IChartOfAccountService AccountService) : base(uow)
         {
-            _chartOfAccountService = chartOfAccountService;
+            _accountService = AccountService;
         }
 
-        public IQueryable<TempGeneralJournal> GetTempGeneralJournalDetails(int gjId, int employeeId, int? tempGJId)
+        public IEnumerable<TempGeneralJournalList>? GetTempGJList(TempGJReq tempGJReq)
         {
-            return Uow.TempGeneralJournals.GetTempGeneralJournalDetails(gjId, employeeId, tempGJId);
+            return Uow.TempGeneralJournals.GetTempGJList(tempGJReq)?.ToList();
         }
 
-        public IQueryable<TempGeneralJournal> CreateTempGeneralJournal(TempGeneralJournal tempGeneralJournal)
+        public TempGeneralJournalList? GetTempGJ(TempGJReq tempGJReq)
         {
-            tempGeneralJournal.Amount = 0;
-            tempGeneralJournal.CrDeAmount = 0;
-            tempGeneralJournal.DebitAmount = 0;
-            tempGeneralJournal.CreditAmount = 0;
+            return GetTempGJList(tempGJReq)?.FirstOrDefault();
+        }
 
-            var account = _chartOfAccountService.CheckAccount(tempGeneralJournal.AccountCode);
+        public TempGeneralJournal GetById(int tempGJId)
+        {
+            return Uow.TempGeneralJournals.GetById(tempGJId);
+        }
 
-            tempGeneralJournal.AccountCode = account.AccountCode;
+        public TempGeneralJournalList CreateTempGJ(TempGeneralJournal tempGJ)
+        {
+            tempGJ.EmpId = UserContext.EmpId;
+            tempGJ.Amount = 0;
+            tempGJ.CrDeAmount = 0;
+            tempGJ.DebitAmount = 0;
+            tempGJ.CreditAmount = 0;
 
-            Uow.TempGeneralJournals.Add(tempGeneralJournal);
+            var account = _accountService.CheckAccount(tempGJ.AccountCode);
+
+            tempGJ.AccountCode = account.AccountCode;
+
+            Uow.TempGeneralJournals.Add(tempGJ);
             Uow.Commit();
 
-            return GetTempGeneralJournalDetails(tempGeneralJournal.GJId, tempGeneralJournal.EmployeeId, tempGeneralJournal.TempGJId);
+            var tempGJReq = new TempGJReq
+            {
+                TempGJId = tempGJ.TempGJId,
+                GJId = tempGJ.GJId
+            };
+
+            return GetTempGJ(tempGJReq);
         }
 
-        public TempGeneralJournal UpdateTempGeneralJournal(TempGeneralJournal tempGeneralJournal)
+        public TempGeneralJournalList UpdateTempGJ(TempGeneralJournal tempGJ)
         {
-            return GetTempGeneralJournalDetails(tempGeneralJournal.TempGJId, tempGeneralJournal.EmployeeId, tempGeneralJournal.TempGJId).ToList().FirstOrDefault();
+            var existing = GetById(tempGJ.TempGJId);
+
+            if (existing != null)
+            {
+                existing.Notes = tempGJ.Notes;
+                existing.Amount = tempGJ.Amount;
+
+                if (existing.Amount != 0)
+                {
+                    var crDeAmount = Uow.ChartOfAccounts.GetCrDeAmount(existing.AccountCode, existing.Amount);
+
+                    existing.CrDeAmount = crDeAmount.CrDeAmount;
+                    existing.DebitAmount = crDeAmount.DebitAmount;
+                    existing.CreditAmount = crDeAmount.CreditAmount;
+                }
+
+                Uow.TempGeneralJournals.Update(existing);
+                Uow.Commit();
+            }
+
+            var tempGJReq = new TempGJReq
+            {
+                TempGJId = tempGJ.TempGJId,
+                GJId = tempGJ.GJId
+            };
+
+            return GetTempGJ(tempGJReq);
         }
 
-        public void DeleteTempGeneralJournal(int id)
+        public void DeleteTempGJ(int tempGJId)
         {
-            Uow.TempGeneralJournals.RemoveById(id);
+            Uow.TempGeneralJournals.RemoveById(tempGJId);
             Uow.Commit();
         }
     }

@@ -19,11 +19,10 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TempGJId { get; set; }
 
-        public int EmployeeId { get; set; }
+        public int EmpId { get; set; }
 
         public int GJId { get; set; }
 
-        [Required(ErrorMessage = "Select AcctCode")]
         public string? AccountCode { get; set; }
 
         public int? PayeeId { get; set; }

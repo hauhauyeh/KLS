@@ -9,6 +9,10 @@ namespace KLS.Contract.Interfaces
 {
     public interface IGeneralJournalRepository : IRepository<GeneralJournal>
     {
-        IQueryable<GeneralJournal> GetAllGeneralJournal(GeneralJournalReq generalJournalReq);
+        IQueryable<GeneralJournal> GetAllGeneralJournals(GJReq gJReq);
+
+        int SaveGeneralJournal(GeneralJournal generalJournal);
+
+        void InjectGeneralJournal(int gjId);
     }
 }

@@ -9,12 +9,14 @@ namespace KLS.Services.Interfaces
 {
     public interface ITempGeneralJournalService
     {
-        IQueryable<TempGeneralJournal> GetTempGeneralJournalDetails(int gjId, int employeeId, int? tempGJId);
+        IEnumerable<TempGeneralJournalList>? GetTempGJList(TempGJReq tempGJReq);
 
-        IQueryable<TempGeneralJournal> CreateTempGeneralJournal(TempGeneralJournal tempGeneralJournal);
+        TempGeneralJournal GetById(int tempGJId);
 
-        TempGeneralJournal UpdateTempGeneralJournal(TempGeneralJournal tempGeneralJournal);
+        TempGeneralJournalList CreateTempGJ(TempGeneralJournal tempGJ);
 
-        void DeleteTempGeneralJournal(int id);
+        TempGeneralJournalList UpdateTempGJ(TempGeneralJournal tempGJ);
+
+        void DeleteTempGJ(int tempGJId);
     }
 }

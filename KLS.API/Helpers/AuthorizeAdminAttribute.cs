@@ -15,20 +15,19 @@ namespace KLS.API.Helpers
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            if (context.HttpContext.Items["User"] != null)
+            if (context.HttpContext.Items["CurrentUser"] != null)
             {
-                var user = JsonConvert.DeserializeObject<User>(context.HttpContext.Items["User"].ToString());
-
+                var CurrentUser = context.HttpContext.Items["CurrentUser"] as User;
                 var refreshToken = context.HttpContext.Items["RefreshToken"]?.ToString();
 
-                if (user == null || refreshToken != user?.RefToken)
+                if (CurrentUser == null || refreshToken != CurrentUser?.RefToken)
                     context.Result = new UnsupportedMediaTypeResult();
 
                 if (!IsProtectedAction(context))
                     return;
 
                 //only employee can access api
-                if (!user.PayeeId.ToString().StartsWith('1'))
+                if (!CurrentUser.PayeeId.ToString().StartsWith('1'))
                     context.Result = new UnsupportedMediaTypeResult();
 
                 var isAdmin = Convert.ToBoolean(context.HttpContext.Items["IsAdmin"]?.ToString());

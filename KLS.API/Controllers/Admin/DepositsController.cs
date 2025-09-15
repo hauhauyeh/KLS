@@ -1,0 +1,41 @@
+﻿using KLS.API.Helpers;
+using KLS.Models;
+using KLS.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace KLS.API.Controllers.Admin
+{
+    [AuthorizeAdmin]
+    [Route("api/admin/[controller]")]
+    [Display(Name = "Deposit Management", GroupName = "Customer")]
+    public class DepositsController : BaseController
+    {
+        #region --- Member(s) ---
+
+        private readonly ITransferFundService _transferFundService;
+
+        #endregion
+
+        #region --- Constructor(s) ---
+
+        public DepositsController(ITransferFundService transferFundService)
+        {
+            _transferFundService = transferFundService;
+        }
+
+        #endregion
+
+        #region --- Method(s) ---
+
+        [HttpGet]
+        [DisplayName("List Deposit")]
+        public IActionResult List([FromQuery] DepositReq depositReq)
+        {
+            return Ok(_transferFundService.GetAllDeposits(depositReq));
+        }
+
+        #endregion
+    }
+}

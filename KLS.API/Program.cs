@@ -61,8 +61,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseCors("corsapp");
-app.UseAuthentication();
+
 app.UseMiddleware<JWTMiddleware>();
+app.UseMiddleware<UserContextMiddleware>();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

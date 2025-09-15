@@ -19,12 +19,9 @@ namespace KLS.Services
         {
         }
 
-        public IEnumerable<Payee> GetAllEmployees()
+        public IEnumerable<EmployeeList> GetAllEmployees(EmpReq empReq)
         {
-            return Uow.Payees
-                .GetAll().Include(e => e.Employee)
-                .OrderByDescending(e => e.PayeeId)
-                .ToList();
+            return Uow.Employees.GetAllEmployees(empReq);
         }
 
         public EmployeeDTO? GetById(int payeeId)
@@ -208,7 +205,12 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        public int GetMaxEmployeeId()
+        public IEnumerable<PayeeSearch>? SearchEmployee(PayeeSearchReq searchReq)
+        {
+            return Uow.Employees.SearchEmployee(searchReq);
+        }
+
+        private int GetMaxEmployeeId()
         {
             var maxId = Uow.Employees.GetAll().Select(p => (int?)p.PayeeId).Max();
             return (maxId ?? 100000) + 1;

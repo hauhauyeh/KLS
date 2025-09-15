@@ -22,30 +22,16 @@ namespace KLS.Models
 
         public bool IsCount { get; set; }
 
-        //public bool? Status { get; set; }
+        public DateOnly? StartDate { get; set; }
 
-        //public string? Filterby { get; set; }
+        public DateOnly? EndDate { get; set; }
 
-        //public string? Content { get; set; }
+        public int? Id { get; set; }
 
-        //public string? Sortby { get; set; }
+        public string? Filterby { get; set; }
 
-        //public bool IsCount { get; set; }
+        public string? SortField { get; set; }
 
-        //public DateTime? StartDate { get; set; }
-
-        //public DateTime? EndDate { get; set; }
-
-        //public int? EmpId { get; set; }
-
-        //public int? PayeeId { get; set; }
-
-        //public string? AcctCode { get; set; }
-
-        //public string? PmtMethod { get; set; }
-
-        //public string? Category { get; set; }
-
-        //public bool IsPaging { get; set; }
+        public string? SortOrder { get; set; }
     }
 }

@@ -103,6 +103,20 @@ namespace KLS.API.Controllers.Admin
             return Ok(_accountTypeService.GetAllAccountTypes());
         }
 
+
+        [HttpGet("Search/{term}")]
+        public IActionResult SearchAccount(string term)
+        {
+            return Ok(_chartOfAccountService.SearchAccount(term));
+        }
+
+
+        [HttpGet("BankCash")]
+        public IActionResult GetBankCashAccounts()
+        {
+            return Ok(_chartOfAccountService.GetBankCashAccounts());
+        }
+
         #endregion
     }
 }

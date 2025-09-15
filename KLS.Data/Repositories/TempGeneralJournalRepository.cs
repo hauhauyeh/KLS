@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 
 using KLS.Models;
@@ -19,15 +20,15 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<TempGeneralJournal> GetTempGeneralJournalDetails(int gjId, int employeeId, int? tempGJId)
+        public IQueryable<TempGeneralJournalList>? GetTempGJList(TempGJReq tempGJReq)
         {
-            var EmployeeIdParam = new SqlParameter("@EmployeeId", employeeId);
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            var GJIdParam = new SqlParameter("@GJId", gjId);
+            var GJIdParam = new SqlParameter("@GJId", tempGJReq.GJId);
 
-            var TempGJIdParam = tempGJId.HasValue ? new SqlParameter("@TempGJId", tempGJId) : new SqlParameter("@TempGJId", DBNull.Value);
+            var TempGJIdParam = tempGJReq.TempGJId.HasValue ? new SqlParameter("@TempGJId", tempGJReq.TempGJId) : new SqlParameter("@TempGJId", DBNull.Value);
 
-            return DbContext.TempGeneralJournals.FromSqlRaw("[TempGeneralJournals_GetList] @EmployeeId,@GJId,@TempGJId", EmployeeIdParam, GJIdParam, TempGJIdParam);
+            return DbContext.TempGeneralJournalList.FromSqlRaw("[TempGeneralJournal_GetList] @EmpId,@GJId,@TempGJId", EmpIdParam, GJIdParam, TempGJIdParam);
         }
     }
 }

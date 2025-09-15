@@ -10,9 +10,8 @@ namespace KLS.Models
 {
     public class TempGeneralJournalList
     {
+        [Key]
         public int TempGJId { get; set; }
-
-        public int EmployeeId { get; set; }
 
         public int GJId { get; set; }
 

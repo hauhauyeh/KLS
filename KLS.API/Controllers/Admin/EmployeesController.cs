@@ -32,9 +32,9 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Employees")]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] EmpReq empReq)
         {
-            return Ok(_employeeService.GetAllEmployees());
+            return Ok(_employeeService.GetAllEmployees(empReq));
         }
 
 
@@ -89,6 +89,13 @@ namespace KLS.API.Controllers.Admin
             _employeeService.DeleteEmployee(id);
 
             return Ok();
+        }
+
+
+        [HttpGet("Search")]
+        public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
+        {
+            return Ok(_employeeService.SearchEmployee(searchReq));
         }
 
         #endregion

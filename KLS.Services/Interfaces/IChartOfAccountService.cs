@@ -24,5 +24,9 @@ namespace KLS.Services.Interfaces
         void DeleteAccount(int accountId);
 
         ChartOfAccount? CheckAccount(string search);
+
+        IEnumerable<AccountDTO>? SearchAccount(string term);
+
+        IEnumerable<AccountDTO>? GetBankCashAccounts();
     }
 }

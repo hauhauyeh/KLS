@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,10 +16,10 @@ namespace KLS.Models
         }
 
         [Key]
-
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int GJId { get; set; }
 
-        public int GJNumber { get; set; }
+        public int GJNum { get; set; }
 
         public DateOnly? GJDate { get; set; }
 

@@ -44,6 +44,18 @@ namespace KLS.Contract.Interfaces
 
         IItemCategoryRepository ItemCategories { get; }
 
+        ITransferFundRepository TransferFunds { get; }
+
+        ITransactionRepository Transactions { get; }
+
+        ITransactionDetailRepository TransactionDetails { get; }
+
+        ISourceDocTypeRepository SourceDocTypes { get; }
+
+        IItemStorageRepository ItemStorages { get; }
+
+        ITimesheetRepository Timesheets { get; }
+
         void Commit();
     }
 }

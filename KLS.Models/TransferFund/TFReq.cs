@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class GeneralJournalReq : PagingRequest
+    public class TFReq : PagingRequest
     {
-        public DateOnly? GJDate { get; set; }
     }
 }

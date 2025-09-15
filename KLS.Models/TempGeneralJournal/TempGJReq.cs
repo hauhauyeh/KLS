@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class TempGeneralJournalReq
+    public class TempGJReq
     {
-        public int TempGJId { get; set; }
-
-        public int EmployeeId { get; set; }
+        public int? TempGJId { get; set; }
 
         public int GJId { get; set; }
     }

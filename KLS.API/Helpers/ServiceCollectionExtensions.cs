@@ -28,6 +28,9 @@ namespace KLS.API.Helpers
             services.AddScoped<IGeneralJournalService, GeneralJournalService>();
             services.AddScoped<ITempGeneralJournalService, TempGeneralJournalService>();
             services.AddScoped<IItemCategoryService, ItemCategoryService>();
+            services.AddScoped<ITransferFundService, TransferFundService>();
+            services.AddScoped<ITransactionService, TransactionService>();
+            services.AddScoped<ISourceDocTypeService, SourceDocTypeService>();
 
             return services;
         }

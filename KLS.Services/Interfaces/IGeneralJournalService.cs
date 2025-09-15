@@ -9,6 +9,16 @@ namespace KLS.Services.Interfaces
 {
     public interface IGeneralJournalService
     {
-        PagingResponse<GeneralJournal> GetAllGeneralJournal(GeneralJournalReq generalJournalReq);
+        PagingResponse<GeneralJournal> GetAllGeneralJournals(GJReq gjReq);
+
+        GeneralJournal GetById(int gjId);
+
+        GeneralJournal SaveGeneralJournal(GeneralJournal generalJournal);
+
+        void DeleteGeneralJournal(int gjId);
+
+        void UpdateNotes(GeneralJournal gj);
+
+        void InjectGeneralJournal(int gjId);
     }
 }
