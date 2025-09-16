@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Data.Repositories
 {
-    public class UserRepository : KLSRepository<User>, IUserRepository
+    public class UserAccountRepository : KLSRepository<UserAccount>, IUserAccountRepository
     {
-        public UserRepository(KLSDBContext dbContext) : base(dbContext)
+        public UserAccountRepository(KLSDBContext dbContext) : base(dbContext)
         {
         }
     }

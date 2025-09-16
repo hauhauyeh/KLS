@@ -14,13 +14,13 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IEmployeeService _employeeService;
-        private readonly IUserService _userService;
+        private readonly IUserAccountService _userService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public EmployeesController(IEmployeeService employeeService, IUserService userService)
+        public EmployeesController(IEmployeeService employeeService, IUserAccountService userService)
         {
             _employeeService = employeeService;
             _userService = userService;
@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Employees")]
-        public IActionResult GetAll([FromQuery] EmpReq empReq)
+        public IActionResult List([FromQuery] EmpReq empReq)
         {
             return Ok(_employeeService.GetAllEmployees(empReq));
         }

@@ -31,7 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Transfer Fund")]
-        public IActionResult GetAll([FromQuery] TFReq tFReq)
+        public IActionResult List([FromQuery] TFReq tFReq)
         {
             return Ok(_transferFundService.GetAllTransferFunds(tFReq));
         }

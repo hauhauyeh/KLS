@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Storage")]
-        public IActionResult GetAllStorages()
+        public IActionResult List()
         {
             return Ok(_itemStorageService.GetAllStorages());
         }

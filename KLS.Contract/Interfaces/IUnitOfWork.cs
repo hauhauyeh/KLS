@@ -14,7 +14,7 @@ namespace KLS.Contract.Interfaces
 
         IPayeeRepository Payees { get; }
 
-        IUserRepository Users { get; }
+        IUserAccountRepository UserAccounts { get; }
 
         IEmployeeRepository Employees { get; }
 
@@ -28,9 +28,9 @@ namespace KLS.Contract.Interfaces
 
         ITruckRepository Trucks { get; }
 
-        IChartOfAccountTypeRepository ChartOfAccountTypes { get; }
+        IAccountTypeRepository AccountTypes { get; }
 
-        IChartOfAccountRepository ChartOfAccounts { get; }
+        IAccountRepository Accounts { get; }
 
         IEmailLogRepository EmailLogs { get; }
 

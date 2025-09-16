@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Terms")]
-        public IActionResult GetAllTerms()
+        public IActionResult List()
         {
             return Ok(_termService.GetAllTerms());
         }
@@ -54,7 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Term")]
-        public IActionResult CreateTerm([FromBody] Term term)
+        public IActionResult Create([FromBody] Term term)
         {
             if (_termService.ExistsName(term))
                 return Conflict("TermName already exists");
@@ -65,7 +65,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Term")]
-        public IActionResult UpdateTerm([FromBody] Term term)
+        public IActionResult Update([FromBody] Term term)
         {
             if (_termService.ExistsName(term))
                 return Conflict("TermName already exists");
@@ -76,7 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Term")]
-        public IActionResult DeleteTerm(int id)
+        public IActionResult Delete(int id)
         {
             if (_termService.TermUsed(id))
                 return Conflict("You can't delete. it is assigned to payee.");

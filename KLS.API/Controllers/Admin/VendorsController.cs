@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Vendor Management", GroupName = "Admin")]
     public class VendorsController : BaseController
@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Vendors")]
-        public IActionResult GetAllVendors()
+        public IActionResult List()
         {
             return Ok(_vendorService.GetAllVendors());
         }
@@ -47,7 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Vendor")]
-        public IActionResult CreateVendor([FromBody] VendorDTO vendorDTO)
+        public IActionResult Create([FromBody] VendorDTO vendorDTO)
         {
             if (_vendorService.VendorExists(vendorDTO))
                 return Conflict("Vendor name already exists.");
@@ -60,7 +60,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Vendor")]
-        public IActionResult UpdateVendor([FromBody] VendorDTO vendorDTO)
+        public IActionResult Update([FromBody] VendorDTO vendorDTO)
         {
             if (_vendorService.VendorExists(vendorDTO))
                 return Conflict("Vendor name already exists.");
@@ -73,7 +73,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Vendor")]
-        public IActionResult DeleteVendor(int id)
+        public IActionResult Delete(int id)
         {
             _vendorService.DeleteVendor(id);
 

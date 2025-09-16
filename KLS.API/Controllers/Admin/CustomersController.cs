@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Customers")]
-        public IActionResult GetAllCustomers()
+        public IActionResult List()
         {
             return Ok(_customerService.GetAllCustomers());
         }
@@ -45,7 +45,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Customer")]
-        public IActionResult CreateCustomer([FromBody] CustomerDTO customerDTO)
+        public IActionResult Create([FromBody] CustomerDTO customerDTO)
         {
             if (_customerService.CustomerExists(customerDTO))
                 return Conflict("Customer name already exists.");
@@ -58,7 +58,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Customer")]
-        public IActionResult UpdateCustomer([FromBody] CustomerDTO customerDTO)
+        public IActionResult Update([FromBody] CustomerDTO customerDTO)
         {
             if (_customerService.CustomerExists(customerDTO))
                 return Conflict("Customer name already exists.");
@@ -71,7 +71,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Customer")]
-        public IActionResult DeleteCustomer(int id)
+        public IActionResult Delete(int id)
         {
             _customerService.DeleteCustomer(id);
 

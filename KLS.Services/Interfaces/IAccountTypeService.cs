@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Interfaces
 {
-    public interface IChartOfAccountTypeService
+    public interface IAccountTypeService
     {
         IEnumerable<AccountTypeGroup>? GetAllAccountTypes();
 
-        ChartOfAccountType GetById(int typeId);
+        AccountType GetById(int typeId);
     }
 }

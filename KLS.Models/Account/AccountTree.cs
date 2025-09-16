@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class ChartAccountTree
+    public class AccountTree
     {
         [Key]
         public int AccountId { get; set; }
 
-        public string? AccountType { get; set; }
+        public string? TypeName { get; set; }
 
         public string? CatName { get; set; }
 
@@ -24,7 +24,7 @@ namespace KLS.Models
 
         public bool IsInactive { get; set; }
 
-        public IEnumerable<ChartAccountTree>? ChildAccounts { get; set; }
+        public IEnumerable<AccountTree>? ChildAccounts { get; set; }
 
         public bool HasChild { get { return ChildAccounts != null && ChildAccounts.Any(); } }
     }

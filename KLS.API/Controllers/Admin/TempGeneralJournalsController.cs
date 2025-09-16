@@ -15,13 +15,13 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly ITempGeneralJournalService _tempGJService;
-        private readonly IChartOfAccountService _accountService;
+        private readonly IAccountService _accountService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public TempGeneralJournalsController(ITempGeneralJournalService tempGJService, IChartOfAccountService accountService)
+        public TempGeneralJournalsController(ITempGeneralJournalService tempGJService, IAccountService accountService)
         {
             _tempGJService = tempGJService;
             _accountService = accountService;
@@ -39,7 +39,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        public IActionResult CreateTempGJ([FromBody] TempGeneralJournal tempGJ)
+        public IActionResult Create([FromBody] TempGeneralJournal tempGJ)
         {
             if (_accountService.CheckAccount(tempGJ.AccountCode) == null)
                 return Conflict("Account is not found");
@@ -49,7 +49,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut]
-        public IActionResult UpdateTempGJ([FromBody] TempGeneralJournal tempGJ)
+        public IActionResult Update([FromBody] TempGeneralJournal tempGJ)
         {
             return Ok(_tempGJService.UpdateTempGJ(tempGJ));
         }

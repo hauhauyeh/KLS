@@ -8,9 +8,6 @@ namespace KLS.Models
 {
     public class EmailLogReq : PagingRequest
     {
-        public DateOnly? EmailDate { get; set; }
-
-        public string? Filterby { get; set; }
-
+        
     }
 }

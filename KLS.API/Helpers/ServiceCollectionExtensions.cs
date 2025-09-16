@@ -13,7 +13,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IUserRoleService, UserRoleService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();
-            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IUserAccountService, UserAccountService>();
 
             services.AddScoped<IHolidayService, HolidayService>();
             services.AddScoped<IPayeeService, PayeeService>();
@@ -21,8 +21,8 @@ namespace KLS.API.Helpers
             services.AddScoped<ITermService, TermService>();
             services.AddScoped<ITruckService, TruckService>();
             services.AddScoped<IVendorService, VendorService>();
-            services.AddScoped<IChartOfAccountService, ChartOfAccountService>();
-            services.AddScoped<IChartOfAccountTypeService, ChartOfAccountTypeService>();
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IAccountTypeService, AccountTypeService>();
             services.AddScoped<IEmailLogService, EmailLogService>();
             services.AddScoped<IRecalculationLogService, RecalculationLogService>();
             services.AddScoped<IGeneralJournalService, GeneralJournalService>();

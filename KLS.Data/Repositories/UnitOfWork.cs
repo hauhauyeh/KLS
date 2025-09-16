@@ -42,7 +42,7 @@ namespace KLS.Data.Repositories
 
         public IPayeeRepository Payees { get { return new PayeeRepository(DbContext); } }
 
-        public IUserRepository Users { get { return new UserRepository(DbContext); } }
+        public IUserAccountRepository UserAccounts { get { return new UserAccountRepository(DbContext); } }
 
         public IEmployeeRepository Employees { get { return new EmployeeRepository(DbContext); } }
 
@@ -54,9 +54,9 @@ namespace KLS.Data.Repositories
 
         public ITruckRepository Trucks { get { return new TruckRepository(DbContext); } }
 
-        public IChartOfAccountTypeRepository ChartOfAccountTypes { get { return new ChartOfAccountTypeRepository(DbContext); } }
+        public IAccountTypeRepository AccountTypes { get { return new AccountTypeRepository(DbContext); } }
 
-        public IChartOfAccountRepository ChartOfAccounts { get { return new ChartOfAccountRepository(DbContext); } }
+        public IAccountRepository Accounts { get { return new AccountRepository(DbContext); } }
 
         public IEmailLogRepository EmailLogs { get { return new EmailLogRepository(DbContext); } }
 

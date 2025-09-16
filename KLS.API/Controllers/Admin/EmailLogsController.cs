@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List EmailLogs")]
-        public IActionResult GetAllEmailLogs([FromQuery] EmailLogReq emailLogReq)
+        public IActionResult List([FromQuery] EmailLogReq emailLogReq)
         {
             return Ok(_emailLogService.GetEmailLogs(emailLogReq));
         }

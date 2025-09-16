@@ -9,17 +9,17 @@ namespace KLS.API.Controllers.Admin
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "ChartOfAccountType Management", GroupName = "Admin")]
-    public class ChartOfAccountTypesController : BaseController
+    public class AccountTypesController : BaseController
     {
         #region --- Member(s) ---
 
-        private readonly IChartOfAccountTypeService _accountTypeService;
+        private readonly IAccountTypeService _accountTypeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ChartOfAccountTypesController(IChartOfAccountTypeService chartOfAccountTypeService)
+        public AccountTypesController(IAccountTypeService chartOfAccountTypeService)
         {
             _accountTypeService = chartOfAccountTypeService;
         }

@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
@@ -69,6 +70,8 @@ namespace KLS.Services
 
         public ItemCategory CreateCategory(ItemCategory itemCategory)
         {
+            itemCategory.Slug = SlugHelper.GenerateSlug(itemCategory.DisplayName);
+
             Uow.ItemCategories.Add(itemCategory);
             Uow.Commit();
 
@@ -91,6 +94,7 @@ namespace KLS.Services
                 existing.ImageUrl = itemCategory.ImageUrl;
                 existing.IsInactive = itemCategory.IsInactive;
                 existing.SortOrder = itemCategory.SortOrder;
+                existing.Slug = SlugHelper.GenerateSlug(itemCategory.DisplayName);
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 Uow.ItemCategories.Update(existing);

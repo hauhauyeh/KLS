@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IChartOfAccountTypeRepository : IRepository<ChartOfAccountType>
+    public interface IAccountTypeRepository : IRepository<AccountType>
     {
 
     }

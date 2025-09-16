@@ -13,9 +13,9 @@ namespace KLS.Services
 {
     public class TempGeneralJournalService : BaseService, ITempGeneralJournalService
     {
-        private IChartOfAccountService _accountService;
+        private Interfaces.IAccountService _accountService;
 
-        public TempGeneralJournalService(IUnitOfWork uow, IChartOfAccountService AccountService) : base(uow)
+        public TempGeneralJournalService(IUnitOfWork uow, Interfaces.IAccountService AccountService) : base(uow)
         {
             _accountService = AccountService;
         }
@@ -70,7 +70,7 @@ namespace KLS.Services
 
                 if (existing.Amount != 0)
                 {
-                    var crDeAmount = Uow.ChartOfAccounts.GetCrDeAmount(existing.AccountCode, existing.Amount);
+                    var crDeAmount = Uow.Accounts.GetCrDeAmount(existing.AccountCode, existing.Amount);
 
                     existing.CrDeAmount = crDeAmount.CrDeAmount;
                     existing.DebitAmount = crDeAmount.DebitAmount;

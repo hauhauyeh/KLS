@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Trucks")]
-        public IActionResult GetAll()
+        public IActionResult List()
         {
             return Ok(_truckService.GetAllTrucks());
         }
@@ -54,7 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Truck")]
-        public IActionResult CreateTruck([FromBody] Truck truck)
+        public IActionResult Create([FromBody] Truck truck)
         {
             if (_truckService.ExistsNumber(truck))
                 return Conflict("TruckNumber already exists");
@@ -65,7 +65,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Truck")]
-        public IActionResult UpdateTruck([FromBody] Truck truck)
+        public IActionResult Update([FromBody] Truck truck)
         {
             if (_truckService.ExistsNumber(truck))
                 return Conflict("TruckNumber already exists");
@@ -76,7 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Truck")]
-        public IActionResult DeleteTruck(int id)
+        public IActionResult Delete(int id)
         {
             //if (_truckService.TermUsed(id))
             //    return Conflict("You can't delete. it is assigned to payee.");

@@ -11,18 +11,18 @@ namespace KLS.API.Controllers.Admin
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "ChartOfAccount Management", GroupName = "Admin")]
-    public class ChartOfAccountsController : BaseController
+    public class AccountsController : BaseController
     {
         #region --- Member(s) ---
 
-        private readonly IChartOfAccountService _chartOfAccountService;
-        private readonly IChartOfAccountTypeService _accountTypeService;
+        private readonly Services.Interfaces.IAccountService _chartOfAccountService;
+        private readonly IAccountTypeService _accountTypeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ChartOfAccountsController(IChartOfAccountService chartOfAccountService, IChartOfAccountTypeService accountTypeService)
+        public AccountsController(Services.Interfaces.IAccountService chartOfAccountService, IAccountTypeService accountTypeService)
         {
             _chartOfAccountService = chartOfAccountService;
             _accountTypeService = accountTypeService;
@@ -49,7 +49,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Account")]
-        public IActionResult CreateAccount([FromBody] ChartOfAccount chartOfAccount)
+        public IActionResult Create([FromBody] Account chartOfAccount)
         {
             //add @ sign if not exist
             if (chartOfAccount?.AccountCode?[0] != '@')
@@ -69,7 +69,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Account")]
-        public IActionResult UpdateAccount([FromBody] ChartOfAccount chartOfAccount)
+        public IActionResult Update([FromBody] Account chartOfAccount)
         {
             //add @ sign if not exist
             if (chartOfAccount?.AccountCode?[0] != '@')
@@ -89,7 +89,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Account")]
-        public IActionResult DeleteAccount(int id)
+        public IActionResult Delete(int id)
         {
             _chartOfAccountService.DeleteAccount(id);
 

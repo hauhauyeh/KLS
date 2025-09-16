@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List General Journal")]
-        public IActionResult GetAll([FromQuery] GJReq gJReq)
+        public IActionResult List([FromQuery] GJReq gJReq)
         {
             return Ok(_gjService.GetAllGeneralJournals(gJReq));
         }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IChartOfAccountRepository : IRepository<ChartOfAccount>
+    public interface IAccountRepository : IRepository<Account>
     {
         IQueryable<AccountDTO> SearchAccount(string term);
 

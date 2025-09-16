@@ -12,7 +12,7 @@ namespace KLS.Models
         [Key]
         public int AccountId { get; set; }
 
-        public string? AccountType { get; set; }
+        public string? TypeName { get; set; }
 
         public string? CatName { get; set; }
 

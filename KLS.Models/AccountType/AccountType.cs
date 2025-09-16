@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class ChartOfAccountType
+    public class AccountType
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AccountTypeId { get; set; }
 
-        public string AccountType { get; set; }
+        public string TypeName { get; set; }
 
         public string? TypeNumber { get; set; }
 

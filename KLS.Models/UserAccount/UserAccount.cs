@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class User
+    public class UserAccount
     {
-        public User()
+        public UserAccount()
         {
             this.CreatedAt = DateTime.UtcNow;
         }

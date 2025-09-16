@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParam(emailLogReq);
 
-            return DbContext.EmailLogDTO.FromSqlRaw("[dbo].[EmailLog_GetAllList] @Pageno,@Pagesize,@EmailDate,@Search,@Filterby,@IsCount", param);
+            return DbContext.EmailLogDTO.FromSqlRaw("[dbo].[EmailLog_GetAllList] @Pageno,@Pagesize,@StartDate,@EndDate,@Search,@Filterby,@IsCount", param);
         }
 
         private static object[] BuildParam(EmailLogReq emailLogReq)
@@ -31,7 +31,8 @@ namespace KLS.Data.Repositories
             object[] param = {
                 new SqlParameter("@Pageno", emailLogReq.Pageno),
                 new SqlParameter("@Pagesize", emailLogReq.Pagesize),
-                emailLogReq.EmailDate.HasValue ? new SqlParameter("@EmailDate", emailLogReq.EmailDate) : new SqlParameter("@EmailDate", DBNull.Value),
+                emailLogReq.StartDate.HasValue ? new SqlParameter("@StartDate", emailLogReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+                emailLogReq.EndDate.HasValue ? new SqlParameter("@EndDate", emailLogReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
                 string.IsNullOrEmpty(emailLogReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", emailLogReq.Search),
                 string.IsNullOrEmpty(emailLogReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", emailLogReq.Filterby),
                 new SqlParameter("@IsCount", emailLogReq.IsCount)

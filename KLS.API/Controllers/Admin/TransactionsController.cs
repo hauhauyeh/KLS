@@ -34,7 +34,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Transaction")]
-        public IActionResult GetAll([FromQuery] TxReq txReq)
+        public IActionResult List([FromQuery] TxReq txReq)
         {
             return Ok(_transactionService.GetAllTransactions(txReq));
         }

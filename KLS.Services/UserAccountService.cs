@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 
 namespace KLS.Services
 {
-    public class UserService : BaseService, IUserService
+    public class UserAccountService : BaseService, IUserAccountService
     {
         private readonly IEmployeeService _employeeService;
         private readonly IJWTService _jWTService;
         private readonly ISystemSettingService _settingService;
         private readonly IUserRoleService _roleService;
 
-        public UserService(IUnitOfWork uow, IJWTService jWTService, IEmployeeService employeeService, ISystemSettingService settingService, IUserRoleService roleService) : base(uow)
+        public UserAccountService(IUnitOfWork uow, IJWTService jWTService, IEmployeeService employeeService, ISystemSettingService settingService, IUserRoleService roleService) : base(uow)
         {
             _jWTService = jWTService;
             _employeeService = employeeService;
@@ -27,32 +27,32 @@ namespace KLS.Services
             _roleService = roleService;
         }
 
-        public User? CheckEmpUsername(LoginReq loginReq)
+        public UserAccount? CheckEmpUsername(LoginReq loginReq)
         {
-            return Uow.Users
+            return Uow.UserAccounts
                 .Find(e => e.Username == loginReq.Username && !e.Inactive && e.PayeeId.ToString().StartsWith("1"))
                 .FirstOrDefault();
         }
 
-        public User GetById(int userId)
+        public UserAccount GetById(int userId)
         {
-            return Uow.Users.GetById(userId);
+            return Uow.UserAccounts.GetById(userId);
         }
 
         public bool UserNameExists(string username, int payeeId)
         {
-            return Uow.Users.Exists(c => c.Username.ToLower() == username.ToLower() && c.PayeeId != payeeId);
+            return Uow.UserAccounts.Exists(c => c.Username.ToLower() == username.ToLower() && c.PayeeId != payeeId);
         }
 
-        public void UpdateUser(User user)
+        public void UpdateUser(UserAccount user)
         {
             user.UpdatedAt = DateTime.UtcNow;
 
-            Uow.Users.Update(user);
+            Uow.UserAccounts.Update(user);
             Uow.Commit();
         }
 
-        public void UpdateToken(User user)
+        public void UpdateToken(UserAccount user)
         {
             var existing = GetById(user.UserId);
 
@@ -61,7 +61,7 @@ namespace KLS.Services
                 existing.RefToken = user.RefToken;
                 existing.RefTokenExpire = user.RefTokenExpire;
 
-                Uow.Users.Update(existing);
+                Uow.UserAccounts.Update(existing);
                 Uow.Commit();
             }
         }
@@ -121,7 +121,7 @@ namespace KLS.Services
             if (string.IsNullOrEmpty(userJson))
                 return new LoginResult { Success = false, ErrorMessage = "Invalid or expired token." };
 
-            var user = JsonSerializer.Deserialize<User>(userJson);
+            var user = JsonSerializer.Deserialize<UserAccount>(userJson);
             if (user == null)
                 return new LoginResult { Success = false, ErrorMessage = "User info malformed." };
 

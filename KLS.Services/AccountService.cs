@@ -13,25 +13,25 @@ using System.Threading.Tasks;
 
 namespace KLS.Services
 {
-    public class ChartOfAccountService : BaseService, IChartOfAccountService
+    public class AccountService : BaseService, Interfaces.IAccountService
     {
-        public ChartOfAccountService(IUnitOfWork uow) : base(uow)
+        public AccountService(IUnitOfWork uow) : base(uow)
         {
 
         }
 
-        public IEnumerable<ChartAccountTree> GetAccountsTree()
+        public IEnumerable<AccountTree> GetAccountsTree()
         {
-            var category = Uow.ChartOfAccountTypes.GetAll();
-            var accounts = Uow.ChartOfAccounts.GetAll();
+            var category = Uow.AccountTypes.GetAll();
+            var accounts = Uow.Accounts.GetAll();
 
             var lst = (from act in accounts
                        join cat in category on act.AccountTypeId equals cat.AccountTypeId
                        orderby cat.CatNumber, cat.CatName
-                       select new ChartAccountTree
+                       select new AccountTree
                        {
                            CatName = cat.CatName,
-                           AccountType = cat.AccountType,
+                           TypeName = cat.TypeName,
                            AccountId = act.AccountId,
                            AccountCode = act.AccountCode,
                            AccountName = act.AccountName,
@@ -42,12 +42,12 @@ namespace KLS.Services
             return BuildTree(lst, null);
         }
 
-        private IEnumerable<ChartAccountTree> BuildTree(IEnumerable<ChartAccountTree> accounts, int? parentId)
+        private IEnumerable<AccountTree> BuildTree(IEnumerable<AccountTree> accounts, int? parentId)
         {
-            return accounts.Where(x => x.ParentAccountId == parentId).Select(x => new ChartAccountTree
+            return accounts.Where(x => x.ParentAccountId == parentId).Select(x => new AccountTree
             {
                 AccountId = x.AccountId,
-                AccountType = x.AccountType,
+                TypeName = x.TypeName,
                 CatName = x.CatName,
                 AccountCode = x.AccountCode,
                 AccountName = x.AccountName,
@@ -57,40 +57,40 @@ namespace KLS.Services
             });
         }
 
-        public ChartOfAccount? GetById(int accountId)
+        public Account? GetById(int accountId)
         {
-            return Uow.ChartOfAccounts.GetById(accountId);
+            return Uow.Accounts.GetById(accountId);
         }
 
-        public ChartOfAccount? GetByAcctName(string acctname)
+        public Account? GetByAcctName(string acctname)
         {
-            return Uow.ChartOfAccounts.Find(c => c.AccountName == acctname && c.IsInactive == false).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountName == acctname && c.IsInactive == false).FirstOrDefault();
         }
 
-        public ChartOfAccount? GetByAcctCode(string acctcode)
+        public Account? GetByAcctCode(string acctcode)
         {
-            return Uow.ChartOfAccounts.Find(c => c.AccountCode == acctcode && c.IsInactive == false).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountCode == acctcode && c.IsInactive == false).FirstOrDefault();
         }
 
-        public bool AcctNameExists(ChartOfAccount account)
+        public bool AcctNameExists(Account account)
         {
-            return Uow.ChartOfAccounts.Exists(c => c.AccountName.ToLower() == account.AccountName.ToLower() && c.AccountId != account.AccountId);
+            return Uow.Accounts.Exists(c => c.AccountName.ToLower() == account.AccountName.ToLower() && c.AccountId != account.AccountId);
         }
 
-        public bool AcctCodeExists(ChartOfAccount account)
+        public bool AcctCodeExists(Account account)
         {
-            return Uow.ChartOfAccounts.Exists(c => c.AccountCode.ToLower() == account.AccountCode.ToLower() && c.AccountId != account.AccountId);
+            return Uow.Accounts.Exists(c => c.AccountCode.ToLower() == account.AccountCode.ToLower() && c.AccountId != account.AccountId);
         }
 
-        public ChartOfAccount CreateAccount(ChartOfAccount chartOfAccount)
+        public Account CreateAccount(Account chartOfAccount)
         {
-            Uow.ChartOfAccounts.Add(chartOfAccount);
+            Uow.Accounts.Add(chartOfAccount);
             Uow.Commit();
 
             return chartOfAccount;
         }
 
-        public ChartOfAccount? UpdateAccount(ChartOfAccount chartOfAccount)
+        public Account? UpdateAccount(Account chartOfAccount)
         {
             var existing = GetById(chartOfAccount.AccountId);
 
@@ -107,7 +107,7 @@ namespace KLS.Services
             if (!existing.IsDefaultAccount)
                 existing.AccountCode = chartOfAccount.AccountCode;
 
-            Uow.ChartOfAccounts.Update(existing);
+            Uow.Accounts.Update(existing);
             Uow.Commit();
 
             return existing;
@@ -115,11 +115,11 @@ namespace KLS.Services
 
         public void DeleteAccount(int id)
         {
-            Uow.ChartOfAccounts.RemoveById(id);
+            Uow.Accounts.RemoveById(id);
             Uow.Commit();
         }
 
-        public ChartOfAccount? CheckAccount(string search)
+        public Account? CheckAccount(string search)
         {
             var account = GetByAcctCode(search);
 
@@ -131,21 +131,21 @@ namespace KLS.Services
 
         public IEnumerable<AccountDTO>? SearchAccount(string term)
         {
-            return Uow.ChartOfAccounts.SearchAccount(term).ToList();
+            return Uow.Accounts.SearchAccount(term).ToList();
         }
 
         public IEnumerable<AccountDTO>? GetBankCashAccounts()
         {
-            var result = from a in Uow.ChartOfAccounts.GetAll()
-                         join at in Uow.ChartOfAccountTypes.GetAll()
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountTypes.GetAll()
                              on a.AccountTypeId equals at.AccountTypeId
-                         where at.AccountType == "Bank" || at.AccountType == "Cash"
+                         where at.TypeName == "Bank" || at.TypeName == "Cash"
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             AccountType = at.AccountType,
+                             TypeName = at.TypeName,
                              CatName = at.CatName,
                              IsInactive = a.IsInactive
                          };

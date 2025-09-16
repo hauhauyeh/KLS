@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KLS.Data.Repositories
 {
-    public class ChartOfAccountRepository : KLSRepository<ChartOfAccount>, IChartOfAccountRepository
+    public class AccountRepository : KLSRepository<Account>, IAccountRepository
     {
-        public ChartOfAccountRepository(KLSDBContext dbContext) : base(dbContext)
+        public AccountRepository(KLSDBContext dbContext) : base(dbContext)
         {
 
         }

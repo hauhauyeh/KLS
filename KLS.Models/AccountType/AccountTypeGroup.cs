@@ -8,8 +8,8 @@ namespace KLS.Models
 {
     public class AccountTypeGroup
     {
-        public string? AccountType { get; set; }
+        public string? TypeName { get; set; }
 
-        public IEnumerable<ChartOfAccountType>? DetailTypes { get; set; }
+        public IEnumerable<AccountType>? DetailTypes { get; set; }
     }
 }

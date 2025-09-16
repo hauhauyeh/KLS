@@ -31,31 +31,31 @@ namespace KLS.Data.DataContext
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Holiday>().ToTable("Holidays");
-            modelBuilder.Entity<UserRole>().ToTable("UserRoles");
-            modelBuilder.Entity<User>().ToTable("Users");
-            modelBuilder.Entity<Employee>().ToTable("Employees");
-            modelBuilder.Entity<Customer>().ToTable("Customers");
-            modelBuilder.Entity<Vendor>().ToTable("Vendors");
-            modelBuilder.Entity<Term>().ToTable("Terms");
-            modelBuilder.Entity<Truck>().ToTable("Trucks");
-            modelBuilder.Entity<ChartOfAccountType>().ToTable("ChartOfAccountTypes");
-            modelBuilder.Entity<ChartOfAccount>().ToTable("ChartOfAccounts");
-            modelBuilder.Entity<EmailLog>().ToTable("EmailLogs");
-            modelBuilder.Entity<RecalculationLog>().ToTable("RecalculationLogs");
-            modelBuilder.Entity<GeneralJournal>().ToTable("GeneralJournals");
-            modelBuilder.Entity<GeneralJournalDetail>().ToTable("GeneralJournalDetails");
-            modelBuilder.Entity<TempGeneralJournal>().ToTable("TempGeneralJournals");
-            modelBuilder.Entity<ItemCategory>().ToTable("ItemCategories");
-            modelBuilder.Entity<SystemSetting>().ToTable("SystemSettings");
-            modelBuilder.Entity<TransferFund>().ToTable("TransferFunds");
-            modelBuilder.Entity<Transaction>().ToTable("Transactions");
-            modelBuilder.Entity<TransactionDetail>().ToTable("TransactionDetails");
-            modelBuilder.Entity<SourceDocType>().ToTable("SourceDocTypes");
-            modelBuilder.Entity<ItemStorage>().ToTable("ItemStorages");
-            modelBuilder.Entity<Timesheet>().ToTable("Timesheets");
+            modelBuilder.Entity<Holiday>().ToTable("Holiday");
+            modelBuilder.Entity<UserRole>().ToTable("UserRole");
+            modelBuilder.Entity<UserAccount>().ToTable("UserAccount");
+            modelBuilder.Entity<Employee>().ToTable("Employee");
+            modelBuilder.Entity<Customer>().ToTable("Customer");
+            modelBuilder.Entity<Vendor>().ToTable("Vendor");
+            modelBuilder.Entity<Term>().ToTable("Term");
+            modelBuilder.Entity<Truck>().ToTable("Truck");
+            modelBuilder.Entity<AccountType>().ToTable("AccountType");
+            modelBuilder.Entity<Account>().ToTable("Account");
+            modelBuilder.Entity<EmailLog>().ToTable("EmailLog");
+            modelBuilder.Entity<RecalculationLog>().ToTable("RecalculationLog");
+            modelBuilder.Entity<GeneralJournal>().ToTable("GeneralJournal");
+            modelBuilder.Entity<GeneralJournalDetail>().ToTable("GeneralJournalDetail");
+            modelBuilder.Entity<TempGeneralJournal>().ToTable("TempGeneralJournal");
+            modelBuilder.Entity<ItemCategory>().ToTable("ItemCategory");
+            modelBuilder.Entity<SystemSetting>().ToTable("SystemSetting");
+            modelBuilder.Entity<TransferFund>().ToTable("TransferFund");
+            modelBuilder.Entity<Transaction>().ToTable("TransactionJournal");
+            modelBuilder.Entity<TransactionDetail>().ToTable("TransactionJournalDetail");
+            modelBuilder.Entity<SourceDocType>().ToTable("SourceDocType");
+            modelBuilder.Entity<ItemStorage>().ToTable("ItemStorage");
+            modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
 
-            modelBuilder.Entity<Payee>().ToTable("Payees");
+            modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
             modelBuilder.Entity<Payee>().Property(c => c.Id).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
         }
@@ -64,11 +64,11 @@ namespace KLS.Data.DataContext
 
         public DbSet<Holiday> Holidays { get; set; }
 
-        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<UserRole> Roles { get; set; }
 
         public DbSet<Payee> Payees { get; set; }
 
-        public DbSet<User> Users { get; set; }
+        public DbSet<UserAccount> Users { get; set; }
 
         public DbSet<Employee> Employees { get; set; }
 
@@ -80,9 +80,9 @@ namespace KLS.Data.DataContext
 
         public DbSet<Truck> Trucks { get; set; }
 
-        public DbSet<ChartOfAccountType> ChartOfAccountTypes { get; set; }
+        public DbSet<AccountType> AccountTypes { get; set; }
 
-        public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
+        public DbSet<Account> Accounts { get; set; }
 
         public DbSet<EmailLog> EmailLogs { get; set; }
 

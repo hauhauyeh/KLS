@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "ItemCategory Management", GroupName = "Admin")]
     public class ItemCategoriesController : BaseController
@@ -31,7 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Category")]
-        public IActionResult GetAll()
+        public IActionResult List()
         {
             return Ok(_itemCategoryService.GetAllCategoryTree());
         }
@@ -53,7 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Category")]
-        public IActionResult CreateCategory([FromBody] ItemCategory itemCategory)
+        public IActionResult Create([FromBody] ItemCategory itemCategory)
         {
             if (_itemCategoryService.NameExists(itemCategory))
                 return Conflict("Category already exists");
@@ -64,7 +65,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Category")]
-        public IActionResult UpdateCategory([FromBody] ItemCategory itemCategory)
+        public IActionResult Update([FromBody] ItemCategory itemCategory)
         {
             if (_itemCategoryService.NameExists(itemCategory))
                 return Conflict("Category already exists");
@@ -75,7 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Category")]
-        public IActionResult DeleteCategory(int id)
+        public IActionResult Delete(int id)
         {
             _itemCategoryService.DeleteCategory(id);
 

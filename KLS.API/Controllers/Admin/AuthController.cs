@@ -10,13 +10,13 @@ namespace KLS.API.Controllers.Admin
     {
         #region --- Member(s) ---
 
-        private readonly IUserService _userService;
+        private readonly IUserAccountService _userService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public AuthController(IUserService userService)
+        public AuthController(IUserAccountService userService)
         {
             _userService = userService;
         }

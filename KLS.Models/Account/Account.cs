@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class ChartOfAccount
+    public class Account
     {
-        public ChartOfAccount()
+        public Account()
         {
             this.CreatedAt = DateTime.UtcNow;
         }

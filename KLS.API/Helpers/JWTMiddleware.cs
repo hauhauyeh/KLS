@@ -30,7 +30,7 @@ namespace KLS.API.Helpers
                     // attach user to context on successful jwt validation
                     //context.Items["User"] = userJSON;
 
-                    var user = JsonSerializer.Deserialize<User>(userJSON);
+                    var user = JsonSerializer.Deserialize<UserAccount>(userJSON);
 
                     if (user != null)
                     {

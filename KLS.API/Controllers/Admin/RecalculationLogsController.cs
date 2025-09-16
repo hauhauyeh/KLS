@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Recalculation Log Management", GroupName = "Admin")]
     public class RecalculationLogsController : BaseController
@@ -31,7 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Logs")]
-        public IActionResult GetAllLogs()
+        public IActionResult List()
         {
             return Ok(_recalculationLogService.GetAllLogs());
         }

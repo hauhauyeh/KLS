@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Interfaces
 {
-    public interface IUserService
+    public interface IUserAccountService
     {
-        User? CheckEmpUsername(LoginReq loginReq);
+        UserAccount? CheckEmpUsername(LoginReq loginReq);
 
-        User GetById(int userId);
+        UserAccount GetById(int userId);
 
         bool UserNameExists(string username, int payeeId);
 
-        void UpdateUser(User user);
+        void UpdateUser(UserAccount user);
 
-        void UpdateToken(User user);
+        void UpdateToken(UserAccount user);
 
         LoginResult LoginEmployee(LoginReq loginReq, string ipAddress);
 

@@ -28,7 +28,7 @@ namespace KLS.Services
         {
             var payee = Uow.Payees.GetById(payeeId);
             var employee = Uow.Employees.GetById(payeeId);
-            var user = Uow.Users.Find(u => u.PayeeId == payeeId).FirstOrDefault();
+            var user = Uow.UserAccounts.Find(u => u.PayeeId == payeeId).FirstOrDefault();
 
             if (payee == null && employee == null)
                 return null;
@@ -75,7 +75,7 @@ namespace KLS.Services
 
             if (!string.IsNullOrEmpty(employeeDTO.Username))
             {
-                var user = new User
+                var user = new UserAccount
                 {
                     PayeeId = newPayeeId,
                     RoleId = employeeDTO.RoleId,
@@ -84,7 +84,7 @@ namespace KLS.Services
                     Inactive = employeeDTO.IsClosed
                 };
 
-                Uow.Users.Add(user);
+                Uow.UserAccounts.Add(user);
             }
 
             Uow.Commit();
@@ -162,7 +162,7 @@ namespace KLS.Services
                 Uow.Employees.Update(employee);
             }
 
-            var user = Uow.Users.Find(c => c.PayeeId == employeeDTO.PayeeId).FirstOrDefault();
+            var user = Uow.UserAccounts.Find(c => c.PayeeId == employeeDTO.PayeeId).FirstOrDefault();
 
             if (user != null)
             {
@@ -173,7 +173,7 @@ namespace KLS.Services
                     user.PasswordHash = Utilities.Encrypt(employeeDTO.Password);
                     user.Inactive = employeeDTO.IsClosed;
 
-                    Uow.Users.Update(user);
+                    Uow.UserAccounts.Update(user);
                     Uow.Commit();
                 }
             }
@@ -181,7 +181,7 @@ namespace KLS.Services
             {
                 if (!string.IsNullOrEmpty(employeeDTO.Username))
                 {
-                    var newuser = new User
+                    var newuser = new UserAccount
                     {
                         PayeeId = employeeDTO.PayeeId,
                         RoleId = employeeDTO.RoleId,
@@ -190,7 +190,7 @@ namespace KLS.Services
                         Inactive = employeeDTO.IsClosed
                     };
 
-                    Uow.Users.Add(newuser);
+                    Uow.UserAccounts.Add(newuser);
                 }
             }
 
