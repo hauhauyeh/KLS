@@ -35,6 +35,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<UserRole>().ToTable("UserRole");
             modelBuilder.Entity<UserAccount>().ToTable("UserAccount");
             modelBuilder.Entity<Employee>().ToTable("Employee");
+            modelBuilder.Entity<EmailSetting>().ToTable("EmailSetting");
             modelBuilder.Entity<Customer>().ToTable("Customer");
             modelBuilder.Entity<Vendor>().ToTable("Vendor");
             modelBuilder.Entity<Term>().ToTable("Term");
@@ -69,6 +70,8 @@ namespace KLS.Data.DataContext
         public DbSet<Payee> Payees { get; set; }
 
         public DbSet<UserAccount> Users { get; set; }
+
+        public DbSet<EmailSetting> EmailSettings { get; set; }
 
         public DbSet<Employee> Employees { get; set; }
 

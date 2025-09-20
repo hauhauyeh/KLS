@@ -13,6 +13,8 @@ namespace KLS.Services.Interfaces
 
         UserAccount GetById(int userId);
 
+        UserAccount? GetByEmail(string email);
+
         bool UserNameExists(string username, int payeeId);
 
         void UpdateUser(UserAccount user);
@@ -22,5 +24,9 @@ namespace KLS.Services.Interfaces
         LoginResult LoginEmployee(LoginReq loginReq, string ipAddress);
 
         LoginResult RefreshToken(RefreshTokenReq tokenReq);
+
+        string ForgetPassword(string email, string url);
+
+        bool ResetPassword(ResetPassword resetPassword);
     }
 }

@@ -46,6 +46,8 @@ namespace KLS.Data.Repositories
 
         public IEmployeeRepository Employees { get { return new EmployeeRepository(DbContext); } }
 
+        public IEmailSettingRepository EmailSettings { get { return new EmailSettingRepository(DbContext); } }
+
         public ICustomerRepository Customers { get { return new CustomerRepository(DbContext); } }
 
         public IVendorRepository Vendors { get { return new VendorRepository(DbContext); } }

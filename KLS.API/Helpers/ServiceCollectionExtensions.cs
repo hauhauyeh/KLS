@@ -24,6 +24,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAccountTypeService, AccountTypeService>();
             services.AddScoped<IEmailLogService, EmailLogService>();
+            services.AddScoped<IEmailSettingService, EmailSettingService>();
             services.AddScoped<IRecalculationLogService, RecalculationLogService>();
             services.AddScoped<IGeneralJournalService, GeneralJournalService>();
             services.AddScoped<ITempGeneralJournalService, TempGeneralJournalService>();
@@ -31,6 +32,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ITransferFundService, TransferFundService>();
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ISourceDocTypeService, SourceDocTypeService>();
+            services.AddScoped<IItemStorageService, ItemStorageService>();
 
             return services;
         }

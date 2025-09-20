@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    [AuthorizeAdmin]
+    //[AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Item Storage Management", GroupName = "Product")]
     public class ItemStoragesController : BaseController
@@ -34,9 +34,54 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Storage")]
         public IActionResult List()
         {
+            return Ok(_itemStorageService.GetAllStorageTree());
+        }
+
+
+        [HttpGet("Storage")]
+        public IActionResult GetAllStorages()
+        {
             return Ok(_itemStorageService.GetAllStorages());
         }
 
+
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            return Ok(_itemStorageService.GetById(id));
+        }
+
+
+        [HttpPost]
+        [DisplayName("Create ItemStorage")]
+        public IActionResult Create([FromBody] ItemStorage itemStorage)
+        {
+            if (_itemStorageService.NameExists(itemStorage))
+                return Conflict("Storage Name already exists");
+
+            return Ok(_itemStorageService.CreateItemStorage(itemStorage));
+        }
+
+
+        [HttpPut]
+        [DisplayName("Update ItemStorage")]
+        public IActionResult Update([FromBody] ItemStorage itemStorage)
+        {
+            if (_itemStorageService.NameExists(itemStorage))
+                return Conflict("Storage Name already exists");
+
+            return Ok(_itemStorageService.UpdateItemStorage(itemStorage));
+        }
+
+
+        [HttpDelete("{id}")]
+        [DisplayName("Delete ItemStorage")]
+        public IActionResult Delete(int id)
+        {
+            _itemStorageService.DeleteItemStorage(id);
+
+            return Ok();
+        }
 
         #endregion
     }

@@ -1,0 +1,33 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KLS.Models
+{
+    public class EmailSetting
+    {
+        [Key]
+        public int EmailId { get; set; }
+
+        public string? Host { get; set; }
+
+        public string? Username { get; set; }
+
+        public string? Password { get; set; }
+
+        public int? Port { get; set; }
+
+        public bool IsDefaultCredential { get; set; }
+
+        public bool IsEnableSSL { get; set; }
+
+        public string? FromEmail { get; set; }
+
+        public string? AdminEmail { get; set; }
+
+        public string? DisplayName { get; set; }
+    }
+}

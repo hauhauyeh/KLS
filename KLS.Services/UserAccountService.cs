@@ -3,12 +3,14 @@ using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace KLS.Services
 {
@@ -18,13 +20,15 @@ namespace KLS.Services
         private readonly IJWTService _jWTService;
         private readonly ISystemSettingService _settingService;
         private readonly IUserRoleService _roleService;
+        private readonly IEmailSettingService _emailSettingService;
 
-        public UserAccountService(IUnitOfWork uow, IJWTService jWTService, IEmployeeService employeeService, ISystemSettingService settingService, IUserRoleService roleService) : base(uow)
+        public UserAccountService(IUnitOfWork uow, IJWTService jWTService, IEmployeeService employeeService, ISystemSettingService settingService, IUserRoleService roleService, IEmailSettingService emailSettingService) : base(uow)
         {
             _jWTService = jWTService;
             _employeeService = employeeService;
             _settingService = settingService;
             _roleService = roleService;
+            _emailSettingService = emailSettingService;
         }
 
         public UserAccount? CheckEmpUsername(LoginReq loginReq)
@@ -37,6 +41,11 @@ namespace KLS.Services
         public UserAccount GetById(int userId)
         {
             return Uow.UserAccounts.GetById(userId);
+        }
+
+        public UserAccount? GetByEmail(string email)
+        {
+            return Uow.UserAccounts.Find(e => e.Email == email).FirstOrDefault();
         }
 
         public bool UserNameExists(string username, int payeeId)
@@ -153,6 +162,70 @@ namespace KLS.Services
                 EmpId = user.PayeeId,
                 EmpSortName = sortName
             };
+        }
+
+        public string ForgetPassword(string email, string url)
+        {
+            var user = GetByEmail(email);
+
+            if (user == null)
+                return null;
+
+            // Generate token
+            var token = TokenHelper.GenerateToken();
+            //var tokenHash = TokenHelper.ComputeSha256(token);
+
+            user.ResetTokenHash = token;
+            user.ResetTokenExpire = DateTime.UtcNow.AddMinutes(15); // 15 min expiry
+            user.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(user);
+            Uow.Commit();
+
+            // Build reset link
+            string resetUrl = $"{url}/resetpassword/{Uri.EscapeDataString(token)}";
+
+            var subject = "Reset your password";
+
+            var model = new ForgotPassword
+            {
+                Username = user.Username ?? user.Email,
+                ResetUrl = resetUrl
+            };
+
+            //string mailBody = EmailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", new
+            //{
+            //    Username = user.Username,
+            //    ResetUrl = resetUrl
+            //});
+
+            string mailBody = EmailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
+
+            EmailSetting setting = _emailSettingService.GetSetting();
+            Task.Factory.StartNew(() => EmailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
+                .ContinueWith((t) => { });
+
+            return resetUrl;
+        }
+
+        public bool ResetPassword(ResetPassword resetPassword)
+        { 
+            string token = HttpUtility.UrlDecode(resetPassword.Token);
+
+            var user = Uow.UserAccounts.Find(u => u.ResetTokenHash == token && u.ResetTokenExpire > DateTime.UtcNow).FirstOrDefault();
+
+            if (user == null)
+                return false;
+
+            user.PasswordHash = Utilities.Encrypt(resetPassword.NewPassword);
+            user.ResetTokenHash = null;
+            user.ResetTokenExpire = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(user);
+            Uow.Commit();
+
+            return true;
         }
     }
 }

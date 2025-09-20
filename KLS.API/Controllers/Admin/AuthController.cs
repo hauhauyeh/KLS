@@ -1,5 +1,6 @@
 ﻿using KLS.Common;
 using KLS.Models;
+using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,6 +48,35 @@ namespace KLS.API.Controllers.Admin
                 return Unauthorized(result.ErrorMessage);
 
             return Ok(result);
+        }
+
+
+        [HttpPost("ForgotPassword/{email}")]
+        public IActionResult ForgotPassword(string email)
+        {
+            var user = _userService.GetByEmail(email);
+
+            if (user == null)
+                return Unauthorized("Invalid Email");
+
+            var headers = Request.Headers;
+            var url = headers?["Origin"].FirstOrDefault() ?? headers?["Referer"].FirstOrDefault();
+
+            var resetUrl = _userService.ForgetPassword(email, url);
+
+            return Ok(new { Message = "Password reset link sent to your email." });
+        }
+
+
+        [HttpPost("ResetPassword")]
+        public IActionResult ResetPassword([FromBody] ResetPassword request)
+        {
+            var isReset = _userService.ResetPassword(request);
+
+            if (!isReset)
+                return Unauthorized("Invalid reset link. Request a new one.");
+
+            return Ok();
         }
 
         #endregion

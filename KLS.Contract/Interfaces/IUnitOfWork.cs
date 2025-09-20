@@ -18,6 +18,8 @@ namespace KLS.Contract.Interfaces
 
         IEmployeeRepository Employees { get; }
 
+        IEmailSettingRepository EmailSettings { get; }
+
         ISystemSettingRepository SystemSettings { get; }
 
         ICustomerRepository Customers { get; }

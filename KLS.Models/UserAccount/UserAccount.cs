@@ -24,6 +24,8 @@ namespace KLS.Models
 
         public int PayeeId { get; set; }
 
+        public string? Email { get; set; }
+
         public string? Username { get; set; }
 
         [JsonIgnore]
@@ -32,6 +34,10 @@ namespace KLS.Models
         public bool Inactive { get; set; }
 
         public string? RefToken { get; set; }
+
+        public string? ResetTokenHash { get; set; }
+
+        public DateTime? ResetTokenExpire { get; set; }
 
         public DateTime? RefTokenExpire { get; set; }
 
