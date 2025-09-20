@@ -85,5 +85,12 @@ namespace KLS.Data.Repositories
         public IItemStorageRepository ItemStorages { get { return new ItemStorageRepository(DbContext); } }
 
         public ITimesheetRepository Timesheets { get { return new TimesheetRepository(DbContext); } }
+
+        public ISalesRepository Sales { get { return new SalesRepository(DbContext); } }
+
+        public IDeleteLogRepository DeleteLogs { get { return new DeleteLogRepository(DbContext); } }
+
+        public ICompanyRepository Companies { get { return new CompanyRepository(DbContext); } }
     }
 }
+

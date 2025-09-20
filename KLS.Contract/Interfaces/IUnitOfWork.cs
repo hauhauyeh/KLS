@@ -58,6 +58,12 @@ namespace KLS.Contract.Interfaces
 
         ITimesheetRepository Timesheets { get; }
 
+        ISalesRepository Sales { get; }
+
+        IDeleteLogRepository DeleteLogs { get; }
+
+        ICompanyRepository Companies { get; }
+
         void Commit();
     }
 }

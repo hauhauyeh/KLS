@@ -55,6 +55,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<SourceDocType>().ToTable("SourceDocType");
             modelBuilder.Entity<ItemStorage>().ToTable("ItemStorage");
             modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
+            modelBuilder.Entity<Sales>().ToTable("Sales");
+            modelBuilder.Entity<DeleteLog>().ToTable("DeleteLog");
+            modelBuilder.Entity<Company>().ToTable("Company");
 
             modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
@@ -112,6 +115,12 @@ namespace KLS.Data.DataContext
         public DbSet<ItemStorage> ItemStorages { get; set; }
 
         public DbSet<Timesheet> Timesheets { get; set; }
+
+        public DbSet<Sales> Sales { get; set; }
+
+        public DbSet<DeleteLog> DeleteLogs { get; set; }
+
+        public DbSet<Company> Companies { get; set; }
 
         #endregion
 

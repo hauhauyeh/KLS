@@ -33,6 +33,9 @@ namespace KLS.API.Helpers
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<ISourceDocTypeService, SourceDocTypeService>();
             services.AddScoped<IItemStorageService, ItemStorageService>();
+            services.AddScoped<ISalesService, SalesService>();
+            services.AddScoped<IDeleteLogService, DeleteLogService>();
+            services.AddScoped<ICompanyService, CompanyService>();
 
             return services;
         }
