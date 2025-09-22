@@ -168,7 +168,8 @@ namespace KLS.Services
 
         private static ICollection<ControllerGroup> GetAdminControllerActions()
         {
-            Assembly asm = Assembly.GetExecutingAssembly();
+            //Assembly asm = Assembly.GetExecutingAssembly();
+            Assembly asm = Assembly.Load("KLS.API");
 
             var controllers = new List<ControllerInfo>();
 
