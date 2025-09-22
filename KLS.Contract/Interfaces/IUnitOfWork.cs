@@ -64,6 +64,8 @@ namespace KLS.Contract.Interfaces
 
         ICompanyRepository Companies { get; }
 
+        IBankReconRepository BankRecons { get; }
+
         void Commit();
     }
 }

@@ -94,6 +94,7 @@ namespace KLS.Services
                 existing.ImageUrl = itemCategory.ImageUrl;
                 existing.IsInactive = itemCategory.IsInactive;
                 existing.SortOrder = itemCategory.SortOrder;
+                existing.CustomDutyRate = itemCategory.CustomDutyRate;
                 existing.Slug = SlugHelper.GenerateSlug(itemCategory.DisplayName);
                 existing.UpdatedAt = DateTime.UtcNow;
 

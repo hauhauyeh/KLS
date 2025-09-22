@@ -152,5 +152,24 @@ namespace KLS.Services
 
             return result.ToList();
         }
+
+        public IEnumerable<AccountDTO>? GetBankCashCCAccounts()
+        {
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountTypes.GetAll()
+                             on a.AccountTypeId equals at.AccountTypeId
+                         where at.TypeName == "Bank" || at.TypeName == "Cash" || at.TypeName == "Credit Card"
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             TypeName = at.TypeName,
+                             CatName = at.CatName,
+                             IsInactive = a.IsInactive
+                         };
+
+            return result.ToList();
+        }
     }
 }

@@ -91,6 +91,8 @@ namespace KLS.Data.Repositories
         public IDeleteLogRepository DeleteLogs { get { return new DeleteLogRepository(DbContext); } }
 
         public ICompanyRepository Companies { get { return new CompanyRepository(DbContext); } }
+
+        public IBankReconRepository BankRecons { get { return new BankReconRepository(DbContext); } }
     }
 }
 
