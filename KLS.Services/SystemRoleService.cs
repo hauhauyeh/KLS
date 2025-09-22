@@ -10,43 +10,43 @@ using System.Threading.Tasks;
 
 namespace KLS.Services
 {
-    public class UserRoleService : BaseService, IUserRoleService
+    public class SystemRoleService : BaseService, ISystemRoleService
     {
-        public UserRoleService(IUnitOfWork uow) : base(uow)
+        public SystemRoleService(IUnitOfWork uow) : base(uow)
         {
         }
 
-        public IEnumerable<UserRole> GetAllRoles()
+        public IEnumerable<SystemRole> GetAllRoles()
         {
-            return Uow.UserRoles
+            return Uow.SystemRoles
                       .GetAll()
                       .OrderBy(r => r.RoleName)
                       .ToList();
         }
 
-        public UserRole? GetById(int roleId)
+        public SystemRole? GetById(int roleId)
         {
-            return Uow.UserRoles.GetById(roleId);
+            return Uow.SystemRoles.GetById(roleId);
         }
 
-        public bool RoleNameExists(UserRole role)
+        public bool RoleNameExists(SystemRole role)
         {
-            return Uow.UserRoles.Exists(r =>
+            return Uow.SystemRoles.Exists(r =>
                 r.RoleName!.ToLower() == role.RoleName!.ToLower() &&
-                r.RoleId != role.RoleId);
+                r.SystemRoleId != role.SystemRoleId);
         }
 
-        public UserRole CreateRole(UserRole role)
+        public SystemRole CreateRole(SystemRole role)
         {
-            Uow.UserRoles.Add(role);
+            Uow.SystemRoles.Add(role);
             Uow.Commit();
 
             return role;
         }
 
-        public UserRole? UpdateRole(UserRole role)
+        public SystemRole? UpdateRole(SystemRole role)
         {
-            var existing = GetById(role.RoleId);
+            var existing = GetById(role.SystemRoleId);
 
             if (existing == null)
                 return null;
@@ -58,7 +58,7 @@ namespace KLS.Services
             existing.Notes = role.Notes;
             existing.UpdatedAt = DateTime.UtcNow;
 
-            Uow.UserRoles.Update(existing);
+            Uow.SystemRoles.Update(existing);
             Uow.Commit();
 
             return existing;
@@ -66,7 +66,7 @@ namespace KLS.Services
 
         public void DeleteRole(int roleId)
         {
-            Uow.UserRoles.RemoveById(roleId);
+            Uow.SystemRoles.RemoveById(roleId);
             Uow.Commit();
         }
 

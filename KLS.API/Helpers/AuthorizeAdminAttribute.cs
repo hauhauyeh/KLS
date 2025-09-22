@@ -17,7 +17,7 @@ namespace KLS.API.Helpers
         {
             if (context.HttpContext.Items["CurrentUser"] != null)
             {
-                var CurrentUser = context.HttpContext.Items["CurrentUser"] as UserAccount;
+                var CurrentUser = context.HttpContext.Items["CurrentUser"] as SystemUser;
                 var refreshToken = context.HttpContext.Items["RefreshToken"]?.ToString();
 
                 if (CurrentUser == null || refreshToken != CurrentUser?.RefToken)

@@ -14,13 +14,13 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IEmployeeService _employeeService;
-        private readonly IUserAccountService _userService;
+        private readonly ISystemUserService _userService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public EmployeesController(IEmployeeService employeeService, IUserAccountService userService)
+        public EmployeesController(IEmployeeService employeeService, ISystemUserService userService)
         {
             _employeeService = employeeService;
             _userService = userService;

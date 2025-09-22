@@ -89,6 +89,6 @@ namespace KLS.Models
 
         public Vendor? Vendor { get; set; }
 
-        public UserAccount? User { get; set; }
+        public SystemUser? User { get; set; }
     }
 }

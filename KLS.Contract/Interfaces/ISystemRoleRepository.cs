@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IUserAccountRepository : IRepository<UserAccount>
+    public interface ISystemRoleRepository : IRepository<SystemRole>
     {
 
     }

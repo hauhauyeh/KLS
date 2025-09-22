@@ -38,11 +38,11 @@ namespace KLS.Data.Repositories
 
         public IHolidayRepository Holidays { get { return new HolidayRepository(DbContext); } }
 
-        public IUserRoleRepository UserRoles { get { return new UserRoleRepository(DbContext); } }
+        public ISystemRoleRepository SystemRoles { get { return new SystemRoleRepository(DbContext); } }
 
         public IPayeeRepository Payees { get { return new PayeeRepository(DbContext); } }
 
-        public IUserAccountRepository UserAccounts { get { return new UserAccountRepository(DbContext); } }
+        public ISystemUserRepository SystemUsers { get { return new SystemUserRepository(DbContext); } }
 
         public IEmployeeRepository Employees { get { return new EmployeeRepository(DbContext); } }
 

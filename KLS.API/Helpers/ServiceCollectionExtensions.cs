@@ -11,9 +11,9 @@ namespace KLS.API.Helpers
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<IUserRoleService, UserRoleService>();
+            services.AddScoped<ISystemRoleService, SystemRoleService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();
-            services.AddScoped<IUserAccountService, UserAccountService>();
+            services.AddScoped<ISystemUserService, SystemUserService>();
 
             services.AddScoped<IHolidayService, HolidayService>();
             services.AddScoped<IPayeeService, PayeeService>();
@@ -36,7 +36,6 @@ namespace KLS.API.Helpers
             services.AddScoped<ISalesService, SalesService>();
             services.AddScoped<IDeleteLogService, DeleteLogService>();
             services.AddScoped<ICompanyService, CompanyService>();
-            services.AddScoped<IBankReconService, BankReconService>();
 
             return services;
         }

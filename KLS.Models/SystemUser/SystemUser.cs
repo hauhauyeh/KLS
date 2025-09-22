@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class UserAccount
+    public class SystemUser
     {
-        public UserAccount()
+        public SystemUser()
         {
             this.CreatedAt = DateTime.UtcNow;
         }
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int UserId { get; set; }
+        public int SystemUserId { get; set; }
 
-        public int RoleId { get; set; }
+        public int SystemRoleId { get; set; }
 
         public int PayeeId { get; set; }
 

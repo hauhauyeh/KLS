@@ -9,16 +9,16 @@ using System.Text.Json.Serialization;
 
 namespace KLS.Models
 {
-    public class UserRole
+    public class SystemRole
     {
-        public UserRole()
+        public SystemRole()
         {
             this.CreatedAt = DateTime.UtcNow;
         }
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int RoleId { get; set; }
+        public int SystemRoleId { get; set; }
 
         [Required(ErrorMessage = "Enter RoleName")]
         public string? RoleName { get; set; }

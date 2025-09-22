@@ -32,8 +32,8 @@ namespace KLS.Data.DataContext
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Holiday>().ToTable("Holiday");
-            modelBuilder.Entity<UserRole>().ToTable("UserRole");
-            modelBuilder.Entity<UserAccount>().ToTable("UserAccount");
+            modelBuilder.Entity<SystemRole>().ToTable("SystemRole");
+            modelBuilder.Entity<SystemUser>().ToTable("SystemUser");
             modelBuilder.Entity<Employee>().ToTable("Employee");
             modelBuilder.Entity<EmailSetting>().ToTable("EmailSetting");
             modelBuilder.Entity<Customer>().ToTable("Customer");
@@ -58,7 +58,6 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Sales>().ToTable("Sales");
             modelBuilder.Entity<DeleteLog>().ToTable("DeleteLog");
             modelBuilder.Entity<Company>().ToTable("Company");
-            modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
 
             modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
@@ -69,11 +68,11 @@ namespace KLS.Data.DataContext
 
         public DbSet<Holiday> Holidays { get; set; }
 
-        public DbSet<UserRole> Roles { get; set; }
+        public DbSet<SystemRole> SystemRoles { get; set; }
 
         public DbSet<Payee> Payees { get; set; }
 
-        public DbSet<UserAccount> Users { get; set; }
+        public DbSet<SystemUser> SystemUsers { get; set; }
 
         public DbSet<EmailSetting> EmailSettings { get; set; }
 
@@ -122,8 +121,6 @@ namespace KLS.Data.DataContext
         public DbSet<DeleteLog> DeleteLogs { get; set; }
 
         public DbSet<Company> Companies { get; set; }
-
-        public DbSet<BankRecon> BankRecons { get; set; }
 
         #endregion
 

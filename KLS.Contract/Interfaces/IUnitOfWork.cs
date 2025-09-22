@@ -10,11 +10,11 @@ namespace KLS.Contract.Interfaces
     {
         IHolidayRepository Holidays { get; }
 
-        IUserRoleRepository UserRoles { get; }
+        ISystemRoleRepository SystemRoles { get; }
 
         IPayeeRepository Payees { get; }
 
-        IUserAccountRepository UserAccounts { get; }
+        ISystemUserRepository SystemUsers { get; }
 
         IEmployeeRepository Employees { get; }
 

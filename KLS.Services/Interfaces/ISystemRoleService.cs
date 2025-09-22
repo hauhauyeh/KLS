@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Interfaces
 {
-    public interface IUserRoleService
+    public interface ISystemRoleService
     {
-        IEnumerable<UserRole> GetAllRoles();
+        IEnumerable<SystemRole> GetAllRoles();
 
-        UserRole? GetById(int roleId);
+        SystemRole? GetById(int roleId);
 
-        bool RoleNameExists(UserRole role);
+        bool RoleNameExists(SystemRole role);
 
-        UserRole CreateRole(UserRole role);
+        SystemRole CreateRole(SystemRole role);
 
-        UserRole? UpdateRole(UserRole role);
+        SystemRole? UpdateRole(SystemRole role);
 
         void DeleteRole(int roleId);
 

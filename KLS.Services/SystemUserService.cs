@@ -14,15 +14,15 @@ using System.Web;
 
 namespace KLS.Services
 {
-    public class UserAccountService : BaseService, IUserAccountService
+    public class SystemUserService : BaseService, ISystemUserService
     {
         private readonly IEmployeeService _employeeService;
         private readonly IJWTService _jWTService;
         private readonly ISystemSettingService _settingService;
-        private readonly IUserRoleService _roleService;
+        private readonly ISystemRoleService _roleService;
         private readonly IEmailSettingService _emailSettingService;
 
-        public UserAccountService(IUnitOfWork uow, IJWTService jWTService, IEmployeeService employeeService, ISystemSettingService settingService, IUserRoleService roleService, IEmailSettingService emailSettingService) : base(uow)
+        public SystemUserService(IUnitOfWork uow, IJWTService jWTService, IEmployeeService employeeService, ISystemSettingService settingService, ISystemRoleService roleService, IEmailSettingService emailSettingService) : base(uow)
         {
             _jWTService = jWTService;
             _employeeService = employeeService;
@@ -31,46 +31,46 @@ namespace KLS.Services
             _emailSettingService = emailSettingService;
         }
 
-        public UserAccount? CheckEmpUsername(LoginReq loginReq)
+        public SystemUser? CheckEmpUsername(LoginReq loginReq)
         {
-            return Uow.UserAccounts
+            return Uow.SystemUsers
                 .Find(e => e.Username == loginReq.Username && !e.Inactive && e.PayeeId.ToString().StartsWith("1"))
                 .FirstOrDefault();
         }
 
-        public UserAccount GetById(int userId)
+        public SystemUser GetById(int userId)
         {
-            return Uow.UserAccounts.GetById(userId);
+            return Uow.SystemUsers.GetById(userId);
         }
 
-        public UserAccount? GetByEmail(string email)
+        public SystemUser? GetByEmail(string email)
         {
-            return Uow.UserAccounts.Find(e => e.Email == email).FirstOrDefault();
+            return Uow.SystemUsers.Find(e => e.Email == email).FirstOrDefault();
         }
 
         public bool UserNameExists(string username, int payeeId)
         {
-            return Uow.UserAccounts.Exists(c => c.Username.ToLower() == username.ToLower() && c.PayeeId != payeeId);
+            return Uow.SystemUsers.Exists(c => c.Username.ToLower() == username.ToLower() && c.PayeeId != payeeId);
         }
 
-        public void UpdateUser(UserAccount user)
+        public void UpdateUser(SystemUser user)
         {
             user.UpdatedAt = DateTime.UtcNow;
 
-            Uow.UserAccounts.Update(user);
+            Uow.SystemUsers.Update(user);
             Uow.Commit();
         }
 
-        public void UpdateToken(UserAccount user)
+        public void UpdateToken(SystemUser user)
         {
-            var existing = GetById(user.UserId);
+            var existing = GetById(user.SystemUserId);
 
             if (existing != null)
             {
                 existing.RefToken = user.RefToken;
                 existing.RefTokenExpire = user.RefTokenExpire;
 
-                Uow.UserAccounts.Update(existing);
+                Uow.SystemUsers.Update(existing);
                 Uow.Commit();
             }
         }
@@ -106,7 +106,7 @@ namespace KLS.Services
             UpdateToken(user);
 
             var token = _jWTService.GenerateJwtToken(user);
-            var userRole = _roleService.GetById(user.RoleId);
+            var role = _roleService.GetById(user.SystemRoleId);
 
             return new LoginResult
             {
@@ -114,8 +114,8 @@ namespace KLS.Services
                 Token = token,
                 RefreshToken = refreshToken,
                 Username = user.Username,
-                IsAdmin = userRole.IsAdmin,
-                IsSalesRole = userRole.IsSalesRole,
+                IsAdmin = role.IsAdmin,
+                IsSalesRole = role.IsSalesRole,
                 EmpId = user.PayeeId,
                 EmpSortName = string.IsNullOrEmpty(emp.FirstName) || string.IsNullOrEmpty(emp.LastName)
                     ? ""
@@ -130,7 +130,7 @@ namespace KLS.Services
             if (string.IsNullOrEmpty(userJson))
                 return new LoginResult { Success = false, ErrorMessage = "Invalid or expired token." };
 
-            var user = JsonSerializer.Deserialize<UserAccount>(userJson);
+            var user = JsonSerializer.Deserialize<SystemUser>(userJson);
             if (user == null)
                 return new LoginResult { Success = false, ErrorMessage = "User info malformed." };
 
@@ -145,7 +145,7 @@ namespace KLS.Services
 
             var newToken = _jWTService.GenerateJwtToken(user);
 
-            var role = _roleService.GetById(user.RoleId);
+            var role = _roleService.GetById(user.SystemRoleId);
 
             var sortName = string.IsNullOrEmpty(emp.FirstName) || string.IsNullOrEmpty(emp.LastName)
                    ? ""
@@ -173,13 +173,12 @@ namespace KLS.Services
 
             // Generate token
             var token = TokenHelper.GenerateToken();
-            //var tokenHash = TokenHelper.ComputeSha256(token);
 
             user.ResetTokenHash = token;
             user.ResetTokenExpire = DateTime.UtcNow.AddMinutes(15); // 15 min expiry
             user.UpdatedAt = DateTime.UtcNow;
 
-            Uow.UserAccounts.Update(user);
+            Uow.SystemUsers.Update(user);
             Uow.Commit();
 
             // Build reset link
@@ -193,12 +192,6 @@ namespace KLS.Services
                 ResetUrl = resetUrl
             };
 
-            //string mailBody = EmailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", new
-            //{
-            //    Username = user.Username,
-            //    ResetUrl = resetUrl
-            //});
-
             string mailBody = EmailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
 
             EmailSetting setting = _emailSettingService.GetSetting();
@@ -210,9 +203,9 @@ namespace KLS.Services
 
         public bool ResetPassword(ResetPassword resetPassword)
         { 
-            string token = HttpUtility.UrlDecode(resetPassword.Token);
+            string? token = HttpUtility.UrlDecode(resetPassword.Token);
 
-            var user = Uow.UserAccounts.Find(u => u.ResetTokenHash == token && u.ResetTokenExpire > DateTime.UtcNow).FirstOrDefault();
+            var user = Uow.SystemUsers.Find(u => u.ResetTokenHash == token && u.ResetTokenExpire > DateTime.UtcNow).FirstOrDefault();
 
             if (user == null)
                 return false;
@@ -222,7 +215,7 @@ namespace KLS.Services
             user.ResetTokenExpire = null;
             user.UpdatedAt = DateTime.UtcNow;
 
-            Uow.UserAccounts.Update(user);
+            Uow.SystemUsers.Update(user);
             Uow.Commit();
 
             return true;

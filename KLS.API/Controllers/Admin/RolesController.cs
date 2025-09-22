@@ -11,17 +11,17 @@ namespace KLS.API.Controllers.Admin
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Role Management", GroupName = "Admin")]
-    public class UserRolesController : BaseController
+    public class RolesController : BaseController
     {
         #region --- Member(s) ---
 
-        private readonly IUserRoleService _roleService;
+        private readonly ISystemRoleService _roleService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public UserRolesController(IUserRoleService roleService)
+        public RolesController(ISystemRoleService roleService)
         {
             _roleService = roleService;
         }
@@ -52,7 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Role")]
-        public IActionResult Create([FromBody] UserRole role)
+        public IActionResult Create([FromBody] SystemRole role)
         {
             if (_roleService.RoleNameExists(role))
                 return Conflict("Rolename already exists.");
@@ -65,7 +65,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Role")]
-        public IActionResult Update([FromBody] UserRole role)
+        public IActionResult Update([FromBody] SystemRole role)
         {
             if (_roleService.RoleNameExists(role))
                 return Conflict("Rolename already exists.");

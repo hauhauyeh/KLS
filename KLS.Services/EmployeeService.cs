@@ -28,7 +28,7 @@ namespace KLS.Services
         {
             var payee = Uow.Payees.GetById(payeeId);
             var employee = Uow.Employees.GetById(payeeId);
-            var user = Uow.UserAccounts.Find(u => u.PayeeId == payeeId).FirstOrDefault();
+            var user = Uow.SystemUsers.Find(u => u.PayeeId == payeeId).FirstOrDefault();
 
             if (payee == null && employee == null)
                 return null;
@@ -43,7 +43,7 @@ namespace KLS.Services
 
             if (user != null)
             {
-                employeeDTO.RoleId = user.RoleId;
+                employeeDTO.RoleId = user.SystemRoleId;
                 employeeDTO.Username = user.Username;
                 employeeDTO.Password = Utilities.Decrypt(user.PasswordHash);
             }
@@ -75,16 +75,16 @@ namespace KLS.Services
 
             if (!string.IsNullOrEmpty(employeeDTO.Username))
             {
-                var user = new UserAccount
+                var user = new SystemUser
                 {
                     PayeeId = newPayeeId,
-                    RoleId = employeeDTO.RoleId,
+                    SystemRoleId = employeeDTO.RoleId,
                     Username = employeeDTO.Username,
                     PasswordHash = Utilities.Encrypt(employeeDTO.Password),
                     Inactive = employeeDTO.IsClosed
                 };
 
-                Uow.UserAccounts.Add(user);
+                Uow.SystemUsers.Add(user);
             }
 
             Uow.Commit();
@@ -162,18 +162,18 @@ namespace KLS.Services
                 Uow.Employees.Update(employee);
             }
 
-            var user = Uow.UserAccounts.Find(c => c.PayeeId == employeeDTO.PayeeId).FirstOrDefault();
+            var user = Uow.SystemUsers.Find(c => c.PayeeId == employeeDTO.PayeeId).FirstOrDefault();
 
             if (user != null)
             {
                 if (!string.IsNullOrEmpty(employeeDTO.Username))
                 {
-                    user.RoleId = employeeDTO.RoleId;
+                    user.SystemRoleId = employeeDTO.RoleId;
                     user.Username = employeeDTO.Username;
                     user.PasswordHash = Utilities.Encrypt(employeeDTO.Password);
                     user.Inactive = employeeDTO.IsClosed;
 
-                    Uow.UserAccounts.Update(user);
+                    Uow.SystemUsers.Update(user);
                     Uow.Commit();
                 }
             }
@@ -181,16 +181,16 @@ namespace KLS.Services
             {
                 if (!string.IsNullOrEmpty(employeeDTO.Username))
                 {
-                    var newuser = new UserAccount
+                    var newuser = new SystemUser
                     {
                         PayeeId = employeeDTO.PayeeId,
-                        RoleId = employeeDTO.RoleId,
+                        SystemRoleId = employeeDTO.RoleId,
                         Username = employeeDTO.Username,
                         PasswordHash = Utilities.Encrypt(employeeDTO.Password),
                         Inactive = employeeDTO.IsClosed
                     };
 
-                    Uow.UserAccounts.Add(newuser);
+                    Uow.SystemUsers.Add(newuser);
                 }
             }
 

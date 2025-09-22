@@ -28,9 +28,8 @@ namespace KLS.API.Helpers
                 if (!string.IsNullOrEmpty(userJSON))
                 {
                     // attach user to context on successful jwt validation
-                    //context.Items["User"] = userJSON;
 
-                    var user = JsonSerializer.Deserialize<UserAccount>(userJSON);
+                    var user = JsonSerializer.Deserialize<SystemUser>(userJSON);
 
                     if (user != null)
                     {
@@ -38,12 +37,10 @@ namespace KLS.API.Helpers
                         UserContext.EmpId = user.PayeeId;
 
                         context.Items["RefreshToken"] = user.RefToken;
-                        //context.Items["PayeeId"] = user.PayeeId;
-                        //context.Items["RoleId"] = user.RoleId;
 
                         // 🔑 Resolve scoped service correctly
-                        var roleService = context.RequestServices.GetRequiredService<IUserRoleService>();
-                        var role = roleService.GetById(user.RoleId);
+                        var roleService = context.RequestServices.GetRequiredService<ISystemRoleService>();
+                        var role = roleService.GetById(user.SystemRoleId);
 
                         if (role != null)
                         {
