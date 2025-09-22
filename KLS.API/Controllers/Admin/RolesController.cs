@@ -5,6 +5,7 @@ using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace KLS.API.Controllers.Admin
 {
@@ -76,16 +77,19 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{roleId}")]
         [DisplayName("Delete Role")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(int roleId)
         {
-            var existing = _roleService.GetById(id);
+            var existing = _roleService.GetById(roleId);
 
             if (existing == null)
-                return NotFound($"User role with ID {id} not found.");
+                return NotFound($"User role with ID {roleId} not found.");
 
-            _roleService.DeleteRole(id);
+            if (_roleService.RoleUsed(roleId))
+                return Conflict("This Role can't be deleted as it is linked to an employee.");
+
+            _roleService.DeleteRole(roleId);
 
             return Ok();
         }
@@ -111,6 +115,24 @@ namespace KLS.API.Controllers.Admin
             var roleId = Convert.ToInt32(HttpContext.Items["RoleId"]);
 
             return Ok(_roleService.CheckMenuPermission(roleId, menuName));
+        }
+
+
+        [HttpGet("GetControllers/{roleId}")]
+        [DisplayName("Permission Setup")]
+        public IActionResult GetControllers(int roleId)
+        {
+            return Ok(_roleService.GetControllers(roleId));
+        }
+
+
+        [HttpPost("SavePermission")]
+        [DisplayName("Save Permission")]
+        public IActionResult SavePermission([FromBody] RolePermissionReq permissionReq)
+        {
+            _roleService.SavePermission(permissionReq);
+
+            return Ok();
         }
 
         #endregion

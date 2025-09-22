@@ -21,8 +21,14 @@ namespace KLS.Services.Interfaces
 
         void DeleteRole(int roleId);
 
+        bool RoleUsed(int roleId);
+
         bool CheckPermission(int roleId, string endPoint);
 
         bool CheckMenuPermission(int roleId, string menuName);
+
+        ICollection<ControllerGroup>? GetControllers(int roleId);
+
+        void SavePermission(RolePermissionReq permissionReq);
     }
 }
