@@ -26,6 +26,8 @@ namespace KLS.Contract.Interfaces
 
         IVendorRepository Vendors { get; }
 
+        IVendorPmtRepository VendorPmts { get; }
+
         ITermRepository Terms { get; }
 
         ITruckRepository Trucks { get; }
@@ -65,6 +67,10 @@ namespace KLS.Contract.Interfaces
         ICompanyRepository Companies { get; }
 
         IBankReconRepository BankRecons { get; }
+
+        IPaymentOptionRepository PaymentOptions { get; }
+
+        IEmployeeAdvancePmtRepository EmployeeAdvancePmts { get; }
 
         void Commit();
     }

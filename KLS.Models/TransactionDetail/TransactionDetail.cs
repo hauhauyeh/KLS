@@ -16,7 +16,7 @@ namespace KLS.Models
 
         public Int64 TxId { get; set; }
 
-        public int? SrcDetailId { get; set; }
+        public int? SourceDetailId { get; set; }
 
         public string? AccountCode { get; set; }
 
@@ -30,11 +30,11 @@ namespace KLS.Models
 
         public decimal? BillQty { get; set; }
 
-        public decimal? CloQty { get; set; }
+        public decimal? ClosingQty { get; set; }
 
-        public decimal? InvValue { get; set; }
+        public decimal? InventoryValue { get; set; }
 
-        public decimal? AvgCost { get; set; }
+        public decimal? AverageCost { get; set; }
 
         public decimal? Amount { get; set; }
 

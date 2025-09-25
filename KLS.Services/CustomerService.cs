@@ -111,22 +111,22 @@ namespace KLS.Services
             if (customer != null)
             {
                 customer.Region = customer.Region;
-                customer.DefRoute = customer.DefRoute;
+                customer.DefaultRoute = customer.DefaultRoute;
                 customer.TextOrderConfirm = customer.TextOrderConfirm;
                 customer.TextInvoice = customer.TextInvoice;
-                customer.TextStmt = customer.TextStmt;
+                customer.TextStatement = customer.TextStatement;
                 customer.TextPricesheet = customer.TextPricesheet;
                 customer.TextACH = customer.TextACH;
                 customer.OGSort = customer.OGSort;
                 customer.IsAutoPayment = customerDTO.IsAutoPayment;
                 customer.SalesRep = customerDTO.SalesRep;
-                customer.DefBasePriceId = customerDTO.DefBasePriceId;
-                customer.DefQuoteId = customerDTO.DefQuoteId;
+                customer.DefaultBasePriceId = customerDTO.DefaultBasePriceId;
+                customer.DefaultQuoteId = customerDTO.DefaultQuoteId;
                 customer.BillId = customerDTO.BillId;
                 customer.CallSchedule = customerDTO.CallSchedule;
                 customer.IsApproved = customerDTO.IsApproved;
-                customer.IsStmtPrint = customerDTO.IsStmtPrint;
-                customer.IsStmtEmail = customerDTO.IsStmtEmail;
+                customer.IsStatementPrint = customerDTO.IsStatementPrint;
+                customer.IsStatementEmail = customerDTO.IsStatementEmail;
                 customer.IsPriceEmail = customerDTO.IsPriceEmail;
                 customer.IsInvoiceEmail = customerDTO.IsInvoiceEmail;
                 customer.IsEditGuide = customerDTO.IsEditGuide;
@@ -134,12 +134,12 @@ namespace KLS.Services
                 customer.IsInvoiceEmail = customerDTO.IsInvoiceEmail;
                 customer.IsLinkOwnShared = customerDTO.IsLinkOwnShared;
                 customer.PriceShow = customerDTO.PriceShow;
-                customer.ShowPromotion = customerDTO.ShowPromotion;
-                customer.Markup = customerDTO.Markup;
+                customer.IsPromotionEnabled = customerDTO.IsPromotionEnabled;
+                customer.BaseMarkup = customerDTO.BaseMarkup;
                 customer.TaxRate = customerDTO.TaxRate;
                 customer.RCExpireDate = customerDTO.RCExpireDate;
                 customer.RCNumber = customerDTO.RCNumber;
-                customer.HRTaxable = customerDTO.HRTaxable;
+                customer.IsHRTaxable = customerDTO.IsHRTaxable;
                 customer.CreditLimit = customerDTO.CreditLimit;
                 customer.MinOrder = customerDTO.MinOrder;
 

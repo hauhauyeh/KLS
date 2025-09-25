@@ -14,7 +14,7 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TFId { get; set; }
 
-        public int TFNum { get; set; }
+        public int TFNumber { get; set; }
 
         public string? TFType { get; set; }
 
@@ -24,7 +24,7 @@ namespace KLS.Models
 
         public string? ToAccount { get; set; }
 
-        public string? RefNum { get; set; }
+        public string? ReferenceId { get; set; }
 
         public decimal? TransferAmount { get; set; }
 

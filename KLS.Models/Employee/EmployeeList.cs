@@ -30,6 +30,6 @@ namespace KLS.Models
 
         public bool CanLogin { get; set; }
 
-        public bool IsRestricted { get; set; }
+        public bool HasOutsideAccess { get; set; }
     }
 }

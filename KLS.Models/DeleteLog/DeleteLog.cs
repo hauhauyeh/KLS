@@ -16,9 +16,9 @@ namespace KLS.Models
 
         public DateTime? LogDate { get; set; }
 
-        public string? DocType { get; set; }
+        public string? SourceDocType { get; set; }
 
-        public int? DocNum { get; set; }
+        public int? SourceDocNum { get; set; }
 
         public int? DeletedBy { get; set; }
     }

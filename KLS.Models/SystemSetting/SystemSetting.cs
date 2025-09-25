@@ -26,7 +26,7 @@ namespace KLS.Models
         [MaxLength(255)]
         public string? Description { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        //public bool IsActive { get; set; } = true;
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 

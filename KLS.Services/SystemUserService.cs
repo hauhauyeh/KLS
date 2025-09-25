@@ -90,7 +90,7 @@ namespace KLS.Services
             if (emp == null)
                 return new LoginResult { Success = false, ErrorMessage = "Username or password is incorrect" };
 
-            if (emp.IsRestricted)
+            if (emp.HasOutsideAccess)
             {
                 var allowedIp = _settingService.GetByKey<string>(GlobalKey.SYS_IPADDRESS);
 

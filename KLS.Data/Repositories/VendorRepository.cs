@@ -2,6 +2,8 @@
 using KLS.Data.DataContext;
 using KLS.Data.Repositories;
 using KLS.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +17,15 @@ namespace KLS.Data.Repositories
         public VendorRepository(KLSDBContext dbContext) : base(dbContext)
         {
 
+        }
+
+        public IQueryable<PayeeSearch>? SearchVendor(PayeeSearchReq searchReq)
+        {
+            var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
+
+            var IsActiveParam = new SqlParameter("@IsActive", searchReq.IsActiveOnly);
+
+            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Vendor_SearchbyTerm] @SearchTerm,@IsActive", TermParam, IsActiveParam);
         }
     }
 }

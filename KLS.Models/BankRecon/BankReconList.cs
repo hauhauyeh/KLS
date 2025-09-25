@@ -26,7 +26,7 @@ namespace KLS.Models
 
             public string? AccountName { get; set; }
 
-            public DateOnly? MaxStmtDate { get; set; }
+            public DateOnly? MaxStatementDate { get; set; }
 
             public ICollection<BankRecon>? BankRecons { get; set; }
         }

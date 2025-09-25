@@ -20,6 +20,6 @@ namespace KLS.Models
 
         public string? AccountName { get; set; }
 
-        public bool IsInactive { get; set; }
+        public bool Inactive { get; set; }
     }
 }

@@ -19,7 +19,7 @@ namespace KLS.Models
 
         public string? DisplayName { get; set; }
 
-        public bool IsInactive { get; set; }
+        public bool Inactive { get; set; }
 
         public IEnumerable<ItemCategoryTree>? ChildCategories { get; set; }
 

@@ -48,7 +48,7 @@ namespace KLS.Data.Repositories
 
             var ToAccountParam = (!string.IsNullOrEmpty(tf.ToAccount)) ? new SqlParameter("@ToAccount", tf.ToAccount) : new SqlParameter("@ToAccount", DBNull.Value);
 
-            var RefNumParam = (!string.IsNullOrEmpty(tf.RefNum)) ? new SqlParameter("@RefNum", tf.RefNum) : new SqlParameter("@RefNum", DBNull.Value);
+            var ReferenceIdParam = (!string.IsNullOrEmpty(tf.ReferenceId)) ? new SqlParameter("@ReferenceId", tf.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
 
             var TransferAmountParam = tf.TransferAmount.HasValue ? new SqlParameter("@TransferAmount", tf.TransferAmount) : new SqlParameter("@TransferAmount", DBNull.Value);
 
@@ -61,7 +61,7 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[TransferFund_Insert] @TFId,@TFDate,@FromAccount,@ToAccount,@RefNum,@TransferAmount,@Notes,@NewTFId OUTPUT", TFIdParam, TFDateParam, FromAccountParam, ToAccountParam, RefNumParam, TransferAmountParam, NotesParam, NewTFId);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[TransferFund_Insert] @TFId,@TFDate,@FromAccount,@ToAccount,@ReferenceId,@TransferAmount,@Notes,@NewTFId OUTPUT", TFIdParam, TFDateParam, FromAccountParam, ToAccountParam, ReferenceIdParam, TransferAmountParam, NotesParam, NewTFId);
 
             return Convert.ToInt32(NewTFId.Value);
         }

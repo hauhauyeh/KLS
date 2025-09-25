@@ -92,7 +92,7 @@ namespace KLS.Services
                 existing.Description = itemCategory.Description;
                 existing.Slug = itemCategory.Slug;
                 existing.ImageUrl = itemCategory.ImageUrl;
-                existing.IsInactive = itemCategory.IsInactive;
+                existing.Inactive = itemCategory.Inactive;
                 existing.SortOrder = itemCategory.SortOrder;
                 existing.CustomDutyRate = itemCategory.CustomDutyRate;
                 existing.Slug = SlugHelper.GenerateSlug(itemCategory.DisplayName);

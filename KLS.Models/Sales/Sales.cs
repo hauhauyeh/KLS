@@ -19,7 +19,7 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SalesId { get; set; }
 
-        public int SalesNum { get; set; }
+        public int SalesNumber { get; set; }
 
         public DateTime? SalesDate { get; set; }
 
@@ -35,7 +35,7 @@ namespace KLS.Models
 
         public int? SalesRepId { get; set; }
 
-        public string? PmtTerm { get; set; }
+        public string? PaymentTerm { get; set; }
 
         public decimal? SubTotal { get; set; }
 
@@ -43,17 +43,17 @@ namespace KLS.Models
 
         public decimal? SalesTotal { get; set; }
 
-        public decimal? AmtDue { get; set; }
+        public decimal? AmountDue { get; set; }
 
         public DateOnly? DueDate { get; set; }
 
-        public DateOnly? DiscDate { get; set; }
+        public DateOnly? DiscountDate { get; set; }
 
-        public decimal? DiscRate { get; set; }
+        public decimal? DiscountPercent { get; set; }
 
-        public decimal? TotalPmtApplied { get; set; }
+        public decimal? PaymentApplied { get; set; }
 
-        public decimal? TotalDiscApplied { get; set; }
+        public decimal? DiscountApplied { get; set; }
 
         public int? Aging { get; set; }
 
@@ -63,11 +63,11 @@ namespace KLS.Models
 
         public int? StageId { get; set; }
 
-        public bool IsStmtAttached { get; set; }
+        public bool IsStatementAttached { get; set; }
 
         public bool IsLocked { get; set; }
 
-        public string? CustPO { get; set; }
+        public string? CustomerPONumber { get; set; }
 
         public int? Deliverby { get; set; }
 
@@ -77,7 +77,7 @@ namespace KLS.Models
 
         public int? Updateby { get; set; }
 
-        public string? TruckNum { get; set; }
+        public string? TruckNumber { get; set; }
 
         public bool IsLoadSeparate { get; set; }
 
@@ -90,6 +90,8 @@ namespace KLS.Models
         public decimal? SalesMarginOrder { get; set; }
 
         public int? ShippingCarrierId { get; set; }
+
+        public string? TrackingNo { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

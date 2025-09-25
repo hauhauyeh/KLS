@@ -14,7 +14,7 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Int64 TxId { get; set; }
 
-        public int TxNum { get; set; }
+        public int TxNumber { get; set; }
 
         public DateOnly TxDate { get; set; }
 
@@ -24,7 +24,7 @@ namespace KLS.Models
 
         public string? SourceDocType { get; set; }
 
-        public int? SourceDocNum { get; set; }
+        public int? SourceDocNumber { get; set; }
 
         public string? Notes { get; set; }
 

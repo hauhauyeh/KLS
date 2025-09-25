@@ -12,7 +12,7 @@ namespace KLS.Models
         [Key]
         public int TFId { get; set; }
 
-        public int TFNum { get; set; }
+        public int TFNumber { get; set; }
 
         public DateOnly? TFDate { get; set; }
 
@@ -20,7 +20,7 @@ namespace KLS.Models
 
         public decimal? TransferAmount { get; set; }
 
-        public string? RefNum { get; set; }
+        public string? ReferenceId { get; set; }
 
         public string? FromAccount { get; set; }
 

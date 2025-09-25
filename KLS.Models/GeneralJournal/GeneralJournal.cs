@@ -19,7 +19,7 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int GJId { get; set; }
 
-        public int GJNum { get; set; }
+        public int GJNumber { get; set; }
 
         public DateOnly? GJDate { get; set; }
 

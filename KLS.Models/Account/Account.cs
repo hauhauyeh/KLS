@@ -31,7 +31,7 @@ namespace KLS.Models
 
         public string? AccountName { get; set; }
 
-        public string? AccountDesc { get; set; }
+        public string? Description { get; set; }
 
         public decimal? AccountBalance { get; set; }
 
@@ -43,7 +43,7 @@ namespace KLS.Models
 
         public decimal? OpenBalance { get; set; }
 
-        public bool IsInactive { get; set; }
+        public bool Inactive { get; set; }
 
         public bool IsDefaultAccount { get; set; }
 

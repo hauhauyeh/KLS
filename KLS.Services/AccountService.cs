@@ -35,7 +35,7 @@ namespace KLS.Services
                            AccountId = act.AccountId,
                            AccountCode = act.AccountCode,
                            AccountName = act.AccountName,
-                           IsInactive = act.IsInactive,
+                           Inactive = act.Inactive,
                            ParentAccountId = act.ParentAccountId
                        }).ToList();
 
@@ -52,7 +52,7 @@ namespace KLS.Services
                 AccountCode = x.AccountCode,
                 AccountName = x.AccountName,
                 ParentAccountId = x.ParentAccountId,
-                IsInactive = x.IsInactive,
+                Inactive = x.Inactive,
                 ChildAccounts = BuildTree(accounts, x.AccountId)
             });
         }
@@ -64,12 +64,12 @@ namespace KLS.Services
 
         public Account? GetByAcctName(string acctname)
         {
-            return Uow.Accounts.Find(c => c.AccountName == acctname && c.IsInactive == false).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountName == acctname && c.Inactive == false).FirstOrDefault();
         }
 
         public Account? GetByAcctCode(string acctcode)
         {
-            return Uow.Accounts.Find(c => c.AccountCode == acctcode && c.IsInactive == false).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountCode == acctcode && c.Inactive == false).FirstOrDefault();
         }
 
         public bool AcctNameExists(Account account)
@@ -99,9 +99,9 @@ namespace KLS.Services
 
             existing.AccountTypeId = chartOfAccount.AccountTypeId;
             existing.AccountName = chartOfAccount.AccountName;
-            existing.AccountDesc = chartOfAccount.AccountDesc;
+            existing.Description = chartOfAccount.Description;
             existing.IsAccountDebit = chartOfAccount.IsAccountDebit;
-            existing.IsInactive = chartOfAccount.IsInactive;
+            existing.Inactive = chartOfAccount.Inactive;
             existing.UpdatedAt = DateTime.UtcNow;
 
             if (!existing.IsDefaultAccount)
@@ -147,7 +147,7 @@ namespace KLS.Services
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
                              CatName = at.CatName,
-                             IsInactive = a.IsInactive
+                             Inactive = a.Inactive
                          };
 
             return result.ToList();
@@ -166,7 +166,7 @@ namespace KLS.Services
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
                              CatName = at.CatName,
-                             IsInactive = a.IsInactive
+                             Inactive = a.Inactive
                          };
 
             return result.ToList();

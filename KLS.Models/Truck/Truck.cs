@@ -45,7 +45,7 @@ namespace KLS.Models
 
         public string? Notes { get; set; }
 
-        public bool IsInactive { get; set; }
+        public bool Inactive { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

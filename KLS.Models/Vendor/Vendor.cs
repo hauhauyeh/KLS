@@ -14,15 +14,9 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PayeeId { get; set; }
 
-        public string PmtCompany { get; set; }
+        public string LegalName { get; set; }
 
-        public string? PmtAddress { get; set; }
-
-        public string? PmtCity { get; set; }
-
-        public string? PmtState { get; set; }
-
-        public string? PmtZipCode { get; set; }
+        public int BillingAddressId { get; set; }
 
         public string? AccountNumber { get; set; }
 
@@ -32,23 +26,23 @@ namespace KLS.Models
 
         public decimal? InterestRate { get; set; }
 
-        public string? PmtSchedule1 { get; set; }
+        public string? PaymentSchedule1 { get; set; }
 
-        public string? PmtSchedule2 { get; set; }
+        public string? PaymentSchedule2 { get; set; }
 
-        public string? AcctCode1 { get; set; }
+        public string? AccountCode1 { get; set; }
 
-        public string? AcctCode2 { get; set; }
+        public string? AccountCode2 { get; set; }
 
-        public string? AcctCode3 { get; set; }
+        public string? AccountCode3 { get; set; }
 
-        public string? AcctCode4 { get; set; }
+        public string? AccountCode4 { get; set; }
 
-        public string? AcctCode5 { get; set; }
+        public string? AccountCode5 { get; set; }
 
-        public string? AcctCode6 { get; set; }
+        public string? AccountCode6 { get; set; }
 
-        public string? DefaultPmtMethod { get; set; }
+        public string? DefaultPaymentMethod { get; set; }
 
         public bool IsShippingCarrier { get; set; }
 

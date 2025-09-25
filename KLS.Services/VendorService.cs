@@ -107,25 +107,25 @@ namespace KLS.Services
 
             if (vendor != null)
             {
-                vendor.PmtCompany = vendorDTO.PmtCompany;
-                vendor.PmtAddress = vendorDTO.PmtAddress;
-                vendor.PmtCity = vendorDTO.PmtCity;
-                vendor.PmtState = vendorDTO.PmtState;
-                vendor.PmtZipCode = vendorDTO.PmtZipCode;
+                //vendor.PmtCompany = vendorDTO.PmtCompany;
+                //vendor.PmtAddress = vendorDTO.PmtAddress;
+                //vendor.PmtCity = vendorDTO.PmtCity;
+                //vendor.PmtState = vendorDTO.PmtState;
+                //vendor.PmtZipCode = vendorDTO.PmtZipCode;
                 vendor.AccountNumber = vendorDTO.AccountNumber;
                 vendor.RoutingNumber = vendorDTO.RoutingNumber;
                 vendor.FreightRate = vendorDTO.FreightRate;
                 vendor.InterestRate = vendorDTO.InterestRate;
-                vendor.PmtSchedule1 = vendorDTO.PmtSchedule1;
-                vendor.PmtSchedule2 = vendorDTO.PmtSchedule2;
-                vendor.AcctCode1 = vendorDTO.AcctCode1;
-                vendor.AcctCode2 = vendorDTO.AcctCode2;
-                vendor.AcctCode3 = vendorDTO.AcctCode3;
-                vendor.AcctCode4 = vendorDTO.AcctCode4;
-                vendor.AcctCode5 = vendorDTO.AcctCode5;
-                vendor.AcctCode6 = vendorDTO.AcctCode6;
-                vendor.AcctCode6 = vendorDTO.AcctCode6;
-                vendor.DefaultPmtMethod = vendorDTO.DefaultPmtMethod;
+                vendor.PaymentSchedule1 = vendorDTO.PaymentSchedule1;
+                vendor.PaymentSchedule2 = vendorDTO.PaymentSchedule2;
+                vendor.AccountCode1 = vendorDTO.AccountCode1;
+                vendor.AccountCode2 = vendorDTO.AccountCode2;
+                vendor.AccountCode3 = vendorDTO.AccountCode3;
+                vendor.AccountCode4 = vendorDTO.AccountCode4;
+                vendor.AccountCode5 = vendorDTO.AccountCode5;
+                vendor.AccountCode6 = vendorDTO.AccountCode6;
+                //vendor.AccountCode6 = vendorDTO.AccountCode6;
+                vendor.DefaultPaymentMethod = vendorDTO.DefaultPaymentMethod;
                 vendor.IsShippingCarrier = vendorDTO.IsShippingCarrier;
                 vendor.IsVisibleToAdmin = vendorDTO.IsVisibleToAdmin;
 
@@ -141,6 +141,11 @@ namespace KLS.Services
         {
             Uow.Payees.RemoveById(payeeId);
             Uow.Commit();
+        }
+
+        public IEnumerable<PayeeSearch>? SearchVendor(PayeeSearchReq searchReq)
+        {
+            return Uow.Vendors.SearchVendor(searchReq);
         }
 
         public int GetMaxVendorId()

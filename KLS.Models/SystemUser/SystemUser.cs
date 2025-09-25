@@ -35,11 +35,11 @@ namespace KLS.Models
 
         public string? RefToken { get; set; }
 
+        public DateTime? RefTokenExpire { get; set; }
+
         public string? ResetTokenHash { get; set; }
 
         public DateTime? ResetTokenExpire { get; set; }
-
-        public DateTime? RefTokenExpire { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

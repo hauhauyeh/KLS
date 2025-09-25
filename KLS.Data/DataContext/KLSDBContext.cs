@@ -59,6 +59,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<DeleteLog>().ToTable("DeleteLog");
             modelBuilder.Entity<Company>().ToTable("Company");
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
+            modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
+            modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
 
             modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
@@ -125,6 +127,10 @@ namespace KLS.Data.DataContext
 
         public DbSet<BankRecon> BankRecons { get; set; }
 
+        public DbSet<VendorPayment> VendorPmts { get; set; }
+
+        public DbSet<PaymentOption> PaymentOptions { get; set; }
+
         #endregion
 
         #region ---Virtual DBSET---
@@ -144,6 +150,10 @@ namespace KLS.Data.DataContext
         public virtual DbSet<EmployeeList> EmployeeList { get; set; }
 
         public virtual DbSet<PayeeSearch> PayeeSearch { get; set; }
+
+        public virtual DbSet<CheckRegister> CheckRegister { get; set; }
+
+        public virtual DbSet<EmployeeAdvancePmt> EmployeeAdvancePmts { get; set; }
 
         #endregion
     }

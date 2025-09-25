@@ -20,5 +20,7 @@ namespace KLS.Services.Interfaces
         VendorDTO? UpdateVendor(VendorDTO vendorDTO);
 
         void DeleteVendor(int payeeId);
+
+        IEnumerable<PayeeSearch>? SearchVendor(PayeeSearchReq searchReq);
     }
 }

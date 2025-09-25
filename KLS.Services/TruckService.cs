@@ -23,7 +23,7 @@ namespace KLS.Services
 
         public ICollection<Truck> GetActiveTrucks()
         {
-            return Uow.Trucks.Find(c => c.IsInactive == false).OrderBy(c => c.TruckNumber).ToList();
+            return Uow.Trucks.Find(c => c.Inactive == false).OrderBy(c => c.TruckNumber).ToList();
         }
 
         public Truck GetById(int id)
@@ -63,7 +63,7 @@ namespace KLS.Services
                 existing.GPSNumber = truck.GPSNumber;
                 existing.EPassNumber = truck.EPassNumber;
                 existing.Notes = truck.Notes;
-                existing.IsInactive = truck.IsInactive;
+                existing.Inactive = truck.Inactive;
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 Uow.Trucks.Update(existing);

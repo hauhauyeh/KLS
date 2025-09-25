@@ -16,7 +16,7 @@ namespace KLS.Models
 
         public string? Region { get; set; }
         
-        public string? DefRoute { get; set; }
+        public string? DefaultRoute { get; set; }
         
         public bool IsApproved { get; set; }
         
@@ -30,11 +30,11 @@ namespace KLS.Models
         
         public bool IsLinkOwnShared { get; set; }
         
-        public bool IsStmtPrint { get; set; }
+        public bool IsStatementPrint { get; set; }
         
         public bool IsPricePrint { get; set; }
         
-        public bool IsStmtEmail { get; set; }
+        public bool IsStatementEmail { get; set; }
         
         public bool IsPriceEmail { get; set; }
         
@@ -50,9 +50,9 @@ namespace KLS.Models
         
         public int? BillId { get; set; }
         
-        public string? DefBasePriceId { get; set; }
+        public string? DefaultBasePriceId { get; set; }
         
-        public int? DefQuoteId { get; set; }
+        public int? DefaultQuoteId { get; set; }
        
         public decimal? TaxRate { get; set; }
         
@@ -70,7 +70,7 @@ namespace KLS.Models
         
         public string? RCNumber { get; set; }
         
-        public bool HRTaxable { get; set; }
+        public bool IsHRTaxable { get; set; }
         
         public decimal? CreditLimit { get; set; }
         
@@ -80,7 +80,7 @@ namespace KLS.Models
         
         public string? TextInvoice { get; set; }
         
-        public string? TextStmt { get; set; }
+        public string? TextStatement { get; set; }
         
         public string? TextPricesheet { get; set; }
         
@@ -100,7 +100,7 @@ namespace KLS.Models
         
         public string? SquareId { get; set; }
         
-        public bool ShowPromotion { get; set; }
+        public bool IsPromotionEnabled { get; set; }
         
         public string? FormatAddress { get; set; }
         
@@ -108,7 +108,7 @@ namespace KLS.Models
         
         public string? Distance { get; set; }
         
-        public decimal? Markup { get; set; }
+        public decimal? BaseMarkup { get; set; }
         
         public int? ShippingCarrierId { get; set; }
         

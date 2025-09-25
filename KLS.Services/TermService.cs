@@ -23,7 +23,7 @@ namespace KLS.Services
 
         public ICollection<Term> GetActiveTerms()
         {
-            return Uow.Terms.Find(c => c.IsInactive == false).OrderBy(c => c.TermName).ToList();
+            return Uow.Terms.Find(c => c.Inactive == false).OrderBy(c => c.TermName).ToList();
         }
 
         public Term GetById(int id)
@@ -61,7 +61,7 @@ namespace KLS.Services
                 existing.DueDays = term.DueDays;
                 //existing.DayOfMonth = term.DayOfMonth;
                 existing.Discount = term.Discount;
-                existing.IsInactive = term.IsInactive;
+                existing.Inactive = term.Inactive;
                 existing.Notes = term.Notes;
 
                 existing.UpdatedAt = DateTime.UtcNow;

@@ -80,6 +80,13 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("Search")]
+        public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
+        {
+            return Ok(_vendorService.SearchVendor(searchReq));
+        }
+
         #endregion
     }
 }

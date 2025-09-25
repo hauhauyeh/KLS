@@ -93,6 +93,12 @@ namespace KLS.Data.Repositories
         public ICompanyRepository Companies { get { return new CompanyRepository(DbContext); } }
 
         public IBankReconRepository BankRecons { get { return new BankReconRepository(DbContext); } }
+
+        public IVendorPmtRepository VendorPmts { get { return new VendorPmtRepository(DbContext); } }
+
+        public IPaymentOptionRepository PaymentOptions { get { return new PaymentOptionRepository(DbContext); } }
+
+        public IEmployeeAdvancePmtRepository EmployeeAdvancePmts { get { return new EmployeeAdvancePmtRepository(DbContext); } }
     }
 }
 

@@ -17,9 +17,9 @@ namespace KLS.Models
 
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TSId { get; set; }
+        public int TimesheetId { get; set; }
 
-        public int TimeSheetNum { get; set; }
+        public int TimesheetNumber { get; set; }
 
         public int PayeeId { get; set; }
 

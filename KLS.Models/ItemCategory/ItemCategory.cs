@@ -35,7 +35,7 @@ namespace KLS.Models
 
         public string? ImageUrl { get; set; }
 
-        public bool IsInactive { get; set; }
+        public bool Inactive { get; set; }
 
         public int SortOrder { get; set; }
 

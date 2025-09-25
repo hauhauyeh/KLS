@@ -19,21 +19,21 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int BankReconId { get; set; }
 
-        public string? BankAcctCode { get; set; }
+        public string? AccountCode { get; set; }
 
-        public DateOnly? StmtDate { get; set; }
+        public DateOnly? StatementDate { get; set; }
 
-        public decimal? StmtBalance { get; set; }
+        public decimal? StatementBalance { get; set; }
 
         public decimal? SystemBalance { get; set; }
 
-        public decimal? BeginBalance { get; set; }
+        public decimal? BeginningBalance { get; set; }
 
-        public decimal? ReconEndBalance { get; set; }
+        public decimal? EndingBalance { get; set; }
 
         public decimal? DifferenceAmount { get; set; }
 
-        public bool IsReconed { get; set; }
+        public bool IsReconciled { get; set; }
 
         public string? Notes { get; set; }
 

@@ -29,7 +29,7 @@ namespace KLS.Models
 
         public decimal? Discount { get; set; }
 
-        public bool IsInactive { get; set; }
+        public bool Inactive { get; set; }
 
         public string? Notes { get; set; }
 

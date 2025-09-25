@@ -12,7 +12,7 @@ namespace KLS.Models.Deposit
         [Key]
         public int TFId { get; set; }
 
-        public int TFNum { get; set; }
+        public int TFNumber { get; set; }
 
         public DateTime? TFDate { get; set; }
 

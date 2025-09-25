@@ -14,7 +14,7 @@ namespace KLS.Models
 
         public string? ItemCode { get; set; }
 
-        public Int64 TxNum { get; set; }
+        public Int64 TxNumber { get; set; }
 
         public DateOnly TxDate { get; set; }
 

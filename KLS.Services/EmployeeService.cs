@@ -134,7 +134,7 @@ namespace KLS.Services
                 employee.SSN = employeeDTO.SSN;
                 employee.DOB = employeeDTO.DOB;
                 employee.DLN = employeeDTO.DLN;
-                employee.PayFreq = employeeDTO.PayFreq;
+                employee.PayFrequency = employeeDTO.PayFrequency;
                 employee.HourOrSalary = employeeDTO.HourOrSalary;
                 employee.Rate = employeeDTO.Rate;
                 employee.SingleOrMarried = employeeDTO.SingleOrMarried;
@@ -145,18 +145,18 @@ namespace KLS.Services
                 employee.R1 = employeeDTO.R1;
                 employee.R2 = employeeDTO.R2;
                 employee.R3 = employeeDTO.R3;
-                employee.HealthIns = employeeDTO.HealthIns;
-                employee.VisionIns = employeeDTO.VisionIns;
-                employee.DentalIns = employeeDTO.DentalIns;
-                employee.ChildSup1 = employeeDTO.ChildSup1;
-                employee.ChildSup2 = employeeDTO.ChildSup2;
-                employee.ChildSup3 = employeeDTO.ChildSup3;
-                employee.ChildSup4 = employeeDTO.ChildSup4;
-                employee.ChildSup5 = employeeDTO.ChildSup5;
+                employee.HealthInsurance = employeeDTO.HealthInsurance;
+                employee.VisionInsurance = employeeDTO.VisionInsurance;
+                employee.DentalInsurance = employeeDTO.DentalInsurance;
+                employee.ChildSupport1 = employeeDTO.ChildSupport1;
+                employee.ChildSupport2 = employeeDTO.ChildSupport2;
+                employee.ChildSupport3 = employeeDTO.ChildSupport3;
+                employee.ChildSupport4 = employeeDTO.ChildSupport4;
+                employee.ChildSupport5 = employeeDTO.ChildSupport5;
                 employee.IsUsePayCheck = employeeDTO.IsUsePayCheck;
-                employee.IsRestricted = employeeDTO.IsRestricted;
-                employee.IsShowPastDueWarning = employeeDTO.IsShowPastDueWarning;
-                employee.IsTextPriceChange = employeeDTO.IsTextPriceChange;
+                employee.HasOutsideAccess = employeeDTO.HasOutsideAccess;
+                employee.HasPastDueWarning = employeeDTO.HasPastDueWarning;
+                employee.IsPriceChangeNotify = employeeDTO.IsPriceChangeNotify;
                 employee.IsService = employeeDTO.IsService;
 
                 Uow.Employees.Update(employee);
