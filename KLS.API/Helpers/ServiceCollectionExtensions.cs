@@ -40,6 +40,8 @@ namespace KLS.API.Helpers
             services.AddScoped<IVendorPaymentService, VendorPaymentService>();
             services.AddScoped<IPaymentOptionService, PaymentOptionService>();
             services.AddScoped<IEmployeeAdvancePmtService, EmployeeAdvancePmtService>();
+            services.AddScoped<IPayrollServiceService, PayrollServiceService>();
+            services.AddScoped<ITempTimesheetService, TempTimesheetService>();
 
             return services;
         }

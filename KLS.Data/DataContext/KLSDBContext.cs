@@ -61,6 +61,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
             modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
+            modelBuilder.Entity<PayrollService>().ToTable("PayrollService");
+            modelBuilder.Entity<TimesheetDetail>().ToTable("TimesheetDetail");
+            modelBuilder.Entity<TempTimesheet>().ToTable("TempTimesheet");
 
             modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
@@ -130,6 +133,12 @@ namespace KLS.Data.DataContext
         public DbSet<VendorPayment> VendorPayments { get; set; }
 
         public DbSet<PaymentOption> PaymentOptions { get; set; }
+
+        public DbSet<PayrollService> PayrollServices { get; set; }
+
+        public DbSet<TimesheetDetail> TimesheetDetails { get; set; }
+
+        public DbSet<TempTimesheet> TempTimesheets { get; set; }
 
         #endregion
 

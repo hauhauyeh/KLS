@@ -72,6 +72,12 @@ namespace KLS.Contract.Interfaces
 
         IEmployeeAdvancePmtRepository EmployeeAdvancePmts { get; }
 
+        IPayrollServiceRepository PayrollServices { get; }
+
+        ITimesheetDetailRepository TimesheetDetails { get; }
+
+        ITempTimesheetRepository TempTimesheets { get; }
+
         void Commit();
     }
 }

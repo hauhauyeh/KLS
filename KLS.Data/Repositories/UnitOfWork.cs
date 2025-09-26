@@ -99,6 +99,12 @@ namespace KLS.Data.Repositories
         public IPaymentOptionRepository PaymentOptions { get { return new PaymentOptionRepository(DbContext); } }
 
         public IEmployeeAdvancePmtRepository EmployeeAdvancePmts { get { return new EmployeeAdvancePmtRepository(DbContext); } }
+
+        public IPayrollServiceRepository PayrollServices { get { return new PayrollServiceRepository(DbContext); } }
+
+        public ITimesheetDetailRepository TimesheetDetails { get { return new TimesheetDetailRepository(DbContext); } }
+
+        public ITempTimesheetRepository TempTimesheets { get { return new TempTimesheetRepository(DbContext); } }
     }
 }
 
