@@ -105,6 +105,14 @@ namespace KLS.Data.Repositories
         public ITimesheetDetailRepository TimesheetDetails { get { return new TimesheetDetailRepository(DbContext); } }
 
         public ITempTimesheetRepository TempTimesheets { get { return new TempTimesheetRepository(DbContext); } }
+
+        public IPayrollServiceDetailRepository PayrollServiceDetails { get { return new PayrollServiceDetailRepository(DbContext); } }
+
+        public IPayrollServiceTypeRepository PayrollServiceTypes { get { return new PayrollServiceTypeRepository(DbContext); } }
+
+        public IEmpJobRepository EmpJobs { get { return new EmpJobRepository(DbContext); } }
+
+        public ITempPayrollServiceRepository TempPayrollServices { get { return new TempPayrollServiceRepository(DbContext); } }
     }
 }
 

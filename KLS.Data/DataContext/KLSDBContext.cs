@@ -1,6 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Models;
 using KLS.Models.Deposit;
+using KLS.Models.TempPayrollService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System;
@@ -64,6 +65,10 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PayrollService>().ToTable("PayrollService");
             modelBuilder.Entity<TimesheetDetail>().ToTable("TimesheetDetail");
             modelBuilder.Entity<TempTimesheet>().ToTable("TempTimesheet");
+            modelBuilder.Entity<PayrollServiceDetail>().ToTable("PayrollServiceDetail");
+            modelBuilder.Entity<PayrollServiceType>().ToTable("PayrollServiceType");
+            modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
+            modelBuilder.Entity<TempPayrollService>().ToTable("TempPayrollService");
 
             modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
@@ -139,6 +144,14 @@ namespace KLS.Data.DataContext
         public DbSet<TimesheetDetail> TimesheetDetails { get; set; }
 
         public DbSet<TempTimesheet> TempTimesheets { get; set; }
+
+        public DbSet<PayrollServiceDetail> PayrollServiceDetails { get; set; }
+
+        public DbSet<PayrollServiceType> PayrollServiceTypes { get; set; }
+
+        public DbSet<EmpJob> EmpJobs { get; set; }
+
+        public DbSet<TempPayrollService> TempPayrollServices { get; set; }
 
         #endregion
 
