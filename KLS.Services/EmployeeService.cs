@@ -24,6 +24,16 @@ namespace KLS.Services
             return Uow.Employees.GetAllEmployees(empReq);
         }
 
+        public ICollection<EmployeeList> GetActiveEmployees()
+        {
+            var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString()).OrderBy(c => c.PayeeName).ToList();
+
+            var employees = new List<EmployeeList>();
+            employees.InjectFrom(payees);
+
+            return employees;
+        }
+
         public EmployeeDTO? GetById(int payeeId)
         {
             var payee = Uow.Payees.GetById(payeeId);

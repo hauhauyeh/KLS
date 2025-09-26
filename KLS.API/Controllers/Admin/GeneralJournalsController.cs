@@ -78,9 +78,9 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Inject/{gjId}")]
-        public IActionResult Inject(int gjId)
+        public IActionResult Inject(int gjId, [FromQuery] bool isClone)
         {
-            _gjService.InjectGeneralJournal(gjId);
+            _gjService.InjectGeneralJournal(gjId, isClone);
 
             return Ok();
         }

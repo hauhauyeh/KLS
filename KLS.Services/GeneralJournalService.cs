@@ -73,9 +73,9 @@ namespace KLS.Services
             }
         }
 
-        public void InjectGeneralJournal(int gjId)
+        public void InjectGeneralJournal(int gjId, bool isClone)
         {
-            Uow.GeneralJournals.InjectGeneralJournal(gjId);
+            Uow.GeneralJournals.InjectGeneralJournal(gjId, isClone);
         }
     }
 }

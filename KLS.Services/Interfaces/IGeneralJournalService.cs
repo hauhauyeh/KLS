@@ -19,6 +19,8 @@ namespace KLS.Services.Interfaces
 
         void UpdateNotes(GeneralJournal gj);
 
-        void InjectGeneralJournal(int gjId);
+        //void InjectGeneralJournal(int gjId);
+
+        void InjectGeneralJournal(int gjId, bool isClone);
     }
 }

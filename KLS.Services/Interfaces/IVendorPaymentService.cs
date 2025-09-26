@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Interfaces
 {
-    public interface IVendorPmtService
+    public interface IVendorPaymentService
     {
         PagingResponse<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq);
     }

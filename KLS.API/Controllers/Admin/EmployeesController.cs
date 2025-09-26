@@ -38,6 +38,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("Active")]
+        public IActionResult GetActive()
+        {
+            return Ok(_employeeService.GetActiveEmployees());
+        }
+
+
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {

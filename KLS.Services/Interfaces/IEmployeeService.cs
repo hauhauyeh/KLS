@@ -11,6 +11,8 @@ namespace KLS.Services.Interfaces
     {
         IEnumerable<EmployeeList> GetAllEmployees(EmpReq empReq);
 
+        ICollection<EmployeeList> GetActiveEmployees();
+
         EmployeeDTO? GetById(int payeeId);
 
         bool EmployeeExists(EmployeeDTO employeeDTO);

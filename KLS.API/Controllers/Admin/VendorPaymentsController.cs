@@ -8,19 +8,19 @@ namespace KLS.API.Controllers.Admin
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "VendorPmt Management", GroupName = "Admin")]
-    public class VendorPmtsController : BaseController
+    public class VendorPaymentsController : BaseController
     {
         #region --- Member(s) ---
 
-        private readonly IVendorPmtService _vendorPmtService;
+        private readonly IVendorPaymentService _vendorPaymentService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public VendorPmtsController(IVendorPmtService vendorPmtService)
+        public VendorPaymentsController(IVendorPaymentService vendorPaymentService)
         {
-            _vendorPmtService = vendorPmtService;
+            _vendorPaymentService = vendorPaymentService;
         }
 
         #endregion

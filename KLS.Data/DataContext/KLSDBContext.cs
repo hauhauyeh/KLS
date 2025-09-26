@@ -127,7 +127,7 @@ namespace KLS.Data.DataContext
 
         public DbSet<BankRecon> BankRecons { get; set; }
 
-        public DbSet<VendorPayment> VendorPmts { get; set; }
+        public DbSet<VendorPayment> VendorPayments { get; set; }
 
         public DbSet<PaymentOption> PaymentOptions { get; set; }
 

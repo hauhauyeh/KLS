@@ -26,7 +26,7 @@ namespace KLS.Contract.Interfaces
 
         IVendorRepository Vendors { get; }
 
-        IVendorPmtRepository VendorPmts { get; }
+        IVendorPaymentRepository VendorPayments { get; }
 
         ITermRepository Terms { get; }
 

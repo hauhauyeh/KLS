@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Data.Repositories
 {
-    public class VendorPmtRepository : KLSRepository<VendorPayment>, IVendorPmtRepository
+    public class VendorPaymentRepository : KLSRepository<VendorPayment>, IVendorPaymentRepository
     {
-        public VendorPmtRepository(KLSDBContext dbContext) : base(dbContext)
+        public VendorPaymentRepository(KLSDBContext dbContext) : base(dbContext)
         {
 
         }

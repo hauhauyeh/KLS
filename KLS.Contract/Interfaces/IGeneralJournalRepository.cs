@@ -13,6 +13,6 @@ namespace KLS.Contract.Interfaces
 
         int SaveGeneralJournal(GeneralJournal generalJournal);
 
-        void InjectGeneralJournal(int gjId);
+        void InjectGeneralJournal(int gjId, bool isClone);
     }
 }

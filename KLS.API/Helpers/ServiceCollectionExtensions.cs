@@ -37,7 +37,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IDeleteLogService, DeleteLogService>();
             services.AddScoped<IBankReconService, BankReconService>();
             services.AddScoped<ICompanyService, CompanyService>();
-            services.AddScoped<IVendorPmtService, VendorPmtService>();
+            services.AddScoped<IVendorPaymentService, VendorPaymentService>();
             services.AddScoped<IPaymentOptionService, PaymentOptionService>();
             services.AddScoped<IEmployeeAdvancePmtService, EmployeeAdvancePmtService>();
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IVendorPmtRepository : IRepository<VendorPayment>
+    public interface IVendorPaymentRepository : IRepository<VendorPayment>
     {
         IQueryable<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq);
     }

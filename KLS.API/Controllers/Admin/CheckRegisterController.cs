@@ -15,13 +15,13 @@ namespace KLS.API.Controllers.Admin
     {
         #region --- Member(s) ---
 
-        private readonly IVendorPmtService _vendorPmtService;
+        private readonly IVendorPaymentService _vendorPmtService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public CheckRegisterController(IVendorPmtService vendorPmtService)
+        public CheckRegisterController(IVendorPaymentService vendorPmtService)
         {
             _vendorPmtService = vendorPmtService;
         }

@@ -59,13 +59,15 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(NewGJId.Value);
         }
 
-        public void InjectGeneralJournal(int gjId)
+        public void InjectGeneralJournal(int gjId, bool isClone)
         {
             var GJIdParam = new SqlParameter("@GJId", gjId);
 
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[GeneralJournal_Inject] @GJId,@EmpId", GJIdParam, EmpIdParam);
+            var IsCloneParam = new SqlParameter("@IsClone", isClone);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[GeneralJournal_Inject] @GJId,@EmpId,@IsClone", GJIdParam, EmpIdParam, IsCloneParam);
         }
     }
 }
