@@ -18,23 +18,23 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<TempTimesheet>? GetTempTimesheetList(int timesheetId)
-        {
-            return Uow.TempTimesheets.Find(c => c.EmpId == UserContext.EmpId && c.TimesheetId == timesheetId).Include(c => c.EmpJob);
-        }
+        //public IEnumerable<TempTimesheet>? GetTempTimesheetList(int timesheetId)
+        //{
+        //    return Uow.TempTimesheets.Find(c => c.EmpId == UserContext.EmpId && c.TimesheetId == timesheetId).Include(c => c.EmpJob);
+        //}
 
-        public TempTimesheet GetById(int tempId)
-        {
-            return Uow.TempTimesheets.Find(c => c.TempTimesheetId == tempId).Include(c => c.EmpJob).FirstOrDefault()!;
-        }
+        //public TempTimesheet GetById(int tempId)
+        //{
+        //    return Uow.TempTimesheets.Find(c => c.TempTimesheetId == tempId).Include(c => c.EmpJob).FirstOrDefault()!;
+        //}
 
-        public TempTimesheet CreateTempTimesheet(TempTimesheet tempTimesheet)
-        {
-            Uow.TempTimesheets.Add(tempTimesheet);
-            Uow.Commit();
+        //public TempTimesheet CreateTempTimesheet(TempTimesheet tempTimesheet)
+        //{
+        //    Uow.TempTimesheets.Add(tempTimesheet);
+        //    Uow.Commit();
 
-            return GetById(tempTimesheet.TempTimesheetId);
-        }
+        //    return GetById(tempTimesheet.TempTimesheetId);
+        //}
 
         public TempTimesheet UpdateTempTimesheet(TempTimesheet tempTimesheet)
         {

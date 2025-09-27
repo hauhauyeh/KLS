@@ -177,6 +177,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<EmployeeAdvancePmt> EmployeeAdvancePmts { get; set; }
 
+        public virtual DbSet<PayrollServiceDTO> PayrollServiceDTO { get; set; }
+
         #endregion
     }
 }
