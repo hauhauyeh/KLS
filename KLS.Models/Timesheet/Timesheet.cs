@@ -32,5 +32,32 @@ namespace KLS.Models
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+
+        [ForeignKey("TimesheetId")]
+        public virtual ICollection<TimesheetDetail>? TimeSheetDetails { get; set; }
+
+
+        public string? DayOfWeek { get { return InTime.DayOfWeek.ToString(); } }
+
+        public virtual TimeSpan WorkingHour
+        {
+            get
+            {
+                return OutTime.HasValue ? OutTime.Value.Subtract(InTime) : new TimeSpan(0);
+            }
+        }
+
+        public string? InTimeHour { get { return InTime.ToString("hh"); } }
+
+        public string? InTimeMinute { get { return InTime.ToString("mm"); } }
+
+        public string? InTimeAMPM { get { return InTime.ToString("tt"); } }
+
+        public string? OutTimeHour { get { return OutTime.HasValue ? OutTime.Value.ToString("hh") : null; } }
+
+        public string? OutTimeMinute { get { return OutTime.HasValue ? OutTime.Value.ToString("mm") : null; } }
+
+        public string? OutTimeAMPM { get { return OutTime.HasValue ? OutTime.Value.ToString("tt") : null; } }
     }
 }

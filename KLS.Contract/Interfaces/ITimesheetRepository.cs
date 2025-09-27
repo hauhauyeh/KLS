@@ -9,5 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITimesheetRepository : IRepository<Timesheet>
     {
+        int SaveTimesheet(Timesheet timeSheet);
     }
 }

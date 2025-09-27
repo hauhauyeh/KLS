@@ -29,5 +29,9 @@ namespace KLS.Models
         public string? Route { get; set; }
 
         public string? Notes { get; set; }
+
+
+        [ForeignKey("JobCode")]
+        public virtual dynamic? EmpJob { get; set; }
     }
 }
