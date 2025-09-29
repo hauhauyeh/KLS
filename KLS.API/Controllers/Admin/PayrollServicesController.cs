@@ -1,4 +1,5 @@
 ﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
@@ -10,20 +11,22 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "PayrollService Management", GroupName = "Admin")]
+    [Display(Name = "Payroll Service Management", GroupName = "Admin")]
     public class PayrollServicesController : BaseController
     {
         #region --- Member(s) ---
 
-        private readonly IPayrollServiceService _payrollServiceService;
+        private readonly IPayrollServiceService _payrollService;
+        private readonly ISystemSettingService _systemSettingService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public PayrollServicesController(IPayrollServiceService payrollServiceService)
+        public PayrollServicesController(IPayrollServiceService payrollService, ISystemSettingService systemSettingService)
         {
-            _payrollServiceService = payrollServiceService;
+            _payrollService = payrollService;
+            _systemSettingService = systemSettingService;
         }
 
         #endregion
@@ -31,10 +34,58 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List PayrollServices")]
+        [DisplayName("List Payroll Service")]
         public IActionResult List([FromQuery] PayrollServiceReq payrollServiceReq)
         {
-            return Ok(_payrollServiceService.GetPayrollService(payrollServiceReq));
+            return Ok(_payrollService.GetAllPayrollService(payrollServiceReq));
+        }
+
+
+        [HttpGet("{payrollId}")]
+        public IActionResult GetById(int payrollId)
+        {
+            var payrollService = new PayrollService();
+
+            if (payrollId > 0)
+                payrollService = _payrollService.GetById(payrollId);
+            else
+                payrollService.FromAccount = _systemSettingService.GetByKey<string>(GlobalKey.DEFAULT_PAYROLL_BANK);
+
+            return Ok(payrollService);
+        }
+
+
+        [HttpPost]
+        [DisplayName("Save Payroll Service")]
+        public IActionResult Save([FromBody] PayrollService payrollService)
+        {
+            return Ok(_payrollService.SavePayrollService(payrollService));
+        }
+
+
+        [HttpDelete("{payrollId}")]
+        [DisplayName("Delete Payroll Service")]
+        public IActionResult Delete(int payrollId)
+        {
+            _payrollService.DeletePayrollService(payrollId);
+            return Ok();
+        }
+
+
+        [HttpPost("Inject/{payrollServiceId}")]
+        public IActionResult Inject(int payrollServiceId, [FromQuery] bool isClone)
+        {
+            _payrollService.InjectPayrollService(payrollServiceId, isClone);
+
+            return Ok();
+        }
+
+
+        [HttpPost("InjectEmployee")]
+        public IActionResult InjectEmployee()
+        {
+            _payrollService.InjectEmployee();
+            return Ok();
         }
 
         #endregion

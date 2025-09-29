@@ -1,7 +1,6 @@
 ﻿using KLS.Common;
 using KLS.Models;
 using KLS.Models.Deposit;
-using KLS.Models.TempPayrollService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System;

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLS.Models.TempPayrollService
+namespace KLS.Models
 {
     public class TempPayrollService
     {
@@ -27,5 +27,9 @@ namespace KLS.Models.TempPayrollService
         public string? ReferenceId { get; set; }
 
         public decimal? PaymentAmount { get; set; }
+
+
+        [NotMapped]
+        public string? PayeeName { get; set; }
     }
 }

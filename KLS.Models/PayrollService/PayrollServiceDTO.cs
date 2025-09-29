@@ -10,6 +10,8 @@ namespace KLS.Models
     public class PayrollServiceDTO
     {
         [Key]
+        public int PayrollServiceId { get; set; }
+
         public int PayrollNumber { get; set; }
 
         public DateOnly? PayrollDate { get; set; }

@@ -9,6 +9,16 @@ namespace KLS.Services.Interfaces
 {
     public interface IPayrollServiceService
     {
-        PagingResponse<PayrollServiceDTO> GetPayrollService(PayrollServiceReq payrollServiceReq);
+        PagingResponse<PayrollServiceDTO> GetAllPayrollService(PayrollServiceReq payrollServiceReq);
+
+        PayrollService GetById(int payrollServiceId);
+
+        PayrollService SavePayrollService(PayrollService payrollService);
+
+        void DeletePayrollService(int payrollId);
+
+        void InjectPayrollService(int payrollServiceId, bool isClone);
+
+        void InjectEmployee();
     }
 }

@@ -58,8 +58,6 @@ namespace KLS.Contract.Interfaces
 
         IItemStorageRepository ItemStorages { get; }
 
-        ITimesheetRepository Timesheets { get; }
-
         ISalesRepository Sales { get; }
 
         IDeleteLogRepository DeleteLogs { get; }
@@ -72,17 +70,21 @@ namespace KLS.Contract.Interfaces
 
         IEmployeeAdvancePmtRepository EmployeeAdvancePmts { get; }
 
-        IPayrollServiceRepository PayrollServices { get; }
+        ITimesheetRepository Timesheets { get; }
 
         ITimesheetDetailRepository TimesheetDetails { get; }
 
         ITempTimesheetRepository TempTimesheets { get; }
 
+        IPayrollServiceRepository PayrollServices { get; }
+
         IPayrollServiceDetailRepository PayrollServiceDetails { get; }
 
-        IEmpJobRepository EmpJobs { get; }
-
         ITempPayrollServiceRepository TempPayrollServices { get; }
+
+        IPayrollServiceTypeRepository PayrollServiceTypes { get; }
+
+        IEmpJobRepository EmpJobs { get; }
 
         void Commit();
     }

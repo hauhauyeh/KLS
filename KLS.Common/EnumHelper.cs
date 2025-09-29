@@ -16,5 +16,13 @@ namespace KLS.Common
             L = 4,
             O = 5
         }
+
+        public enum PayrollServiceCode
+        {
+            PAYROLLCHECK = 1,
+            PAYROLLTAXPMT = 2,
+            LOANPMTDEDUCTION = 3,
+            GARNISHMENT = 4
+        }
     }
 }

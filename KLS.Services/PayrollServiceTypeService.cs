@@ -1,4 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,11 @@ namespace KLS.Services
         public PayrollServiceTypeService(IUnitOfWork uow) : base(uow)
         {
 
+        }
+
+        public IEnumerable<PayrollServiceType>? GetServiceTypes()
+        {
+            return Uow.PayrollServiceTypes.GetAll();
         }
     }
 }

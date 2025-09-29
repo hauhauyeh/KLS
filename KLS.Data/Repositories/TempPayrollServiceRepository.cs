@@ -2,7 +2,6 @@
 using KLS.Data.DataContext;
 using KLS.Data.Repositories;
 using KLS.Models;
-using KLS.Models.TempPayrollService;
 using System;
 using System.Collections.Generic;
 using System.Linq;

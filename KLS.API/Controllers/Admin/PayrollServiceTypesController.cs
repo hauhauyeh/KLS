@@ -7,7 +7,6 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "PayrollServiceType Management", GroupName = "Admin")]
     public class PayrollServiceTypesController : BaseController
     {
         #region --- Member(s) ---
@@ -27,7 +26,11 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-
+        [HttpGet]
+        public IActionResult GetServiceTypes()
+        {
+            return Ok(_payrollServiceTypeService.GetServiceTypes());
+        }
 
         #endregion
     }

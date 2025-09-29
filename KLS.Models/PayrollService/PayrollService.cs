@@ -13,6 +13,43 @@ namespace KLS.Models
         public PayrollService()
         {
             this.CreatedAt = DateTime.UtcNow;
+
+            RegularPay = 0;
+            OverTimePay = 0;
+            HolidayPay = 0;
+            VacationPay = 0;
+            EPSLPay = 0;
+            OtherPay = 0;
+            GrossPay = 0;
+            Commission = 0;
+            C401K = 0;
+            E401K = 0;
+            E401KLoan = 0;
+            CHealthIns = 0;
+            EHealthIns = 0;
+            CVisionIns = 0;
+            EVisionIns = 0;
+            CDentalIns = 0;
+            EDentalIns = 0;
+            ChildSupState = 0;
+            ChildSupOutState = 0;
+            Garnishment = 0;
+            COASDI = 0;
+            EOASDI = 0;
+            CHI = 0;
+            EHI = 0;
+            EFWH = 0;
+            CFUTA = 0;
+            CSUTA = 0;
+            Uniform = 0;
+            ChildSupAnnualFee = 0;
+            Loan = 0;
+            PayrollCharge = 0;
+            NetPay = 0;
+            DirectDeposit = 0;
+            EPSLCredit = 0;
+            CheckPay = 0;
+            PayrollDate = DateOnly.FromDateTime(DateTime.UtcNow);
         }
 
         [Key]
