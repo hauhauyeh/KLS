@@ -29,6 +29,8 @@ namespace KLS.Services.Interfaces
 
         IEnumerable<AccountDTO>? GetBankCashAccounts();
 
+        IEnumerable<AccountDTO>? GetBankAccounts();
+
         IEnumerable<AccountDTO>? GetBankCashCCAccounts();
     }
 }

@@ -118,6 +118,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("BankAccount")]
+        public IActionResult GetBankAccounts()
+        {
+            return Ok(_chartOfAccountService.GetBankAccounts());
+        }
+
+
         [HttpGet("BankCashCC")]
         public IActionResult GetBankCashCCAccounts()
         {
