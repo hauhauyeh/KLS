@@ -86,6 +86,10 @@ namespace KLS.Contract.Interfaces
 
         IEmpJobRepository EmpJobs { get; }
 
+        IPayrollDetailRepository PayrollDetails { get; }
+
+        ITempPayrollDetailRepository TempPayrollDetails { get; }
+
         void Commit();
     }
 }
