@@ -11,6 +11,8 @@ namespace KLS.Contract.Interfaces
     {
         IQueryable<GeneralJournal> GetAllGeneralJournals(GJReq gJReq);
 
+        int CountAllGeneralJournals(GJReq gJReq);
+
         int SaveGeneralJournal(GeneralJournal generalJournal);
 
         void InjectGeneralJournal(int gjId, bool isClone);

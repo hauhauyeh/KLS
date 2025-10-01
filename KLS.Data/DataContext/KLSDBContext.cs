@@ -187,6 +187,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<VendorPaymentList> VendorPaymentList { get; set; }
 
+        public virtual DbSet<PayrollList> PayrollList { get; set; }
+
         #endregion
     }
 }

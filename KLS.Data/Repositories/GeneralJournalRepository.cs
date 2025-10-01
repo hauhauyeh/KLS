@@ -22,19 +22,20 @@ namespace KLS.Data.Repositories
 
         public IQueryable<GeneralJournal> GetAllGeneralJournals(GJReq gJReq)
         {
-            var PagenoParam = new SqlParameter("@Pageno", gJReq.Pageno);
+            var param = BuildGJParam(gJReq);
 
-            var PagesizeParam = new SqlParameter("@Pagesize", gJReq.Pagesize);
+            return DbContext.GeneralJournals.FromSqlRaw("[dbo].[GeneralJournal_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+        }
 
-            var SearchParam = (!string.IsNullOrEmpty(gJReq.Search)) ? new SqlParameter("@Search", gJReq.Search) : new SqlParameter("@Search", DBNull.Value);
+        public int CountAllGeneralJournals(GJReq gJReq)
+        {
+            gJReq.IsCount = true;
+            var param = BuildGJParam(gJReq);
 
-            var StartDateParam = gJReq.StartDate.HasValue ? new SqlParameter("@StartDate", gJReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[GeneralJournal_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var EndDateParam = gJReq.EndDate.HasValue ? new SqlParameter("@EndDate", gJReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
-
-            var IsCountParam = new SqlParameter("@IsCount", gJReq.IsCount);
-
-            return DbContext.GeneralJournals.FromSqlRaw("[dbo].[GeneralJournal_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@IsCount", PagenoParam, PagesizeParam, SearchParam, StartDateParam, EndDateParam, IsCountParam);
+            var output = param[8] as SqlParameter;
+            return Convert.ToInt32(output.Value);
         }
 
         public int SaveGeneralJournal(GeneralJournal generalJournal)
@@ -68,6 +69,36 @@ namespace KLS.Data.Repositories
             var IsCloneParam = new SqlParameter("@IsClone", isClone);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[GeneralJournal_Inject] @GJId,@EmpId,@IsClone", GJIdParam, EmpIdParam, IsCloneParam);
+        }
+
+        private static object[] BuildGJParam(GJReq gJReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", gJReq.Pageno),
+
+                new SqlParameter("@Pagesize", gJReq.Pagesize),
+
+                (!string.IsNullOrEmpty(gJReq.Search)) ? new SqlParameter("@Search", gJReq.Search) : new SqlParameter("@Search", DBNull.Value),
+
+                gJReq.StartDate.HasValue ? new SqlParameter("@StartDate", gJReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                gJReq.EndDate.HasValue ? new SqlParameter("@EndDate", gJReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                string.IsNullOrEmpty(gJReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", gJReq.SortField),
+
+                string.IsNullOrEmpty(gJReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", gJReq.SortOrder),
+
+                new SqlParameter("@IsCount", gJReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+
+            return param;
         }
     }
 }

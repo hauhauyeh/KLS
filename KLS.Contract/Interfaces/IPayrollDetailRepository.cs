@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface IPayrollDetailRepository : IRepository<PayrollDetail>
     {
-
+        IQueryable<PayrollList> GetAllPayrolls(PayrollReq payrollReq);
     }
 }

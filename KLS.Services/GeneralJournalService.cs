@@ -21,9 +21,7 @@ namespace KLS.Services
         {
             var list = Uow.GeneralJournals.GetAllGeneralJournals(gJReq);
 
-            gJReq.IsCount = true;
-
-            var totalRecords = Uow.GeneralJournals.GetAllGeneralJournals(gJReq).ToList().Count;
+            var totalRecords = Uow.GeneralJournals.CountAllGeneralJournals(gJReq);
 
             return new PagingResponse<GeneralJournal>(totalRecords, gJReq.Pageno, gJReq.Pagesize)
             {

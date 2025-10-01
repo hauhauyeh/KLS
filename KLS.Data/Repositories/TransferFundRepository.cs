@@ -71,7 +71,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildDepositParam(depositReq);
 
-            return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccount,@Filterby,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccount,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountAllDeposits(DepositReq depositReq)
@@ -79,9 +79,9 @@ namespace KLS.Data.Repositories
             depositReq.IsCount = true;
             var param = BuildDepositParam(depositReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccount,@Filterby,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccount,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[8] as SqlParameter;
+            var output = param[10] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -89,13 +89,25 @@ namespace KLS.Data.Repositories
         {
             object[] param = {
                 new SqlParameter("@Pageno", depositReq.Pageno),
+
                 new SqlParameter("@Pagesize", depositReq.Pagesize),
+
                 (!string.IsNullOrEmpty(depositReq.Search)) ? new SqlParameter("@Search", depositReq.Search) : new SqlParameter("@Search", DBNull.Value),
+
                 depositReq.StartDate.HasValue ? new SqlParameter("@StartDate", depositReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
                 depositReq.EndDate.HasValue ? new SqlParameter("@EndDate", depositReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
                 (!string.IsNullOrEmpty(depositReq.ToAccount)) ? new SqlParameter("@ToAccount", depositReq.ToAccount) : new SqlParameter("@ToAccount", DBNull.Value),
+
                 (!string.IsNullOrEmpty(depositReq.Filterby)) ? new SqlParameter("@Filterby", depositReq.Filterby) : new SqlParameter("@Filterby", DBNull.Value),
+
+                string.IsNullOrEmpty(depositReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", depositReq.SortField),
+
+                string.IsNullOrEmpty(depositReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", depositReq.SortOrder),
+
                 new SqlParameter("@IsCount", depositReq.IsCount),
+
                 new SqlParameter()
                 {
                     ParameterName = "@TotalCount",
