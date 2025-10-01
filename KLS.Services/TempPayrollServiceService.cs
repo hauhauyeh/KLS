@@ -55,6 +55,7 @@ namespace KLS.Services
                 throw new Exception("Employee already exists");
 
             tempService.PayeeName = payee.PayeeName;
+            tempService.EmpId = UserContext.EmpId;
 
             Uow.TempPayrollServices.Add(tempService);
             Uow.Commit();
