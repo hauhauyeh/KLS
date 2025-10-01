@@ -143,7 +143,7 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        public IEnumerable<PayeeSearch>? SearchVendor(PayeeSearchReq searchReq)
+        public IEnumerable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq)
         {
             return Uow.Vendors.SearchVendor(searchReq);
         }

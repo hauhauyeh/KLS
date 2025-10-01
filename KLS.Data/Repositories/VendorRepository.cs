@@ -19,13 +19,13 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PayeeSearch>? SearchVendor(PayeeSearchReq searchReq)
+        public IQueryable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq)
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 
             var IsActiveParam = new SqlParameter("@IsActive", searchReq.IsActiveOnly);
 
-            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Vendor_SearchbyTerm] @SearchTerm,@IsActive", TermParam, IsActiveParam);
+            return DbContext.VendorSearchDTO.FromSqlRaw("[dbo].[Vendor_SearchbyTerm] @SearchTerm,@IsActive", TermParam, IsActiveParam);
         }
     }
 }

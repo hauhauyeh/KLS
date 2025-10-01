@@ -27,5 +27,17 @@ namespace KLS.Services
                 RowData = registerlist,
             };
         }
+
+        public PagingResponse<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq)
+        {
+            var vendorPaymentlist = Uow.VendorPayments.GetVendorPayment(vendorPaymentReq);
+
+            var totalRecords = Uow.VendorPayments.GetVendorPayment(vendorPaymentReq).ToList().Count();
+
+            return new PagingResponse<VendorPaymentList>(totalRecords, vendorPaymentReq.Pageno, vendorPaymentReq.Pagesize)
+            {
+                RowData = vendorPaymentlist,
+            };
+        }
     }
 }

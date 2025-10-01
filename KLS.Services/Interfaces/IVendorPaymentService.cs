@@ -10,5 +10,7 @@ namespace KLS.Services.Interfaces
     public interface IVendorPaymentService
     {
         PagingResponse<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq);
+
+        PagingResponse<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq);
     }
 }

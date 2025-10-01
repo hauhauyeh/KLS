@@ -177,11 +177,15 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PayeeSearch> PayeeSearch { get; set; }
 
+        public virtual DbSet<VendorSearchDTO> VendorSearchDTO { get; set; }
+
         public virtual DbSet<CheckRegister> CheckRegister { get; set; }
 
         public virtual DbSet<EmployeeAdvancePmt> EmployeeAdvancePmts { get; set; }
 
         public virtual DbSet<PayrollServiceDTO> PayrollServiceDTO { get; set; }
+
+        public virtual DbSet<VendorPaymentList> VendorPaymentList { get; set; }
 
         #endregion
     }

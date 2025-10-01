@@ -51,5 +51,38 @@ namespace KLS.Data.Repositories
 
             return param;
         }
+
+        public IQueryable<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq)
+        {
+            var param = BuildVendorPaymentParam(vendorPaymentReq);
+
+            return DbContext.VendorPaymentList.FromSqlRaw("[dbo].[VendorPayment_GetAllList] @Pageno,@Pagesize,@StartDate,@EndDate,@PayeeId,@Search,@FromAccount,@PaymentMethod,@Filterby,@IsCount", param);
+        }
+
+        private static object[] BuildVendorPaymentParam(VendorPaymentReq vendorPaymentReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", vendorPaymentReq.Pageno),
+
+                new SqlParameter("@Pagesize", vendorPaymentReq.Pagesize),
+
+                vendorPaymentReq.StartDate.HasValue ? new SqlParameter("@StartDate", vendorPaymentReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                vendorPaymentReq.EndDate.HasValue ? new SqlParameter("@EndDate", vendorPaymentReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                vendorPaymentReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", vendorPaymentReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
+
+                string.IsNullOrEmpty(vendorPaymentReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", vendorPaymentReq.Search),
+
+                string.IsNullOrEmpty(vendorPaymentReq.FromAccount) ? new SqlParameter("@FromAccount", DBNull.Value) : new SqlParameter("@FromAccount", vendorPaymentReq.FromAccount),
+
+                string.IsNullOrEmpty(vendorPaymentReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", vendorPaymentReq.PaymentMethod),
+
+                string.IsNullOrEmpty(vendorPaymentReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", vendorPaymentReq.Filterby),
+                new SqlParameter("@IsCount", vendorPaymentReq.IsCount),
+            };
+
+            return param;
+        }
     }
 }

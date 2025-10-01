@@ -21,6 +21,6 @@ namespace KLS.Services.Interfaces
 
         void DeleteVendor(int payeeId);
 
-        IEnumerable<PayeeSearch>? SearchVendor(PayeeSearchReq searchReq);
+        IEnumerable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq);
     }
 }

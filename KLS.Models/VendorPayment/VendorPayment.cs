@@ -51,6 +51,28 @@ namespace KLS.Models
 
         public DateTime? VoidAt { get; set; }
 
+        public bool IsReturn1 { get; set; }
+
+        public string? ReturnType1 { get; set; }
+
+        public DateOnly? ReturnDate1 { get; set; }
+
+        public string? FeeAccount1 { get; set; }
+
+        public decimal? FeeAmount1 { get; set; }
+
+        public bool IsRedeposit { get; set; }
+
+        public bool IsReturn2 { get; set; }
+
+        public string? ReturnType2 { get; set; }
+
+        public DateOnly? ReturnDate2 { get; set; }
+
+        public string? FeeAccount2 { get; set; }
+
+        public decimal? FeeAmount2 { get; set; }
+
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }

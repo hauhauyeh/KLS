@@ -10,5 +10,7 @@ namespace KLS.Contract.Interfaces
     public interface IVendorPaymentRepository : IRepository<VendorPayment>
     {
         IQueryable<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq);
+
+        IQueryable<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq);
     }
 }

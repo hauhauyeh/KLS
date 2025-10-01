@@ -1,6 +1,9 @@
 ﻿using KLS.API.Helpers;
+using KLS.Models;
+using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
@@ -27,7 +30,12 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-
+        [HttpGet]
+        [DisplayName("List VendorPayments")]
+        public IActionResult List([FromQuery] VendorPaymentReq vendorPaymentReq)
+        {
+            return Ok(_vendorPaymentService.GetVendorPayment(vendorPaymentReq));
+        }
 
         #endregion
     }
