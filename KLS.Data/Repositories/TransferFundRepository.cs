@@ -21,21 +21,66 @@ namespace KLS.Data.Repositories
 
         public IQueryable<TransferFundList> GetAllTransferFunds(TFReq tFReq)
         {
-            var PagenoParam = new SqlParameter("@Pageno", tFReq.Pageno);
+            //var PagenoParam = new SqlParameter("@Pageno", tFReq.Pageno);
 
-            var PagesizeParam = new SqlParameter("@Pagesize", tFReq.Pagesize);
+            //var PagesizeParam = new SqlParameter("@Pagesize", tFReq.Pagesize);
 
-            var SearchParam = (!string.IsNullOrEmpty(tFReq.Search)) ? new SqlParameter("@Search", tFReq.Search) : new SqlParameter("@Search", DBNull.Value);
+            //var SearchParam = (!string.IsNullOrEmpty(tFReq.Search)) ? new SqlParameter("@Search", tFReq.Search) : new SqlParameter("@Search", DBNull.Value);
 
-            var StartDateParam = tFReq.StartDate.HasValue ? new SqlParameter("@StartDate", tFReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            //var StartDateParam = tFReq.StartDate.HasValue ? new SqlParameter("@StartDate", tFReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
 
-            var EndDateParam = tFReq.EndDate.HasValue ? new SqlParameter("@EndDate", tFReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            //var EndDateParam = tFReq.EndDate.HasValue ? new SqlParameter("@EndDate", tFReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
 
-            var TFIdParam = tFReq.Id.HasValue ? new SqlParameter("@TFId", tFReq.Id) : new SqlParameter("@TFId", DBNull.Value);
+            //var TFIdParam = tFReq.Id.HasValue ? new SqlParameter("@TFId", tFReq.Id) : new SqlParameter("@TFId", DBNull.Value);
 
-            var IsCountParam = new SqlParameter("@IsCount", tFReq.IsCount);
+            //var IsCountParam = new SqlParameter("@IsCount", tFReq.IsCount);
 
-            return DbContext.TransferFundList.FromSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@IsCount", PagenoParam, PagesizeParam, SearchParam, StartDateParam, EndDateParam, TFIdParam, IsCountParam);
+            var param = BuildTransferFundParam(tFReq);
+
+            return DbContext.TransferFundList.FromSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+        }
+
+        public int CountAllTransferFunds(TFReq tFReq)
+        {
+            tFReq.IsCount = true;
+            var param = BuildTransferFundParam(tFReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+
+            var output = param[9] as SqlParameter;
+            return Convert.ToInt32(output.Value);
+        }
+
+        private object[] BuildTransferFundParam(TFReq tFReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", tFReq.Pageno),
+
+                new SqlParameter("@Pagesize", tFReq.Pagesize),
+
+                (!string.IsNullOrEmpty(tFReq.Search)) ? new SqlParameter("@Search", tFReq.Search) : new SqlParameter("@Search", DBNull.Value),
+
+                tFReq.StartDate.HasValue ? new SqlParameter("@StartDate", tFReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                tFReq.EndDate.HasValue ? new SqlParameter("@EndDate", tFReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                tFReq.Id.HasValue ? new SqlParameter("@TFId", tFReq.Id) : new SqlParameter("@TFId", DBNull.Value),
+
+                string.IsNullOrEmpty(tFReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", tFReq.SortField),
+
+                string.IsNullOrEmpty(tFReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", tFReq.SortOrder),
+
+                new SqlParameter("@IsCount", tFReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+
+            return param;
         }
 
         public int SaveTransferFund(TransferFund tf)

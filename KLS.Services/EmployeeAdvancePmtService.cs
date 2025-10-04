@@ -20,7 +20,7 @@ namespace KLS.Services
         {
             var empAdvanceList = Uow.EmployeeAdvancePmts.GetAllEmployeeAdvancePmt(empAdvanceReq);
 
-            var totalRecords = Uow.EmployeeAdvancePmts.GetAllEmployeeAdvancePmt(empAdvanceReq).ToList().Count();
+            var totalRecords = Uow.EmployeeAdvancePmts.CountAllEmployeeAdvancePmt(empAdvanceReq);
 
             return new PagingResponse<EmployeeAdvancePmt>(totalRecords, empAdvanceReq.Pageno, empAdvanceReq.Pagesize)
             {

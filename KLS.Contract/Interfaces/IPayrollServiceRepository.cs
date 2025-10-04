@@ -10,7 +10,10 @@ namespace KLS.Contract.Interfaces
     public interface IPayrollServiceRepository : IRepository<PayrollService>
     {
         IQueryable<PayrollServiceDTO> GetAllPayrollService(PayrollServiceReq payrollServiceReq);
-        
+
+        int CountAllPayrollService(PayrollServiceReq payrollServiceReq);
+
+
         int SavePayrollService(PayrollService service);
 
         void InjectPayrollService(int payrollServiceId, bool isClone);

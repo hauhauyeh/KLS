@@ -32,7 +32,7 @@ namespace KLS.Services
         {
             var vendorPaymentlist = Uow.VendorPayments.GetVendorPayment(vendorPaymentReq);
 
-            var totalRecords = Uow.VendorPayments.GetVendorPayment(vendorPaymentReq).ToList().Count();
+            var totalRecords = Uow.VendorPayments.CountAllVendorPayment(vendorPaymentReq);
 
             return new PagingResponse<VendorPaymentList>(totalRecords, vendorPaymentReq.Pageno, vendorPaymentReq.Pagesize)
             {

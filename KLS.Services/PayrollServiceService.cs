@@ -21,7 +21,7 @@ namespace KLS.Services
         {
             var payrollServicelist = Uow.PayrollServices.GetAllPayrollService(payrollServiceReq);
 
-            var totalRecords = Uow.PayrollServices.GetAllPayrollService(payrollServiceReq).ToList().Count();
+            var totalRecords = Uow.PayrollServices.CountAllPayrollService(payrollServiceReq);
 
             return new PagingResponse<PayrollServiceDTO>(totalRecords, payrollServiceReq.Pageno, payrollServiceReq.Pagesize)
             {

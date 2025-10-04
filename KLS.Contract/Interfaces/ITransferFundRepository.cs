@@ -12,6 +12,8 @@ namespace KLS.Contract.Interfaces
     {
         IQueryable<TransferFundList> GetAllTransferFunds(TFReq tFReq);
 
+        int CountAllTransferFunds(TFReq tFReq);
+
         int SaveTransferFund(TransferFund transferFund);
 
 

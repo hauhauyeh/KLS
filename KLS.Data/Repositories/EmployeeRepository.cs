@@ -3,6 +3,7 @@ using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
@@ -20,15 +21,33 @@ namespace KLS.Data.Repositories
 
         public IQueryable<EmployeeList> GetAllEmployees(EmpReq empReq)
         {
-            var SearchParam = (!string.IsNullOrEmpty(empReq.Search)) ? new SqlParameter("@Search", empReq.Search) : new SqlParameter("@Search", DBNull.Value);
+            //var SearchParam = (!string.IsNullOrEmpty(empReq.Search)) ? new SqlParameter("@Search", empReq.Search) : new SqlParameter("@Search", DBNull.Value);
 
-            var EmpStatusParam = empReq.EmpStatus.HasValue ? new SqlParameter("@EmpStatus", empReq.EmpStatus) : new SqlParameter("@EmpStatus", DBNull.Value);
+            //var EmpStatusParam = empReq.EmpStatus.HasValue ? new SqlParameter("@EmpStatus", empReq.EmpStatus) : new SqlParameter("@EmpStatus", DBNull.Value);
 
-            var SortFieldParam = (!string.IsNullOrEmpty(empReq.SortField)) ? new SqlParameter("@SortField", empReq.SortField) : new SqlParameter("@SortField", DBNull.Value);
+            //var SortFieldParam = (!string.IsNullOrEmpty(empReq.SortField)) ? new SqlParameter("@SortField", empReq.SortField) : new SqlParameter("@SortField", DBNull.Value);
 
-            var SortOrderParam = (!string.IsNullOrEmpty(empReq.SortOrder)) ? new SqlParameter("@SortOrder", empReq.SortOrder) : new SqlParameter("@SortOrder", DBNull.Value);
+            //var SortOrderParam = (!string.IsNullOrEmpty(empReq.SortOrder)) ? new SqlParameter("@SortOrder", empReq.SortOrder) : new SqlParameter("@SortOrder", DBNull.Value);
 
-            return DbContext.EmployeeList.FromSqlRaw("[dbo].[Employee_GetAllList] @Search,@EmpStatus,@SortField,@SortOrder", SearchParam, EmpStatusParam, SortFieldParam, SortOrderParam);
+            var param = BuildEmployeesParam(empReq);
+
+            return DbContext.EmployeeList.FromSqlRaw("[dbo].[Employee_GetAllList] @Search,@EmpStatus,@SortField,@SortOrder", param);
+        }
+
+        private static object[] BuildEmployeesParam(EmpReq empReq)
+        {
+            object[] param = {
+
+                string.IsNullOrEmpty(empReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", empReq.Search),
+
+                empReq.EmpStatus.HasValue ? new SqlParameter("@EmpStatus", empReq.EmpStatus) : new SqlParameter("@EmpStatus", DBNull.Value),
+
+                string.IsNullOrEmpty(empReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", empReq.SortField),
+
+                string.IsNullOrEmpty(empReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", empReq.SortOrder),
+            };
+
+            return param;
         }
 
         public IQueryable<PayeeSearch>? SearchEmployee(PayeeSearchReq searchReq)

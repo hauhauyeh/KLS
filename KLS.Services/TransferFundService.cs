@@ -20,15 +20,15 @@ namespace KLS.Services
 
         public PagingResponse<TransferFundList> GetAllTransferFunds(TFReq tFReq)
         {
-            var list = Uow.TransferFunds.GetAllTransferFunds(tFReq);
+            var transferfundlist = Uow.TransferFunds.GetAllTransferFunds(tFReq);
 
-            tFReq.IsCount = true;
+            var totalRecords = Uow.TransferFunds.CountAllTransferFunds(tFReq);
 
-            var totalRecords = Uow.TransferFunds.GetAllTransferFunds(tFReq).ToList().Count;
+            //tFReq.IsCount = true;
 
             return new PagingResponse<TransferFundList>(totalRecords, tFReq.Pageno, tFReq.Pagesize)
             {
-                RowData = list,
+                RowData = transferfundlist,
             };
         }
 

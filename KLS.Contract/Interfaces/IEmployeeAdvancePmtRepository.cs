@@ -10,5 +10,7 @@ namespace KLS.Contract.Interfaces
     public interface IEmployeeAdvancePmtRepository : IRepository<VendorPayment>
     {
         IQueryable<EmployeeAdvancePmt> GetAllEmployeeAdvancePmt(EmployeeAdvancePmtReq employeeAdvancePmtReq);
+
+        int CountAllEmployeeAdvancePmt(EmployeeAdvancePmtReq employeeAdvancePmtReq);
     }
 }

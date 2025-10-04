@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace KLS.Services
         {
             var payrolllist = Uow.PayrollDetails.GetAllPayrolls(payrollReq);
 
-            var totalRecords = Uow.PayrollDetails.GetAllPayrolls(payrollReq).ToList().Count();
+            var totalRecords = Uow.PayrollDetails.CountAllPayrolls(payrollReq);
 
             return new PagingResponse<PayrollList>(totalRecords, payrollReq.Pageno, payrollReq.Pagesize)
             {

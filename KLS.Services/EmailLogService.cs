@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace KLS.Services
         {
             var loglist = Uow.EmailLogs.GetEmailLogs(emailLogReq);
 
-            var totalRecords = Uow.EmailLogs.GetEmailLogs(emailLogReq).ToList().Count();
+            var totalRecords = Uow.EmailLogs.CountAllEmailLogs(emailLogReq);
 
             return new PagingResponse<EmailLogDTO>(totalRecords, emailLogReq.Pageno, emailLogReq.Pagesize)
             {

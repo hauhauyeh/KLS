@@ -6,6 +6,7 @@ using KLS.Models;
 using MailKit.Net.Smtp;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,9 +24,20 @@ namespace KLS.Data.Repositories
 
         public IQueryable<PayrollServiceDTO> GetAllPayrollService(PayrollServiceReq payrollServiceReq)
         {
-            var param = BuildParam(payrollServiceReq);
+            var param = BuildPayrollServiceParam(payrollServiceReq);
 
-            return DbContext.PayrollServiceDTO.FromSqlRaw("[dbo].[PayrollService_GetAllList] @Pageno,@Pagesize,@StartDate,@EndDate,@Search,@IsCount", param);
+            return DbContext.PayrollServiceDTO.FromSqlRaw("[dbo].[PayrollService_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+        }
+
+        public int CountAllPayrollService(PayrollServiceReq payrollServiceReq)
+        {
+            payrollServiceReq.IsCount = true;
+            var param = BuildPayrollServiceParam(payrollServiceReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[PayrollService_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+
+            var output = param[8] as SqlParameter;
+            return Convert.ToInt32(output.Value);
         }
 
         public int SavePayrollService(PayrollService service)
@@ -142,15 +154,31 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[PayrollService_InjectEmp] @EmpId", EmpIdParam);
         }
 
-        private static object[] BuildParam(PayrollServiceReq payrollServiceReq)
+        private static object[] BuildPayrollServiceParam(PayrollServiceReq payrollServiceReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", payrollServiceReq.Pageno),
+
                 new SqlParameter("@Pagesize", payrollServiceReq.Pagesize),
-                payrollServiceReq.StartDate.HasValue ? new SqlParameter("@StartDate", payrollServiceReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
-                payrollServiceReq.EndDate.HasValue ? new SqlParameter("@EndDate", payrollServiceReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
                 string.IsNullOrEmpty(payrollServiceReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", payrollServiceReq.Search),
-                new SqlParameter("@IsCount", payrollServiceReq.IsCount)
+
+                payrollServiceReq.StartDate.HasValue ? new SqlParameter("@StartDate", payrollServiceReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                payrollServiceReq.EndDate.HasValue ? new SqlParameter("@EndDate", payrollServiceReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                string.IsNullOrEmpty(payrollServiceReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", payrollServiceReq.SortField),
+
+                string.IsNullOrEmpty(payrollServiceReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", payrollServiceReq.SortOrder),
+
+                new SqlParameter("@IsCount", payrollServiceReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
             };
 
             return param;

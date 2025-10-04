@@ -11,6 +11,10 @@ namespace KLS.Contract.Interfaces
     {
         IQueryable<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq);
 
+        int CountAllCheckRegister(CheckRegisterReq checkRegisterReq);
+
         IQueryable<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq);
+
+        int CountAllVendorPayment(VendorPaymentReq vendorPaymentReq);
     }
 }
