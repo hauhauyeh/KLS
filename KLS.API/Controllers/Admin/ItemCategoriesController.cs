@@ -3,6 +3,7 @@ using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting.Internal;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -16,14 +17,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IItemCategoryService _itemCategoryService;
+        private IWebHostEnvironment _hostingEnvironment;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ItemCategoriesController(IItemCategoryService itemCategoryService)
+        public ItemCategoriesController(IItemCategoryService itemCategoryService, IWebHostEnvironment Environment)
         {
             _itemCategoryService = itemCategoryService;
+            _hostingEnvironment = Environment;
         }
 
         #endregion
@@ -54,23 +57,31 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Category")]
-        public IActionResult Create([FromBody] ItemCategory itemCategory)
+        public IActionResult Create([FromForm] ItemCategory itemCategory)
         {
             if (_itemCategoryService.NameExists(itemCategory))
                 return Conflict("Category already exists");
 
-            return Ok(_itemCategoryService.CreateCategory(itemCategory));
+            var newcat = _itemCategoryService.CreateCategory(itemCategory);
+
+            _itemCategoryService.SaveImage(newcat, Request);
+
+            return Ok(newcat);
         }
 
 
         [HttpPut]
         [DisplayName("Update Category")]
-        public IActionResult Update([FromBody] ItemCategory itemCategory)
+        public IActionResult Update([FromForm] ItemCategory itemCategory)
         {
             if (_itemCategoryService.NameExists(itemCategory))
                 return Conflict("Category already exists");
 
-            return Ok(_itemCategoryService.UpdateCategory(itemCategory));
+            var newcat = _itemCategoryService.UpdateCategory(itemCategory);
+
+            _itemCategoryService.SaveImage(newcat, Request);
+
+            return Ok();
         }
 
 
@@ -80,6 +91,14 @@ namespace KLS.API.Controllers.Admin
         {
             _itemCategoryService.DeleteCategory(id);
 
+            return Ok();
+        }
+
+
+        [HttpDelete("DeleteImg/{id}")]
+        public IActionResult DeleteImg(int id)
+        {
+            _itemCategoryService.DeleteImage(id);
             return Ok();
         }
 
