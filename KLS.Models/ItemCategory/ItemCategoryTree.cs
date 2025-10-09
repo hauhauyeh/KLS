@@ -19,6 +19,8 @@ namespace KLS.Models
 
         public string? DisplayName { get; set; }
 
+        public string? ImageUrl { get; set; }
+
         public bool Inactive { get; set; }
 
         public IEnumerable<ItemCategoryTree>? ChildCategories { get; set; }

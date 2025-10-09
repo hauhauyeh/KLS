@@ -15,7 +15,7 @@
   <ItemGroup>
     <Folder Include="Controllers\Web\" />
     <Folder Include="Hubs\" />
-    <Folder Include="wwwroot\" />
+    <Folder Include="wwwroot\KLS\category\" />
   </ItemGroup>
 
   <ItemGroup>
