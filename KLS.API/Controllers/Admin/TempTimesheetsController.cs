@@ -28,18 +28,18 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-        //[HttpGet("{timesheetId}")]
-        //public IActionResult List(int timesheetId)
-        //{
-        //    return Ok(_tempTimesheetService.GetTempTimesheetList(timesheetId));
-        //}
+        [HttpGet("{timesheetId}")]
+        public IActionResult List(int timesheetId)
+        {
+            return Ok(_tempTimesheetService.GetTempTimesheetList(timesheetId));
+        }
 
 
-        //[HttpPost]
-        //public IActionResult Create([FromBody] TempTimesheet tempTimesheet)
-        //{
-        //    return Ok(_tempTimesheetService.CreateTempTimesheet(tempTimesheet));
-        //}
+        [HttpPost]
+        public IActionResult Create([FromBody] TempTimesheet tempTimesheet)
+        {
+            return Ok(_tempTimesheetService.CreateTempTimesheet(tempTimesheet));
+        }
 
 
         [HttpPut]

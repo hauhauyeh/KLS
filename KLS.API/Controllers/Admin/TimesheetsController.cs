@@ -5,6 +5,7 @@ using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 
 namespace KLS.API.Controllers.Admin
 {
@@ -30,6 +31,21 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
+        [HttpGet]
+        [DisplayName("Timesheet List")]
+        public IActionResult List([FromQuery] TimesheetReq timesheetReq)
+        {
+            return Ok(_timesheetService.GetAllTimesheets(timesheetReq));
+        }
+
+
+        [HttpGet("Weekly")]
+        public IActionResult Weekly([FromQuery] TimesheetReq timesheetReq)
+        {
+            return Ok(_timesheetService.GetWeeklyTimesheets(timesheetReq));
+        }
+
+
         [HttpGet("{timesheetId}")]
         public IActionResult GetById(int timesheetId)
         {
@@ -52,6 +68,22 @@ namespace KLS.API.Controllers.Admin
             _timesheetService.DeleteTimesheet(timesheetId);
 
             return Ok();
+        }
+
+
+        [HttpPost("Inject/{timesheetId}")]
+        public IActionResult Inject(int timesheetId, [FromQuery] bool isClone)
+        {
+            _timesheetService.InjectTimesheet(timesheetId, isClone);
+
+            return Ok();
+        }
+
+
+        [HttpGet("GetPayPeriod")]
+        public IActionResult GetPayPeriod()
+        {
+            return Ok(_timesheetService.GetPayPeriod());
         }
 
         #endregion

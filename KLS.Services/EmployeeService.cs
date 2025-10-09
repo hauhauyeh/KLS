@@ -28,8 +28,8 @@ namespace KLS.Services
         {
             var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString()).OrderBy(c => c.PayeeName).ToList();
 
-            var employees = new List<EmployeeList>();
-            employees.InjectFrom(payees);
+            var employees = payees.Select(p => new EmployeeList().InjectFrom(p)).Cast<EmployeeList>()
+                .ToList();
 
             return employees;
         }

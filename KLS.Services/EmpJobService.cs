@@ -1,4 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,11 @@ namespace KLS.Services
         public EmpJobService(IUnitOfWork uow) : base(uow)
         {
 
+        }
+
+        public ICollection<EmpJob> GetAllJobs()
+        {
+            return Uow.EmpJobs.GetAll().OrderBy(c => c.Inactive).ThenBy(c => c.JobId).ToList();
         }
     }
 }

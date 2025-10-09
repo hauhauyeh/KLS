@@ -41,12 +41,13 @@ namespace KLS.API.Helpers
             services.AddScoped<IPaymentOptionService, PaymentOptionService>();
             services.AddScoped<IEmployeeAdvancePmtService, EmployeeAdvancePmtService>();
             services.AddScoped<IPayrollServiceService, PayrollServiceService>();
-            services.AddScoped<ITempTimesheetService, TempTimesheetService>();
             services.AddScoped<IPayrollServiceTypeService, PayrollServiceTypeService>();
-            services.AddScoped<IEmpJobService, EmpJobService>();
             services.AddScoped<ITempPayrollServiceService, TempPayrollServiceService>();
-            services.AddScoped<IPayrollDetailService, PayrollDetailService>();
             services.AddScoped<ITempPayrollDetailService, TempPayrollDetailService>();
+            services.AddScoped<IPayrollDetailService, PayrollDetailService>();
+            services.AddScoped<IEmpJobService, EmpJobService>();
+            services.AddScoped<ITimesheetService, TimesheetService>();
+            services.AddScoped<ITempTimesheetService, TempTimesheetService>();
 
             return services;
         }

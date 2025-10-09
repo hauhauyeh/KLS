@@ -1,4 +1,5 @@
 ﻿using KLS.Common;
+using System.Runtime.InteropServices;
 
 namespace KLS.API.Helpers
 {
@@ -22,11 +23,27 @@ namespace KLS.API.Helpers
                     UserContext.EmpId = empId;
                 }
 
-                // Example: get from header or context item
-                if (context.Items.TryGetValue("Timezone", out var timezone))
+                // Determine timezone from context or fallback
+                string? timezone = null;
+
+                // 1️⃣ First check if it was already set in HttpContext.Items
+                if (context.Items.TryGetValue("Timezone", out var tzItem))
+                    timezone = tzItem?.ToString();
+
+                // 2️⃣ Otherwise, optionally check headers (common in APIs)
+                if (string.IsNullOrWhiteSpace(timezone))
+                    timezone = context.Request.Headers["Timezone"].FirstOrDefault();
+
+                // 3️⃣ Default to U.S. Eastern if still missing
+                if (string.IsNullOrWhiteSpace(timezone))
                 {
-                    UserContext.UserTimezone = timezone?.ToString();
+                    timezone = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                        ? "Eastern Standard Time"   // Windows ID
+                        : "America/New_York";       // IANA ID (Linux)
                 }
+
+                // Store in context and UserContext for downstream usage
+                UserContext.UserTimezone = timezone;
             }
             catch
             {

@@ -10,5 +10,9 @@ namespace KLS.Contract.Interfaces
     public interface ITimesheetRepository : IRepository<Timesheet>
     {
         int SaveTimesheet(Timesheet timeSheet);
+
+        void InjectTimesheet(int timesheetId, bool isClone);
+
+        PayPeriod? GetPayPeriod();
     }
 }

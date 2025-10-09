@@ -8,6 +8,6 @@ namespace KLS.Models
 {
     public class TimesheetReq : PagingRequest
     {
-
+        public int? PayeeId { get; set; }
     }
 }

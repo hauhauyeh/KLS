@@ -28,7 +28,11 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-
+        [HttpGet]
+        public IActionResult List()
+        {
+            return Ok(_empJobService.GetAllJobs());
+        }
 
         #endregion
     }

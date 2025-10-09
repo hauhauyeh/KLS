@@ -11,11 +11,11 @@ namespace KLS.Models
 {
     public class EmpJob
     {
-        [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int JobId { get; set; }
 
-        public string? JobCode { get; set; }
+        [Key]
+        public string JobCode { get; set; }
 
         public string? JobDescription { get; set; }
 

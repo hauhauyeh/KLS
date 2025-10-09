@@ -54,21 +54,24 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TransactionDetail>().ToTable("TransactionJournalDetail");
             modelBuilder.Entity<SourceDocType>().ToTable("SourceDocType");
             modelBuilder.Entity<ItemStorage>().ToTable("ItemStorage");
-            modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
             modelBuilder.Entity<Sales>().ToTable("Sales");
             modelBuilder.Entity<DeleteLog>().ToTable("DeleteLog");
             modelBuilder.Entity<Company>().ToTable("Company");
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
-            modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
-            modelBuilder.Entity<PayrollService>().ToTable("PayrollService");
+            modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");            
+            modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
             modelBuilder.Entity<TimesheetDetail>().ToTable("TimesheetDetail");
             modelBuilder.Entity<TempTimesheet>().ToTable("TempTimesheet");
+            modelBuilder.Entity<PayrollService>().ToTable("PayrollService");
             modelBuilder.Entity<PayrollServiceDetail>().ToTable("PayrollServiceDetail");
             modelBuilder.Entity<PayrollServiceType>().ToTable("PayrollServiceType");
-            modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<TempPayrollService>().ToTable("TempPayrollService");
             modelBuilder.Entity<PayrollDetail>().ToTable("PayrollDetail");
+
+            modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
+            modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
+            modelBuilder.Entity<EmpJob>().Property(c => c.JobId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
             modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();

@@ -12,6 +12,8 @@ namespace KLS.Common
 
         public const string SYS_GOOGLEMAPS_APIKEY = "SYS_GOOGLEMAPS_APIKEY";
 
-        public const string DEFAULT_PAYROLL_BANK = "DEFAULT_PAYROLL_BANK";
+        public const string PAYROLL_DEFAULT_PAYFREQ = "PAYROLL_DEFAULT_PAYFREQ";
+        public const string PAYROLL_DEFAULT_BANK = "PAYROLL_DEFAULT_BANK";
+        public const string PAYROLL_BEGINDAYOFWEEK = "PAYROLL_BEGINDAYOFWEEK";
     }
 }

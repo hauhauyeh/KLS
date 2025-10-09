@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -24,14 +25,24 @@ namespace KLS.Models
 
         public decimal? JobRate { get; set; }
 
-        public decimal? ExtTotal { get; set; }
+        public decimal? ExtTotal
+        {
+            get
+            {
+                return Utilities.Rounding(Qty * JobRate, 2);
+            }
+            set
+            {
+                value = Utilities.Rounding(Qty * JobRate, 2);
+            }
+        }
 
         public string? Route { get; set; }
 
         public string? Notes { get; set; }
 
 
-        //[ForeignKey("JobCode")]
-        //public virtual dynamic? EmpJob { get; set; }
+        [ForeignKey("JobCode")]
+        public virtual EmpJob? EmpJob { get; set; }
     }
 }

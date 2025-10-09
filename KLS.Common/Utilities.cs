@@ -728,5 +728,51 @@ namespace KLS.Common
             }
             return EANAddOnToPrint;
         }
+
+        public static DateTime ConvertToUtc(DateTime localTime, string userTimeZoneId)
+        {
+            // Get the user's timezone — support both Windows ("India Standard Time") and IANA ("Asia/Kolkata") formats
+            TimeZoneInfo tz;
+            try
+            {
+                tz = TimeZoneInfo.FindSystemTimeZoneById(userTimeZoneId);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                // Fallback for cross-platform apps
+                tz = TimeZoneInfo.FindSystemTimeZoneById("UTC");
+            }
+
+            // Always treat the input as a wall-clock time in user's timezone
+            var unspecified = DateTime.SpecifyKind(localTime, DateTimeKind.Unspecified);
+
+            // Convert that to UTC
+            var utc = TimeZoneInfo.ConvertTimeToUtc(unspecified, tz);
+
+            return DateTime.SpecifyKind(utc, DateTimeKind.Utc);
+        }
+
+        public static DateTime ConvertFromUtcToLocal(DateTime utcTime, string userTimeZoneId)
+        {
+            // Get the user's timezone — support both Windows ("India Standard Time") and IANA ("Asia/Kolkata") formats
+            TimeZoneInfo tz;
+            try
+            {
+                tz = TimeZoneInfo.FindSystemTimeZoneById(userTimeZoneId);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                // Fallback if timezone not found
+                tz = TimeZoneInfo.FindSystemTimeZoneById("UTC");
+            }
+
+            // Ensure the input is treated as UTC
+            var utc = DateTime.SpecifyKind(utcTime, DateTimeKind.Utc);
+
+            // Convert UTC -> user's local time
+            var local = TimeZoneInfo.ConvertTimeFromUtc(utc, tz);
+
+            return DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
+        }
     }
 }

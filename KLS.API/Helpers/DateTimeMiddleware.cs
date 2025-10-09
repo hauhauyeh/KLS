@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.Json;
+using KLS.Common;
 
 namespace KLS.API.Helpers
 {
@@ -21,11 +22,9 @@ namespace KLS.API.Helpers
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
             // Serialization: Convert UTC DateTime to the target timezone.
-            //var timeZoneId = _httpContextAccessor.HttpContext?.Items["Timezone"].ToString();
-            var timeZoneId = Convert.ToString(_httpContextAccessor.HttpContext?.Items["Timezone"]);
+            //var timeZoneId = Convert.ToString(_httpContextAccessor.HttpContext?.Items["Timezone"]);
 
-            //if (!string.IsNullOrEmpty(StoreContext.UserTimezone))
-            //    timeZoneId = StoreContext.UserTimezone;
+            var timeZoneId = Convert.ToString(UserContext.UserTimezone);
 
             if (!string.IsNullOrEmpty(timeZoneId))
             {

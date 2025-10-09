@@ -49,7 +49,7 @@ namespace KLS.API.Controllers.Admin
             if (payrollId > 0)
                 payrollService = _payrollService.GetById(payrollId);
             else
-                payrollService.FromAccount = _systemSettingService.GetByKey<string>(GlobalKey.DEFAULT_PAYROLL_BANK);
+                payrollService.FromAccount = _systemSettingService.GetByKey<string>(GlobalKey.PAYROLL_DEFAULT_BANK);
 
             return Ok(payrollService);
         }

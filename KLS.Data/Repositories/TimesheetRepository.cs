@@ -54,5 +54,37 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[Timesheet_Inject] @TimesheetId,@IsClone,@EmpId", TimesheetIdParam, IsCloneParam, EmpIdParam);
         }
+
+        public PayPeriod? GetPayPeriod()
+        {
+            var PayOptionParam = new SqlParameter("@Payoption", DBNull.Value);
+
+            var PayDateParam = new SqlParameter("@Paydate", DateTime.Now);
+
+            var PayrollStartDate = new SqlParameter()
+            {
+                ParameterName = "@PayrollStartDate",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Date
+            };
+
+            var PayrollEndDate = new SqlParameter()
+            {
+                ParameterName = "@PayrollEndDate",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Date
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[Fn_Calc_PayrollDate] @Payoption,@Paydate,@PayrollStartDate OUTPUT,@PayrollEndDate OUTPUT", PayOptionParam, PayDateParam, PayrollStartDate, PayrollEndDate);
+
+            var startDate = PayrollStartDate.Value as DateTime?;
+            var endDate = PayrollEndDate.Value as DateTime?;
+
+            return new PayPeriod
+            {
+                PayrollStartDate = DateOnly.FromDateTime(startDate.Value),
+                PayrollEndDate = DateOnly.FromDateTime(endDate.Value)
+            };
+        }
     }
 }

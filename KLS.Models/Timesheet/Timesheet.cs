@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KLS.Common;
 
 namespace KLS.Models
 {
@@ -37,27 +38,39 @@ namespace KLS.Models
         [ForeignKey("TimesheetId")]
         public virtual ICollection<TimesheetDetail>? TimeSheetDetails { get; set; }
 
+        // Display-only / computed: NOT MAPPED
+        [NotMapped] public string? PayeeName { get; set; }
 
-        public string? DayOfWeek { get { return InTime.DayOfWeek.ToString(); } }
+        [NotMapped]
+        public DateTime InTimeLocal
+            => Utilities.ConvertFromUtcToLocal(InTime, UserContext.UserTimezone);
 
-        public virtual TimeSpan WorkingHour
-        {
-            get
-            {
-                return OutTime.HasValue ? OutTime.Value.Subtract(InTime) : new TimeSpan(0);
-            }
-        }
+        [NotMapped]
+        public DateTime? OutTimeLocal
+            => OutTime.HasValue ? Utilities.ConvertFromUtcToLocal(OutTime.Value, UserContext.UserTimezone) : null;
 
-        public string? InTimeHour { get { return InTime.ToString("hh"); } }
+        [NotMapped]
+        public string DayOfWeek => InTimeLocal.DayOfWeek.ToString();
 
-        public string? InTimeMinute { get { return InTime.ToString("mm"); } }
+        [NotMapped]
+        public TimeSpan WorkingHour => OutTimeLocal.HasValue ? OutTimeLocal.Value - InTimeLocal : TimeSpan.Zero;
 
-        public string? InTimeAMPM { get { return InTime.ToString("tt"); } }
+        [NotMapped]
+        public string InTimeHour => InTimeLocal.ToString("hh");
 
-        public string? OutTimeHour { get { return OutTime.HasValue ? OutTime.Value.ToString("hh") : null; } }
+        [NotMapped]
+        public string InTimeMinute => InTimeLocal.ToString("mm");
 
-        public string? OutTimeMinute { get { return OutTime.HasValue ? OutTime.Value.ToString("mm") : null; } }
+        [NotMapped]
+        public string InTimeAMPM => InTimeLocal.ToString("tt");
 
-        public string? OutTimeAMPM { get { return OutTime.HasValue ? OutTime.Value.ToString("tt") : null; } }
+        [NotMapped]
+        public string? OutTimeHour => OutTimeLocal?.ToString("hh");
+
+        [NotMapped]
+        public string? OutTimeMinute => OutTimeLocal?.ToString("mm");
+
+        [NotMapped]
+        public string? OutTimeAMPM => OutTimeLocal?.ToString("tt");
     }
 }

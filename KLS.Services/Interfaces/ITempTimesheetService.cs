@@ -9,11 +9,11 @@ namespace KLS.Services.Interfaces
 {
     public interface ITempTimesheetService
     {
-        //IEnumerable<TempTimesheet>? GetTempTimesheetList(int timesheetId);
+        IEnumerable<TempTimesheet>? GetTempTimesheetList(int timesheetId);
 
-        //TempTimesheet GetById(int tempId);
+        TempTimesheet GetById(int tempId);
 
-        //TempTimesheet CreateTempTimesheet(TempTimesheet tempTimesheet);
+        TempTimesheet CreateTempTimesheet(TempTimesheet tempTimesheet);
 
         TempTimesheet UpdateTempTimesheet(TempTimesheet tempTimesheet);
 
