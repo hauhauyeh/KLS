@@ -23,5 +23,9 @@ namespace KLS.Services.Interfaces
         void InjectTimesheet(int timesheetId, bool isClone);
 
         PayPeriod? GetPayPeriod();
+
+        PayeeSearch? Validate(string SSNNumber);
+
+        CheckInOut CheckInOut(CheckInOutReq checkInOutReq);
     }
 }

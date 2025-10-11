@@ -192,6 +192,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PayrollList> PayrollList { get; set; }
 
+        public virtual DbSet<CheckInOut> CheckInOut { get; set; }
+
         #endregion
     }
 }

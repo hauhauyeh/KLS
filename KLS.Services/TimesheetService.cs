@@ -102,7 +102,14 @@ namespace KLS.Services
 
         public Timesheet GetById(int timesheetId)
         {
-            return Uow.Timesheets.Find(c => c.TimesheetId == timesheetId).Include(c => c.TimeSheetDetails).FirstOrDefault()!;
+            var timesheet = Uow.Timesheets.Find(c => c.TimesheetId == timesheetId).Include(c => c.TimeSheetDetails).FirstOrDefault()!;
+
+            var payee = Uow.Payees.GetById(timesheet.PayeeId);
+
+            if (payee != null)
+                timesheet.PayeeName = payee.PayeeName;
+
+            return timesheet;
         }
 
         public Timesheet SaveTimesheet(Timesheet timesheet)
@@ -134,6 +141,31 @@ namespace KLS.Services
         public PayPeriod? GetPayPeriod()
         {
             return Uow.Timesheets.GetPayPeriod();
+        }
+
+        public PayeeSearch? Validate(string SSNNumber)
+        {
+            var employee = Uow.Employees.Find(c => c.SSN != null && c.SSN.EndsWith(SSNNumber)).FirstOrDefault();
+
+            if (employee == null)
+            {
+                return null;
+            }
+
+            var payee = new PayeeSearch
+            {
+                PayeeId = employee.PayeeId,
+                PayeeName = employee.FirstName,
+            };
+
+            return payee;
+        }
+
+        public CheckInOut CheckInOut(CheckInOutReq checkInOutReq)
+        {
+            var registerlist = Uow.Timesheets.CheckInOut(checkInOutReq);
+
+            return registerlist;
         }
     }
 }

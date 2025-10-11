@@ -86,5 +86,16 @@ namespace KLS.Data.Repositories
                 PayrollEndDate = DateOnly.FromDateTime(endDate.Value)
             };
         }
+
+        public CheckInOut CheckInOut(CheckInOutReq checkInOutReq)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", checkInOutReq.PayeeId);
+
+            var IsDetailSaveParam = new SqlParameter("@IsDetailSave", checkInOutReq.IsDetailSave);
+
+            var IsDetailAddParam = new SqlParameter("@IsDetailAdd", checkInOutReq.IsDetailAdd);
+
+            return DbContext.CheckInOut.FromSqlRaw("[dbo].[Timesheet_CheckInOut] @PayeeId,@IsDetailSave,@IsDetailAdd", PayeeIdParam, IsDetailSaveParam, IsDetailAddParam).ToList().FirstOrDefault();
+        }
     }
 }

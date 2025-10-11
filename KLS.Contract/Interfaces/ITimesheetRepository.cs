@@ -14,5 +14,7 @@ namespace KLS.Contract.Interfaces
         void InjectTimesheet(int timesheetId, bool isClone);
 
         PayPeriod? GetPayPeriod();
+
+        CheckInOut CheckInOut(CheckInOutReq checkInOutReq);
     }
 }

@@ -43,6 +43,7 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod()
+              .WithExposedHeaders("EmpId")
               .SetPreflightMaxAge(TimeSpan.FromSeconds(600));
     });
 });

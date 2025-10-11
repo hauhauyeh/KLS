@@ -30,6 +30,8 @@ namespace KLS.Services
 
         public TempTimesheet CreateTempTimesheet(TempTimesheet tempTimesheet)
         {
+            //--For timesheeet portal
+            //if (tempTimesheet.EmpId == 0)
             tempTimesheet.EmpId = UserContext.EmpId;
 
             Uow.TempTimesheets.Add(tempTimesheet);

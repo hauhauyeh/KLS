@@ -1,0 +1,74 @@
+﻿using KLS.API.Helpers;
+using KLS.Models;
+using KLS.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace KLS.API.Controllers.Timesheets
+{
+    [Route("api/[controller]")]
+    [Display(Name = "Timesheet Management", GroupName = "Employee")]
+    public class TimesheetsController : BaseController
+    {
+        #region --- Member(s) ---
+
+        private readonly ITimesheetService _timesheetService;
+        
+        #endregion
+
+        #region --- Constructor(s) ---
+
+        public TimesheetsController(ITimesheetService timesheetService)
+        {
+            _timesheetService = timesheetService;
+        }
+
+        #endregion
+
+        #region --- Method(s) ---
+
+        [HttpGet("{timesheetId}")]
+        public IActionResult GetById(int timesheetId)
+        {
+            return Ok(_timesheetService.GetById(timesheetId));
+        }
+
+
+        [HttpPost("Inject/{timesheetId}")]
+        public IActionResult Inject(int timesheetId, [FromQuery] bool isClone)
+        {
+            _timesheetService.InjectTimesheet(timesheetId, isClone);
+
+            return Ok();
+        }
+
+
+        [HttpGet("validate/{SSNNumber}")]
+        public IActionResult Validate(string SSNNumber)
+        {
+            if (string.IsNullOrWhiteSpace(SSNNumber) || SSNNumber.Length != 4)
+            {
+                return BadRequest("Please enter the last 4 digits of the SSN.");
+            }
+
+            var result = _timesheetService.Validate(SSNNumber);
+
+            if (result != null)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest("Please enter a valid SSN Number.");
+        }
+
+
+        [HttpPost("CheckInOut")]
+        public IActionResult CheckInOut([FromBody] CheckInOutReq checkInOutReq)
+        {
+            return Ok(_timesheetService.CheckInOut(checkInOutReq));
+        }
+
+        #endregion
+    }
+}

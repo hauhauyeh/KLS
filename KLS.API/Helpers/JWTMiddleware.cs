@@ -50,6 +50,20 @@ namespace KLS.API.Helpers
                     }
                 }
             }
+            else //for Timesheet portal
+            {
+                var empIdHeader = context.Request.Headers["EmpId"].FirstOrDefault();
+
+                if (!string.IsNullOrWhiteSpace(empIdHeader) && int.TryParse(empIdHeader, out var empId))
+                {
+                    UserContext.EmpId = empId;
+                }
+                else
+                {
+                    // Handle missing or invalid EmpId gracefully
+                    UserContext.EmpId = 0; // or skip setting if optional
+                }
+            }
 
             await _next(context);
         }
