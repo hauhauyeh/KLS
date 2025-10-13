@@ -117,6 +117,8 @@ namespace KLS.Data.Repositories
         public IPayrollDetailRepository PayrollDetails { get { return new PayrollDetailRepository(DbContext); } }
 
         public ITempPayrollDetailRepository TempPayrollDetails { get { return new TempPayrollDetailRepository(DbContext); } }
+
+        public ICustomerPaymentRepository CustomerPayments { get { return new CustomerPaymentRepository(DbContext); } }
     }
 }
 

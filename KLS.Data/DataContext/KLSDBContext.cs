@@ -68,6 +68,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PayrollServiceType>().ToTable("PayrollServiceType");
             modelBuilder.Entity<TempPayrollService>().ToTable("TempPayrollService");
             modelBuilder.Entity<PayrollDetail>().ToTable("PayrollDetail");
+            modelBuilder.Entity<CustomerPayment>().ToTable("CustomerPayment");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -160,6 +161,8 @@ namespace KLS.Data.DataContext
 
         public DbSet<TempPayrollDetail> TempPayrollDetails { get; set; }
 
+        public DbSet<CustomerPayment> CustomerPayments { get; set; }
+
         #endregion
 
         #region ---Virtual DBSET---
@@ -193,6 +196,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<PayrollList> PayrollList { get; set; }
 
         public virtual DbSet<CheckInOut> CheckInOut { get; set; }
+
+        public virtual DbSet<CustomerPaymentList> CustomerPaymentList { get; set; }
 
         #endregion
     }

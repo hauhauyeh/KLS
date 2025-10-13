@@ -90,6 +90,8 @@ namespace KLS.Contract.Interfaces
 
         ITempPayrollDetailRepository TempPayrollDetails { get; }
 
+        ICustomerPaymentRepository CustomerPayments { get; }
+
         void Commit();
     }
 }
