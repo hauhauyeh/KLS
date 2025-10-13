@@ -43,9 +43,9 @@ namespace KLS.Services
             tempGJ.DebitAmount = 0;
             tempGJ.CreditAmount = 0;
 
-            var account = _accountService.CheckAccount(tempGJ.AccountCode);
+            var account = _accountService.CheckAccount(tempGJ.AccountId?.ToString() ?? "");
 
-            tempGJ.AccountCode = account.AccountCode;
+            tempGJ.AccountId = account.AccountId;
 
             Uow.TempGeneralJournals.Add(tempGJ);
             Uow.Commit();
@@ -70,7 +70,7 @@ namespace KLS.Services
 
                 if (existing.Amount != 0)
                 {
-                    var crDeAmount = Uow.Accounts.GetCrDeAmount(existing.AccountCode, existing.Amount);
+                    var crDeAmount = Uow.Accounts.GetCrDeAmount(existing.AccountId.ToString() ?? "", existing.Amount);
 
                     existing.CrDeAmount = crDeAmount.CrDeAmount;
                     existing.DebitAmount = crDeAmount.DebitAmount;

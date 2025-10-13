@@ -41,7 +41,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost]
         public IActionResult Create([FromBody] TempGeneralJournal tempGJ)
         {
-            if (_accountService.CheckAccount(tempGJ.AccountCode) == null)
+            if (_accountService.CheckAccount(tempGJ.AccountId.ToString()?? "") == null)
                 return Conflict("Account is not found");
 
             return Ok(_tempGJService.CreateTempGJ(tempGJ));

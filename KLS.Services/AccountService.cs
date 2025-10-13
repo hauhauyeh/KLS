@@ -67,9 +67,14 @@ namespace KLS.Services
             return Uow.Accounts.Find(c => c.AccountName == acctname && c.Inactive == false).FirstOrDefault();
         }
 
-        public Account? GetByAcctCode(string acctcode)
+        public Account? GetByAccountCode(string accountCode)
         {
-            return Uow.Accounts.Find(c => c.AccountCode == acctcode && c.Inactive == false).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountCode == accountCode && c.Inactive == false).FirstOrDefault();
+        }
+
+        public Account? GetByAcctId(int acctId)
+        {
+            return Uow.Accounts.Find(c => c.AccountId == acctId && c.Inactive == false).FirstOrDefault();
         }
 
         public bool AcctNameExists(Account account)
@@ -121,7 +126,18 @@ namespace KLS.Services
 
         public Account? CheckAccount(string search)
         {
-            var account = GetByAcctCode(search);
+            //var account = GetByAcctId(search);
+
+            //if (account == null)
+            //    account = GetByAcctName(search);
+
+            Account? account = null;
+
+            if (int.TryParse(search, out int acctId))
+                account = GetByAcctId(acctId);
+
+            if (account == null)
+                account = GetByAccountCode(search);
 
             if (account == null)
                 account = GetByAcctName(search);
