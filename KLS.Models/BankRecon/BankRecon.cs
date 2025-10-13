@@ -19,7 +19,7 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int BankReconId { get; set; }
 
-        public string? AccountCode { get; set; }
+        public int? AccountId { get; set; }
 
         public DateOnly? StatementDate { get; set; }
 

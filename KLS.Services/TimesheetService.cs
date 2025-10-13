@@ -163,9 +163,7 @@ namespace KLS.Services
 
         public CheckInOut CheckInOut(CheckInOutReq checkInOutReq)
         {
-            var registerlist = Uow.Timesheets.CheckInOut(checkInOutReq);
-
-            return registerlist;
+            return Uow.Timesheets.CheckInOut(checkInOutReq);
         }
     }
 }

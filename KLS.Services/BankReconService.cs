@@ -18,26 +18,19 @@ namespace KLS.Services
 
         }
 
-        //public IQueryable<BankReconList> GetAllBankRecon()
-        //{
-        //    var qry = DbContext.BankRecons.AsQueryable();
-
-        //    return Uow.BankRecons.GetAll().OrderBy(b => b.CreatedAt);
-        //}
-
         public List<BankReconList> GetAllBankRecon()
         {
             var qry = Uow.BankRecons.GetAll();
 
-            var acct = from b in qry.Select(c => new { c.AccountCode }).Distinct()
-                       join a in Uow.Accounts.GetAll() on b.AccountCode equals a.AccountCode
+            var acct = from b in qry.Select(c => new { c.AccountId }).Distinct()
+                       join a in Uow.Accounts.GetAll() on b.AccountId equals a.AccountId
                        join at in Uow.AccountTypes.GetAll() on a.AccountTypeId equals at.AccountTypeId
                        select new ReconAccount
                        {
                            AccountType = at.TypeName,
                            AccountName = a.AccountName,
-                           MaxStatementDate = qry.Where(c => c.AccountCode == b.AccountCode).Max(c => c.StatementDate),
-                           BankRecons = qry.Where(c => c.AccountCode == b.AccountCode).OrderByDescending(c => c.StatementDate).ToList()
+                           MaxStatementDate = qry.Where(c => c.AccountId == b.AccountId).Max(c => c.StatementDate),
+                           BankRecons = qry.Where(c => c.AccountId == b.AccountId).OrderByDescending(c => c.StatementDate).ToList()
                        };
 
             return acct.GroupBy(c => c.AccountType).Select(c => new BankReconList
@@ -47,14 +40,14 @@ namespace KLS.Services
             }).ToList();
         }
 
-        public BankRecon GetById(int id)
+        public BankRecon GetById(int bankReconId)
         {
-            return Uow.BankRecons.GetById(id);
+            return Uow.BankRecons.GetById(bankReconId);
         }
 
         public bool ExistsBankRecon(BankRecon bankRecon)
         {
-            return Uow.BankRecons.Exists(c => c.AccountCode == bankRecon.AccountCode && c.StatementDate > bankRecon.StatementDate && bankRecon.BankReconId == 0);
+            return Uow.BankRecons.Exists(c => c.AccountId == bankRecon.AccountId && c.StatementDate > bankRecon.StatementDate && bankRecon.BankReconId == 0);
         }
 
         public BankRecon CreateBankRecon(BankRecon bankRecon)
@@ -71,14 +64,10 @@ namespace KLS.Services
 
             if (existing != null)
             {
-                existing.AccountCode = bankRecon.AccountCode;
+                existing.AccountId = bankRecon.AccountId;
                 existing.StatementDate = bankRecon.StatementDate;
                 existing.StatementBalance = bankRecon.StatementBalance;
-                existing.SystemBalance = bankRecon.SystemBalance;
                 existing.BeginningBalance = bankRecon.BeginningBalance;
-                existing.EndingBalance = bankRecon.EndingBalance;
-                existing.DifferenceAmount = bankRecon.DifferenceAmount;
-                existing.IsReconciled = bankRecon.IsReconciled;
                 existing.Notes = bankRecon.Notes;
 
                 existing.UpdatedAt = DateTime.UtcNow;

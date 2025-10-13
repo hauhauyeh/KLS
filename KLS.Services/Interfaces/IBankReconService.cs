@@ -9,11 +9,9 @@ namespace KLS.Services.Interfaces
 {
     public interface IBankReconService
     {
-        //IQueryable<BankRecon> GetAllBankRecon();
-
         List<BankReconList> GetAllBankRecon();
 
-        BankRecon GetById(int id);
+        BankRecon GetById(int bankReconId);
 
         bool ExistsBankRecon(BankRecon bankRecon);
 

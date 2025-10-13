@@ -18,6 +18,8 @@ namespace KLS.Models
 
         public int? SourceDetailId { get; set; }
 
+        public int? AccountId { get; set; }
+
         public string? AccountCode { get; set; }
 
         public int? PayeeId { get; set; }
