@@ -20,19 +20,19 @@ namespace KLS.Models
 
         public DateTime? TFDate { get; set; }
 
-        public string? FromAccount { get; set; }
+        public int? FromAccountId { get; set; }
 
-        public string? ToAccount { get; set; }
+        public int? ToAccountId { get; set; }
 
         public string? ReferenceId { get; set; }
 
         public decimal? TransferAmount { get; set; }
 
-        public string? CashbackAccount { get; set; }
+        public int? CashbackAccountId { get; set; }
 
         public decimal? CashbackAmount { get; set; }
 
-        public string? CCFeeAccount { get; set; }
+        public int? CCFeeAccountId { get; set; }
 
         public decimal? CCFeeAmount { get; set; }
 
