@@ -10,7 +10,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "PayrollDetail Management", GroupName = "Admin")]
+    [Display(Name = "Payroll Management", GroupName = "Admin")]
     public class PayrollsController : BaseController
     {
         #region --- Member(s) ---
@@ -31,7 +31,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List PayrollDetails")]
+        [DisplayName("List Payroll")]
         public IActionResult List([FromQuery] PayrollReq payrollReq)
         {
             return Ok(_payrollDetailService.GetAllPayrolls(payrollReq));

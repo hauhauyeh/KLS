@@ -31,7 +31,7 @@ namespace KLS.Models
 
         public string? ReferenceId { get; set; }
 
-        public string? FromAccount { get; set; }
+        public int? FromAccountId { get; set; }
 
         public decimal? PaymentAmount { get; set; }
 
@@ -57,7 +57,7 @@ namespace KLS.Models
 
         public DateOnly? ReturnDate1 { get; set; }
 
-        public string? FeeAccount1 { get; set; }
+        public int? FeeAccountId1 { get; set; }
 
         public decimal? FeeAmount1 { get; set; }
 
@@ -69,7 +69,7 @@ namespace KLS.Models
 
         public DateOnly? ReturnDate2 { get; set; }
 
-        public string? FeeAccount2 { get; set; }
+        public int? FeeAccountId2 { get; set; }
 
         public decimal? FeeAmount2 { get; set; }
 

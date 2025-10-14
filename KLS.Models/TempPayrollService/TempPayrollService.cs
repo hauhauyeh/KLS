@@ -22,7 +22,7 @@ namespace KLS.Models
 
         public string? ServiceCode { get; set; }
 
-        public string? FromAccount { get; set; }
+        public int? FromAccountId { get; set; }
 
         public string? ReferenceId { get; set; }
 

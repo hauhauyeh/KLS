@@ -80,7 +80,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildVendorPaymentParam(vendorPaymentReq);
 
-            return DbContext.VendorPaymentList.FromSqlRaw("[dbo].[VendorPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccount,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.VendorPaymentList.FromSqlRaw("[dbo].[VendorPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountAllVendorPayment(VendorPaymentReq vendorPaymentReq)
@@ -88,7 +88,7 @@ namespace KLS.Data.Repositories
             vendorPaymentReq.IsCount = true;
             var param = BuildVendorPaymentParam(vendorPaymentReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccount,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
             var output = param[12] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -109,7 +109,7 @@ namespace KLS.Data.Repositories
 
                 vendorPaymentReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", vendorPaymentReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
 
-                string.IsNullOrEmpty(vendorPaymentReq.FromAccount) ? new SqlParameter("@FromAccount", DBNull.Value) : new SqlParameter("@FromAccount", vendorPaymentReq.FromAccount),
+                vendorPaymentReq.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", vendorPaymentReq.FromAccountId) : new SqlParameter("@FromAccountId", DBNull.Value),
 
                 string.IsNullOrEmpty(vendorPaymentReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", vendorPaymentReq.PaymentMethod),
 

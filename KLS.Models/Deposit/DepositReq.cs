@@ -8,6 +8,6 @@ namespace KLS.Models
 {
     public class DepositReq : PagingRequest
     {
-        public string? ToAccount { get; set; }
+        public int? ToAccountId { get; set; }
     }
 }

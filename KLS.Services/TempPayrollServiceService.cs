@@ -72,7 +72,7 @@ namespace KLS.Services
                 oldTemp.PaymentAmount = tempService.PaymentAmount;
                 oldTemp.ServiceCode = tempService.ServiceCode;
                 oldTemp.ReferenceId = tempService.ReferenceId;
-                oldTemp.FromAccount = tempService.FromAccount;
+                oldTemp.FromAccountId = tempService.FromAccountId;
 
                 var isExist = EmployeeExists(tempService);
 

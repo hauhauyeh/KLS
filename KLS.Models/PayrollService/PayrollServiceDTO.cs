@@ -24,7 +24,7 @@ namespace KLS.Models
 
         public decimal? CheckPay { get; set; }
 
-        public string? FromAccount { get; set; }
+        public int? FromAccountId { get; set; }
 
         public string? AccountName { get; set; }
 

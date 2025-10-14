@@ -114,7 +114,7 @@ namespace KLS.Data.Repositories
 
             var NetPayParam = service.NetPay.HasValue ? new SqlParameter("@NetPay", service.NetPay) : new SqlParameter("@NetPay", DBNull.Value);
 
-            var FromAccountParam = new SqlParameter("@FromAccount", service.FromAccount);
+            var FromAccountIdParam = new SqlParameter("@FromAccountId", service.FromAccountId);
 
             var DirectDepositParam = service.DirectDeposit.HasValue ? new SqlParameter("@DirectDeposit", service.DirectDeposit) : new SqlParameter("@DirectDeposit", DBNull.Value);
 
@@ -131,7 +131,7 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[PayrollService_Insert] @PayrollServiceId,@PayrollDate,@PayrollStartDate,@PayrollEndDate,@RegularPay,@OverTimePay,@HolidayPay,@VacationPay,@EPSLPay,@OtherPay,@GrossPay,@Commission,@C401K,@E401K,@E401KLoan,@CHealthIns,@EHealthIns,@CVisionIns,@EVisionIns,@CDentalIns,@EDentalIns,@ChildSupState,@ChildSupOutState,@Garnishment,@COASDI,@EOASDI,@CHI,@EHI,@EFWH,@CFUTA,@CSUTA,@Uniform,@ChildSupAnnualFee,@Loan,@PayrollCharge,@NetPay,@FromAccount,@DirectDeposit,@CheckPay,@EPSLCredit,@EmpId,@NewPayrollServiceId OUTPUT", PayrollServiceIdParam, PayrollDateParam, PayrollStartDateParam, PayrollEndDateParam, RegularPayParam, OverTimePayParam, HolidayPayParam, VacationPayParam, EPSLPayParam, OtherPayParam, GrossPayParam, CommissionParam, C401KParam, E401KParam, E401KLoanParam, CHealthInsParam, EHealthInsParam, CVisionInsParam, EVisionInsParam, CDentalInsParam, EDentalInsParam, ChildSupStateParam, ChildSupOutStateParam, GarnishmentParam, COASDIParam, EOASDIParam, CHIParam, EHIParam, EFWHParam, CFUTAParam, CSUTAParam, UniformParam, ChildSupAnnualFeeParam, LoanParam, PayrollChargeParam, NetPayParam, FromAccountParam, DirectDepositParam, CheckPayParam, EPSLCreditParam, EmpIdParam, NewPayrollServiceId);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[PayrollService_Insert] @PayrollServiceId,@PayrollDate,@PayrollStartDate,@PayrollEndDate,@RegularPay,@OverTimePay,@HolidayPay,@VacationPay,@EPSLPay,@OtherPay,@GrossPay,@Commission,@C401K,@E401K,@E401KLoan,@CHealthIns,@EHealthIns,@CVisionIns,@EVisionIns,@CDentalIns,@EDentalIns,@ChildSupState,@ChildSupOutState,@Garnishment,@COASDI,@EOASDI,@CHI,@EHI,@EFWH,@CFUTA,@CSUTA,@Uniform,@ChildSupAnnualFee,@Loan,@PayrollCharge,@NetPay,@FromAccountId,@DirectDeposit,@CheckPay,@EPSLCredit,@EmpId,@NewPayrollServiceId OUTPUT", PayrollServiceIdParam, PayrollDateParam, PayrollStartDateParam, PayrollEndDateParam, RegularPayParam, OverTimePayParam, HolidayPayParam, VacationPayParam, EPSLPayParam, OtherPayParam, GrossPayParam, CommissionParam, C401KParam, E401KParam, E401KLoanParam, CHealthInsParam, EHealthInsParam, CVisionInsParam, EVisionInsParam, CDentalInsParam, EDentalInsParam, ChildSupStateParam, ChildSupOutStateParam, GarnishmentParam, COASDIParam, EOASDIParam, CHIParam, EHIParam, EFWHParam, CFUTAParam, CSUTAParam, UniformParam, ChildSupAnnualFeeParam, LoanParam, PayrollChargeParam, NetPayParam, FromAccountIdParam, DirectDepositParam, CheckPayParam, EPSLCreditParam, EmpIdParam, NewPayrollServiceId);
 
             return Convert.ToInt32(NewPayrollServiceId.Value);
         }

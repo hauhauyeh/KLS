@@ -64,7 +64,7 @@ namespace KLS.Models
 
         public DateOnly? PayrollEndDate { get; set; }
 
-        public string? FromAccount { get; set; }
+        public int? FromAccountId { get; set; }
 
         public decimal? RegularPay { get; set; }
 

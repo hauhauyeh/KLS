@@ -116,7 +116,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildDepositParam(depositReq);
 
-            return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccount,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountAllDeposits(DepositReq depositReq)
@@ -124,7 +124,7 @@ namespace KLS.Data.Repositories
             depositReq.IsCount = true;
             var param = BuildDepositParam(depositReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccount,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
             var output = param[10] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -143,7 +143,7 @@ namespace KLS.Data.Repositories
 
                 depositReq.EndDate.HasValue ? new SqlParameter("@EndDate", depositReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
 
-                (!string.IsNullOrEmpty(depositReq.ToAccount)) ? new SqlParameter("@ToAccount", depositReq.ToAccount) : new SqlParameter("@ToAccount", DBNull.Value),
+                depositReq.ToAccountId.HasValue ? new SqlParameter("@ToAccountId", depositReq.ToAccountId) : new SqlParameter("@ToAccountId", DBNull.Value),
 
                 (!string.IsNullOrEmpty(depositReq.Filterby)) ? new SqlParameter("@Filterby", depositReq.Filterby) : new SqlParameter("@Filterby", DBNull.Value),
 
