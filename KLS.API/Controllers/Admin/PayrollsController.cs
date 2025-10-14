@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    [AuthorizeAdmin]
+    //[AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Payroll Management", GroupName = "Admin")]
     public class PayrollsController : BaseController
@@ -35,6 +35,15 @@ namespace KLS.API.Controllers.Admin
         public IActionResult List([FromQuery] PayrollReq payrollReq)
         {
             return Ok(_payrollDetailService.GetAllPayrolls(payrollReq));
+        }
+
+
+        [HttpPost("Inject/{vendorPaymentId}")]
+        public IActionResult Inject(int vendorPaymentId)
+        {
+            _payrollDetailService.InjectPayrollDetail(vendorPaymentId);
+
+            return Ok();
         }
 
         #endregion

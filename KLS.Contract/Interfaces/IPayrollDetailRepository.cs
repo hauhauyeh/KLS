@@ -12,5 +12,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<PayrollList> GetAllPayrolls(PayrollReq payrollReq);
 
         int CountAllPayrolls(PayrollReq payrollReq);
+
+        void InjectPayrollDetail(int vendorPaymentId);
     }
 }

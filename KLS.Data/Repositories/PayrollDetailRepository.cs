@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Data.Repositories;
 using KLS.Models;
@@ -70,6 +71,15 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public void InjectPayrollDetail(int vendorPaymentId)
+        {
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Inject] @EmpId,@VendorPaymentId", EmpIdParam, VendorPaymentIdParam);
         }
     }
 }

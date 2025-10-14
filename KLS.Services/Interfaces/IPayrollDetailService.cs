@@ -10,5 +10,7 @@ namespace KLS.Services.Interfaces
     public interface IPayrollDetailService
     {
         PagingResponse<PayrollList> GetAllPayrolls(PayrollReq payrollDetailReq);
+
+        void InjectPayrollDetail(int payrollServiceId);
     }
 }

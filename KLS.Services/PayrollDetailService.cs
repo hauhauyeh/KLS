@@ -28,5 +28,10 @@ namespace KLS.Services
                 RowData = payrolllist,
             };
         }
+
+        public void InjectPayrollDetail(int vendorPaymentId)
+        {
+            Uow.PayrollDetails.InjectPayrollDetail(vendorPaymentId);
+        }
     }
 }
