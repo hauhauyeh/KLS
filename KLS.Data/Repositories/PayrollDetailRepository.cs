@@ -81,5 +81,23 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Inject] @EmpId,@VendorPaymentId", EmpIdParam, VendorPaymentIdParam);
         }
+
+        public int ImportPayroll(string excelfile)
+        {
+            var FilePathParam = String.IsNullOrEmpty(excelfile) ? new SqlParameter("@FilePath", DBNull.Value) : new SqlParameter("@FilePath", excelfile);
+
+            var EmpIdParameter = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var ImportCountnum = new SqlParameter()
+            {
+                ParameterName = "@ImportCount",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Import] @FilePath,@EmpId,@ImportCount OUTPUT", FilePathParam, EmpIdParameter, ImportCountnum);
+
+            return Convert.ToInt32(ImportCountnum.Value);
+        }
     }
 }

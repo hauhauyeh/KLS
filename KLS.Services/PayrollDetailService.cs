@@ -1,6 +1,10 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting.Internal;
 using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
@@ -12,9 +16,11 @@ namespace KLS.Services
 {
     public class PayrollDetailService : BaseService, IPayrollDetailService
     {
-        public PayrollDetailService(IUnitOfWork uow) : base(uow)
-        {
+        private IWebHostEnvironment _hostingEnvironment;
 
+        public PayrollDetailService(IUnitOfWork uow, IWebHostEnvironment hostingEnvironment) : base(uow)
+        {
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public PagingResponse<PayrollList> GetAllPayrolls(PayrollReq payrollReq)
@@ -32,6 +38,32 @@ namespace KLS.Services
         public void InjectPayrollDetail(int vendorPaymentId)
         {
             Uow.PayrollDetails.InjectPayrollDetail(vendorPaymentId);
+        }
+
+        public int Import(IFormFile PayrollFile)
+        {
+            int RecordCount = 0;
+
+            if (PayrollFile != null)
+            {
+                var excelfile = Path.Combine(_hostingEnvironment.WebRootPath, Constants.PayrollPath, PayrollFile.FileName);
+
+                GC.Collect();
+
+                if (System.IO.File.Exists(excelfile))
+                    System.IO.File.Delete(excelfile);
+
+                using (var fileStream = new FileStream(excelfile, FileMode.Create))
+                {
+                    PayrollFile.CopyTo(fileStream);
+                }
+
+                GC.Collect();
+
+                RecordCount = Uow.PayrollDetails.ImportPayroll(excelfile);
+            }
+
+            return RecordCount;
         }
     }
 }

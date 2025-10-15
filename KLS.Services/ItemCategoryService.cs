@@ -124,12 +124,12 @@ namespace KLS.Services
             {
                 string extension = Path.GetExtension(category.CatFormFile.FileName);
                 string fileName = category.CategoryId + extension;
-                string path = Path.Combine(hostingEnvironment.WebRootPath + "/KLS/category/", fileName);
+                string path = Path.Combine(hostingEnvironment.WebRootPath + "/Images/category/", fileName);
 
                 using var fileStream = new FileStream(path, FileMode.Create);
                 category.CatFormFile.CopyTo(fileStream);
 
-                var imagepath = request.Scheme + "://" + request.Host + request.PathBase + "/KLS/category/" + fileName + "?" + category.UpdatedAt?.Ticks;
+                var imagepath = request.Scheme + "://" + request.Host + request.PathBase + "/Images/category/" + fileName + "?" + category.UpdatedAt?.Ticks;
 
                 category.ImageUrl = imagepath;
 
@@ -166,7 +166,7 @@ namespace KLS.Services
                 var fileNames = fileName.Split("?");
                 var imageFileName = fileNames[0];
 
-                string filepath = Path.Combine(hostingEnvironment.WebRootPath, "KLS", "category", imageFileName);
+                string filepath = Path.Combine(hostingEnvironment.WebRootPath, "Images", "category", imageFileName);
 
                 if (System.IO.File.Exists(filepath))
                     System.IO.File.Delete(filepath);

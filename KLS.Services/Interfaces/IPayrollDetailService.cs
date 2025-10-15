@@ -1,4 +1,5 @@
 ﻿using KLS.Models;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,7 @@ namespace KLS.Services.Interfaces
         PagingResponse<PayrollList> GetAllPayrolls(PayrollReq payrollDetailReq);
 
         void InjectPayrollDetail(int payrollServiceId);
+
+        int Import(IFormFile PayrollFile);
     }
 }

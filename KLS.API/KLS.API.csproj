@@ -15,7 +15,10 @@
   <ItemGroup>
     <Folder Include="Controllers\Web\" />
     <Folder Include="Hubs\" />
+    <Folder Include="wwwroot\Images\category\" />
+    <Folder Include="wwwroot\Images\item\" />
     <Folder Include="wwwroot\KLS\category\" />
+    <Folder Include="wwwroot\Payroll\" />
   </ItemGroup>
 
   <ItemGroup>

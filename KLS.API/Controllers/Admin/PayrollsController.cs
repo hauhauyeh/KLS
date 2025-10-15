@@ -1,4 +1,5 @@
 ﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
@@ -44,6 +45,16 @@ namespace KLS.API.Controllers.Admin
             _payrollDetailService.InjectPayrollDetail(vendorPaymentId);
 
             return Ok();
+        }
+
+
+        [HttpPost("Import")]
+        [DisplayName("Import Payroll")]
+        public IActionResult Import([FromForm] IFormFile PayrollFile)
+        {
+            var RecordCount = _payrollDetailService.Import(PayrollFile);
+
+            return Ok(RecordCount);
         }
 
         #endregion
