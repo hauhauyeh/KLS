@@ -1,10 +1,12 @@
-﻿using KLS.Common;
+﻿using Azure;
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Data.Repositories;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
@@ -82,7 +84,7 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Inject] @EmpId,@VendorPaymentId", EmpIdParam, VendorPaymentIdParam);
         }
 
-        public int ImportPayroll(string excelfile)
+        public ImportPayrollResp ImportPayroll(string excelfile)
         {
             var FilePathParam = String.IsNullOrEmpty(excelfile) ? new SqlParameter("@FilePath", DBNull.Value) : new SqlParameter("@FilePath", excelfile);
 
@@ -95,9 +97,23 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Import] @FilePath,@EmpId,@ImportCount OUTPUT", FilePathParam, EmpIdParameter, ImportCountnum);
+            var ErrorParam = new SqlParameter()
+            {
+                ParameterName = "@Error",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.NVarChar,
+                Size = 255
+            };
 
-            return Convert.ToInt32(ImportCountnum.Value);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Import] @FilePath,@EmpId,@ImportCount OUTPUT,@Error OUTPUT", FilePathParam, EmpIdParameter, ImportCountnum, ErrorParam);
+
+            var response = new ImportPayrollResp();
+
+            response.ImportCount = ImportCountnum.Value == DBNull.Value ? null : Convert.ToInt32(ImportCountnum.Value);
+
+            response.Error = Convert.ToString(ErrorParam.Value);
+
+            return response;
         }
     }
 }

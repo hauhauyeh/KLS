@@ -14,6 +14,6 @@ namespace KLS.Services.Interfaces
 
         void InjectPayrollDetail(int payrollServiceId);
 
-        int Import(IFormFile PayrollFile);
+        ImportPayrollResp Import(IFormFile PayrollFile);
     }
 }

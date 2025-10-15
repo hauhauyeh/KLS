@@ -4,6 +4,7 @@ using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -52,9 +53,12 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Import Payroll")]
         public IActionResult Import([FromForm] IFormFile PayrollFile)
         {
-            var RecordCount = _payrollDetailService.Import(PayrollFile);
+            var response = _payrollDetailService.Import(PayrollFile);
 
-            return Ok(RecordCount);
+            if (!string.IsNullOrEmpty(response.Error))
+                return Conflict(response.Error);
+
+            return Ok(response.ImportCount);
         }
 
         #endregion

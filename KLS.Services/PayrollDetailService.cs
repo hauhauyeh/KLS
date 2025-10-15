@@ -40,9 +40,9 @@ namespace KLS.Services
             Uow.PayrollDetails.InjectPayrollDetail(vendorPaymentId);
         }
 
-        public int Import(IFormFile PayrollFile)
+        public ImportPayrollResp Import(IFormFile PayrollFile)
         {
-            int RecordCount = 0;
+            var response = new ImportPayrollResp();
 
             if (PayrollFile != null)
             {
@@ -60,10 +60,10 @@ namespace KLS.Services
 
                 GC.Collect();
 
-                RecordCount = Uow.PayrollDetails.ImportPayroll(excelfile);
+                response = Uow.PayrollDetails.ImportPayroll(excelfile);
             }
 
-            return RecordCount;
+            return response;
         }
     }
 }
