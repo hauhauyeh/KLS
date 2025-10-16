@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Payroll Management", GroupName = "Admin")]
     public class PayrollsController : BaseController
@@ -40,11 +40,45 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("{vendorPaymentId}")]
+        public IActionResult GetById(int vendorPaymentId)
+        {
+            //return Ok(_payrollDetailService.GetById(vendorPaymentId));
+            return Ok();
+        }
+
+
+        [HttpPost("InjectEmp")]
+        public IActionResult InjectEmp([FromBody] PayrollInjectEmpReq injectEmpReq)
+        {
+            _payrollDetailService.InjectPayrollEmp(injectEmpReq);
+            return Ok();
+        }
+
+
         [HttpPost("Inject/{vendorPaymentId}")]
         public IActionResult Inject(int vendorPaymentId)
         {
-            _payrollDetailService.InjectPayrollDetail(vendorPaymentId);
+            _payrollDetailService.InjectPayroll(vendorPaymentId);
 
+            return Ok();
+        }
+
+
+        //[HttpPost]
+        //[DisplayName("Save Payroll")]
+        //public IActionResult Save([FromBody] PayrollReq payrollReq)
+        //{
+        //    _payrollDetailService.SavePayroll(payrollReq);
+        //    return Ok();
+        //}
+
+
+        [HttpDelete("{vendorPaymentId}")]
+        [DisplayName("Delete Payroll")]
+        public IActionResult Delete(int vendorPaymentId)
+        {
+            _payrollDetailService.DeletePayroll(vendorPaymentId);
             return Ok();
         }
 

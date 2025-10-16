@@ -24,5 +24,15 @@ namespace KLS.Common
             LOANPMTDEDUCTION = 3,
             GARNISHMENT = 4
         }
+
+        public enum PaymentMethod
+        {
+            ACH = 1,
+            CASH = 2,
+            CHECK = 3,
+            CREDIT_CARD = 4,
+            E_CHECK = 5,
+            HANDWRITE_CHECK = 6
+        }
     }
 }

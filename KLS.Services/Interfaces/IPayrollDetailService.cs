@@ -12,7 +12,11 @@ namespace KLS.Services.Interfaces
     {
         PagingResponse<PayrollList> GetAllPayrolls(PayrollReq payrollDetailReq);
 
-        void InjectPayrollDetail(int payrollServiceId);
+        void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq);
+
+        void InjectPayroll(int vendorPaymentId);
+
+        void DeletePayroll(int vendorPaymentId);
 
         ImportPayrollResp Import(IFormFile PayrollFile);
     }

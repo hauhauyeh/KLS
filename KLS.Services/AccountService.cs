@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.OutputCaching;
@@ -145,31 +146,12 @@ namespace KLS.Services
             return account;
         }
 
-        public IEnumerable<AccountDTO>? SearchAccount(string term)
+        public ICollection<AccountDTO>? SearchAccount(string term)
         {
             return Uow.Accounts.SearchAccount(term).ToList();
         }
 
-        public IEnumerable<AccountDTO>? GetBankCashAccounts()
-        {
-            var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.TypeName == "Bank" || at.TypeName == "Cash"
-                         select new AccountDTO
-                         {
-                             AccountId = a.AccountId,
-                             AccountCode = a.AccountCode,
-                             AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             CatName = at.CatName,
-                             Inactive = a.Inactive
-                         };
-
-            return result.ToList();
-        }
-
-        public IEnumerable<AccountDTO>? GetBankAccounts()
+        public ICollection<AccountDTO>? GetBankAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
                          join at in Uow.AccountTypes.GetAll()
@@ -185,10 +167,67 @@ namespace KLS.Services
                              Inactive = a.Inactive
                          };
 
-            return result.ToList();
+            return result.OrderBy(c => c.AccountName).ToList();
         }
 
-        public IEnumerable<AccountDTO>? GetBankCashCCAccounts()
+        public ICollection<AccountDTO>? GetCashAccounts()
+        {
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountTypes.GetAll()
+                             on a.AccountTypeId equals at.AccountTypeId
+                         where at.TypeName == "Cash"
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             TypeName = at.TypeName,
+                             CatName = at.CatName,
+                             Inactive = a.Inactive
+                         };
+
+            return result.OrderBy(c => c.AccountName).ToList();
+        }
+
+        public ICollection<AccountDTO>? GetCCAccounts()
+        {
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountTypes.GetAll()
+                             on a.AccountTypeId equals at.AccountTypeId
+                         where at.TypeName == "Credit Card"
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             TypeName = at.TypeName,
+                             CatName = at.CatName,
+                             Inactive = a.Inactive
+                         };
+
+            return result.OrderBy(c => c.AccountName).ToList();
+        }
+
+        public ICollection<AccountDTO>? GetBankCashAccounts()
+        {
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountTypes.GetAll()
+                             on a.AccountTypeId equals at.AccountTypeId
+                         where at.TypeName == "Bank" || at.TypeName == "Cash"
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             TypeName = at.TypeName,
+                             CatName = at.CatName,
+                             Inactive = a.Inactive
+                         };
+
+            return result.OrderBy(c => c.TypeName).ThenBy(c => c.AccountName).ToList();
+        }
+
+        public ICollection<AccountDTO>? GetBankCashCCAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
                          join at in Uow.AccountTypes.GetAll()
@@ -204,7 +243,19 @@ namespace KLS.Services
                              Inactive = a.Inactive
                          };
 
-            return result.ToList();
+            return result.OrderBy(c => c.TypeName).ThenBy(c => c.AccountName).ToList();
+        }
+
+        public ICollection<AccountDTO>? GetByPaymentMethod(string pmtMethod)
+        {
+            string normalized = pmtMethod.Trim().Replace(" ", "_").ToUpper();
+
+            if (normalized == EnumHelper.PaymentMethod.CASH.ToString())
+                return GetCashAccounts();
+            else if (normalized == EnumHelper.PaymentMethod.CREDIT_CARD.ToString())
+                return GetCCAccounts();
+            else
+                return GetBankAccounts();
         }
     }
 }

@@ -25,12 +25,16 @@ namespace KLS.Services.Interfaces
 
         Account? CheckAccount(string search);
 
-        IEnumerable<AccountDTO>? SearchAccount(string term);
+        ICollection<AccountDTO>? SearchAccount(string term);
 
-        IEnumerable<AccountDTO>? GetBankCashAccounts();
+        ICollection<AccountDTO>? GetBankAccounts();
 
-        IEnumerable<AccountDTO>? GetBankAccounts();
+        ICollection<AccountDTO>? GetCashAccounts();
 
-        IEnumerable<AccountDTO>? GetBankCashCCAccounts();
+        ICollection<AccountDTO>? GetBankCashAccounts();
+
+        ICollection<AccountDTO>? GetBankCashCCAccounts();
+
+        ICollection<AccountDTO>? GetByPaymentMethod(string pmtMethod);
     }
 }

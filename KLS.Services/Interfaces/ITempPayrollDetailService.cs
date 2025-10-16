@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,10 @@ namespace KLS.Services.Interfaces
 {
     public interface ITempPayrollDetailService
     {
+        ICollection<TempPayrollDetail>? GetTempPayrollList(int vendorPaymentId);
 
+        TempPayrollDetail GetById(int tempPayrollId);
+
+        TempPayrollDetail Update(TempPayrollDetail tempPayrollDetail);
     }
 }

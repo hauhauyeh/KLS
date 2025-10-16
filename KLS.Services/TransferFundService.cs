@@ -61,6 +61,7 @@ namespace KLS.Services
             if (tf != null && !tf.IsLocked)
             {
                 Uow.TransferFunds.Find(c => c.TFId == tfId).ExecuteDelete();
+                //there is instead of delete trigger that's why we use ExecuteDelete.
             }
         }
 

@@ -4,6 +4,7 @@ using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.Internal;
 using Org.BouncyCastle.Ocsp;
 using System;
@@ -14,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Services
 {
+    //we use PayrollDetailService becuase of PayrollService class already there.
     public class PayrollDetailService : BaseService, IPayrollDetailService
     {
         private IWebHostEnvironment _hostingEnvironment;
@@ -35,27 +37,42 @@ namespace KLS.Services
             };
         }
 
-        public void InjectPayrollDetail(int vendorPaymentId)
+        public void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq)
         {
-            Uow.PayrollDetails.InjectPayrollDetail(vendorPaymentId);
+            Uow.PayrollDetails.InjectPayrollEmp(injectEmpReq);
         }
 
-        public ImportPayrollResp Import(IFormFile PayrollFile)
+        public void InjectPayroll(int vendorPaymentId)
+        {
+            Uow.PayrollDetails.InjectPayroll(vendorPaymentId);
+        }
+
+        public void DeletePayroll(int vendorPaymentId)
+        {
+            var payroll = Uow.VendorPayments.GetById(vendorPaymentId);
+
+            if (payroll != null && !payroll.IsLocked)
+            {
+                Uow.VendorPayments.Find(c => c.VendorPaymentId == vendorPaymentId).ExecuteDelete();
+            }
+        }
+
+        public ImportPayrollResp Import(IFormFile payrollFile)
         {
             var response = new ImportPayrollResp();
 
-            if (PayrollFile != null)
+            if (payrollFile != null)
             {
-                var excelfile = Path.Combine(_hostingEnvironment.WebRootPath, Constants.PayrollPath, PayrollFile.FileName);
+                var excelfile = Path.Combine(_hostingEnvironment.WebRootPath, Constants.PayrollPath, payrollFile.FileName);
 
                 GC.Collect();
 
-                if (System.IO.File.Exists(excelfile))
-                    System.IO.File.Delete(excelfile);
+                if (File.Exists(excelfile))
+                    File.Delete(excelfile);
 
                 using (var fileStream = new FileStream(excelfile, FileMode.Create))
                 {
-                    PayrollFile.CopyTo(fileStream);
+                    payrollFile.CopyTo(fileStream);
                 }
 
                 GC.Collect();

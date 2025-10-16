@@ -1,5 +1,8 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +16,23 @@ namespace KLS.Services
         public TempPayrollDetailService(IUnitOfWork uow) : base(uow)
         {
 
+        }
+
+        public ICollection<TempPayrollDetail>? GetTempPayrollList(int vendorPaymentId)
+        {
+            return Uow.TempPayrollDetails.Find(c => c.EmpId == UserContext.EmpId && c.VendorPaymentId == vendorPaymentId).Include(c => c.Employee).ToList();
+        }
+
+        public TempPayrollDetail GetById(int tempPayrollId)
+        {
+            return Uow.TempPayrollDetails.Find(c => c.TempPayrollId == tempPayrollId).Include(c => c.Employee).FirstOrDefault()!;
+        }
+
+        public TempPayrollDetail Update(TempPayrollDetail tempPayrollDetail)
+        {
+            Uow.TempPayrollDetails.UpdateTempPayroll(tempPayrollDetail);
+
+            return GetById(tempPayrollDetail.TempPayrollId);
         }
     }
 }

@@ -14,7 +14,9 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TempPayrollId { get; set; }
 
-        public int? EmpId { get; set; }
+        public int EmpId { get; set; }
+
+        public int VendorPaymentId { get; set; }
 
         public int PayeeId { get; set; }
 
@@ -116,7 +118,46 @@ namespace KLS.Models
 
         public decimal? NetPay { get; set; }
 
-        public decimal? Cash { get; set; }
-    }
+        public decimal? CashPay { get; set; }
 
+        [ForeignKey("PayeeId")]
+        public virtual EmployeeDTO? Employee { get; set; }
+
+
+        [NotMapped]
+        public bool IsEmpFWHChange { get; set; }
+
+        [NotMapped]
+        public bool IsEmpOASDIChange { get; set; }
+
+        [NotMapped]
+        public bool IsEmpHIChange { get; set; }
+
+        [NotMapped]
+        public bool IsCOASDIChange { get; set; }
+
+        [NotMapped]
+        public bool IsCHIChange { get; set; }
+
+        [NotMapped]
+        public bool IsTotalHourChange { get; set; }
+
+        [NotMapped]
+        public bool IsRegularHourChange { get; set; }
+
+        [NotMapped]
+        public bool IsOTHourChange { get; set; }
+
+        [NotMapped]
+        public bool IsCFUTAChange { get; set; }
+
+        [NotMapped]
+        public bool IsCSUTAChange { get; set; }
+
+        [NotMapped]
+        public int PayOption { get; set; }
+
+        [NotMapped]
+        public DateTime PayDate { get; set; }
+    }
 }

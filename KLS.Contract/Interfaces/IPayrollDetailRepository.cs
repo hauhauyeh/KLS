@@ -13,7 +13,9 @@ namespace KLS.Contract.Interfaces
 
         int CountAllPayrolls(PayrollReq payrollReq);
 
-        void InjectPayrollDetail(int vendorPaymentId);
+        void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq);
+
+        void InjectPayroll(int vendorPaymentId);
 
         ImportPayrollResp ImportPayroll(string excelfile);
     }

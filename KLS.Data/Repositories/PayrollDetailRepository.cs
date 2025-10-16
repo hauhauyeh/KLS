@@ -75,7 +75,18 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public void InjectPayrollDetail(int vendorPaymentId)
+        public void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq)
+        {
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var PayOptionParam = new SqlParameter("@PayOption", injectEmpReq.PayOption);
+
+            var PayDateParam = new SqlParameter("@PayDate", injectEmpReq.PayDate);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_InjectEmp] @EmpId,@PayOption,@PayDate", EmpIdParam, PayOptionParam, PayDateParam);
+        }
+
+        public void InjectPayroll(int vendorPaymentId)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 

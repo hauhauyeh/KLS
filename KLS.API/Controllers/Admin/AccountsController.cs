@@ -111,6 +111,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("Bank")]
+        public IActionResult GetBankAccounts()
+        {
+            return Ok(_chartOfAccountService.GetBankAccounts());
+        }
+
+
         [HttpGet("BankCash")]
         public IActionResult GetBankCashAccounts()
         {
@@ -118,17 +125,17 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("BankAccount")]
-        public IActionResult GetBankAccounts()
-        {
-            return Ok(_chartOfAccountService.GetBankAccounts());
-        }
-
-
         [HttpGet("BankCashCC")]
         public IActionResult GetBankCashCCAccounts()
         {
             return Ok(_chartOfAccountService.GetBankCashCCAccounts());
+        }
+
+
+        [HttpGet("GetByPaymentMethod/{method}")]
+        public IActionResult GetByPaymentMethod(string method)
+        {
+            return Ok(_chartOfAccountService.GetByPaymentMethod(method));
         }
 
         #endregion

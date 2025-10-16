@@ -68,6 +68,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PayrollServiceType>().ToTable("PayrollServiceType");
             modelBuilder.Entity<TempPayrollService>().ToTable("TempPayrollService");
             modelBuilder.Entity<PayrollDetail>().ToTable("PayrollDetail");
+            modelBuilder.Entity<TempPayrollDetail>().ToTable("TempPayrollDetail");
             modelBuilder.Entity<CustomerPayment>().ToTable("CustomerPayment");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");

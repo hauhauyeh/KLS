@@ -16,6 +16,6 @@ namespace KLS.Models
 
         public string? MethodName { get; set; }
 
-        public string? DefaultAccount { get; set; }
+        public int? DefaultAccountId { get; set; }
     }
 }
