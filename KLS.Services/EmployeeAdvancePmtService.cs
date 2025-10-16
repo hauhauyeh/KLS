@@ -27,5 +27,17 @@ namespace KLS.Services
                 RowData = empAdvanceList
             };
         }
+
+        public VendorPayment? GetById(int vendorPaymentId)
+        {
+            return Uow.VendorPayments.GetById(vendorPaymentId);
+        }
+
+        public VendorPayment SaveEmployeeAdvancePmt(VendorPayment vendorPayment)
+        {
+            var newVendorPaymentId = Uow.EmployeeAdvancePmts.SaveEmployeeAdvancePmt(vendorPayment);
+
+            return GetById(newVendorPaymentId);
+        }
     }
 }

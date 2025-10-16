@@ -10,5 +10,9 @@ namespace KLS.Services.Interfaces
     public interface IEmployeeAdvancePmtService
     {
         PagingResponse<EmployeeAdvancePmt> GetAllEmployeeAdvancePmt(EmployeeAdvancePmtReq empAdvanceReq);
+
+        VendorPayment? GetById(int vendorPaymentId);
+
+        VendorPayment SaveEmployeeAdvancePmt(VendorPayment vendorPayment);
     }
 }

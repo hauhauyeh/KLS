@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
@@ -67,6 +68,36 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public int SaveEmployeeAdvancePmt(VendorPayment vendorPayment)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPayment.VendorPaymentId);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", vendorPayment.PayeeId);
+
+            var PaymentDateParam = new SqlParameter("@PaymentDate", vendorPayment.PaymentDate);
+
+            var PaymentMethodParam = new SqlParameter("@PaymentMethod", vendorPayment.PaymentMethod);
+
+            var FromAccountIdParam = new SqlParameter("@FromAccountId", vendorPayment.FromAccountId);
+
+            var ReferenceIdParam = (!string.IsNullOrEmpty(vendorPayment.ReferenceId)) ? new SqlParameter("@ReferenceId", vendorPayment.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
+
+            var PaymentAmountParam = vendorPayment.PaymentAmount.HasValue ? new SqlParameter("@PaymentAmount", vendorPayment.PaymentAmount) : new SqlParameter("@PaymentAmount", DBNull.Value);
+
+            var NotesParam = (!string.IsNullOrEmpty(vendorPayment.Notes)) ? new SqlParameter("@Notes", vendorPayment.Notes) : new SqlParameter("@Notes", DBNull.Value);
+
+            var NewVendorPaymentId = new SqlParameter()
+            {
+                ParameterName = "@NewVendorPaymentId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[EmployeeAdvance_Insert] @VendorPaymentId,@PayeeId,@PaymentDate,@PaymentMethod,@FromAccountId,@ReferenceId,@PaymentAmount,@Notes,@NewVendorPaymentId OUTPUT", VendorPaymentIdParam, PayeeIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, ReferenceIdParam, PaymentAmountParam, NotesParam, NewVendorPaymentId);
+
+            return Convert.ToInt32(NewVendorPaymentId.Value);
         }
     }
 }

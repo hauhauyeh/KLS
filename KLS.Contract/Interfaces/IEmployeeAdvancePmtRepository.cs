@@ -12,5 +12,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<EmployeeAdvancePmt> GetAllEmployeeAdvancePmt(EmployeeAdvancePmtReq employeeAdvancePmtReq);
 
         int CountAllEmployeeAdvancePmt(EmployeeAdvancePmtReq employeeAdvancePmtReq);
+
+        int SaveEmployeeAdvancePmt(VendorPayment vendorPayment);
     }
 }

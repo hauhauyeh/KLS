@@ -37,6 +37,21 @@ namespace KLS.API.Controllers.Admin
             return Ok(_employeeAdvancePmt.GetAllEmployeeAdvancePmt(empAdvanceReq));
         }
 
+
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            return Ok(_employeeAdvancePmt.GetById(id));
+        }
+
+
+        [HttpPost("Save")]
+        [DisplayName("Save EmpAdvancePmt")]
+        public IActionResult Save([FromBody] VendorPayment vendorPayment)
+        {
+            return Ok(_employeeAdvancePmt.SaveEmployeeAdvancePmt(vendorPayment));
+        }
+
         #endregion
     }
 }
