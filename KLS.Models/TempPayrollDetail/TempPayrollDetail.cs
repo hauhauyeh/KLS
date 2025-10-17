@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace KLS.Models
@@ -120,9 +121,13 @@ namespace KLS.Models
 
         public decimal? CashPay { get; set; }
 
-        [ForeignKey("PayeeId")]
-        public virtual EmployeeDTO? Employee { get; set; }
 
+        [ForeignKey("PayeeId")]
+        [JsonIgnore]
+        public virtual Payee? Payee { get; set; }
+
+        [NotMapped]
+        public string? PayeeName => Payee?.PayeeName;
 
         [NotMapped]
         public bool IsEmpFWHChange { get; set; }
@@ -158,6 +163,6 @@ namespace KLS.Models
         public int PayOption { get; set; }
 
         [NotMapped]
-        public DateTime PayDate { get; set; }
+        public DateOnly PayDate { get; set; }
     }
 }
