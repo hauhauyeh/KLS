@@ -13,6 +13,8 @@ namespace KLS.Services.Interfaces
 
         VendorPayment? GetById(int vendorPaymentId);
 
-        VendorPayment SaveEmployeeAdvancePmt(VendorPayment vendorPayment);
+        VendorPayment SaveEmployeeAdvancePmt(EmployeeAdvancePmt employeeAdvancePmt);
+
+        void Delete(int vendorPaymentId);
     }
 }

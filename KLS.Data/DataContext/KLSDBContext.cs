@@ -202,6 +202,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<CustomerPaymentList> CustomerPaymentList { get; set; }
 
+        public virtual DbSet<IncomingPaymentList> IncomingPaymentList { get; set; }
+
         #endregion
     }
 }

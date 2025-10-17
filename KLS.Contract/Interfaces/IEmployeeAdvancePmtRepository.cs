@@ -13,6 +13,6 @@ namespace KLS.Contract.Interfaces
 
         int CountAllEmployeeAdvancePmt(EmployeeAdvancePmtReq employeeAdvancePmtReq);
 
-        int SaveEmployeeAdvancePmt(VendorPayment vendorPayment);
+        int SaveEmployeeAdvancePmt(EmployeeAdvancePmt employeeAdvancePmt);
     }
 }

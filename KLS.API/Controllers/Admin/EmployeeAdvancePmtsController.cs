@@ -47,9 +47,18 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Save")]
         [DisplayName("Save EmpAdvancePmt")]
-        public IActionResult Save([FromBody] VendorPayment vendorPayment)
+        public IActionResult Save([FromBody] EmployeeAdvancePmt employeeAdvancePmt)
         {
-            return Ok(_employeeAdvancePmt.SaveEmployeeAdvancePmt(vendorPayment));
+            return Ok(_employeeAdvancePmt.SaveEmployeeAdvancePmt(employeeAdvancePmt));
+        }
+
+
+        [HttpDelete("{id}")]
+        [DisplayName("Delete EmpAdvancePmt")]
+        public IActionResult Delete(int id)
+        {
+            _employeeAdvancePmt.Delete(id);
+            return Ok();
         }
 
         #endregion

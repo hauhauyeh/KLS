@@ -22,6 +22,8 @@ namespace KLS.Models
 
         public string? PaymentMethod { get; set; }
 
+        public int? FromAccountId { get; set; }
+
         public string? ReferenceId { get; set; }
 
         public decimal? PaymentAmount { get; set; }

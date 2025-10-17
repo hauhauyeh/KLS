@@ -57,6 +57,9 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Save Timesheet")]
         public IActionResult Save([FromBody] Timesheet timeSheet)
         {
+            if (_timesheetService.ValidateTime(timeSheet))
+                return Conflict("Out Time must be greater than In Time.");
+
             return Ok(_timesheetService.SaveTimesheet(timeSheet));
         }
 
