@@ -16,6 +16,8 @@ namespace KLS.Services.Interfaces
 
         Timesheet GetById(int timesheetId);
 
+        bool ValidateTime(Timesheet timesheet);
+
         Timesheet SaveTimesheet(Timesheet timesheet);
 
         void DeleteTimesheet(int timesheetId);

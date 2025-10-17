@@ -33,11 +33,22 @@ namespace KLS.Services
             return Uow.VendorPayments.GetById(vendorPaymentId);
         }
 
-        public VendorPayment SaveEmployeeAdvancePmt(VendorPayment vendorPayment)
+        public VendorPayment SaveEmployeeAdvancePmt(EmployeeAdvancePmt employeeAdvancePmt)
         {
-            var newVendorPaymentId = Uow.EmployeeAdvancePmts.SaveEmployeeAdvancePmt(vendorPayment);
+            var newVendorPaymentId = Uow.EmployeeAdvancePmts.SaveEmployeeAdvancePmt(employeeAdvancePmt);
 
             return GetById(newVendorPaymentId);
+        }
+
+        public void Delete(int vendorPaymentId)
+        {
+            var vendorPayment = GetById(vendorPaymentId);
+
+            if (vendorPayment != null && !vendorPayment.IsLocked)
+            {
+                Uow.VendorPayments.RemoveById(vendorPaymentId);
+                Uow.Commit();
+            }
         }
     }
 }

@@ -112,6 +112,16 @@ namespace KLS.Services
             return timesheet;
         }
 
+        public bool ValidateTime(Timesheet timesheet)
+        {
+            if (timesheet.OutTime.HasValue)
+            {
+                if (timesheet.OutTime.Value <= timesheet.InTime)
+                    return true;
+            }
+            return false;
+        }
+
         public Timesheet SaveTimesheet(Timesheet timesheet)
         {
             //convert to utc

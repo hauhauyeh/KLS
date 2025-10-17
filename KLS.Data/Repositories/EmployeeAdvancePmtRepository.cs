@@ -70,23 +70,23 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public int SaveEmployeeAdvancePmt(VendorPayment vendorPayment)
+        public int SaveEmployeeAdvancePmt(EmployeeAdvancePmt employeeAdvancePmt)
         {
-            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPayment.VendorPaymentId);
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", employeeAdvancePmt.VendorPaymentId);
 
-            var PayeeIdParam = new SqlParameter("@PayeeId", vendorPayment.PayeeId);
+            var PayeeIdParam = new SqlParameter("@PayeeId", employeeAdvancePmt.PayeeId);
 
-            var PaymentDateParam = new SqlParameter("@PaymentDate", vendorPayment.PaymentDate);
+            var PaymentDateParam = new SqlParameter("@PaymentDate", employeeAdvancePmt.PaymentDate);
 
-            var PaymentMethodParam = new SqlParameter("@PaymentMethod", vendorPayment.PaymentMethod);
+            var PaymentMethodParam = new SqlParameter("@PaymentMethod", employeeAdvancePmt.PaymentMethod);
 
-            var FromAccountIdParam = new SqlParameter("@FromAccountId", vendorPayment.FromAccountId);
+            var FromAccountIdParam = new SqlParameter("@FromAccountId", employeeAdvancePmt.FromAccountId);
 
-            var ReferenceIdParam = (!string.IsNullOrEmpty(vendorPayment.ReferenceId)) ? new SqlParameter("@ReferenceId", vendorPayment.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
+            var ReferenceIdParam = (!string.IsNullOrEmpty(employeeAdvancePmt.ReferenceId)) ? new SqlParameter("@ReferenceId", employeeAdvancePmt.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
 
-            var PaymentAmountParam = vendorPayment.PaymentAmount.HasValue ? new SqlParameter("@PaymentAmount", vendorPayment.PaymentAmount) : new SqlParameter("@PaymentAmount", DBNull.Value);
+            var PaymentAmountParam = employeeAdvancePmt.PaymentAmount.HasValue ? new SqlParameter("@PaymentAmount", employeeAdvancePmt.PaymentAmount) : new SqlParameter("@PaymentAmount", DBNull.Value);
 
-            var NotesParam = (!string.IsNullOrEmpty(vendorPayment.Notes)) ? new SqlParameter("@Notes", vendorPayment.Notes) : new SqlParameter("@Notes", DBNull.Value);
+            var NotesParam = (!string.IsNullOrEmpty(employeeAdvancePmt.Notes)) ? new SqlParameter("@Notes", employeeAdvancePmt.Notes) : new SqlParameter("@Notes", DBNull.Value);
 
             var NewVendorPaymentId = new SqlParameter()
             {
