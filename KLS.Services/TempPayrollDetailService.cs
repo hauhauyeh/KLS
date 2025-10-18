@@ -20,12 +20,12 @@ namespace KLS.Services
 
         public ICollection<TempPayrollDetail>? GetTempPayrollList(int vendorPaymentId)
         {
-            return Uow.TempPayrollDetails.Find(c => c.EmpId == UserContext.EmpId && c.VendorPaymentId == vendorPaymentId).Include(c => c.Employee).ToList();
+            return Uow.TempPayrollDetails.Find(c => c.EmpId == UserContext.EmpId && c.VendorPaymentId == vendorPaymentId).Include(c => c.Payee).ToList();
         }
 
         public TempPayrollDetail GetById(int tempPayrollId)
         {
-            return Uow.TempPayrollDetails.Find(c => c.TempPayrollId == tempPayrollId).Include(c => c.Employee).FirstOrDefault()!;
+            return Uow.TempPayrollDetails.Find(c => c.TempPayrollId == tempPayrollId).Include(c => c.Payee).FirstOrDefault()!;
         }
 
         public TempPayrollDetail Update(TempPayrollDetail tempPayrollDetail)
