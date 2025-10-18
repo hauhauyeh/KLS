@@ -96,6 +96,8 @@ namespace KLS.Contract.Interfaces
 
         IIncomingPaymentRepository IncomingPayments { get; }
 
+        IPurchaseOrderRepository PurchaseOrders { get; }
+
         void Commit();
     }
 }

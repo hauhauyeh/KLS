@@ -123,6 +123,8 @@ namespace KLS.Data.Repositories
         public IItemRepository Items { get { return new ItemRepository(DbContext); } }
 
         public IIncomingPaymentRepository IncomingPayments { get { return new IncomingPaymentRepository(DbContext); } }
+
+        public IPurchaseOrderRepository PurchaseOrders { get { return new PurchaseOrderRepository(DbContext); } }
     }
 }
 
