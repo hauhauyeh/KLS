@@ -12,7 +12,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Payroll Management", GroupName = "Admin")]
+    [Display(Name = "Payroll Management", GroupName = "Employee")]
     public class PayrollsController : BaseController
     {
         #region --- Member(s) ---

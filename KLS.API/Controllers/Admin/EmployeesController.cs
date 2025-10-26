@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 namespace KLS.API.Controllers.Admin
 {
     [Route("api/admin/[controller]")]
-    [Display(Name = "Employee Management", GroupName = "Admin")]
+    [Display(Name = "Employee Management", GroupName = "Employee")]
     public class EmployeesController : BaseController
     {
         #region --- Member(s) ---

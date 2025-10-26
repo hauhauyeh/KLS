@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Temp Payroll Service Management", GroupName = "Admin")]
+    [Display(Name = "Temp Payroll Service Management", GroupName = "Employee")]
     public class TempPayrollServicesController : BaseController
     {
         #region --- Member(s) ---

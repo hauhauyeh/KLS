@@ -10,7 +10,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "CheckRegister Management", GroupName = "Admin")]
+    [Display(Name = "Check Register Management", GroupName = "Admin")]
     public class CheckRegisterController : BaseController
     {
         #region --- Member(s) ---

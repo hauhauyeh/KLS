@@ -16,15 +16,15 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<PurchaseOrderList> GetPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
+        public PagingResponse<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
         {
-            var purchaseOrderList = Uow.PurchaseOrders.GetPurchaseOrders(purchaseOrderReq);
+            var purchaseOrders = Uow.PurchaseOrders.GetPurchaseOrders(purchaseOrderReq);
 
             var totalRecords = Uow.PurchaseOrders.CountAllPurchaseOrders(purchaseOrderReq);
 
             return new PagingResponse<PurchaseOrderList>(totalRecords, purchaseOrderReq.Pageno, purchaseOrderReq.Pagesize)
             {
-                RowData = purchaseOrderList,
+                RowData = purchaseOrders,
             };
         }
 

@@ -1,4 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,23 @@ namespace KLS.Services
         public SalesService(IUnitOfWork uow) : base(uow)
         {
 
+        }
+
+        public PagingResponse<SalesList> GetAllSales(SalesListReq salesListReq)
+        {
+            var sales = Uow.Sales.GetAllSales(salesListReq);
+
+            var totalRecords = Uow.Sales.CountAllSales(salesListReq);
+
+            return new PagingResponse<SalesList>(totalRecords, salesListReq.Pageno, salesListReq.Pagesize)
+            {
+                RowData = sales,
+            };
+        }
+
+        public Sales GetById(int salesId)
+        {
+            return Uow.Sales.GetById(salesId);
         }
     }
 }

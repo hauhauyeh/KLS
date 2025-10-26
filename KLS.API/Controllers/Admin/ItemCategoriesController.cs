@@ -11,7 +11,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "ItemCategory Management", GroupName = "Admin")]
+    [Display(Name = "ItemCategory Management", GroupName = "Product")]
     public class ItemCategoriesController : BaseController
     {
         #region --- Member(s) ---

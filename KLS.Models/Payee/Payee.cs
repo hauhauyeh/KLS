@@ -54,7 +54,7 @@ namespace KLS.Models
 
         public bool IsClosed { get; set; }
         public DateTime? StartDate { get; set; }
-        public string? TermName { get; set; }
+        public int? TermId { get; set; }
         public int? GracePeriod { get; set; }
 
         public bool IsPastDue { get; set; }

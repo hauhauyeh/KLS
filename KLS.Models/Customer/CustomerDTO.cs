@@ -74,7 +74,7 @@ namespace KLS.Models
 
         public string? Notes { get; set; }
 
-        public string? TermName { get; set; }
+        public int? TermId { get; set; }
 
 
         public string? Region { get; set; }

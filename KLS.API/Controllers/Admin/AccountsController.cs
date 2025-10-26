@@ -10,7 +10,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "ChartOfAccount Management", GroupName = "Admin")]
+    [Display(Name = "Account Management", GroupName = "Admin")]
     public class AccountsController : BaseController
     {
         #region --- Member(s) ---

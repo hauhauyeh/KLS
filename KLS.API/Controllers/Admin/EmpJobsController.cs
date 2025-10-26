@@ -5,10 +5,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "EmpJobs Management", GroupName = "Admin")]
     public class EmpJobsController : BaseController
     {
         #region --- Member(s) ---

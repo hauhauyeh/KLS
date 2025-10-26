@@ -9,7 +9,7 @@ namespace KLS.Services.Interfaces
 {
     public interface IPurchaseOrderService
     {
-        PagingResponse<PurchaseOrderList> GetPurchaseOrders(PurchaseOrderReq purchaseOrderReq);
+        PagingResponse<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq);
 
         void UpdateNotes(PurchaseOrder purchaseOrder);
 

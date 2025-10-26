@@ -95,7 +95,7 @@ namespace KLS.Services
             existingPayee.Email = customerDTO.Email;
             existingPayee.EmailInvoice = customerDTO.EmailInvoice;
             existingPayee.EmailStmt = customerDTO.EmailStmt;
-            existingPayee.TermName = customerDTO.TermName;
+            existingPayee.TermId = customerDTO.TermId;
             existingPayee.IsClosed = customerDTO.IsClosed;
             existingPayee.IsDelinquent = customerDTO.IsDelinquent;
             existingPayee.GracePeriod = customerDTO.GracePeriod;

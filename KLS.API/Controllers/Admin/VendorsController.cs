@@ -8,9 +8,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-   [AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Vendor Management", GroupName = "Admin")]
+    [Display(Name = "Vendor Management", GroupName = "Vendor")]
     public class VendorsController : BaseController
     {
         #region --- Member(s) ---

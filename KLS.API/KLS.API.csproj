@@ -18,6 +18,7 @@
     <Folder Include="wwwroot\Images\category\" />
     <Folder Include="wwwroot\Images\item\" />
     <Folder Include="wwwroot\KLS\category\" />
+    <Folder Include="wwwroot\Python\" />
     <Folder Include="wwwroot\Payroll\" />
   </ItemGroup>
 

@@ -8,7 +8,6 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "PaymentOption Management", GroupName = "Admin")]
     public class PaymentOptionsController : BaseController
     {
         #region --- Member(s) ---
@@ -29,7 +28,6 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List PaymentOption")]
         public IActionResult List()
         {
             return Ok(_paymentOptionService.GetAllPaymentOption());

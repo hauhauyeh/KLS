@@ -210,6 +210,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PurchaseOrderList> PurchaseOrderList { get; set; }
 
+        public virtual DbSet<SalesList> SalesList { get; set; }
+
         #endregion
     }
 }

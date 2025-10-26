@@ -49,6 +49,7 @@ namespace KLS.Models
 
         public DateOnly? DiscountDate { get; set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? DiscountPercent { get; set; }
 
         public decimal? PaymentApplied { get; set; }
@@ -69,14 +70,6 @@ namespace KLS.Models
 
         public string? CustomerPONumber { get; set; }
 
-        public int? Deliverby { get; set; }
-
-        public int? Enterby { get; set; }
-
-        public int? Loadby { get; set; }
-
-        public int? Updateby { get; set; }
-
         public string? TruckNumber { get; set; }
 
         public bool IsLoadSeparate { get; set; }
@@ -92,6 +85,14 @@ namespace KLS.Models
         public int? ShippingCarrierId { get; set; }
 
         public string? TrackingNo { get; set; }
+
+        public int? Deliverby { get; set; }
+
+        public int? Enterby { get; set; }
+
+        public int? Loadby { get; set; }
+
+        public int? Updateby { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

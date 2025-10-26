@@ -97,7 +97,7 @@ namespace KLS.Services
             existingPayee.IsClosed = vendorDTO.IsClosed;
             existingPayee.StartDate = vendorDTO.StartDate;
             existingPayee.Balance = vendorDTO.Balance;
-            existingPayee.TermName = vendorDTO.TermName;
+            existingPayee.TermId = vendorDTO.TermId;
             existingPayee.Notes = vendorDTO.Notes;
             existingPayee.UpdatedAt = DateTime.UtcNow;
 

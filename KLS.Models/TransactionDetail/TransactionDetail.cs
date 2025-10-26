@@ -20,11 +20,9 @@ namespace KLS.Models
 
         public int? AccountId { get; set; }
 
-        //public string? AccountCode { get; set; }
-
         public int? PayeeId { get; set; }
 
-        public string? ItemCode { get; set; }
+        public int? ItemId { get; set; }
 
         public decimal? Qty { get; set; }
 

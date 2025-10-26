@@ -26,9 +26,9 @@ namespace KLS.Services
             return Uow.Terms.Find(c => c.Inactive == false).OrderBy(c => c.TermName).ToList();
         }
 
-        public Term GetById(int id)
+        public Term GetById(int termId)
         {
-            return Uow.Terms.GetById(id);
+            return Uow.Terms.GetById(termId);
         }
 
         public bool ExistsName(Term term)
@@ -36,10 +36,10 @@ namespace KLS.Services
             return Uow.Terms.Exists(c => c.TermName.ToLower() == term.TermName.ToLower() && c.TermId != term.TermId);
         }
 
-        public bool TermUsed(int termid)
+        public bool TermUsed(int termId)
         {
-            var term = GetById(termid);
-            return Uow.Payees.Exists(c => c.TermName == term.TermName);
+            var term = GetById(termId);
+            return Uow.Payees.Exists(c => c.TermId == term.TermId);
         }
 
         public Term CreateTerm(Term term)
@@ -73,9 +73,9 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteTerm(int termid)
+        public void DeleteTerm(int termId)
         {
-            Uow.Terms.RemoveById(termid);
+            Uow.Terms.RemoveById(termId);
             Uow.Commit();
         }
     }
