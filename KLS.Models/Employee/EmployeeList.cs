@@ -14,10 +14,6 @@ namespace KLS.Models
 
         public string? PayeeName { get; set; }
 
-        public string? PhoneDesc1 { get; set; }
-
-        public string? Phone1 { get; set; }
-
         public bool IsClosed { get; set; }
 
         public string? FirstName { get; set; }

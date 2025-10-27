@@ -116,14 +116,6 @@ namespace KLS.Services
             existingPayee.City = employeeDTO.City;
             existingPayee.State = employeeDTO.State;
             existingPayee.ZipCode = employeeDTO.ZipCode;
-            existingPayee.PhoneDesc1 = employeeDTO.PhoneDesc1;
-            existingPayee.Phone1 = employeeDTO.Phone1;
-            existingPayee.PhoneDesc2 = employeeDTO.PhoneDesc2;
-            existingPayee.Phone2 = employeeDTO.Phone2;
-            existingPayee.PhoneDesc3 = employeeDTO.PhoneDesc3;
-            existingPayee.Phone3 = employeeDTO.Phone3;
-            existingPayee.PhoneDesc4 = employeeDTO.PhoneDesc4;
-            existingPayee.Phone4 = employeeDTO.Phone4;
             existingPayee.IsClosed = employeeDTO.IsClosed;
             existingPayee.StartDate = employeeDTO.StartDate;
             existingPayee.Balance = employeeDTO.Balance;

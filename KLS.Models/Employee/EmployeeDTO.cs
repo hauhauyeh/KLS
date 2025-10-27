@@ -22,25 +22,9 @@ namespace KLS.Models
 
         public string? ZipCode { get; set; }
 
-        public string? PhoneDesc1 { get; set; }
-
-        public string? Phone1 { get; set; }
-
-        public string? PhoneDesc2 { get; set; }
-
-        public string? Phone2 { get; set; }
-
-        public string? PhoneDesc3 { get; set; }
-
-        public string? Phone3 { get; set; }
-
-        public string? PhoneDesc4 { get; set; }
-
-        public string? Phone4 { get; set; }
-
         public bool IsClosed { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        public DateOnly? StartDate { get; set; }
 
         public decimal? Balance { get; set; }
 

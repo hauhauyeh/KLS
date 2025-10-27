@@ -30,30 +30,6 @@ namespace KLS.Models
 
         public string? Country { get; set; }
 
-        public string? PhoneDesc1 { get; set; }
-
-        public string? Phone1 { get; set; }
-
-        public string? PhoneDesc2 { get; set; }
-
-        public string? Phone2 { get; set; }
-
-        public string? PhoneDesc3 { get; set; }
-
-        public string? Phone3 { get; set; }
-
-        public string? PhoneDesc4 { get; set; }
-
-        public string? Phone4 { get; set; }
-
-        public string? PhoneDesc5 { get; set; }
-
-        public string? Phone5 { get; set; }
-
-        public string? PhoneDesc6 { get; set; }
-
-        public string? Phone6 { get; set; }
-
         public string? Email { get; set; }
 
         public string? EmailInvoice { get; set; }
@@ -70,7 +46,7 @@ namespace KLS.Models
 
         public int? GracePeriod { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        public DateOnly? StartDate { get; set; }
 
         public string? Notes { get; set; }
 
@@ -155,21 +131,11 @@ namespace KLS.Models
 
         public int? AvgPayDay { get; set; }
 
-        public string? Lat1 { get; set; }
-
-        public string? Long1 { get; set; }
-
         public decimal? MinOrder { get; set; }
 
         public string? SquareId { get; set; }
 
         public bool IsPromotionEnabled { get; set; }
-
-        public string? FormatAddress { get; set; }
-
-        public string? PlaceId { get; set; }
-
-        public string? Distance { get; set; }
 
         public decimal? BaseMarkup { get; set; }
 

@@ -14,13 +14,13 @@ namespace KLS.Models
 
         public string? PayeeName { get; set; }
 
-        public string? AccountCode1 { get; set; }
+        public int? AccountId1 { get; set; }
 
-        public string? AccountCode2 { get; set; }
+        public string? AccountId2 { get; set; }
 
-        public string? AccountCode3 { get; set; }
+        public string? AccountId3 { get; set; }
 
-        public string? AccountCode4 { get; set; }
+        public string? AccountId4 { get; set; }
 
         public string? AccountName1 { get; set; }
 

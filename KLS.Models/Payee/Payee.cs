@@ -21,30 +21,23 @@ namespace KLS.Models
 
         [Key]
         public int PayeeId { get; set; }
-
         public string? PayeeType { get; set; }
-
         public string? PayeeName { get; set; }
+
         public string? GoogleAddress { get; set; }
         public string? GoogleMapLink { get; set; }
+        public string? GooglePlaceId { get; set; }
+        public string? GoogleLat { get; set; }
+        public string? GoogleLong { get; set; }
+        public string? FormatAddress { get; set; }
+        public string? Distance { get; set; }
+        public string? Website { get; set; }
+
         public string? Address { get; set; }
         public string? City { get; set; }
         public string? State { get; set; }
         public string? ZipCode { get; set; }
         public string? Country { get; set; }
-
-        public string? PhoneDesc1 { get; set; }
-        public string? Phone1 { get; set; }
-        public string? PhoneDesc2 { get; set; }
-        public string? Phone2 { get; set; }
-        public string? PhoneDesc3 { get; set; }
-        public string? Phone3 { get; set; }
-        public string? PhoneDesc4 { get; set; }
-        public string? Phone4 { get; set; }
-        public string? PhoneDesc5 { get; set; }
-        public string? Phone5 { get; set; }
-        public string? PhoneDesc6 { get; set; }
-        public string? Phone6 { get; set; }
 
         public string? Email { get; set; }
         public string? EmailInvoice { get; set; }
@@ -53,7 +46,7 @@ namespace KLS.Models
         public string? EmailACH { get; set; }
 
         public bool IsClosed { get; set; }
-        public DateTime? StartDate { get; set; }
+        public DateOnly? StartDate { get; set; }
         public int? TermId { get; set; }
         public int? GracePeriod { get; set; }
 
@@ -72,10 +65,10 @@ namespace KLS.Models
         public decimal? PayeeTotalDue { get; set; }
         public decimal? PayeePastDue { get; set; }
 
-        public decimal? Inv30 { get; set; }
-        public decimal? Inv60 { get; set; }
-        public decimal? Inv90 { get; set; }
-        public decimal? InvOver90 { get; set; }
+        public decimal? Invoice30 { get; set; }
+        public decimal? Invoice60 { get; set; }
+        public decimal? Invoice90 { get; set; }
+        public decimal? InvoiceOver90 { get; set; }
 
         public decimal? Payee30Volume { get; set; }
 
@@ -88,7 +81,5 @@ namespace KLS.Models
         public Customer? Customer { get; set; }
 
         public Vendor? Vendor { get; set; }
-
-        public SystemUser? User { get; set; }
     }
 }

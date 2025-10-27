@@ -14,9 +14,15 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PayeeId { get; set; }
 
-        public string LegalName { get; set; }
+        public string CompanyName { get; set; }
 
-        public int BillingAddressId { get; set; }
+        public string? PaymentAddress { get; set; }
+
+        public string? PaymentCity { get; set; }
+
+        public string? PaymentState { get; set; }
+
+        public string? PaymentZipCode { get; set; }
 
         public string? AccountNumber { get; set; }
 
@@ -26,21 +32,17 @@ namespace KLS.Models
 
         public decimal? InterestRate { get; set; }
 
-        public string? PaymentSchedule1 { get; set; }
+        public int? AccountId1 { get; set; }
 
-        public string? PaymentSchedule2 { get; set; }
+        public int? AccountId2 { get; set; }
 
-        public string? AccountCode1 { get; set; }
+        public int? AccountId3 { get; set; }
 
-        public string? AccountCode2 { get; set; }
+        public int? AccountId4 { get; set; }
 
-        public string? AccountCode3 { get; set; }
+        public int? AccountId5 { get; set; }
 
-        public string? AccountCode4 { get; set; }
-
-        public string? AccountCode5 { get; set; }
-
-        public string? AccountCode6 { get; set; }
+        public int? AccountId6 { get; set; }
 
         public string? DefaultPaymentMethod { get; set; }
 

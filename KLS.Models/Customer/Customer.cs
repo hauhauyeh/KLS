@@ -92,34 +92,16 @@ namespace KLS.Models
         
         public int? AvgPayDay { get; set; }
         
-        public string? Lat1 { get; set; }
-        
-        public string? Long1 { get; set; }
-        
         public decimal? MinOrder { get; set; }
         
         public string? SquareId { get; set; }
         
         public bool IsPromotionEnabled { get; set; }
         
-        public string? FormatAddress { get; set; }
-        
-        public string? PlaceId { get; set; }
-        
-        public string? Distance { get; set; }
-        
         public decimal? BaseMarkup { get; set; }
         
         public int? ShippingCarrierId { get; set; }
         
         public bool IsOnlineRegister { get; set; }
-
-        //public virtual string FullAddress
-        //{
-        //    get
-        //    {
-        //        return Address + ", " + City + ", " + State + ", " + ZipCode;
-        //    }
-        //}
     }
 }
