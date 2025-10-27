@@ -125,6 +125,8 @@ namespace KLS.Data.Repositories
         public IIncomingPaymentRepository IncomingPayments { get { return new IncomingPaymentRepository(DbContext); } }
 
         public IPurchaseOrderRepository PurchaseOrders { get { return new PurchaseOrderRepository(DbContext); } }
+
+        public IPurchaseRepository Purchases { get { return new PurchaseRepository(DbContext); } }
     }
 }
 

@@ -72,6 +72,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<CustomerPayment>().ToTable("CustomerPayment");
             modelBuilder.Entity<Item>().ToTable("Item");
             modelBuilder.Entity<PurchaseOrder>().ToTable("PurchaseOrder");
+            modelBuilder.Entity<Purchase>().ToTable("Purchase");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -211,6 +212,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<PurchaseOrderList> PurchaseOrderList { get; set; }
 
         public virtual DbSet<SalesList> SalesList { get; set; }
+
+        public virtual DbSet<PurchaseList> PurchaseList { get; set; }
 
         #endregion
     }

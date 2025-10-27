@@ -98,6 +98,8 @@ namespace KLS.Contract.Interfaces
 
         IPurchaseOrderRepository PurchaseOrders { get; }
 
+        IPurchaseRepository Purchases { get; }
+
         void Commit();
     }
 }
