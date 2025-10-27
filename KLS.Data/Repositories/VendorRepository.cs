@@ -19,6 +19,50 @@ namespace KLS.Data.Repositories
 
         }
 
+        public IQueryable<VendorList> GetVendors(VendorListReq vendorListReq)
+        {
+            var param = BuildVendorsParam(vendorListReq);
+
+            return DbContext.VendorList.FromSqlRaw("[dbo].[Vendor_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+        }
+
+        public int CountAllVendors(VendorListReq vendorListReq)
+        {
+            vendorListReq.IsCount = true;
+            var param = BuildVendorsParam(vendorListReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Vendor_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+
+            var output = param[6] as SqlParameter;
+            return Convert.ToInt32(output.Value);
+        }
+
+        private static object[] BuildVendorsParam(VendorListReq vendorListReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", vendorListReq.Pageno),
+
+                new SqlParameter("@Pagesize", vendorListReq.Pagesize),
+
+                string.IsNullOrEmpty(vendorListReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", vendorListReq.Search),
+
+                string.IsNullOrEmpty(vendorListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", vendorListReq.SortField),
+
+                string.IsNullOrEmpty(vendorListReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", vendorListReq.SortOrder),
+
+                new SqlParameter("@IsCount", vendorListReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+
+            return param;
+        }
+
         public IQueryable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq)
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);

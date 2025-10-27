@@ -9,7 +9,9 @@ namespace KLS.Services.Interfaces
 {
     public interface IVendorService
     {
-        IEnumerable<Payee> GetAllVendors();
+        //IEnumerable<Payee> GetAllVendors();
+
+        PagingResponse<VendorList> GetAllVendors(VendorListReq vendorListReq);
 
         VendorDTO? GetById(int payeeId);
 

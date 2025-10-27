@@ -30,11 +30,19 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
+        //[HttpGet]
+        //[DisplayName("List Vendors")]
+        //public IActionResult List()
+        //{
+        //    return Ok(_vendorService.GetAllVendors());
+        //}
+
+
         [HttpGet]
         [DisplayName("List Vendors")]
-        public IActionResult List()
+        public IActionResult List([FromQuery] VendorListReq vendorReq)
         {
-            return Ok(_vendorService.GetAllVendors());
+            return Ok(_vendorService.GetAllVendors(vendorReq));
         }
 
 

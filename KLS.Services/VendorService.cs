@@ -19,12 +19,24 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<Payee> GetAllVendors()
+        //public IEnumerable<Payee> GetAllVendors()
+        //{
+        //    return Uow.Payees
+        //        .Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString()).Include(v => v.Vendor)
+        //        .OrderByDescending(v => v.PayeeId)
+        //        .ToList();
+        //}
+
+        public PagingResponse<VendorList> GetAllVendors(VendorListReq vendorListReq)
         {
-            return Uow.Payees
-                .Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString()).Include(v => v.Vendor)
-                .OrderByDescending(v => v.PayeeId)
-                .ToList();
+            var vendorlist = Uow.Vendors.GetVendors(vendorListReq);
+
+            var totalRecords = Uow.Vendors.CountAllVendors(vendorListReq);
+
+            return new PagingResponse<VendorList>(totalRecords, vendorListReq.Pageno, vendorListReq.Pagesize)
+            {
+                RowData = vendorlist,
+            };
         }
 
         public VendorDTO? GetById(int payeeId)

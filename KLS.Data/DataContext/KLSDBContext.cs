@@ -215,6 +215,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PurchaseList> PurchaseList { get; set; }
 
+        public virtual DbSet<VendorList> VendorList { get; set; }
+
         #endregion
     }
 }
