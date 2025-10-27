@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Purchase Management", GroupName = "Admin")]
     public class PurchasesController : BaseController
@@ -31,7 +31,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Purchases")]
+        [DisplayName("List Purchase")]
         public IActionResult List([FromQuery] PurchaseListReq purchaseListReq)
         {
             return Ok(_purchaseService.GetAllPurchase(purchaseListReq));
