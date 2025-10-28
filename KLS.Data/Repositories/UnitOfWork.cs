@@ -127,6 +127,8 @@ namespace KLS.Data.Repositories
         public IPurchaseOrderRepository PurchaseOrders { get { return new PurchaseOrderRepository(DbContext); } }
 
         public IPurchaseRepository Purchases { get { return new PurchaseRepository(DbContext); } }
+
+        public ITempSalesRepository TempSales { get { return new TempSalesRepository(DbContext); } }
     }
 }
 

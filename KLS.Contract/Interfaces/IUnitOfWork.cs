@@ -100,6 +100,8 @@ namespace KLS.Contract.Interfaces
 
         IPurchaseRepository Purchases { get; }
 
+        ITempSalesRepository TempSales { get; }
+
         void Commit();
     }
 }
