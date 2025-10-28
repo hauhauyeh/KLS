@@ -10,5 +10,9 @@ namespace KLS.Services.Interfaces
     public interface IPurchaseService
     {
         PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq);
+
+        void UpdateNotes(Purchase purchase);
+
+        void UpdateVendorDocNumber(Purchase purchase);
     }
 }

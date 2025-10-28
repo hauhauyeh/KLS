@@ -28,9 +28,14 @@ namespace KLS.Services
             };
         }
 
-        public IEnumerable<TransactionDetail>? GetTxDetail(int txId)
+        //public IEnumerable<TransactionDetail>? GetTxDetail(int txId)
+        //{
+        //    return Uow.TransactionDetails.Find(c => c.TxId == txId).OrderBy(c => c.TxDetailId);
+        //}
+
+        public ICollection<TransactionDetailList>? GetTxDetail(int txId)
         {
-            return Uow.TransactionDetails.Find(c => c.TxId == txId).OrderBy(c => c.TxDetailId);
+            return Uow.TransactionDetails.GetTxDetail(txId).ToList();
         }
     }
 }

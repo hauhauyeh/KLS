@@ -37,5 +37,33 @@ namespace KLS.Services
                 RowData = bills,
             };
         }
+
+        public void UpdateNotes(Purchase purchase)
+        {
+            var existing = GetById(purchase.PurchaseId);
+
+            if (existing != null)
+            {
+                existing.Notes = purchase.Notes;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Purchases.Update(existing);
+                Uow.Commit();
+            }
+        }
+
+        public void UpdateVendorDocNumber(Purchase purchase)
+        {
+            var existing = GetById(purchase.PurchaseId);
+
+            if (existing != null)
+            {
+                existing.VendorDocNumber = purchase.VendorDocNumber;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Purchases.Update(existing);
+                Uow.Commit();
+            }
+        }
     }
 }

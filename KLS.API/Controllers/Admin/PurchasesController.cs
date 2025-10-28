@@ -37,6 +37,24 @@ namespace KLS.API.Controllers.Admin
             return Ok(_purchaseService.GetAllPurchase(purchaseListReq));
         }
 
+
+        [HttpPost("UpdateNotes")]
+        public IActionResult UpdateNotes([FromBody] Purchase purchase)
+        {
+            _purchaseService.UpdateNotes(purchase);
+
+            return Ok();
+        }
+
+
+        [HttpPost("UpdateVendorDocNumber")]
+        public IActionResult UpdateVendorDocNumber([FromBody] Purchase purchase)
+        {
+            _purchaseService.UpdateVendorDocNumber(purchase);
+
+            return Ok();
+        }
+
         #endregion
     }
 }

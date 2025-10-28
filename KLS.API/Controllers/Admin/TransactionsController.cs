@@ -8,7 +8,7 @@ using System.Transactions;
 
 namespace KLS.API.Controllers.Admin
 {
-    [AuthorizeAdmin]
+    //[AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Transaction Management", GroupName = "Admin")]
     public class TransactionsController : BaseController

@@ -11,6 +11,8 @@ namespace KLS.Services.Interfaces
     {
         PagingResponse<Transaction>? GetAllTransactions(TxReq txReq);
 
-        IEnumerable<TransactionDetail>? GetTxDetail(int txId);
+        //IEnumerable<TransactionDetail>? GetTxDetail(int txId);
+
+        ICollection<TransactionDetailList>? GetTxDetail(int txId);
     }
 }

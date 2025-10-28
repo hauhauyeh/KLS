@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface ITransactionDetailRepository : IRepository<TransactionDetail>
+    public interface ITempPurchaseRepository : IRepository<TempPurchase>
     {
-        IQueryable<TransactionDetailList> GetTxDetail(int txId);
+
     }
 }

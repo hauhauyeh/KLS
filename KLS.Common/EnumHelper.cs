@@ -34,5 +34,14 @@ namespace KLS.Common
             E_CHECK = 5,
             HANDWRITE_CHECK = 6
         }
+
+        public enum AccountCategory
+        {
+            Asset = 1,
+            Liability = 2,
+            Capital = 3,
+            Income = 4,
+            Expense = 5
+        }
     }
 }

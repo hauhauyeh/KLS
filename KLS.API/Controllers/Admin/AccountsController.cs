@@ -138,6 +138,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_chartOfAccountService.GetByPaymentMethod(method));
         }
 
+
+        [HttpGet("ACEAccounts")]
+        public IActionResult GetACEAccounts()
+        {
+            return Ok(_chartOfAccountService.GetACEAccounts());
+        }
+
         #endregion
     }
 }
