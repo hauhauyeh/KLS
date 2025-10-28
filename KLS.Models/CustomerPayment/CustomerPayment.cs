@@ -29,7 +29,7 @@ namespace KLS.Models
 
         public string? PaymentMethod { get; set; }
 
-        public string? FromAccount { get; set; }
+        public int? FromAccountId { get; set; }
 
         public string? ReferenceId { get; set; }
 
@@ -39,11 +39,11 @@ namespace KLS.Models
 
         public bool IsLocked { get; set; }
 
-        public decimal PaymentApplied { get; set; }
+        public decimal? PaymentApplied { get; set; }
 
-        public decimal UnappliedAmount { get; set; }
+        public decimal? UnappliedAmount { get; set; }
 
-        public decimal AsIncome { get; set; }
+        public decimal? AsIncome { get; set; }
 
         public bool IsBadDebt { get; set; }
 
@@ -64,6 +64,22 @@ namespace KLS.Models
         public string? ReturnNotes { get; set; }
 
         public int? ReturnSalesId { get; set; }
+
+        public int? AccountId1 { get; set; }
+
+        public int? AccountId2 { get; set; }
+
+        public int? AccountId3 { get; set; }
+
+        public int? AccountId4 { get; set; }
+
+        public decimal? Amount1 { get; set; }
+
+        public decimal? Amount2 { get; set; }
+
+        public decimal? Amount3 { get; set; }
+
+        public decimal? Amount4 { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

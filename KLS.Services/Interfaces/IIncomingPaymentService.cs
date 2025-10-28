@@ -9,6 +9,12 @@ namespace KLS.Services.Interfaces
 {
     public interface IIncomingPaymentService
     {
-        PagingResponse<IncomingPaymentList> GetIncomingPayment(IncomingPaymentReq incomingPaymentReq);
+        PagingResponse<IncomingPaymentList> GetIncomingPayment(IncomingPaymentListReq incomingPaymentReq);
+
+        CustomerPayment GetById(int customerPaymentId);
+
+        CustomerPayment SaveIncomingPayment(IncomingPaymentReq incomingPaymentReq);
+
+        void DeleteIncomingPayment(int customerPaymentId);
     }
 }

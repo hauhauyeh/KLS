@@ -38,6 +38,11 @@ namespace KLS.Services
             };
         }
 
+        public Purchase GetById(int purchaseId)
+        {
+            return Uow.Purchases.GetById(purchaseId);
+        }
+
         public void UpdateNotes(Purchase purchase)
         {
             var existing = GetById(purchase.PurchaseId);
