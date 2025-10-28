@@ -1,6 +1,8 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +15,13 @@ namespace KLS.Data.Repositories
     {
         public TransactionDetailRepository(KLSDBContext dbContext) : base(dbContext)
         {
+        }
+
+        public IQueryable<TransactionDetailList> GetTxDetail(int txId)
+        {
+            var TxIdParam = new SqlParameter("@TxId", txId);
+
+            return DbContext.TransactionDetailList.FromSqlRaw("[dbo].[TransactionDetail_GetById] @TxId", TxIdParam);
         }
     }
 }

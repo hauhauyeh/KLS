@@ -257,5 +257,24 @@ namespace KLS.Services
             else
                 return GetBankAccounts();
         }
+
+        public ICollection<AccountDTO>? GetACEAccounts()
+        {
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountTypes.GetAll()
+                             on a.AccountTypeId equals at.AccountTypeId
+                         where at.CatName != EnumHelper.AccountCategory.Income.ToString() && at.CatName != EnumHelper.AccountCategory.Liability.ToString()
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             TypeName = at.TypeName,
+                             CatName = at.CatName,
+                             Inactive = a.Inactive
+                         };
+
+            return result.OrderBy(c => c.TypeName).ThenBy(c => c.AccountName).ToList();
+        }
     }
 }

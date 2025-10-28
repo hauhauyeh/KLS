@@ -21,6 +21,11 @@ namespace KLS.Services
             return Uow.Purchases.GetAll();
         }
 
+        public Purchase GetById(int purchaseId)
+        {
+            return Uow.Purchases.GetById(purchaseId);
+        }
+
         public PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
         {
             var purchaselist = Uow.Purchases.GetPurchase(purchaseListReq);
@@ -31,6 +36,34 @@ namespace KLS.Services
             {
                 RowData = purchaselist,
             };
+        }
+
+        public void UpdateNotes(Purchase purchase)
+        {
+            var existing = GetById(purchase.PurchaseId);
+
+            if (existing != null)
+            {
+                existing.Notes = purchase.Notes;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Purchases.Update(existing);
+                Uow.Commit();
+            }
+        }
+
+        public void UpdateVendorDocNumber(Purchase purchase)
+        {
+            var existing = GetById(purchase.PurchaseId);
+
+            if (existing != null)
+            {
+                existing.VendorDocNumber = purchase.VendorDocNumber;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Purchases.Update(existing);
+                Uow.Commit();
+            }
         }
     }
 }
