@@ -18,7 +18,7 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PurchaseList> GetPurchase(PurchaseListReq purchaseListReq)
+        public IQueryable<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
         {
             var param = BuildPurchaseParam(purchaseListReq);
 

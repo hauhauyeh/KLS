@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,9 +11,9 @@ namespace KLS.Models
     public class PurchaseList
     {
         [Key]
-        public int? PurchaseId { get; set; }
+        public int PurchaseId { get; set; }
 
-        public int? PurchaseNumber { get; set; }
+        public int PurchaseNumber { get; set; }
 
         public string? PayeeName { get; set; }
 
@@ -40,15 +41,13 @@ namespace KLS.Models
 
         public string? Notes { get; set; }
 
-        public bool? IsLocked { get; set; }
+        public bool IsLocked { get; set; }
 
-        public bool? IsNormalPurchase { get; set; }
+        public bool IsNormalPurchase { get; set; }
 
-        public bool? IsPayNow { get; set; }
+        public bool IsPayNow { get; set; }
 
-        public bool? IsBillPDFExist { get; set; }
-
-        public bool? IsFreightOnly { get; set; }
+        public bool IsFreightOnly { get; set; }
 
         public decimal? FreightTotal { get; set; }
 
@@ -59,5 +58,8 @@ namespace KLS.Models
         public decimal? ImportCommission { get; set; }
 
         public decimal? CustomDutyTotal { get; set; }
+
+        [NotMapped]
+        public bool IsPdfExist { get; set; }
     }
 }

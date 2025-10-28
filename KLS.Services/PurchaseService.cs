@@ -16,20 +16,25 @@ namespace KLS.Services
 
         }
 
-        public IQueryable<Purchase> GetAllPurchase()
-        {
-            return Uow.Purchases.GetAll();
-        }
-
         public PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
         {
-            var purchaselist = Uow.Purchases.GetPurchase(purchaseListReq);
+            var bills = Uow.Purchases.GetAllPurchase(purchaseListReq);
 
             var totalRecords = Uow.Purchases.CountAllPurchase(purchaseListReq);
 
+            // Get absolute path to wwwroot/BillPdf
+            var billPDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
+
+            foreach (PurchaseList bill in bills)
+            {
+                var filePath = Path.Combine(billPDfPath, bill.PurchaseNumber + ".pdf");
+
+                bill.IsPdfExist = File.Exists(filePath);
+            }
+
             return new PagingResponse<PurchaseList>(totalRecords, purchaseListReq.Pageno, purchaseListReq.Pagesize)
             {
-                RowData = purchaselist,
+                RowData = bills,
             };
         }
     }
