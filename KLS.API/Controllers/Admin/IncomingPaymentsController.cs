@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "IncomingPayment Management", GroupName = "Admin")]
     public class IncomingPaymentsController : BaseController
@@ -31,10 +31,40 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List IncomingPayment")]
-        public IActionResult List([FromQuery] IncomingPaymentReq incomingPaymentReq)
+        [DisplayName("List Incoming Payment")]
+        public IActionResult List([FromQuery] IncomingPaymentListReq incomingPaymentReq)
         {
             return Ok(_incomingPaymentService.GetIncomingPayment(incomingPaymentReq));
+        }
+
+
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var incomingPayment = _incomingPaymentService.GetById(id);
+
+            if (incomingPayment == null)
+                return NotFound($"General journal not found.");
+
+            return Ok(incomingPayment);
+        }
+
+
+        [HttpPost("Save")]
+        [DisplayName("Add/Edit Incoming Payment")]
+        public IActionResult Save([FromBody] IncomingPaymentReq incomingPaymentReq)
+        {
+            return Ok(_incomingPaymentService.SaveIncomingPayment(incomingPaymentReq));
+        }
+
+
+        [HttpDelete("{id}")]
+        [DisplayName("Delete Incoming Payment")]
+        public IActionResult Delete(int id)
+        {
+            _incomingPaymentService.DeleteIncomingPayment(id);
+
+            return Ok();
         }
 
         #endregion

@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<IncomingPaymentList> GetIncomingPayment(IncomingPaymentReq incomingPaymentReq)
+        public PagingResponse<IncomingPaymentList> GetIncomingPayment(IncomingPaymentListReq incomingPaymentReq)
         {
             var incomingPaymenList = Uow.IncomingPayments.GetIncomingPayments(incomingPaymentReq);
 
@@ -26,6 +27,30 @@ namespace KLS.Services
             {
                 RowData = incomingPaymenList,
             };
+        }
+
+        public CustomerPayment GetById(int customerPaymentId)
+        {
+            return Uow.CustomerPayments.GetById(customerPaymentId);
+        }
+
+        public CustomerPayment SaveIncomingPayment(IncomingPaymentReq incomingPaymentReq)
+        {
+            var newCustomerPaymentId = Uow.IncomingPayments.SaveIncomingPayment(incomingPaymentReq);
+
+            return GetById(newCustomerPaymentId);
+        }
+
+        public void DeleteIncomingPayment(int customerPaymentId)
+        {
+            var customerPayment = GetById(customerPaymentId);
+
+            if (customerPayment != null && !customerPayment.IsLocked)
+            {
+                Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).ExecuteDelete();
+                //Uow.GeneralJournals.RemoveById(gjId);
+                //Uow.Commit();
+            }
         }
     }
 }
