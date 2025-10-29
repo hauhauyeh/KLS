@@ -37,6 +37,15 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
+        public IQueryable<PayeeSearch>? SearchCustomer(PayeeSearchReq searchReq)
+        {
+            var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
+
+            var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
+
+            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Customer_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
+        }
+
         private static object[] BuildCustomersParam(CustomerListReq customerListReq)
         {
             object[] param = {
@@ -76,5 +85,6 @@ namespace KLS.Data.Repositories
 
             return param;
         }
+
     }
 }

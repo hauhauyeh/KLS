@@ -10,10 +10,7 @@ namespace KLS.Services.Interfaces
 {
     public interface ICustomerService
     {
-        //IEnumerable<Payee> GetAllCustomers();
-
         PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq);
-
 
         Payee? GetById(int payeeId);
 
@@ -24,5 +21,7 @@ namespace KLS.Services.Interfaces
         CustomerDTO? UpdateCustomer(CustomerDTO customerDTO);
 
         void DeleteCustomer(int payeeId);
+
+        ICollection<PayeeSearch>? SearchCustomer(PayeeSearchReq searchReq);
     }
 }

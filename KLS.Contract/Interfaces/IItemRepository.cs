@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface IItemRepository : IRepository<Item>
     {
-
+        IQueryable<ItemSearch>? SearchItem(ItemSearchReq searchReq);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,11 @@ namespace KLS.Services
     {
         public PayeeService(IUnitOfWork uow) : base(uow)
         {
+        }
+
+        public ICollection<PayeeSearch>? SearchPayee(PayeeSearchReq searchReq)
+        {
+            return Uow.Payees.SearchPayee(searchReq)?.ToList();
         }
     }
 }

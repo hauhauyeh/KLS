@@ -21,14 +21,6 @@ namespace KLS.Data.Repositories
 
         public IQueryable<EmployeeList> GetAllEmployees(EmpReq empReq)
         {
-            //var SearchParam = (!string.IsNullOrEmpty(empReq.Search)) ? new SqlParameter("@Search", empReq.Search) : new SqlParameter("@Search", DBNull.Value);
-
-            //var EmpStatusParam = empReq.EmpStatus.HasValue ? new SqlParameter("@EmpStatus", empReq.EmpStatus) : new SqlParameter("@EmpStatus", DBNull.Value);
-
-            //var SortFieldParam = (!string.IsNullOrEmpty(empReq.SortField)) ? new SqlParameter("@SortField", empReq.SortField) : new SqlParameter("@SortField", DBNull.Value);
-
-            //var SortOrderParam = (!string.IsNullOrEmpty(empReq.SortOrder)) ? new SqlParameter("@SortOrder", empReq.SortOrder) : new SqlParameter("@SortOrder", DBNull.Value);
-
             var param = BuildEmployeesParam(empReq);
 
             return DbContext.EmployeeList.FromSqlRaw("[dbo].[Employee_GetAllList] @Search,@EmpStatus,@SortField,@SortOrder", param);
@@ -54,9 +46,9 @@ namespace KLS.Data.Repositories
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 
-            var IsActiveParam = new SqlParameter("@IsActive", searchReq.IsActiveOnly);
+            var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
 
-            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Employee_SearchbyTerm] @SearchTerm,@IsActive", TermParam, IsActiveParam);
+            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Employee_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
         }
     }
 }

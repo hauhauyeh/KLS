@@ -74,7 +74,7 @@ namespace KLS.Data.Repositories
         {
             var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", incomingPaymentReq.CustomerPaymentId);
 
-            var PayeeIdParam = new SqlParameter("@PayeeId", UserContext.EmpId);
+            var PayeeIdParam = new SqlParameter("@PayeeId", incomingPaymentReq.PayeeId);
 
             var PaymentDateParam = new SqlParameter("@PaymentDate", incomingPaymentReq.PaymentDate);
 

@@ -67,9 +67,9 @@ namespace KLS.Data.Repositories
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 
-            var IsActiveParam = new SqlParameter("@IsActive", searchReq.IsActiveOnly);
+            var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
 
-            return DbContext.VendorSearchDTO.FromSqlRaw("[dbo].[Vendor_SearchbyTerm] @SearchTerm,@IsActive", TermParam, IsActiveParam);
+            return DbContext.VendorSearchDTO.FromSqlRaw("[dbo].[Vendor_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
         }
     }
 }

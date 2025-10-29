@@ -10,20 +10,22 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "IncomingPayment Management", GroupName = "Admin")]
+    [Display(Name = "Incoming Payment Management", GroupName = "Admin")]
     public class IncomingPaymentsController : BaseController
     {
         #region --- Member(s) ---
 
         private readonly IIncomingPaymentService _incomingPaymentService;
+        private readonly IPayeeService _payeeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public IncomingPaymentsController(IIncomingPaymentService incomingPaymentService)
+        public IncomingPaymentsController(IIncomingPaymentService incomingPaymentService, IPayeeService payeeService)
         {
             _incomingPaymentService = incomingPaymentService;
+            _payeeService = payeeService;
         }
 
         #endregion
@@ -65,6 +67,13 @@ namespace KLS.API.Controllers.Admin
             _incomingPaymentService.DeleteIncomingPayment(id);
 
             return Ok();
+        }
+
+
+        [HttpGet("SearchPayee")]
+        public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
+        {
+            return Ok(_payeeService.SearchPayee(searchReq));
         }
 
         #endregion

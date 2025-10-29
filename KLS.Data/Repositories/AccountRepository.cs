@@ -17,7 +17,7 @@ namespace KLS.Data.Repositories
         {
             var TermParam = (!string.IsNullOrEmpty(term)) ? new SqlParameter("@SearchTerm", term) : new SqlParameter("@SearchTerm", DBNull.Value);
 
-            return DbContext.AccountDTO.FromSqlRaw("[Account_SearchbyTerm] @SearchTerm", TermParam);
+            return DbContext.AccountDTO.FromSqlRaw("[Account_SearchByTerm] @SearchTerm", TermParam);
         }
 
         public CreditDebitAmount GetCrDeAmount(string accountCode, decimal? amount)
