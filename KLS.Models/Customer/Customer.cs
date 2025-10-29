@@ -46,7 +46,7 @@ namespace KLS.Models
         
         public bool HasOwnList { get; set; }
         
-        public int? SalesRep { get; set; }
+        public int? SalesRepId { get; set; }
         
         public int? BillId { get; set; }
         

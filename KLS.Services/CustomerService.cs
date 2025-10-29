@@ -119,7 +119,7 @@ namespace KLS.Services
                 customer.TextACH = customer.TextACH;
                 customer.OGSort = customer.OGSort;
                 customer.IsAutoPayment = customerDTO.IsAutoPayment;
-                customer.SalesRep = customerDTO.SalesRep;
+                customer.SalesRepId = customerDTO.SalesRepId;
                 customer.DefaultBasePriceId = customerDTO.DefaultBasePriceId;
                 customer.DefaultQuoteId = customerDTO.DefaultQuoteId;
                 customer.BillId = customerDTO.BillId;

@@ -18,7 +18,7 @@ namespace KLS.Models
 
         public string? PayeeName { get; set; }
 
-        public int? SalesRep { get; set; }
+        public int? SalesRepId { get; set; }
 
         public string? SalesRepName { get; set; }
 
@@ -45,6 +45,8 @@ namespace KLS.Models
         public string? TermName { get; set; }
 
         public int? AvgPayDay { get; set; }
+
+        //public int? OwnListItemCount { get; set; }
 
         public bool IsClosed { get; set; }
 
