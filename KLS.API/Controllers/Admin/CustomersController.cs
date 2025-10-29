@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Customer Management", GroupName = "Customer")]
     public class CustomersController : BaseController
@@ -28,11 +30,18 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
+        //[HttpGet]
+        //[DisplayName("List Customers")]
+        //public IActionResult List()
+        //{
+        //    return Ok(_customerService.GetAllCustomers());
+        //}
+
         [HttpGet]
         [DisplayName("List Customers")]
-        public IActionResult List()
+        public IActionResult List([FromQuery] CustomerListReq customerListReq)
         {
-            return Ok(_customerService.GetAllCustomers());
+            return Ok(_customerService.GetAllCustomers(customerListReq));
         }
 
 

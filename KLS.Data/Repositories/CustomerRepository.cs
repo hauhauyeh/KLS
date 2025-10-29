@@ -2,6 +2,8 @@
 using KLS.Data.DataContext;
 using KLS.Data.Repositories;
 using KLS.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +17,64 @@ namespace KLS.Data.Repositories
         public CustomerRepository(KLSDBContext dbContext) : base(dbContext)
         {
 
+        }
+
+        public IQueryable<CustomerList> GetAllCustomers(CustomerListReq customerListReq)
+        {
+            var param = BuildCustomersParam(customerListReq);
+
+            return DbContext.CustomerList.FromSqlRaw("[dbo].[Customer_GetAllList] @Pageno,@Pagesize,@Search,@Filterby,@Content,@Sortby,@Category,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+        }
+
+        public int CountAllCustomers(CustomerListReq customerListReq)
+        {
+            customerListReq.IsCount = true;
+            var param = BuildCustomersParam(customerListReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Customer_GetAllList] @Pageno,@Pagesize,@Search,@Filterby,@Content,@Sortby,@Category,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+
+            var output = param[11] as SqlParameter;
+            return Convert.ToInt32(output.Value);
+        }
+
+        private static object[] BuildCustomersParam(CustomerListReq customerListReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", customerListReq.Pageno),
+
+                new SqlParameter("@Pagesize", customerListReq.Pagesize),
+
+                string.IsNullOrEmpty(customerListReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", customerListReq.Search),
+
+                //customerListReq.StartDate.HasValue ? new SqlParameter("@StartDate", customerListReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                //customerListReq.EndDate.HasValue ? new SqlParameter("@EndDate", customerListReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                string.IsNullOrEmpty(customerListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", customerListReq.Filterby),
+
+                string.IsNullOrEmpty(customerListReq.Content) ? new SqlParameter("@Content", DBNull.Value) : new SqlParameter("@Content", customerListReq.Content),
+
+                string.IsNullOrEmpty(customerListReq.Sortby) ? new SqlParameter("@Sortby", DBNull.Value) : new SqlParameter("@Sortby", customerListReq.Sortby),
+
+                string.IsNullOrEmpty(customerListReq.Category) ? new SqlParameter("@Category", DBNull.Value) : new SqlParameter("@Category", customerListReq.Category),
+
+                new SqlParameter("@PayeeId", customerListReq.PayeeId),
+
+                string.IsNullOrEmpty(customerListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", customerListReq.SortField),
+
+                string.IsNullOrEmpty(customerListReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", customerListReq.SortOrder),
+
+                new SqlParameter("@IsCount", customerListReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+
+            return param;
         }
     }
 }

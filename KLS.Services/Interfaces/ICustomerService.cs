@@ -10,8 +10,11 @@ namespace KLS.Services.Interfaces
 {
     public interface ICustomerService
     {
-        IEnumerable<Payee> GetAllCustomers();
-        
+        //IEnumerable<Payee> GetAllCustomers();
+
+        PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq);
+
+
         Payee? GetById(int payeeId);
 
         bool CustomerExists(CustomerDTO customerDTO);

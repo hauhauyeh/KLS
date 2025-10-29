@@ -22,12 +22,24 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<Payee> GetAllCustomers()
+        //public IEnumerable<Payee> GetAllCustomers()
+        //{
+        //    return Uow.Payees
+        //        .GetAll().Include(v => v.Customer)
+        //        .OrderByDescending(v => v.PayeeId)
+        //        .ToList();
+        //}
+
+        public PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq)
         {
-            return Uow.Payees
-                .GetAll().Include(v => v.Customer)
-                .OrderByDescending(v => v.PayeeId)
-                .ToList();
+            var customerlist = Uow.Customers.GetAllCustomers(customerListReq);
+
+            var totalRecords = Uow.Customers.CountAllCustomers(customerListReq);
+
+            return new PagingResponse<CustomerList>(totalRecords, customerListReq.Pageno, customerListReq.Pagesize)
+            {
+                RowData = customerlist,
+            };
         }
 
         public Payee? GetById(int payeeId)

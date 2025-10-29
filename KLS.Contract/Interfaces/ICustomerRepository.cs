@@ -10,6 +10,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface ICustomerRepository : IRepository<Customer>
     {
+        IQueryable<CustomerList> GetAllCustomers(CustomerListReq customerListReq);
 
+        int CountAllCustomers(CustomerListReq customerListReq);
     }
 }
