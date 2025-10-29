@@ -31,7 +31,7 @@ namespace KLS.Services
 
         public CustomerPayment GetById(int customerPaymentId)
         {
-            return Uow.CustomerPayments.GetById(customerPaymentId);
+            return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.Payee).FirstOrDefault()!;
         }
 
         public CustomerPayment SaveIncomingPayment(IncomingPaymentReq incomingPaymentReq)
@@ -48,8 +48,6 @@ namespace KLS.Services
             if (customerPayment != null && !customerPayment.IsLocked)
             {
                 Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).ExecuteDelete();
-                //Uow.GeneralJournals.RemoveById(gjId);
-                //Uow.Commit();
             }
         }
     }

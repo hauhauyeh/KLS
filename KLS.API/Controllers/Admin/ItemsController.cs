@@ -1,4 +1,5 @@
 ﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +29,11 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-
+        [HttpGet("Search")]
+        public IActionResult Search([FromQuery] ItemSearchReq searchReq)
+        {
+            return Ok(_itemService.SearchItem(searchReq));
+        }
 
         #endregion
     }

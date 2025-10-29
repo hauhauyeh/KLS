@@ -13,5 +13,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<CustomerList> GetAllCustomers(CustomerListReq customerListReq);
 
         int CountAllCustomers(CustomerListReq customerListReq);
+
+        IQueryable<PayeeSearch>? SearchCustomer(PayeeSearchReq searchReq);
     }
 }

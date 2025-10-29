@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface IPayeeRepository : IRepository<Payee>
     {
-
+        IQueryable<PayeeSearch>? SearchPayee(PayeeSearchReq searchReq);
     }
 }

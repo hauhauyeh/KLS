@@ -30,13 +30,6 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-        //[HttpGet]
-        //[DisplayName("List Customers")]
-        //public IActionResult List()
-        //{
-        //    return Ok(_customerService.GetAllCustomers());
-        //}
-
         [HttpGet]
         [DisplayName("List Customers")]
         public IActionResult List([FromQuery] CustomerListReq customerListReq)
@@ -85,6 +78,13 @@ namespace KLS.API.Controllers.Admin
             _customerService.DeleteCustomer(id);
 
             return Ok();
+        }
+
+
+        [HttpGet("Search")]
+        public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
+        {
+            return Ok(_customerService.SearchCustomer(searchReq));
         }
 
         #endregion

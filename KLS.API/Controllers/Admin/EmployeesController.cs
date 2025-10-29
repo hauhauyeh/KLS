@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Employee Management", GroupName = "Employee")]
     public class EmployeesController : BaseController

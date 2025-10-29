@@ -22,14 +22,6 @@ namespace KLS.Services
 
         }
 
-        //public IEnumerable<Payee> GetAllCustomers()
-        //{
-        //    return Uow.Payees
-        //        .GetAll().Include(v => v.Customer)
-        //        .OrderByDescending(v => v.PayeeId)
-        //        .ToList();
-        //}
-
         public PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq)
         {
             var customerlist = Uow.Customers.GetAllCustomers(customerListReq);
@@ -170,6 +162,11 @@ namespace KLS.Services
         {
             var maxId = Uow.Customers.GetAll().Select(p => (int?)p.PayeeId).Max();
             return (maxId ?? 300000) + 1;
+        }
+
+        public ICollection<PayeeSearch>? SearchCustomer(PayeeSearchReq searchReq)
+        {
+            return Uow.Customers.SearchCustomer(searchReq)?.ToList();
         }
 
         private static MapLatLong? GetMapLatLong(string Address, string MapsAPIKEY)

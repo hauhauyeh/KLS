@@ -1,5 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +15,11 @@ namespace KLS.Services
         public ItemService(IUnitOfWork uow) : base(uow)
         {
 
+        }
+
+        public ICollection<ItemSearch>? SearchItem(ItemSearchReq searchReq)
+        {
+            return Uow.Items.SearchItem(searchReq)?.ToList();
         }
     }
 }
