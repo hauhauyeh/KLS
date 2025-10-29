@@ -31,27 +31,36 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Purchase")]
+        [DisplayName("Bill Manager")]
         public IActionResult List([FromQuery] PurchaseListReq purchaseListReq)
         {
             return Ok(_purchaseService.GetAllPurchase(purchaseListReq));
         }
 
 
-        [HttpPost("UpdateNotes")]
-        public IActionResult UpdateNotes([FromBody] Purchase purchase)
+        [HttpPut("UpdateNotes")]
+        public IActionResult UpdateNotes([FromBody] PurchaseUpdateReq updateReq)
         {
-            _purchaseService.UpdateNotes(purchase);
+            _purchaseService.UpdateNotes(updateReq.PurchaseId, updateReq.Notes);
 
             return Ok();
         }
 
 
-        [HttpPost("UpdateVendorDocNumber")]
-        public IActionResult UpdateVendorDocNumber([FromBody] Purchase purchase)
+        [HttpPut("UpdateDocNumber")]
+        public IActionResult UpdateDocNumber([FromBody] PurchaseUpdateReq updateReq)
         {
-            _purchaseService.UpdateVendorDocNumber(purchase);
+            _purchaseService.UpdateDocNumber(updateReq.PurchaseId, updateReq.VendorDocNumber);
 
+            return Ok();
+        }
+
+
+        [HttpDelete("{purchaseId}")]
+        [DisplayName("Delete Bill")]
+        public IActionResult Delete(int purchaseId)
+        {
+            _purchaseService.DeletePurchase(purchaseId);
             return Ok();
         }
 

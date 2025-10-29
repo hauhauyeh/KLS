@@ -1,6 +1,8 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,31 +40,46 @@ namespace KLS.Services
             };
         }
 
-        public void UpdateNotes(Purchase purchase)
+        public Purchase GetById(int purchaseId)
         {
-            var existing = GetById(purchase.PurchaseId);
+            return Uow.Purchases.GetById(purchaseId);
+        }
 
-            if (existing != null)
+        public void UpdateNotes(int purchaseId, string? notes)
+        {
+            var purchase = GetById(purchaseId);
+
+            if (purchase != null)
             {
-                existing.Notes = purchase.Notes;
-                existing.UpdatedAt = DateTime.UtcNow;
+                purchase.Notes = notes;
+                purchase.UpdatedAt = DateTime.UtcNow;
 
-                Uow.Purchases.Update(existing);
+                Uow.Purchases.Update(purchase);
                 Uow.Commit();
             }
         }
 
-        public void UpdateVendorDocNumber(Purchase purchase)
+        public void UpdateDocNumber(int purchaseId, string? docNumber)
         {
-            var existing = GetById(purchase.PurchaseId);
+            var purchase = GetById(purchaseId);
 
-            if (existing != null)
+            if (purchase != null)
             {
-                existing.VendorDocNumber = purchase.VendorDocNumber;
-                existing.UpdatedAt = DateTime.UtcNow;
+                purchase.VendorDocNumber = docNumber;
+                purchase.UpdatedAt = DateTime.UtcNow;
 
-                Uow.Purchases.Update(existing);
+                Uow.Purchases.Update(purchase);
                 Uow.Commit();
+            }
+        }
+
+        public void DeletePurchase(int purchaseId)
+        {
+            var purchase = GetById(purchaseId);
+
+            if (purchase != null && !purchase.IsLocked)
+            {
+                Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
             }
         }
     }
