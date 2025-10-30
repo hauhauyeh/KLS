@@ -3,11 +3,12 @@ using KLS.Models;
 using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    [AuthorizeAdmin]
+    //[AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Item Management", GroupName = "Product")]
     public class ItemsController : BaseController
@@ -28,6 +29,14 @@ namespace KLS.API.Controllers.Admin
         #endregion
 
         #region --- Method(s) ---
+
+        [HttpGet]
+        [DisplayName("List Item")]
+        public IActionResult List([FromQuery] ItemListReq itemListReq)
+        {
+            return Ok(_itemService.GetItems(itemListReq));
+        }
+
 
         [HttpGet("Search")]
         public IActionResult Search([FromQuery] ItemSearchReq searchReq)

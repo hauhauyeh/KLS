@@ -89,17 +89,19 @@ namespace KLS.Models
 
         public int? BillId { get; set; }
 
-        public string? DefaultBasePriceId { get; set; }
+        //public string? DefaultBasePriceId { get; set; }
 
-        public int? DefaultQuoteId { get; set; }
+        public int? ShareQuoteId { get; set; }
+
+        public bool IsShareBasePrice { get; set; }
 
         public decimal? TaxRate { get; set; }
 
         public string? CallSchedule { get; set; }
 
-        public DateOnly? LastOrderDate { get; set; }
+        //public DateOnly? LastOrderDate { get; set; }
 
-        public DateOnly? FirstDueDate { get; set; }
+        //public DateOnly? FirstDueDate { get; set; }
 
         public DateTime? LastCallingTime { get; set; }
 
@@ -119,7 +121,7 @@ namespace KLS.Models
 
         public string? TextInvoice { get; set; }
 
-        public string? TextStmt { get; set; }
+        public string? TextStatement { get; set; }
 
         public string? TextPricesheet { get; set; }
 
@@ -129,7 +131,7 @@ namespace KLS.Models
 
         public string? Lang { get; set; }
 
-        public int? AvgPayDay { get; set; }
+        //public int? AvgPayDay { get; set; }
 
         public decimal? MinOrder { get; set; }
 

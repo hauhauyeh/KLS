@@ -12,7 +12,7 @@ namespace KLS.Services.Interfaces
     {
         PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq);
 
-        Payee? GetById(int payeeId);
+        CustomerDTO? GetById(int payeeId);
 
         bool CustomerExists(CustomerDTO customerDTO);
 

@@ -72,6 +72,14 @@ namespace KLS.Models
 
         public decimal? Payee30Volume { get; set; }
 
+        public DateOnly? LastOrderDate { get; set; }
+        public decimal? LastOrderAmount { get; set; }
+        public DateOnly? LastPaymentDate { get; set; }
+        public decimal? LastPaymentAmount { get; set; }
+        public int? AvgPaymentDays { get; set; }
+        public DateOnly? FirstDueDate { get; set; }
+        public int? MaxInvoiceAgingDays { get; set; }
+
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

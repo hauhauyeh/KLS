@@ -17,6 +17,18 @@ namespace KLS.Services
 
         }
 
+        public PagingResponse<ItemList> GetItems(ItemListReq itemListReq)
+        {
+            var itemlist = Uow.Items.GetItems(itemListReq);
+
+            var totalRecords = Uow.Items.CountAllItems(itemListReq);
+
+            return new PagingResponse<ItemList>(totalRecords, itemListReq.Pageno, itemListReq.Pagesize)
+            {
+                RowData = itemlist,
+            };
+        }
+
         public ICollection<ItemSearch>? SearchItem(ItemSearchReq searchReq)
         {
             return Uow.Items.SearchItem(searchReq)?.ToList();

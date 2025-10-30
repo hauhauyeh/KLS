@@ -231,6 +231,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ItemSearch> ItemSearch { get; set; }
 
+        public virtual DbSet<ItemList> ItemList { get; set; }
+
         #endregion
     }
 }

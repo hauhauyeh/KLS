@@ -26,7 +26,7 @@ namespace KLS.Models
 
         public bool IsLinkOwnShared { get; set; }
 
-        public int? DefaultQuoteId { get; set; }
+        public int? ShareQuoteId { get; set; }
 
         public string? DefQuoteName { get; set; }
 
@@ -44,7 +44,7 @@ namespace KLS.Models
 
         public string? TermName { get; set; }
 
-        public int? AvgPayDay { get; set; }
+        //public int? AvgPayDay { get; set; }
 
         //public int? OwnListItemCount { get; set; }
 

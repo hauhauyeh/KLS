@@ -9,6 +9,8 @@ namespace KLS.Services.Interfaces
 {
     public interface IItemService
     {
+        PagingResponse<ItemList> GetItems(ItemListReq itemListReq);
+
         ICollection<ItemSearch>? SearchItem(ItemSearchReq searchReq);
     }
 }

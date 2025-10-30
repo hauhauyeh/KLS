@@ -34,9 +34,28 @@ namespace KLS.Services
             };
         }
 
-        public Payee? GetById(int payeeId)
+        //public Payee? GetById(int payeeId)
+        //{
+        //    return Uow.Payees.Find(c => c.PayeeId == payeeId).Include(c => c.Customer).FirstOrDefault();
+        //}
+
+        public CustomerDTO? GetById(int payeeId)
         {
-            return Uow.Payees.Find(c => c.PayeeId == payeeId).Include(c => c.Customer).FirstOrDefault();
+            var payee = Uow.Payees.GetById(payeeId);
+            var customer = Uow.Customers.GetById(payeeId);
+
+            if (payee == null && customer == null)
+                return null;
+
+            var customerDTO = new CustomerDTO();
+
+            if (payee != null)
+                customerDTO.InjectFrom(payee);
+
+            if (customer != null)
+                customerDTO.InjectFrom(customer);
+
+            return customerDTO;
         }
 
         public bool CustomerExists(CustomerDTO customerDTO)
@@ -112,8 +131,9 @@ namespace KLS.Services
                 customer.OGSort = customer.OGSort;
                 customer.IsAutoPayment = customerDTO.IsAutoPayment;
                 customer.SalesRepId = customerDTO.SalesRepId;
-                customer.DefaultBasePriceId = customerDTO.DefaultBasePriceId;
-                customer.DefaultQuoteId = customerDTO.DefaultQuoteId;
+                //customer.DefaultBasePriceId = customerDTO.DefaultBasePriceId;
+                customer.ShareQuoteId = customerDTO.ShareQuoteId;
+                customer.IsShareBasePrice= customerDTO.IsShareBasePrice;
                 customer.BillId = customerDTO.BillId;
                 customer.CallSchedule = customerDTO.CallSchedule;
                 customer.IsApproved = customerDTO.IsApproved;
