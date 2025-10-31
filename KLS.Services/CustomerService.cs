@@ -17,9 +17,11 @@ namespace KLS.Services
 {
     public class CustomerService : BaseService, ICustomerService
     {
-        public CustomerService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly ISystemSettingService _systemSettingService;
 
+        public CustomerService(IUnitOfWork uow, ISystemSettingService systemSettingService) : base(uow)
+        {
+            _systemSettingService = systemSettingService;
         }
 
         public PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq)
@@ -89,8 +91,8 @@ namespace KLS.Services
             var customer = Uow.Customers.GetById(customerDTO.PayeeId);
             var existingPayee = Uow.Payees.GetById(customerDTO.PayeeId);
 
-            //var mapAPIKey = Uow.SystemSettings.GetBySGKey(GlobalKey.SYS_GOOGLEMAPS_APIKEY);
-            //var latlong = GetMapLatLong(customer.add, mapAPIKey);
+            var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.SYS_GOOGLEMAPS_APIKEY);
+            var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
 
             if (customer == null || existingPayee == null)
                 return null;
@@ -114,6 +116,15 @@ namespace KLS.Services
             existingPayee.Notes = customerDTO.Notes;
 
             existingPayee.UpdatedAt = DateTime.UtcNow;
+
+            if (latlong != null)
+            {
+                existingPayee.GoogleLat = customerDTO.GoogleLat;
+                existingPayee.GoogleLong = customerDTO.GoogleLong;
+                existingPayee.GooglePlaceId = customerDTO.GooglePlaceId;
+                existingPayee.FormatAddress = customerDTO.FormatAddress;
+                existingPayee.Distance = customerDTO.Distance;
+            }
 
             Uow.Payees.Update(existingPayee);
 
@@ -154,15 +165,6 @@ namespace KLS.Services
                 customer.IsHRTaxable = customerDTO.IsHRTaxable;
                 customer.CreditLimit = customerDTO.CreditLimit;
                 customer.MinOrder = customerDTO.MinOrder;
-
-                //if (latlong != null)
-                //{
-                //    customer.Lat1 = customerDTO.Lat1;
-                //    customer.Long1 = customerDTO.Long1;
-                //    customer.PlaceId = customerDTO.PlaceId;
-                //    customer.FormatAddress = customerDTO.FormatAddress;
-                //    customer.Distance = customerDTO.Distance;
-                //}
 
                 Uow.Customers.Update(customer);
             }

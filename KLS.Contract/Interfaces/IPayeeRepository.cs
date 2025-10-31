@@ -10,5 +10,9 @@ namespace KLS.Contract.Interfaces
     public interface IPayeeRepository : IRepository<Payee>
     {
         IQueryable<PayeeSearch>? SearchPayee(PayeeSearchReq searchReq);
+
+        IQueryable<ARCustomerList> GetARCustomers(ARCustomerListReq aRCustomerListReq);
+
+        int CountAllARCustomer(ARCustomerListReq aRCustomerListReq);
     }
 }

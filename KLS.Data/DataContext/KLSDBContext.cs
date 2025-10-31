@@ -233,6 +233,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ItemList> ItemList { get; set; }
 
+        public virtual DbSet<ARCustomerList> ARCustomerList { get; set; }
+
         #endregion
     }
 }

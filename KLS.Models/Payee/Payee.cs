@@ -89,5 +89,14 @@ namespace KLS.Models
         public Customer? Customer { get; set; }
 
         public Vendor? Vendor { get; set; }
+
+        public virtual string FullAddress
+        {
+            get
+            {
+                return Address + ", " + City + ", " + State + ", " + ZipCode;
+            }
+        }
+
     }
 }

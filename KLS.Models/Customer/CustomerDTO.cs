@@ -52,6 +52,16 @@ namespace KLS.Models
 
         public int? TermId { get; set; }
 
+        public string? GooglePlaceId { get; set; }
+
+        public string? GoogleLat { get; set; }
+
+        public string? GoogleLong { get; set; }
+
+        public string? FormatAddress { get; set; }
+
+        public string? Distance { get; set; }
+
 
         public string? Region { get; set; }
 

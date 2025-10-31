@@ -9,6 +9,16 @@ namespace KLS.Services.Interfaces
 {
     public interface IPayeeService
     {
+        #region --- ARCustomer ---
+
         ICollection<PayeeSearch>? SearchPayee(PayeeSearchReq searchReq);
+
+        #endregion
+
+        #region --- ARCustomer ---
+
+        PagingResponse<ARCustomerList> GetARCustomers(ARCustomerListReq aRCustomerListReq);
+
+        #endregion
     }
 }

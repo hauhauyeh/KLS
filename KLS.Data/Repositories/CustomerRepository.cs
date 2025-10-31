@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Data.Repositories;
 using KLS.Models;
@@ -43,7 +44,11 @@ namespace KLS.Data.Repositories
 
             var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
 
-            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Customer_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var IsSearchSalesParam = new SqlParameter("@IsSearchSales", searchReq.IsSearchSales);
+
+            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Customer_SearchByTerm] @SearchTerm,@IsActiveOnly,@EmpId,@IsSearchSales", TermParam, IsActiveOnlyParam, EmpIdParam, IsSearchSalesParam);
         }
 
         private static object[] BuildCustomersParam(CustomerListReq customerListReq)
