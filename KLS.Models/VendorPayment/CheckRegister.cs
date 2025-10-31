@@ -20,7 +20,7 @@ namespace KLS.Models
 
         public string? ReferenceId { get; set; }
 
-        public string? FromAccount { get; set; }
+        public int? FromAccountId { get; set; }
 
         public decimal? PaymentAmount { get; set; }
 

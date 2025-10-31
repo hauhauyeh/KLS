@@ -24,7 +24,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildCheckRegisterParam(checkRegisterReq);
 
-            return DbContext.CheckRegister.FromSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccount,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
+            return DbContext.CheckRegister.FromSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
         }
 
         public int CountAllCheckRegister(CheckRegisterReq checkRegisterReq)
@@ -32,7 +32,7 @@ namespace KLS.Data.Repositories
             checkRegisterReq.IsCount = true;
             var param = BuildCheckRegisterParam(checkRegisterReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccount,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
 
             var output = param[12] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -53,7 +53,7 @@ namespace KLS.Data.Repositories
 
                 checkRegisterReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", checkRegisterReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
 
-                string.IsNullOrEmpty(checkRegisterReq.FromAccount) ? new SqlParameter("@FromAccount", DBNull.Value) : new SqlParameter("@FromAccount", checkRegisterReq.FromAccount),
+                checkRegisterReq.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", checkRegisterReq.FromAccountId.Value) : new SqlParameter("@FromAccountId", DBNull.Value),
 
                 string.IsNullOrEmpty(checkRegisterReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", checkRegisterReq.PaymentMethod),
 
