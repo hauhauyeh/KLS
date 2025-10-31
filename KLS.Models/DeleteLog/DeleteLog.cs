@@ -18,7 +18,7 @@ namespace KLS.Models
 
         public string? SourceDocType { get; set; }
 
-        public int? SourceDocNum { get; set; }
+        public int? SourceDocNumber { get; set; }
 
         public int? DeletedBy { get; set; }
     }

@@ -8,20 +8,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class TempSales
+    public class TempSalesItem
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TempSalesId { get; set; }
-
-        public int EmpId { get; set; }
-
-        public int SalesId { get; set; }
-
-        public int PayeeId { get; set; }
-
-        public string? ChangeStatus { get; set; }
-
-        public int? SalesDetailId { get; set; }
     }
 }

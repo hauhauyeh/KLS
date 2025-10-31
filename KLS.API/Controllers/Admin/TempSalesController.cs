@@ -1,4 +1,6 @@
 ﻿using KLS.API.Helpers;
+using KLS.Models;
+using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -27,7 +29,20 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
+        [HttpDelete("{tempId}")]
+        public IActionResult Delete(int tempId)
+        {
+            _tempSalesService.DeleteTempSales(tempId);
+            return Ok();
+        }
 
+
+        [HttpPost("Clear")]
+        public IActionResult Clear([FromBody] TempSalesReq tempReq)
+        {
+            _tempSalesService.ClearTempSales(tempReq);
+            return Ok();
+        }
 
         #endregion
     }

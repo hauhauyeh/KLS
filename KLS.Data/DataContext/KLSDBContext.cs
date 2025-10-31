@@ -235,6 +235,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ARCustomerList> ARCustomerList { get; set; }
 
+        public virtual DbSet<TempPurchaseItem> TempPurchaseItem { get; set; }
+
         #endregion
     }
 }

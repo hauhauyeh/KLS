@@ -11,6 +11,8 @@ namespace KLS.Services.Interfaces
     {
         PagingResponse<ItemList> GetItems(ItemListReq itemListReq);
 
+        Item? GetBySearch(string itemCode);
+
         ICollection<ItemSearch>? SearchItem(ItemSearchReq searchReq);
     }
 }

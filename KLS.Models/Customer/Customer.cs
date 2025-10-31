@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Net;
 using System.Reflection.Emit;
@@ -99,7 +100,8 @@ namespace KLS.Models
         public string? SquareId { get; set; }
         
         public bool IsPromotionEnabled { get; set; }
-        
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? BaseMarkup { get; set; }
         
         public int? ShippingCarrierId { get; set; }

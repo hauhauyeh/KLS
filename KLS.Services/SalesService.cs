@@ -82,30 +82,16 @@ namespace KLS.Services
 
         public void UpdateInstruction(int salesId, string? instruction)
         {
-            var sales = GetById(salesId);
-
-            if (sales != null)
-            {
-                sales.Instruction = instruction;
-                sales.UpdatedAt = DateTime.UtcNow;
-
-                Uow.Sales.Update(sales);
-                Uow.Commit();
-            }
+            Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.Instruction, x => instruction)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
         public void UpdatePO(int salesId, string? custPO)
         {
-            var sales = GetById(salesId);
-
-            if (sales != null)
-            {
-                sales.CustomerPONumber = custPO;
-                sales.UpdatedAt = DateTime.UtcNow;
-
-                Uow.Sales.Update(sales);
-                Uow.Commit();
-            }
+            Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.CustomerPONumber, x => custPO)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
         public void DeleteSales(int salesId)

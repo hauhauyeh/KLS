@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,6 +11,12 @@ namespace KLS.Models
 {
     public class TempPurchase
     {
+        public TempPurchase()
+        {
+            ChangeStatus = EnumHelper.ChangeStatus.I.ToString();
+            LineType = EnumHelper.LineType.I.ToString();
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TempPurchaseId { get; set; }

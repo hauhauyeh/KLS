@@ -43,5 +43,18 @@ namespace KLS.Common
             Income = 4,
             Expense = 5
         }
+
+        public enum ChangeStatus
+        {
+            I = 1,  //Insert
+            U = 2,  //Update
+            D = 3   //Delete
+        }
+
+        public enum LineType
+        {
+            I = 1,  //Item
+            A = 2,  //Account
+        }
     }
 }

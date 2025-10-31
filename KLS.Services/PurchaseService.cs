@@ -47,16 +47,9 @@ namespace KLS.Services
 
         public void UpdateNotes(int purchaseId, string? notes)
         {
-            var purchase = GetById(purchaseId);
-
-            if (purchase != null)
-            {
-                purchase.Notes = notes;
-                purchase.UpdatedAt = DateTime.UtcNow;
-
-                Uow.Purchases.Update(purchase);
-                Uow.Commit();
-            }
+            Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.Notes, x => notes)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
         public void UpdateDocNumber(int purchaseId, string? docNumber)
