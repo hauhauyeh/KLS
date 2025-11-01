@@ -12,9 +12,9 @@ namespace KLS.Models
         [Key]
         public Int64 LogId { get; set; }
 
-        public string? ItemCode { get; set; }
+        public int? ItemId { get; set; }
 
-        public Int64 TxNumber { get; set; }
+        //public Int64 TxNumber { get; set; }
 
         public DateOnly TxDate { get; set; }
 
