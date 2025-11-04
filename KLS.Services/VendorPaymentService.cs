@@ -39,5 +39,10 @@ namespace KLS.Services
                 RowData = vendorPaymentlist,
             };
         }
+
+        public void UnVoidCheck(int vendorPaymentId)
+        {
+            Uow.VendorPayments.UnVoidCheck(vendorPaymentId);
+        }
     }
 }

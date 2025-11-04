@@ -19,5 +19,7 @@ namespace KLS.Services.Interfaces
         void DeletePayroll(int vendorPaymentId);
 
         ImportPayrollResp Import(IFormFile PayrollFile);
+
+        void VoidCheck(int vendorPaymentId);
     }
 }

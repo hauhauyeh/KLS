@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    [AuthorizeAdmin]
+    //[AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Payroll Management", GroupName = "Employee")]
     public class PayrollsController : BaseController
@@ -18,14 +18,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IPayrollDetailService _payrollDetailService;
+        private readonly IVendorPaymentService _vendorPaymentService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public PayrollsController(IPayrollDetailService payrollDetailService)
+        public PayrollsController(IPayrollDetailService payrollDetailService, IVendorPaymentService vendorPaymentService)
         {
             _payrollDetailService = payrollDetailService;
+            _vendorPaymentService = vendorPaymentService;
         }
 
         #endregion
@@ -93,6 +95,24 @@ namespace KLS.API.Controllers.Admin
                 return Conflict(response.Error);
 
             return Ok(response.ImportCount);
+        }
+
+
+        [HttpPost("VoidCheck/{vendorPaymentId}")]
+        public IActionResult VoidCheck(int vendorPaymentId)
+        {
+            _payrollDetailService.VoidCheck(vendorPaymentId);
+
+            return Ok();
+        }
+
+
+        [HttpPost("UnVoidCheck/{vendorPaymentId}")]
+        public IActionResult UnVoidCheck(int vendorPaymentId)
+        {
+            _vendorPaymentService.UnVoidCheck(vendorPaymentId);
+
+            return Ok();
         }
 
         #endregion

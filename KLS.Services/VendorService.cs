@@ -98,6 +98,7 @@ namespace KLS.Services
             existingPayee.City = vendorDTO.City;
             existingPayee.State = vendorDTO.State;
             existingPayee.ZipCode = vendorDTO.ZipCode;
+            existingPayee.Email = vendorDTO.Email;
             existingPayee.IsClosed = vendorDTO.IsClosed;
             existingPayee.StartDate = vendorDTO.StartDate;
             existingPayee.Balance = vendorDTO.Balance;

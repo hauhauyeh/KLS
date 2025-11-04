@@ -131,5 +131,12 @@ namespace KLS.Data.Repositories
 
             return param;
         }
+
+        public void UnVoidCheck(int vendorPaymentId)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_DeleteVoidCheck] @VendorPaymentId", VendorPaymentIdParam);
+        }
     }
 }

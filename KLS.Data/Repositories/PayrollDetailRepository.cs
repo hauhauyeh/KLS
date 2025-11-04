@@ -126,5 +126,12 @@ namespace KLS.Data.Repositories
 
             return response;
         }
+
+        public void VoidCheck(int vendorPaymentId)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_VoidCheck] @VendorPaymentId", VendorPaymentIdParam);
+        }
     }
 }

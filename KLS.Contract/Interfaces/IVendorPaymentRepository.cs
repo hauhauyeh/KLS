@@ -16,5 +16,8 @@ namespace KLS.Contract.Interfaces
         IQueryable<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq);
 
         int CountAllVendorPayment(VendorPaymentReq vendorPaymentReq);
+
+        void UnVoidCheck(int vendorPaymentId);
+
     }
 }

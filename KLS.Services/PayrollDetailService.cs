@@ -82,5 +82,10 @@ namespace KLS.Services
 
             return response;
         }
+
+        public void VoidCheck(int vendorPaymentId)
+        {
+            Uow.PayrollDetails.VoidCheck(vendorPaymentId);
+        }
     }
 }
