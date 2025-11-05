@@ -61,5 +61,7 @@ namespace KLS.Models
         public decimal? Payee30Volume { get; set; }
 
         public decimal? BaseMarkup { get; set; }
+
+        public string? Address { get; set; }
     }
 }
