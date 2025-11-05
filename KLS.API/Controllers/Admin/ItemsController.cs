@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Item Management", GroupName = "Product")]
     public class ItemsController : BaseController

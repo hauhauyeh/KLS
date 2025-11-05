@@ -31,15 +31,36 @@ namespace KLS.Services
 
         public TempPurchaseItem CreateTempPurchase(TempPurchaseItem tempItem)
         {
-            if (tempItem.ItemCode.StartsWith('@'))
+            if (tempItem.LineType == EnumHelper.LineType.A.ToString() || tempItem.ItemCode.StartsWith('@'))
                 return AddAccount(tempItem);
             else
                 return AddItem(tempItem);
         }
 
-        public TempPurchaseItem UpdateTempPurchase()
+        public TempPurchaseItem UpdateTempPurchase(TempPurchaseItem tempPurchase)
         {
-            throw new NotImplementedException();
+            var existing = Uow.TempPurchases.GetById(tempPurchase.TempPurchaseId);
+
+            if (existing != null)
+            {
+                existing.OrdQty0 = tempPurchase.OrdQty0;
+                existing.OrdQty1 = tempPurchase.OrdQty1;
+                existing.BillPrice = tempPurchase.BillPrice;
+                existing.FinalPrice = tempPurchase.FinalPrice;
+                existing.IsFree = tempPurchase.IsFree;
+                existing.IsOut = tempPurchase.IsOut;
+                existing.IsCRCG = tempPurchase.IsCRCG;
+                existing.Notes = tempPurchase.Notes;
+                existing.ExpiryDate = tempPurchase.ExpiryDate;
+
+                if (existing.PurchaseDetailId.HasValue)
+                    existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
+
+                Uow.TempPurchases.Update(existing);
+                Uow.Commit();
+            }
+
+            return tempPurchase;
         }
 
         public void DeleteTempPurchase(int tempId)
@@ -63,7 +84,7 @@ namespace KLS.Services
 
         public void ClearTempPurchase(TempPurchaseReq tempReq)
         {
-            Uow.TempPurchases.Find(c => c.EmpId == UserContext.EmpId && c.PurchaseId == tempReq.PurchaseId).ExecuteDelete();
+            Uow.TempPurchases.Find(c => c.EmpId == UserContext.EmpId && c.PayeeId == tempReq.PayeeId && c.PurchaseId == tempReq.PurchaseId).ExecuteDelete();
         }
 
         private TempPurchaseItem AddItem(TempPurchaseItem tempItem)
@@ -111,7 +132,7 @@ namespace KLS.Services
 
             tempItem.ItemCode = account.AccountCode;
             tempItem.ItemName = account.AccountName;
-            tempItem.ItemId = account.AccountId;
+            tempItem.AccountId = account.AccountId;
             tempItem.LineType = EnumHelper.LineType.A.ToString();
 
             var tempPurchase = new TempPurchase();

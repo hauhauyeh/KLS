@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace KLS.API.Controllers.Timesheets
+namespace KLS.API.Controllers.Timesheet
 {
     [Route("api/[controller]")]
     [Display(Name = "Timesheet Management", GroupName = "Employee")]

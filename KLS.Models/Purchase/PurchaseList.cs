@@ -51,9 +51,9 @@ namespace KLS.Models
 
         public decimal? FreightTotal { get; set; }
 
-        public string? BillerName { get; set; }
+        //public string? BillerName { get; set; }
 
-        public int? PalletCount { get; set; }
+        //public int? PalletCount { get; set; }
 
         public decimal? ImportCommission { get; set; }
 

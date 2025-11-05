@@ -1,5 +1,6 @@
 ﻿using KLS.API.Helpers;
 using KLS.Models;
+using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -34,6 +35,18 @@ namespace KLS.API.Controllers.Admin
         public IActionResult List([FromQuery] SalesListReq salesListReq)
         {
             return Ok(_salesService.GetAllSales(salesListReq));
+        }
+
+
+        [HttpGet("{salesId}")]
+        public IActionResult GetById(int salesId)
+        {
+            var sales = _salesService.GetById(salesId);
+
+            if (sales == null)
+                return NotFound($"Sales with Id {salesId} not found.");
+
+            return Ok(sales);
         }
 
 

@@ -34,6 +34,8 @@ namespace KLS.Models
 
         public int? TermId { get; set; }
 
+        public string? TermName { get; set; }
+
         public DateOnly? StartDate { get; set; }
 
         public string? GoogleAddress { get; set; }

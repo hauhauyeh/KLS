@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
@@ -22,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildPurchaseParam(purchaseListReq);
 
-            return DbContext.PurchaseList.FromSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.PurchaseList.FromSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountAllPurchase(PurchaseListReq purchaseListReq)
@@ -30,9 +31,9 @@ namespace KLS.Data.Repositories
             purchaseListReq.IsCount = true;
             var param = BuildPurchaseParam(purchaseListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[10] as SqlParameter;
+            var output = param[11] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -49,7 +50,9 @@ namespace KLS.Data.Repositories
 
                 purchaseListReq.EndDate.HasValue ? new SqlParameter("@EndDate", purchaseListReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
 
-                purchaseListReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", purchaseListReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
+                purchaseListReq.PayeeId.HasValue ? new SqlParameter("@VendorId", purchaseListReq.PayeeId) : new SqlParameter("@VendorId", DBNull.Value),
+
+                new SqlParameter("@EmpId", UserContext.EmpId),
 
                 string.IsNullOrEmpty(purchaseListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", purchaseListReq.Filterby),
 

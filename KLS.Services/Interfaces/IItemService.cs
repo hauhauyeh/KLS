@@ -13,6 +13,6 @@ namespace KLS.Services.Interfaces
 
         Item? GetBySearch(string itemCode);
 
-        ICollection<ItemSearch>? SearchItem(ItemSearchReq searchReq);
+        IEnumerable<ItemSearch>? SearchItem(ItemSearchReq searchReq);
     }
 }

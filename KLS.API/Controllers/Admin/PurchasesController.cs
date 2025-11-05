@@ -38,6 +38,18 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("{purchaseId}")]
+        public IActionResult GetById(int purchaseId)
+        {
+            var purchase = _purchaseService.GetById(purchaseId);
+
+            if (purchase == null)
+                return NotFound($"Purchase with Id {purchaseId} not found.");
+
+            return Ok(purchase);
+        }
+
+
         [HttpPut("UpdateNotes")]
         public IActionResult UpdateNotes([FromBody] PurchaseUpdateReq updateReq)
         {

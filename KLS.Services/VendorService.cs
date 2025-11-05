@@ -2,7 +2,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
 using System;
 using System.Collections.Generic;
@@ -18,14 +17,6 @@ namespace KLS.Services
         {
 
         }
-
-        //public IEnumerable<Payee> GetAllVendors()
-        //{
-        //    return Uow.Payees
-        //        .Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString()).Include(v => v.Vendor)
-        //        .OrderByDescending(v => v.PayeeId)
-        //        .ToList();
-        //}
 
         public PagingResponse<VendorList> GetAllVendors(VendorListReq vendorListReq)
         {
@@ -55,6 +46,10 @@ namespace KLS.Services
             if (vendor != null)
                 vendorDTO.InjectFrom(vendor);
 
+            var term = Uow.Terms.GetById(payee.TermId ?? 0);
+
+            vendorDTO.TermName = term?.TermName;
+
             return vendorDTO;
         }
 
@@ -81,7 +76,7 @@ namespace KLS.Services
             Uow.Vendors.Add(vendor);
             Uow.Commit();
 
-            return vendorDTO;
+            return GetById(newPayeeId);
         }
 
         public VendorDTO? UpdateVendor(VendorDTO vendorDTO)

@@ -13,7 +13,7 @@ namespace KLS.Services.Interfaces
 
         TempPurchaseItem CreateTempPurchase(TempPurchaseItem tempPurchase);
 
-        TempPurchaseItem UpdateTempPurchase();
+        TempPurchaseItem UpdateTempPurchase(TempPurchaseItem tempPurchase);
 
         void DeleteTempPurchase(int tempId);
 

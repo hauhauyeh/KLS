@@ -2,7 +2,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
-using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Services
 {
-    public class AccountService : BaseService, Interfaces.IAccountService
+    public class AccountService : BaseService, IAccountService
     {
         public AccountService(IUnitOfWork uow) : base(uow)
         {
@@ -75,7 +74,7 @@ namespace KLS.Services
 
         public Account? GetByAcctId(int acctId)
         {
-            return Uow.Accounts.Find(c => c.AccountId == acctId && c.Inactive == false).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountId == acctId && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
         }
 
         public bool AcctNameExists(Account account)

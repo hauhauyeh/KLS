@@ -72,9 +72,9 @@ namespace KLS.Services
             return item;
         }
 
-        public ICollection<ItemSearch>? SearchItem(ItemSearchReq searchReq)
+        public IEnumerable<ItemSearch>? SearchItem(ItemSearchReq searchReq)
         {
-            return Uow.Items.SearchItem(searchReq)?.ToList();
+            return Uow.Items.SearchItem(searchReq);
         }
     }
 }

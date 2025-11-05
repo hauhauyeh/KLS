@@ -24,7 +24,7 @@ namespace KLS.Data.Repositories
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            //var VendorIdParam = new SqlParameter("@VendorId", cartReq.VendorId);
+            var PayeeIdParam = new SqlParameter("@PayeeId", tempReq.PayeeId);
 
             var PurchaseIdParam = new SqlParameter("@PurchaseId", tempReq.PurchaseId);
 
@@ -32,7 +32,7 @@ namespace KLS.Data.Repositories
 
             var SortOrderParam = (!string.IsNullOrEmpty(tempReq.SortOrder)) ? new SqlParameter("@SortOrder", tempReq.SortOrder) : new SqlParameter("@SortOrder", DBNull.Value);
 
-            return DbContext.TempPurchaseItem.FromSqlRaw("[TempPurchase_GetList] @EmpId,@PurchaseId,@SortField,@SortOrder", EmpIdParam, PurchaseIdParam, SortFieldParam, SortOrderParam);
+            return DbContext.TempPurchaseItem.FromSqlRaw("[TempPurchase_GetList] @EmpId,@PayeeId,@PurchaseId,@SortField,@SortOrder", EmpIdParam, PayeeIdParam, PurchaseIdParam, SortFieldParam, SortOrderParam);
         }
     }
 }
