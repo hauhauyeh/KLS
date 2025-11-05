@@ -240,6 +240,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<TempPurchaseItem> TempPurchaseItem { get; set; }
 
+        public virtual DbSet<ItemHistorySales> ItemHistorySales { get; set; }
+
         #endregion
     }
 }

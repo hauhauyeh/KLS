@@ -133,6 +133,8 @@ namespace KLS.Data.Repositories
         public ITempPurchaseRepository TempPurchases { get { return new TempPurchaseRepository(DbContext); } }
 
         public IItemQuoteRepository ItemQuotes { get { return new ItemQuoteRepository(DbContext); } }
+
+        public IItemHistoryRepository ItemHistories { get { return new ItemHistoryRepository(DbContext); } }
     }
 }
 

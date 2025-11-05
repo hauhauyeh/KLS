@@ -106,6 +106,8 @@ namespace KLS.Contract.Interfaces
 
         IItemQuoteRepository ItemQuotes { get; }
 
+        IItemHistoryRepository ItemHistories { get; }
+
         void Commit();
     }
 }
