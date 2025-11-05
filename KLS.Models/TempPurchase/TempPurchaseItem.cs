@@ -20,7 +20,7 @@ namespace KLS.Models
 
         public int? LineId { get; set; }
 
-        public string LineType { get; set; }
+        public string? LineType { get; set; }
 
         public int? ItemId { get; set; }
 
