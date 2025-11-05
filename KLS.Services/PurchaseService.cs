@@ -2,6 +2,8 @@
 using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -13,9 +15,11 @@ namespace KLS.Services
 {
     public class PurchaseService : BaseService, IPurchaseService
     {
-        public PurchaseService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IWebHostEnvironment _env;
 
+        public PurchaseService(IUnitOfWork uow, IWebHostEnvironment env) : base(uow)
+        {
+            _env = env;
         }
 
         public PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
@@ -73,6 +77,40 @@ namespace KLS.Services
             if (purchase != null && !purchase.IsLocked)
             {
                 Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
+            }
+        }
+
+        public void UploadBillPDF(PDFUploadReq pdfUploadReq)
+        {
+            var pdfbillfile = Path.Combine(_env.WebRootPath, Constants.PurchaseImagePath, pdfUploadReq.PurchaseNumber + ".pdf");
+
+            if (System.IO.File.Exists(pdfbillfile))
+            {
+                PdfDocument oldpdf = new(pdfbillfile);
+
+                string newfile = Path.Combine(_env.WebRootPath, Constants.PurchaseImagePath, "Temp-" + pdfUploadReq.PurchaseNumber + ".pdf");
+
+                using (var fileStream = new FileStream(newfile, FileMode.Create, FileAccess.ReadWrite))
+                {
+                    pdfUploadReq.PDFFile?.CopyTo(fileStream);
+                }
+
+                //combined 2 file
+                PdfDocument newpdffile = new(newfile);
+
+                oldpdf.AppendPdf(newpdffile);
+
+                if (oldpdf.PageCount > 0)
+                    oldpdf.SaveAs(pdfbillfile);
+
+                System.IO.File.Delete(newfile);
+            }
+            else
+            {
+                using (var fileStream = new FileStream(pdfbillfile, FileMode.Create))
+                {
+                    pdfUploadReq.PDFFile?.CopyTo(fileStream);
+                }
             }
         }
     }

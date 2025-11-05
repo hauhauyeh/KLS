@@ -73,6 +73,16 @@ namespace KLS.API.Controllers.Admin
         public IActionResult Delete(int purchaseId)
         {
             _purchaseService.DeletePurchase(purchaseId);
+
+            return Ok();
+        }
+
+
+        [HttpPost("UploadBillPDF")]
+        public IActionResult UploadBillPDF([FromForm] PDFUploadReq pdfUploadReq)
+        {
+            _purchaseService.UploadBillPDF(pdfUploadReq);
+
             return Ok();
         }
 

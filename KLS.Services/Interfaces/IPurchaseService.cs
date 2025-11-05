@@ -18,5 +18,7 @@ namespace KLS.Services.Interfaces
         void UpdateDocNumber(int purchaseId, string? docNumber);
 
         void DeletePurchase(int purchaseId);
+
+        void UploadBillPDF(PDFUploadReq pdfUploadReq);
     }
 }

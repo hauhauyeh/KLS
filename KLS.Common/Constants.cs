@@ -11,5 +11,7 @@ namespace KLS.Common
         public static string? ConnectionString { get; set; }
 
         public static string? PayrollPath = "Payroll";
+
+        public static string? PurchaseImagePath = "BillPdf";
     }
 }
