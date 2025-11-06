@@ -59,7 +59,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Company>().ToTable("Company");
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
-            modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");            
+            modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
             modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
             modelBuilder.Entity<TimesheetDetail>().ToTable("TimesheetDetail");
             modelBuilder.Entity<TempTimesheet>().ToTable("TempTimesheet");
@@ -243,6 +243,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<ItemHistorySales> ItemHistorySales { get; set; }
 
         public virtual DbSet<ItemHistoryPurchase> ItemHistoryPurchase { get; set; }
+
+        public virtual DbSet<ItemHistoryInventory> ItemHistoryInventory { get; set; }
 
         #endregion
     }

@@ -45,6 +45,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemHistoryService.GetPurchaseHistory(itemHistoryReq));
         }
 
+
+        [HttpGet("Inventory")]
+        [DisplayName("Inventory History")]
+        public IActionResult Inventory([FromQuery] ItemHistoryReq itemHistoryReq)
+        {
+            return Ok(_itemHistoryService.GetInventoryHistory(itemHistoryReq));
+        }
+
         #endregion
     }
 }

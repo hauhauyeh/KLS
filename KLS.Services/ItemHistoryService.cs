@@ -25,5 +25,10 @@ namespace KLS.Services
         {
             return Uow.ItemHistories.GetPurchaseHistory(itemHistoryReq);
         }
+
+        public IEnumerable<ItemHistoryInventory> GetInventoryHistory(ItemHistoryReq itemHistoryReq)
+        {
+            return Uow.ItemHistories.GetInventoryHistory(itemHistoryReq);
+        }
     }
 }

@@ -37,5 +37,12 @@ namespace KLS.Data.Repositories
 
             return DbContext.ItemHistoryPurchase.FromSqlRaw("[dbo].[ItemHistory_Purchase] @ItemId,@PayeeId", ItemIdParam, PayeeIdParam);
         }
+
+        public IQueryable<ItemHistoryInventory> GetInventoryHistory(ItemHistoryReq itemHistoryReq)
+        {
+            var ItemIdParam = new SqlParameter("@ItemId", itemHistoryReq.ItemId);
+
+            return DbContext.ItemHistoryInventory.FromSqlRaw("[dbo].[ItemHistory_Inventory] @ItemId", ItemIdParam);
+        }
     }
 }

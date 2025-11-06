@@ -12,5 +12,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<ItemHistorySales> GetSalesHistory(ItemHistoryReq itemHistoryReq);
 
         IQueryable<ItemHistoryPurchase> GetPurchaseHistory(ItemHistoryReq itemHistoryReq);
+
+        IQueryable<ItemHistoryInventory> GetInventoryHistory(ItemHistoryReq itemHistoryReq);
     }
 }

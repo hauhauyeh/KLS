@@ -12,5 +12,7 @@ namespace KLS.Services.Interfaces
         IEnumerable<ItemHistorySales> GetSalesHistory(ItemHistoryReq itemHistoryReq);
 
         IEnumerable<ItemHistoryPurchase> GetPurchaseHistory(ItemHistoryReq itemHistoryReq);
+
+        IEnumerable<ItemHistoryInventory> GetInventoryHistory(ItemHistoryReq itemHistoryReq);
     }
 }
