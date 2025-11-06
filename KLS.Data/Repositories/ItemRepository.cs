@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildGetItemsParam(itemListReq);
 
-            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@Content,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountAllItems(ItemListReq itemListReq)
@@ -31,9 +31,9 @@ namespace KLS.Data.Repositories
             itemListReq.IsCount = true;
             var param = BuildGetItemsParam(itemListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@Content,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[9] as SqlParameter;
+            var output = param[10] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -51,6 +51,8 @@ namespace KLS.Data.Repositories
                 itemListReq.EndDate.HasValue ? new SqlParameter("@EndDate", itemListReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
 
                 string.IsNullOrEmpty(itemListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", itemListReq.Filterby),
+
+                string.IsNullOrEmpty(itemListReq.Content) ? new SqlParameter("@Content", DBNull.Value) : new SqlParameter("@Content", itemListReq.Content),
 
                 string.IsNullOrEmpty(itemListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", itemListReq.SortField),
 

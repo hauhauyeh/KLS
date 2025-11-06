@@ -8,6 +8,8 @@ namespace KLS.Models
 {
     public class ItemListReq : PagingRequest
     {
-        public int PayeeId { get; set; }
+        //public int PayeeId { get; set; }
+
+        public string? Content { get; set; }
     }
 }
