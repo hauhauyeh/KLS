@@ -28,5 +28,14 @@ namespace KLS.Data.Repositories
 
             return DbContext.ItemHistorySales.FromSqlRaw("[dbo].[ItemHistory_Sales] @ItemId,@PayeeId,@Filterby", ItemIdParam, PayeeIdParam, FilterbyParam);
         }
+
+        public IQueryable<ItemHistoryPurchase> GetPurchaseHistory(ItemHistoryReq itemHistoryReq)
+        {
+            var ItemIdParam = new SqlParameter("@ItemId", itemHistoryReq.ItemId);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", itemHistoryReq.PayeeId);
+
+            return DbContext.ItemHistoryPurchase.FromSqlRaw("[dbo].[ItemHistory_Purchase] @ItemId,@PayeeId", ItemIdParam, PayeeIdParam);
+        }
     }
 }

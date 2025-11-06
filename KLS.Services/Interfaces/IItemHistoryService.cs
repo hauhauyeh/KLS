@@ -10,5 +10,7 @@ namespace KLS.Services.Interfaces
     public interface IItemHistoryService
     {
         IEnumerable<ItemHistorySales> GetSalesHistory(ItemHistoryReq itemHistoryReq);
+
+        IEnumerable<ItemHistoryPurchase> GetPurchaseHistory(ItemHistoryReq itemHistoryReq);
     }
 }

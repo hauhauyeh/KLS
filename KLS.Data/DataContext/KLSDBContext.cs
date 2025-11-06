@@ -242,6 +242,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ItemHistorySales> ItemHistorySales { get; set; }
 
+        public virtual DbSet<ItemHistoryPurchase> ItemHistoryPurchase { get; set; }
+
         #endregion
     }
 }
