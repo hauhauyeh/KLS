@@ -105,7 +105,7 @@ namespace KLS.Models
         public int? PurchaseDetailId { get; set; }
 
 
-        private void SetQtyBasedOnFlag()
+        public void SetQtyBasedOnFlag()
         {
             if (IsFree)
             {
@@ -126,6 +126,13 @@ namespace KLS.Models
                 ShipQty = 0;
                 BillQty = OrdQty0;
                 ReceiveQty = 0;
+                FinalQty = OrdQty1;
+            }
+            else
+            {
+                ShipQty = OrdQty0;
+                BillQty = OrdQty0;
+                ReceiveQty = OrdQty1;
                 FinalQty = OrdQty1;
             }
         } 

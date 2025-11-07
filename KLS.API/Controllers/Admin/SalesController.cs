@@ -16,14 +16,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly ISalesService _salesService;
+        private readonly IWebHostEnvironment _env;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public SalesController(ISalesService salesService)
+        public SalesController(ISalesService salesService, IWebHostEnvironment env)
         {
             _salesService = salesService;
+            _env = env;
         }
 
         #endregion
@@ -89,6 +91,20 @@ namespace KLS.API.Controllers.Admin
         public IActionResult GetShipRoutes(DateOnly ShipDate)
         {
             return Ok(_salesService.GetShipRoutes(ShipDate));
+        }
+
+
+        [HttpGet("SeePDF/{salesNumber}")]
+        [DisplayName("See PDF Image")]
+        public IActionResult SeePdf(int salesNumber)
+        {
+            var filePath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return File(fileStream, "application/pdf");
         }
 
         #endregion

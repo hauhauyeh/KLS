@@ -20,5 +20,9 @@ namespace KLS.Services.Interfaces
         void DeletePurchase(int purchaseId);
 
         void UploadBillPDF(PDFUploadReq pdfUploadReq);
+
+        void InjectPurchase(PurchaseInjectReq injectReq);
+
+        Purchase Checkout(PurchaseCheckoutReq checkoutReq);
     }
 }

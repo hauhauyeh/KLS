@@ -113,5 +113,25 @@ namespace KLS.Services
                 }
             }
         }
+
+        public void InjectPurchase(PurchaseInjectReq injectReq)
+        {
+            Uow.Purchases.InjectPurchase(injectReq);
+        }
+
+        public Purchase Checkout(PurchaseCheckoutReq checkoutReq)
+        {
+            var purchaseId = Uow.Purchases.Checkout(checkoutReq);
+
+            //send cost change notification
+            var itemCostChange = Uow.Items.Find(c => c.IsCostChange == true).ToList();
+
+            foreach (var item in itemCostChange)
+            {
+                //_ItemManager.SendCostChangeNotification(item);
+            }
+
+            return GetById(purchaseId);
+        }
     }
 }

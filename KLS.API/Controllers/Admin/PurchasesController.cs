@@ -16,14 +16,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IPurchaseService _purchaseService;
+        private readonly IWebHostEnvironment _env;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public PurchasesController(IPurchaseService purchaseService)
+        public PurchasesController(IPurchaseService purchaseService, IWebHostEnvironment env)
         {
             _purchaseService = purchaseService;
+            _env = env;
         }
 
         #endregion
@@ -84,6 +86,36 @@ namespace KLS.API.Controllers.Admin
             _purchaseService.UploadBillPDF(pdfUploadReq);
 
             return Ok();
+        }
+
+
+        [HttpPost("Inject")]
+        public IActionResult Inject([FromBody] PurchaseInjectReq injectReq)
+        {
+            _purchaseService.InjectPurchase(injectReq);
+            return Ok();
+        }
+
+
+        [HttpPost("Checkout")]
+        [DisplayName("Checkout Bill")]
+        public IActionResult Checkout([FromBody] PurchaseCheckoutReq checkoutReq)
+        {
+            return Ok(_purchaseService.Checkout(checkoutReq));
+        }
+
+
+        [HttpGet("SeePDF/{purchaseNumber}")]
+        [DisplayName("See PDF Image")]
+        public IActionResult SeePdf(int purchaseNumber)
+        {
+            var filePath = Path.Combine(_env.WebRootPath, "BillPdf", purchaseNumber + ".pdf");
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return File(fileStream, "application/pdf");
         }
 
         #endregion

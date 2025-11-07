@@ -135,6 +135,8 @@ namespace KLS.Data.Repositories
         public IItemQuoteRepository ItemQuotes { get { return new ItemQuoteRepository(DbContext); } }
 
         public IItemHistoryRepository ItemHistories { get { return new ItemHistoryRepository(DbContext); } }
+
+        public IPurchaseStageRepository PurchaseStages { get { return new PurchaseStageRepository(DbContext); } }
     }
 }
 

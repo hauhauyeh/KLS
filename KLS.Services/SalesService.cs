@@ -26,7 +26,7 @@ namespace KLS.Services
             var totalRecords = Uow.Sales.CountAllSales(salesListReq);
 
             // Get absolute path to wwwroot/InvoicePdf
-            var invoicePDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
+            var invoicePDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "InvoicePdf");
 
             foreach (var invoice in sales)
             {

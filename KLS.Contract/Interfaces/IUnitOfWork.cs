@@ -108,6 +108,8 @@ namespace KLS.Contract.Interfaces
 
         IItemHistoryRepository ItemHistories { get; }
 
+        IPurchaseStageRepository PurchaseStages { get; }
+
         void Commit();
     }
 }

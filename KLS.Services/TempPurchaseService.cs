@@ -56,8 +56,12 @@ namespace KLS.Services
                 if (existing.PurchaseDetailId.HasValue)
                     existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
 
+                existing.SetQtyBasedOnFlag();
+
                 Uow.TempPurchases.Update(existing);
                 Uow.Commit();
+
+                tempPurchase.InjectFrom(existing);
             }
 
             return tempPurchase;
