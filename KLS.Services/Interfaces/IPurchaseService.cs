@@ -17,6 +17,12 @@ namespace KLS.Services.Interfaces
 
         void UpdateDocNumber(int purchaseId, string? docNumber);
 
+        void UpdateInvoiceDate(int purchaseId, DateOnly? invoiceDate);
+
+        void UpdateCommission(int purchaseId, decimal? commission);
+
+        void UpdatePallet(int purchaseId, int? palletCount);
+
         void DeletePurchase(int purchaseId);
 
         void UploadBillPDF(PDFUploadReq pdfUploadReq);

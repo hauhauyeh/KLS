@@ -5,6 +5,7 @@ using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,6 +69,27 @@ namespace KLS.Services
                 Uow.Purchases.Update(purchase);
                 Uow.Commit();
             }
+        }
+
+        public void UpdateInvoiceDate(int purchaseId, DateOnly? invoiceDate)
+        {
+            Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.InvoiceDate, x => invoiceDate)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+        }
+
+        public void UpdateCommission(int purchaseId, decimal? commission)
+        {
+            Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.ImportCommission, x => commission)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+        }
+
+        public void UpdatePallet(int purchaseId, int? palletCount)
+        {
+            Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.PalletCount, x => palletCount)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
         public void DeletePurchase(int purchaseId)

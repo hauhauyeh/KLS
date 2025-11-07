@@ -70,6 +70,33 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateInvoiceDate")]
+        public IActionResult UpdateInvoiceDate([FromBody] PurchaseUpdateReq updateReq)
+        {
+            _purchaseService.UpdateInvoiceDate(updateReq.PurchaseId, updateReq.InvoiceDate);
+
+            return Ok();
+        }
+
+
+        [HttpPut("UpdateCommission")]
+        public IActionResult UpdateCommission([FromBody] PurchaseUpdateReq updateReq)
+        {
+            _purchaseService.UpdateCommission(updateReq.PurchaseId, updateReq.ImportCommission);
+
+            return Ok();
+        }
+
+
+        [HttpPut("UpdatePallet")]
+        public IActionResult UpdatePallet([FromBody] PurchaseUpdateReq updateReq)
+        {
+            _purchaseService.UpdatePallet(updateReq.PurchaseId, updateReq.PalletCount);
+
+            return Ok();
+        }
+
+
         [HttpDelete("{purchaseId}")]
         [DisplayName("Delete Bill")]
         public IActionResult Delete(int purchaseId)

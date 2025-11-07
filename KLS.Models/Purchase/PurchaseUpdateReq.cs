@@ -15,5 +15,11 @@ namespace KLS.Models
         public string? VendorDocNumber { get; set; }
 
         public string? ContainerNumber { get; set; }
+
+        public DateOnly? InvoiceDate { get; set; }
+
+        public decimal? ImportCommission { get; set; }
+
+        public int? PalletCount { get; set; }
     }
 }
