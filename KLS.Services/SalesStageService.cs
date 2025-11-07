@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 
 namespace KLS.Services
 {
-    public class PurchaseStageService : BaseService, IPurchaseStageService
+    public class SalesStageService : BaseService, ISalesStageService
     {
-        public PurchaseStageService(IUnitOfWork uow) : base(uow)
+        public SalesStageService(IUnitOfWork uow) : base(uow)
         {
 
         }
 
-        public IEnumerable<PurchaseStage> GetAllPurchaseStages()
+        public IEnumerable<SalesStage> GetAllSalesStages()
         {
-            return Uow.PurchaseStages.GetAll();
+            return Uow.SalesStages.GetAll();
         }
     }
 }

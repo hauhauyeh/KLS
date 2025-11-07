@@ -110,6 +110,8 @@ namespace KLS.Contract.Interfaces
 
         IPurchaseStageRepository PurchaseStages { get; }
 
+        ISalesStageRepository SalesStages { get; }
+
         void Commit();
     }
 }

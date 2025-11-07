@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLS.Services.Interfaces
+namespace KLS.Contract.Interfaces
 {
-    public interface IPurchaseStageService
+    public interface ISalesStageRepository : IRepository<SalesStage>
     {
-        IEnumerable<PurchaseStage> GetAllPurchaseStages();
+
     }
 }

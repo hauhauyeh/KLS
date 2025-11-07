@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Interfaces
 {
-    public interface IPurchaseStageService
+    public interface ISalesStageService
     {
-        IEnumerable<PurchaseStage> GetAllPurchaseStages();
+        IEnumerable<SalesStage> GetAllSalesStages();
     }
 }
