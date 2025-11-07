@@ -53,7 +53,7 @@ namespace KLS.Models
 
         //public string? BillerName { get; set; }
 
-        //public int? PalletCount { get; set; }
+        public int? PalletCount { get; set; }
 
         public decimal? ImportCommission { get; set; }
 
