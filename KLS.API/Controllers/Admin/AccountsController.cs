@@ -15,14 +15,14 @@ namespace KLS.API.Controllers.Admin
     {
         #region --- Member(s) ---
 
-        private readonly Services.Interfaces.IAccountService _chartOfAccountService;
+        private readonly IAccountService _chartOfAccountService;
         private readonly IAccountTypeService _accountTypeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public AccountsController(Services.Interfaces.IAccountService chartOfAccountService, IAccountTypeService accountTypeService)
+        public AccountsController(IAccountService chartOfAccountService, IAccountTypeService accountTypeService)
         {
             _chartOfAccountService = chartOfAccountService;
             _accountTypeService = accountTypeService;

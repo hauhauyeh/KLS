@@ -31,7 +31,6 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List PurchaseStages")]
         public IActionResult List()
         {
             return Ok(_purchaseStageService.GetAllPurchaseStages());

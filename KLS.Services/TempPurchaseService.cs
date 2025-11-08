@@ -106,11 +106,13 @@ namespace KLS.Services
 
             tempItem.ItemId = item.ItemId;
             tempItem.ItemCode = item.ItemCode;
+            tempItem.ItemName = item.ItemName;
             tempItem.CaseWeight = item.CaseWeight;
             tempItem.CaseVolume = item.CaseVolume;
             tempItem.BillPrice = tempItem.BillPrice == 0 ? item.DefaultCost ?? 0 : 0;
             tempItem.FinalPrice = tempItem.BillPrice;
             tempItem.OrgPrice = tempItem.BillPrice;
+            tempItem.LineType = EnumHelper.LineType.I.ToString();
 
             var tempPurchase = new TempPurchase();
             tempPurchase.InjectFrom(tempItem);

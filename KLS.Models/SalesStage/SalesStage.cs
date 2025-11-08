@@ -11,7 +11,6 @@ namespace KLS.Models
     public class SalesStage
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int StageId { get; set; }
 
         public string? StageName { get; set; }

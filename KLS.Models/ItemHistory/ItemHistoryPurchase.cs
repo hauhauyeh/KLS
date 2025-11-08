@@ -34,6 +34,8 @@ namespace KLS.Models
 
         public decimal? TotalCost { get; set; }
 
+        public decimal? FreightTotal { get; set; }
+
         public string? Type { get; set; }
     }
 }

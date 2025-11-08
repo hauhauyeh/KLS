@@ -1,5 +1,4 @@
 ﻿using KLS.API.Helpers;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -30,7 +29,6 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List SalesStages")]
         public IActionResult List()
         {
             return Ok(_salesStageService.GetAllSalesStages());
