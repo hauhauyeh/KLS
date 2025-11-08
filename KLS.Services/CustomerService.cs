@@ -114,6 +114,19 @@ namespace KLS.Services
             existingPayee.GracePeriod = customerDTO.GracePeriod;
             existingPayee.StartDate = customerDTO.StartDate;
             existingPayee.Notes = customerDTO.Notes;
+            existingPayee.PhoneDesc1 = customerDTO.PhoneDesc1;
+            existingPayee.Phone1 = customerDTO.Phone1;
+            existingPayee.PhoneDesc2 = customerDTO.PhoneDesc2;
+            existingPayee.Phone2 = customerDTO.Phone2;
+            existingPayee.PhoneDesc3 = customerDTO.PhoneDesc3;
+            existingPayee.Phone3 = customerDTO.Phone3;
+            existingPayee.PhoneDesc4 = customerDTO.PhoneDesc4;
+            existingPayee.Phone4 = customerDTO.Phone4;
+            existingPayee.PhoneDesc5 = customerDTO.PhoneDesc5;
+            existingPayee.Phone5 = customerDTO.Phone5;
+            existingPayee.PhoneDesc6 = customerDTO.PhoneDesc6;
+            existingPayee.Phone6 = customerDTO.Phone6;
+
 
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
@@ -144,7 +157,7 @@ namespace KLS.Services
                 customer.SalesRepId = customerDTO.SalesRepId;
                 //customer.DefaultBasePriceId = customerDTO.DefaultBasePriceId;
                 customer.ShareQuoteId = customerDTO.ShareQuoteId;
-                customer.IsShareBasePrice= customerDTO.IsShareBasePrice;
+                customer.IsShareBasePrice = customerDTO.IsShareBasePrice;
                 customer.BillId = customerDTO.BillId;
                 customer.CallSchedule = customerDTO.CallSchedule;
                 customer.IsApproved = customerDTO.IsApproved;

@@ -99,6 +99,19 @@ namespace KLS.Services
             existingPayee.Balance = vendorDTO.Balance;
             existingPayee.TermId = vendorDTO.TermId;
             existingPayee.Notes = vendorDTO.Notes;
+            existingPayee.PhoneDesc1 = vendorDTO.PhoneDesc1;
+            existingPayee.Phone1 = vendorDTO.Phone1;
+            existingPayee.PhoneDesc2 = vendorDTO.PhoneDesc2;
+            existingPayee.Phone2 = vendorDTO.Phone2;
+            existingPayee.PhoneDesc3 = vendorDTO.PhoneDesc3;
+            existingPayee.Phone3 = vendorDTO.Phone3;
+            existingPayee.PhoneDesc4 = vendorDTO.PhoneDesc4;
+            existingPayee.Phone4 = vendorDTO.Phone4;
+            existingPayee.PhoneDesc5 = vendorDTO.PhoneDesc5;
+            existingPayee.Phone5 = vendorDTO.Phone5;
+            existingPayee.PhoneDesc6 = vendorDTO.PhoneDesc6;
+            existingPayee.Phone6 = vendorDTO.Phone6;
+
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
             Uow.Payees.Update(existingPayee);

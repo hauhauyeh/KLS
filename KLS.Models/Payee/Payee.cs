@@ -39,6 +39,19 @@ namespace KLS.Models
         public string? ZipCode { get; set; }
         public string? Country { get; set; }
 
+        public string? PhoneDesc1 { get; set; }
+        public string? Phone1 { get; set; }
+        public string? PhoneDesc2 { get; set; }
+        public string? Phone2 { get; set; }
+        public string? PhoneDesc3 { get; set; }
+        public string? Phone3 { get; set; }
+        public string? PhoneDesc4 { get; set; }
+        public string? Phone4 { get; set; }
+        public string? PhoneDesc5 { get; set; }
+        public string? Phone5 { get; set; }
+        public string? PhoneDesc6 { get; set; }
+        public string? Phone6 { get; set; }
+
         public string? Email { get; set; }
         public string? EmailInvoice { get; set; }
         public string? EmailStmt { get; set; }
