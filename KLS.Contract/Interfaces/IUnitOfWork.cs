@@ -112,6 +112,8 @@ namespace KLS.Contract.Interfaces
 
         ISalesStageRepository SalesStages { get; }
 
+        ITempVendorPaymentRepository TempVendorPayments { get; }
+
         void Commit();
     }
 }

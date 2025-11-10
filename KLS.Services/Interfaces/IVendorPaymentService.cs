@@ -14,5 +14,7 @@ namespace KLS.Services.Interfaces
         PagingResponse<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq);
         
         void UnVoidCheck(int vendorPaymentId);
+
+        void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq);
     }
 }

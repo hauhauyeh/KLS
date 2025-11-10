@@ -139,6 +139,8 @@ namespace KLS.Data.Repositories
         public IPurchaseStageRepository PurchaseStages { get { return new PurchaseStageRepository(DbContext); } }
 
         public ISalesStageRepository SalesStages { get { return new SalesStageRepository(DbContext); } }
+
+        public ITempVendorPaymentRepository TempVendorPayments { get { return new TempVendorPaymentRepository(DbContext); } }
     }
 }
 

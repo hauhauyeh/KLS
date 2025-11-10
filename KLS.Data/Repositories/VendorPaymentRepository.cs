@@ -4,6 +4,7 @@ using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
@@ -137,6 +138,23 @@ namespace KLS.Data.Repositories
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_DeleteVoidCheck] @VendorPaymentId", VendorPaymentIdParam);
+        }
+
+        public void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", checkReq.VendorPaymentId);
+
+            var ReturnTypeParam = (!string.IsNullOrEmpty(checkReq.ReturnType)) ? new SqlParameter("@ReturnType", checkReq.ReturnType) : new SqlParameter("@ReturnType", DBNull.Value);
+
+            var ReturnDateParam = checkReq.ReturnDate.HasValue ? new SqlParameter("@ReturnDate", checkReq.ReturnDate) : new SqlParameter("@ReturnDate", DBNull.Value);
+
+            var FeeAccountIdParam = checkReq.FeeAccountId.HasValue ? new SqlParameter("@FeeAccountId", checkReq.FeeAccountId) : new SqlParameter("@FeeAccountId", DBNull.Value);
+
+            var FeeAmountParam = checkReq.FeeAmount.HasValue ? new SqlParameter("@FeeAmount", checkReq.FeeAmount) : new SqlParameter("@FeeAmount", DBNull.Value);
+
+            var IsRedepositParam = new SqlParameter("@IsRedeposit", checkReq.IsRedeposit);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPmt_ReturnCheck] @VendorPaymentId,@ReturnType,@ReturnDate,@FeeAccountId,@FeeAmount,@IsRedeposit", VendorPaymentIdParam, ReturnTypeParam, ReturnDateParam, FeeAccountIdParam, FeeAmountParam, IsRedepositParam);
         }
     }
 }

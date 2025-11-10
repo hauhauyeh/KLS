@@ -37,6 +37,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_vendorPaymentService.GetVendorPayment(vendorPaymentReq));
         }
 
+
+        [HttpPost("ReturnCheck")]
+        public IActionResult VendorPaymentReturnCheck([FromBody] VendorPaymentReturnReq checkReq)
+        {
+            _vendorPaymentService.VendorPaymentReturnCheck(checkReq);
+            return Ok();
+        }
+
         #endregion
     }
 }

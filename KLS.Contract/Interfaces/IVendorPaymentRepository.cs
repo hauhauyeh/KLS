@@ -19,5 +19,7 @@ namespace KLS.Contract.Interfaces
 
         void UnVoidCheck(int vendorPaymentId);
 
+        void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq);
+
     }
 }

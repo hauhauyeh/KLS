@@ -44,5 +44,10 @@ namespace KLS.Services
         {
             Uow.VendorPayments.UnVoidCheck(vendorPaymentId);
         }
+
+        public void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq)
+        {
+            Uow.VendorPayments.VendorPaymentReturnCheck(checkReq);
+        }
     }
 }
