@@ -16,5 +16,9 @@ namespace KLS.Contract.Interfaces
         void InjectPurchase(PurchaseInjectReq injectReq);
 
         int Checkout(PurchaseCheckoutReq checkoutReq);
+
+        void UpdateNameDate(PurchaseUpdateReq updateReq);
+
+        void UpdatePartially(int purchaseId);
     }
 }

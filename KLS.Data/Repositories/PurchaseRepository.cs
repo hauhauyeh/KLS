@@ -111,6 +111,34 @@ namespace KLS.Data.Repositories
             return (NewPurchaseIdParam.Value == DBNull.Value) ? 0 : Convert.ToInt32(NewPurchaseIdParam.Value);
         }
 
+        public void UpdateNameDate(PurchaseUpdateReq updateReq)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", updateReq.PurchaseId);
+
+            var IsNameChangeParam = new SqlParameter("@IsNameChange", updateReq.IsNameChange);
+
+            var PayeeIdParam = updateReq.PayeeId.HasValue
+                ? new SqlParameter("@PayeeId", updateReq.PayeeId)
+                : new SqlParameter("@PayeeId", DBNull.Value);
+
+            var IsDateChangeParam = new SqlParameter("@IsDateChange", updateReq.IsDateChange);
+
+            var ArrivalDateParam = updateReq.ArrivalDate.HasValue
+                ? new SqlParameter("@ArrivalDate", updateReq.ArrivalDate)
+                : new SqlParameter("@ArrivalDate", DBNull.Value);
+
+            DbContext.Database.ExecuteSqlRaw("[Purchase_Update] @PurchaseId,@IsNameChange,@PayeeId,@IsDateChange,@ArrivalDate", PurchaseIdParam, IsNameChangeParam, PayeeIdParam, IsDateChangeParam, ArrivalDateParam);
+        }
+
+        public void UpdatePartially(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw("[Purchase_PartialUpdate] @PurchaseId,@EmpId", PurchaseIdParam, EmpIdParam);
+        }
+
         private static object[] BuildPurchaseParam(PurchaseListReq purchaseListReq)
         {
             object[] param = {

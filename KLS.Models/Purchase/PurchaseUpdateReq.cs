@@ -21,5 +21,14 @@ namespace KLS.Models
         public decimal? ImportCommission { get; set; }
 
         public int? PalletCount { get; set; }
+
+        //for name and date change
+        public bool IsNameChange { get; set; }
+
+        public int? PayeeId { get; set; }
+
+        public bool IsDateChange { get; set; }
+
+        public DateOnly? ArrivalDate { get; set; }
     }
 }

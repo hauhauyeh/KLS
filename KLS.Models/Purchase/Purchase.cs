@@ -65,12 +65,14 @@ namespace KLS.Models
 
         public decimal? FreightOutside { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public decimal? FreightTotal { get; set; }
 
         public decimal? CustomDutyInside { get; set; }
 
         public decimal? CustomDutyOutside { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public decimal? CustomDutyTotal { get; set; }
 
         public decimal? ImportCommission { get; set; }

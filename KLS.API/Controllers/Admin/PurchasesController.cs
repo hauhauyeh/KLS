@@ -97,20 +97,35 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateNameDate")]
+        public IActionResult UpdateNameDate([FromBody] PurchaseUpdateReq updateReq)
+        {
+            _purchaseService.UpdateNameDate(updateReq);
+            return Ok();
+        }
+
+
+        [HttpPost("Checkout")]
+        [DisplayName("Checkout Bill")]
+        public IActionResult Checkout([FromBody] PurchaseCheckoutReq checkoutReq)
+        {
+            return Ok(_purchaseService.Checkout(checkoutReq));
+        }
+
+
+        [HttpPut("UpdatePartially/{purchaseId}")]
+        public IActionResult UpdatePartially(int purchaseId)
+        {
+            _purchaseService.UpdatePartially(purchaseId);
+            return Ok();
+        }
+
+
         [HttpDelete("{purchaseId}")]
         [DisplayName("Delete Bill")]
         public IActionResult Delete(int purchaseId)
         {
             _purchaseService.DeletePurchase(purchaseId);
-
-            return Ok();
-        }
-
-
-        [HttpPost("UploadBillPDF")]
-        public IActionResult UploadBillPDF([FromForm] PDFUploadReq pdfUploadReq)
-        {
-            _purchaseService.UploadBillPDF(pdfUploadReq);
 
             return Ok();
         }
@@ -124,11 +139,12 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("Checkout")]
-        [DisplayName("Checkout Bill")]
-        public IActionResult Checkout([FromBody] PurchaseCheckoutReq checkoutReq)
+        [HttpPost("UploadBillPDF")]
+        public IActionResult UploadBillPDF([FromForm] PDFUploadReq pdfUploadReq)
         {
-            return Ok(_purchaseService.Checkout(checkoutReq));
+            _purchaseService.UploadBillPDF(pdfUploadReq);
+
+            return Ok();
         }
 
 

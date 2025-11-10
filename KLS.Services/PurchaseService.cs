@@ -92,6 +92,36 @@ namespace KLS.Services
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
+        public void UpdateNameDate(PurchaseUpdateReq updateReq)
+        {
+            Uow.Purchases.UpdateNameDate(updateReq);
+        }
+
+        public Purchase Checkout(PurchaseCheckoutReq checkoutReq)
+        {
+            var purchaseId = Uow.Purchases.Checkout(checkoutReq);
+
+            //send cost change notification
+            var itemCostChange = Uow.Items.Find(c => c.IsCostChange == true).ToList();
+
+            foreach (var item in itemCostChange)
+            {
+                //_ItemManager.SendCostChangeNotification(item);
+            }
+
+            return GetById(purchaseId);
+        }
+
+        public void UpdatePartially(int purchaseId)
+        {
+            Uow.Purchases.UpdatePartially(purchaseId);
+        }
+
+        public void InjectPurchase(PurchaseInjectReq injectReq)
+        {
+            Uow.Purchases.InjectPurchase(injectReq);
+        }
+
         public void DeletePurchase(int purchaseId)
         {
             var purchase = GetById(purchaseId);
@@ -134,26 +164,6 @@ namespace KLS.Services
                     pdfUploadReq.PDFFile?.CopyTo(fileStream);
                 }
             }
-        }
-
-        public void InjectPurchase(PurchaseInjectReq injectReq)
-        {
-            Uow.Purchases.InjectPurchase(injectReq);
-        }
-
-        public Purchase Checkout(PurchaseCheckoutReq checkoutReq)
-        {
-            var purchaseId = Uow.Purchases.Checkout(checkoutReq);
-
-            //send cost change notification
-            var itemCostChange = Uow.Items.Find(c => c.IsCostChange == true).ToList();
-
-            foreach (var item in itemCostChange)
-            {
-                //_ItemManager.SendCostChangeNotification(item);
-            }
-
-            return GetById(purchaseId);
         }
     }
 }

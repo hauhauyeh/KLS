@@ -75,14 +75,12 @@ namespace KLS.Services
             {
                 if (temp.PurchaseDetailId.HasValue)
                 {
-                    temp.ChangeStatus = EnumHelper.ChangeStatus.D.ToString();
-                    Uow.TempPurchases.Update(temp);
+                    Uow.TempPurchases.Find(c => c.TempPurchaseId == tempId).ExecuteUpdate(setters => setters.SetProperty(x => x.ChangeStatus, x => EnumHelper.ChangeStatus.D.ToString()));
                 }
                 else
                 {
-                    Uow.TempPurchases.Remove(temp);
+                    Uow.TempPurchases.Find(c => c.TempPurchaseId == tempId).ExecuteDelete();
                 }
-                Uow.Commit();
             }
         }
 
@@ -121,7 +119,10 @@ namespace KLS.Services
             Uow.TempPurchases.Add(tempPurchase);
             Uow.Commit();
 
+            Uow.TempPurchases.Reload(tempPurchase);
+
             tempItem.TempPurchaseId = tempPurchase.TempPurchaseId;
+            tempItem.LineId = tempPurchase.LineId;
 
             return tempItem;
         }
@@ -148,7 +149,10 @@ namespace KLS.Services
             Uow.TempPurchases.Add(tempPurchase);
             Uow.Commit();
 
+            Uow.TempPurchases.Reload(tempPurchase);
+
             tempItem.TempPurchaseId = tempPurchase.TempPurchaseId;
+            tempItem.LineId = tempPurchase.LineId;
 
             return tempItem;
         }
