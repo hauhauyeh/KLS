@@ -16,5 +16,7 @@ namespace KLS.Services.Interfaces
         void UnVoidCheck(int vendorPaymentId);
 
         void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq);
+
+        List<string> GetReturnTypes();
     }
 }

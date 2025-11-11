@@ -45,6 +45,13 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("ReturnTypes")]
+        public IActionResult ReturnTypes()
+        {
+            return Ok(_vendorPaymentService.GetReturnTypes());
+        }
+
         #endregion
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,6 +56,18 @@ namespace KLS.Common
         {
             I = 1,  //Item
             A = 2,  //Account
+        }
+
+        public enum ReturnTypes
+        {
+            [Display(Name = "NSF")]
+            NSF = 1,
+            [Display(Name = "STOP")]
+            STOP = 2,
+            [Display(Name = "DISPUTE")]
+            DISPUTE = 3,
+            [Display(Name = "BANK ERROR")]
+            BANKERROR = 4
         }
     }
 }

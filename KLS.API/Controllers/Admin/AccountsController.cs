@@ -145,6 +145,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_chartOfAccountService.GetACEAccounts());
         }
 
+
+        [HttpGet("ExpenseAccounts")]
+        public IActionResult GetExpenseAccounts()
+        {
+            return Ok(_chartOfAccountService.GetExpenseAccounts());
+        }
+
         #endregion
     }
 }

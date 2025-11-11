@@ -154,7 +154,7 @@ namespace KLS.Data.Repositories
 
             var IsRedepositParam = new SqlParameter("@IsRedeposit", checkReq.IsRedeposit);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPmt_ReturnCheck] @VendorPaymentId,@ReturnType,@ReturnDate,@FeeAccountId,@FeeAmount,@IsRedeposit", VendorPaymentIdParam, ReturnTypeParam, ReturnDateParam, FeeAccountIdParam, FeeAmountParam, IsRedepositParam);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_ReturnCheck] @VendorPaymentId,@ReturnType,@ReturnDate,@FeeAccountId,@FeeAmount,@IsRedeposit", VendorPaymentIdParam, ReturnTypeParam, ReturnDateParam, FeeAccountIdParam, FeeAmountParam, IsRedepositParam);
         }
     }
 }

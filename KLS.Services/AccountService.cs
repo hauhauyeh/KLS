@@ -270,5 +270,24 @@ namespace KLS.Services
 
             return result.OrderBy(c => c.TypeName).ThenBy(c => c.AccountName).ToList();
         }
+
+        public ICollection<AccountDTO>? GetExpenseAccounts()
+        {
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountTypes.GetAll()
+                             on a.AccountTypeId equals at.AccountTypeId
+                         where at.CatName == EnumHelper.AccountCategory.Expense.ToString()
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             TypeName = at.TypeName,
+                             CatName = at.CatName,
+                             Inactive = a.Inactive
+                         };
+
+            return result.OrderBy(c => c.TypeName).ThenBy(c => c.AccountName).ToList();
+        }
     }
 }

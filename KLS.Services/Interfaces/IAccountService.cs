@@ -38,5 +38,7 @@ namespace KLS.Services.Interfaces
         ICollection<AccountDTO>? GetByPaymentMethod(string pmtMethod);
 
         ICollection<AccountDTO>? GetACEAccounts();
+
+        ICollection<AccountDTO>? GetExpenseAccounts();
     }
 }

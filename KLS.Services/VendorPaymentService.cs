@@ -1,8 +1,10 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -48,6 +50,23 @@ namespace KLS.Services
         public void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq)
         {
             Uow.VendorPayments.VendorPaymentReturnCheck(checkReq);
+        }
+
+        public List<string> GetReturnTypes()
+        {
+            var types = new List<string>();
+
+            foreach (var enumValue in Enum.GetValues<EnumHelper.ReturnTypes>())
+            {
+                var field = enumValue.GetType().GetField(enumValue.ToString());
+
+                if (Attribute.GetCustomAttribute(field, typeof(DisplayAttribute)) is DisplayAttribute attribute)
+                {
+                    types.Add(attribute.Name);
+                }
+            }
+
+            return types;
         }
     }
 }
