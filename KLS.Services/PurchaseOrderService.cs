@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,6 +59,28 @@ namespace KLS.Services
 
                 Uow.PurchaseOrders.Update(existing);
                 Uow.Commit();
+            }
+        }
+
+        public void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq)
+        {
+            Uow.PurchaseOrders.InjectPurchaseOrder(injectReq);
+        }
+
+        public PurchaseOrder Checkout(PurchaseOrderCheckoutReq checkoutReq)
+        {
+            var poId = Uow.PurchaseOrders.Checkout(checkoutReq);
+
+            return GetById(poId);
+        }
+
+        public void DeletePurchaseOrder(int poId)
+        {
+            var purchaseOrder = GetById(poId);
+
+            if (purchaseOrder != null && !purchaseOrder.PurchaseId.HasValue)
+            {
+                Uow.PurchaseOrders.Find(c => c.POId == poId).ExecuteDelete();
             }
         }
     }

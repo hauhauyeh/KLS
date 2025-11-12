@@ -11,8 +11,16 @@ namespace KLS.Services.Interfaces
     {
         PagingResponse<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq);
 
+        PurchaseOrder GetById(int pOId);
+
         void UpdateNotes(PurchaseOrder purchaseOrder);
 
         void UpdateVendorDocNumber(PurchaseOrder purchaseOrder);
+
+        void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq);
+
+        PurchaseOrder Checkout(PurchaseOrderCheckoutReq checkoutReq);
+
+        void DeletePurchaseOrder(int poId);
     }
 }

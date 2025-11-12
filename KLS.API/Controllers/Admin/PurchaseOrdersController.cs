@@ -38,6 +38,18 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("{poId}")]
+        public IActionResult GetById(int poId)
+        {
+            var purchaseOrder = _purchaseOrderService.GetById(poId);
+
+            if (purchaseOrder == null)
+                return NotFound($"PurchaseOrder with Id {poId} not found.");
+
+            return Ok(purchaseOrder);
+        }
+
+
         [HttpPost("UpdateNotes")]
         public IActionResult UpdateNotes([FromBody] PurchaseOrder purchaseOrder)
         {
@@ -51,6 +63,32 @@ namespace KLS.API.Controllers.Admin
         public IActionResult UpdateVendorDocNumber([FromBody] PurchaseOrder purchaseOrder)
         {
             _purchaseOrderService.UpdateVendorDocNumber(purchaseOrder);
+
+            return Ok();
+        }
+
+
+        [HttpPost("Inject")]
+        public IActionResult Inject([FromBody] PurchaseOrderInjectReq injectReq)
+        {
+            _purchaseOrderService.InjectPurchaseOrder(injectReq);
+            return Ok();
+        }
+
+
+        [HttpPost("Checkout")]
+        [DisplayName("Checkout PO")]
+        public IActionResult Checkout([FromBody] PurchaseOrderCheckoutReq checkoutReq)
+        {
+            return Ok(_purchaseOrderService.Checkout(checkoutReq));
+        }
+
+
+        [HttpDelete("{poId}")]
+        [DisplayName("Delete PO")]
+        public IActionResult Delete(int poId)
+        {
+            _purchaseOrderService.DeletePurchaseOrder(poId);
 
             return Ok();
         }

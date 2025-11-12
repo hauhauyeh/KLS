@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
@@ -68,6 +69,57 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq)
+        {
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", injectReq.PayeeId);
+
+            var POIdParam = new SqlParameter("@POId", injectReq.POId);
+
+            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Inject] @EmpId,@PayeeId,@POId", EmpIdParam, PayeeIdParam, POIdParam);
+        }
+
+        public int Checkout(PurchaseOrderCheckoutReq checkoutReq)
+        {
+            // int parameters
+            var POIdParam = new SqlParameter("@POId", (object?)checkoutReq.POId ?? 0);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", checkoutReq.PayeeId);
+
+            // date parameters
+            object ToDbDate(DateOnly? d) => d.HasValue ? d.Value.ToDateTime(TimeOnly.MinValue) : DBNull.Value;
+
+            var PurchaseDateParam = checkoutReq.PurchaseDate.HasValue
+                ? new SqlParameter("@PurchaseDate", ToDbDate(checkoutReq.PurchaseDate))
+                : new SqlParameter("@PurchaseDate", DBNull.Value);
+
+            var EstArrivalDateParam = checkoutReq.EstArrivalDate.HasValue
+                ? new SqlParameter("@EstArrivalDate", ToDbDate(checkoutReq.EstArrivalDate))
+                : new SqlParameter("@EstArrivalDate", DBNull.Value);
+
+            // notes
+            var NotesParam = string.IsNullOrWhiteSpace(checkoutReq.Notes)
+                ? new SqlParameter("@Notes", DBNull.Value)
+                : new SqlParameter("@Notes", checkoutReq.Notes);
+
+            // emp
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            // output
+            var NewPOIdParam = new SqlParameter
+            {
+                ParameterName = "@NewPOId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Insert] @POId,@PayeeId,@PurchaseDate,@EstArrivalDate,@Notes,@EmpId,@NewPOId OUTPUT", POIdParam, PayeeIdParam, PurchaseDateParam, EstArrivalDateParam, NotesParam, EmpIdParam, NewPOIdParam);
+
+            return (NewPOIdParam.Value == DBNull.Value) ? 0 : Convert.ToInt32(NewPOIdParam.Value);
         }
     }
 }

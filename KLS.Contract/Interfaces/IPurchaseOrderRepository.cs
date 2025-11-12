@@ -12,5 +12,9 @@ namespace KLS.Contract.Interfaces
         IQueryable<PurchaseOrderList> GetPurchaseOrders(PurchaseOrderReq purchaseOrderReq);
 
         int CountAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq);
+
+        void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq);
+
+        int Checkout(PurchaseOrderCheckoutReq checkoutReq);
     }
 }
