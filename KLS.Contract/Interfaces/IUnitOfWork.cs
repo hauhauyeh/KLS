@@ -114,6 +114,8 @@ namespace KLS.Contract.Interfaces
 
         ITempVendorPaymentRepository TempVendorPayments { get; }
 
+        IDocumentTemplateRepository DocumentTemplates { get; }
+
         void Commit();
     }
 }

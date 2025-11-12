@@ -79,6 +79,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PurchaseStage>().ToTable("PurchaseStage");
             modelBuilder.Entity<SalesStage>().ToTable("SalesStage");
             modelBuilder.Entity<TempVendorPayment>().ToTable("TempVendorPayment");
+            modelBuilder.Entity<DocumentTemplate>().ToTable("DocumentTemplate");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -190,6 +191,8 @@ namespace KLS.Data.DataContext
         public DbSet<SalesStage> SalesStages { get; set; }
 
         public DbSet<TempVendorPayment> TempVendorPayments { get; set; }
+
+        public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
 
         #endregion
 
