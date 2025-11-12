@@ -15,16 +15,16 @@ namespace KLS.API.Controllers.Admin
     {
         #region --- Member(s) ---
 
-        private readonly IAccountService _chartOfAccountService;
+        private readonly IAccountService _accountService;
         private readonly IAccountTypeService _accountTypeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public AccountsController(IAccountService chartOfAccountService, IAccountTypeService accountTypeService)
+        public AccountsController(IAccountService accountService, IAccountTypeService accountTypeService)
         {
-            _chartOfAccountService = chartOfAccountService;
+            _accountService = accountService;
             _accountTypeService = accountTypeService;
         }
 
@@ -36,14 +36,14 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Accounts")]
         public IActionResult GetAccountsTree()
         {
-            return Ok(_chartOfAccountService.GetAccountsTree());
+            return Ok(_accountService.GetAccountsTree());
         }
 
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            return Ok(_chartOfAccountService.GetById(id));
+            return Ok(_accountService.GetById(id));
         }
 
 
@@ -55,13 +55,13 @@ namespace KLS.API.Controllers.Admin
             if (chartOfAccount?.AccountCode?[0] != '@')
                 chartOfAccount.AccountCode = "@" + chartOfAccount.AccountCode;
 
-            if (_chartOfAccountService.AcctNameExists(chartOfAccount))
+            if (_accountService.AcctNameExists(chartOfAccount))
                 return Conflict("Name already exists.");
 
-            if (_chartOfAccountService.AcctCodeExists(chartOfAccount))
+            if (_accountService.AcctCodeExists(chartOfAccount))
                 return Conflict("Code already exists");
 
-            var created = _chartOfAccountService.CreateAccount(chartOfAccount);
+            var created = _accountService.CreateAccount(chartOfAccount);
 
             return Ok(created);
         }
@@ -75,13 +75,13 @@ namespace KLS.API.Controllers.Admin
             if (chartOfAccount?.AccountCode?[0] != '@')
                 chartOfAccount.AccountCode = "@" + chartOfAccount.AccountCode;
 
-            if (_chartOfAccountService.AcctNameExists(chartOfAccount))
+            if (_accountService.AcctNameExists(chartOfAccount))
                 return Conflict("Name already exists.");
 
-            if (_chartOfAccountService.AcctCodeExists(chartOfAccount))
+            if (_accountService.AcctCodeExists(chartOfAccount))
                 return Conflict("Code already exists");
 
-            var created = _chartOfAccountService.UpdateAccount(chartOfAccount);
+            var created = _accountService.UpdateAccount(chartOfAccount);
 
             return Ok(created);
         }
@@ -91,7 +91,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Account")]
         public IActionResult Delete(int id)
         {
-            _chartOfAccountService.DeleteAccount(id);
+            _accountService.DeleteAccount(id);
 
             return Ok();
         }
@@ -107,49 +107,49 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("Search/{term}")]
         public IActionResult SearchAccount(string term)
         {
-            return Ok(_chartOfAccountService.SearchAccount(term));
+            return Ok(_accountService.SearchAccount(term));
         }
 
 
         [HttpGet("Bank")]
         public IActionResult GetBankAccounts()
         {
-            return Ok(_chartOfAccountService.GetBankAccounts());
+            return Ok(_accountService.GetBankAccounts());
         }
 
 
         [HttpGet("BankCash")]
         public IActionResult GetBankCashAccounts()
         {
-            return Ok(_chartOfAccountService.GetBankCashAccounts());
+            return Ok(_accountService.GetBankCashAccounts());
         }
 
 
         [HttpGet("BankCashCC")]
         public IActionResult GetBankCashCCAccounts()
         {
-            return Ok(_chartOfAccountService.GetBankCashCCAccounts());
+            return Ok(_accountService.GetBankCashCCAccounts());
         }
 
 
         [HttpGet("GetByPaymentMethod/{method}")]
         public IActionResult GetByPaymentMethod(string method)
         {
-            return Ok(_chartOfAccountService.GetByPaymentMethod(method));
+            return Ok(_accountService.GetByPaymentMethod(method));
         }
 
 
         [HttpGet("ACEAccounts")]
         public IActionResult GetACEAccounts()
         {
-            return Ok(_chartOfAccountService.GetACEAccounts());
+            return Ok(_accountService.GetACEAccounts());
         }
 
 
         [HttpGet("ExpenseAccounts")]
         public IActionResult GetExpenseAccounts()
         {
-            return Ok(_chartOfAccountService.GetExpenseAccounts());
+            return Ok(_accountService.GetExpenseAccounts());
         }
 
         #endregion

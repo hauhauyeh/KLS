@@ -21,7 +21,7 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq)
+        public IQueryable<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq)
         {
             var param = BuildCheckRegisterParam(checkRegisterReq);
 
@@ -77,14 +77,15 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public IQueryable<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq)
+
+        public IQueryable<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq)
         {
             var param = BuildVendorPaymentParam(vendorPaymentReq);
 
             return DbContext.VendorPaymentList.FromSqlRaw("[dbo].[VendorPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllVendorPayment(VendorPaymentReq vendorPaymentReq)
+        public int CountAllVendorPayments(VendorPaymentReq vendorPaymentReq)
         {
             vendorPaymentReq.IsCount = true;
             var param = BuildVendorPaymentParam(vendorPaymentReq);
@@ -133,6 +134,13 @@ namespace KLS.Data.Repositories
             return param;
         }
 
+        public void VoidCheck(int vendorPaymentId)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_VoidCheck] @VendorPaymentId", VendorPaymentIdParam);
+        }
+
         public void UnVoidCheck(int vendorPaymentId)
         {
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
@@ -140,7 +148,7 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_DeleteVoidCheck] @VendorPaymentId", VendorPaymentIdParam);
         }
 
-        public void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq)
+        public void VendorPaymentReturn(VendorPaymentReturnReq checkReq)
         {
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", checkReq.VendorPaymentId);
 
@@ -155,6 +163,11 @@ namespace KLS.Data.Repositories
             var IsRedepositParam = new SqlParameter("@IsRedeposit", checkReq.IsRedeposit);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_ReturnCheck] @VendorPaymentId,@ReturnType,@ReturnDate,@FeeAccountId,@FeeAmount,@IsRedeposit", VendorPaymentIdParam, ReturnTypeParam, ReturnDateParam, FeeAccountIdParam, FeeAmountParam, IsRedepositParam);
+        }
+
+        public void DeleteReturn(int vendorPaymentId)
+        {
+
         }
     }
 }

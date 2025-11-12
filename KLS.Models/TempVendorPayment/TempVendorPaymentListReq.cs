@@ -8,8 +8,6 @@ namespace KLS.Models
 {
     public class TempVendorPaymentListReq
     {
-        public int EmpId { get; set; }
-
         public int PayeeId { get; set; }
 
         public int VendorPaymentId { get; set; }

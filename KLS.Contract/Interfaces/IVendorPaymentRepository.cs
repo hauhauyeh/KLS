@@ -9,17 +9,20 @@ namespace KLS.Contract.Interfaces
 {
     public interface IVendorPaymentRepository : IRepository<VendorPayment>
     {
-        IQueryable<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq);
+        IQueryable<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq);
 
         int CountAllCheckRegister(CheckRegisterReq checkRegisterReq);
 
-        IQueryable<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq);
+        IQueryable<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq);
 
-        int CountAllVendorPayment(VendorPaymentReq vendorPaymentReq);
+        int CountAllVendorPayments(VendorPaymentReq vendorPaymentReq);
+
+        void VoidCheck(int vendorPaymentId);
 
         void UnVoidCheck(int vendorPaymentId);
 
-        void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq);
+        void VendorPaymentReturn(VendorPaymentReturnReq checkReq);
 
+        void DeleteReturn(int vendorPaymentId);
     }
 }

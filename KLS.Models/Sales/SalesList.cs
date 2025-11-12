@@ -45,6 +45,15 @@ namespace KLS.Models
 
         public string? City { get; set; }
 
+        public int? StageId { get; set; }
+
+        public string? StageName { get; set; }
+
+        public int? PaymentStatusId { get; set; }
+
+        public string? PaymentStatusName { get; set; }
+
+
         [NotMapped]
         public bool IsPdfExist { get; set; }
     }

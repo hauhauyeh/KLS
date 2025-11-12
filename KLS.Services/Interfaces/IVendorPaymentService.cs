@@ -9,14 +9,21 @@ namespace KLS.Services.Interfaces
 {
     public interface IVendorPaymentService
     {
-        PagingResponse<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq);
+        PagingResponse<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq);
 
-        PagingResponse<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq);
-        
+        VendorPayment GetById(int vendorPaymentId);
+
+        void DeleteVendorPayment(int vendorPaymentId);
+
+        void VoidCheck(int vendorPaymentId);
+
         void UnVoidCheck(int vendorPaymentId);
 
-        void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq);
+        void VendorPaymentReturn(VendorPaymentReturnReq checkReq);
 
         List<string> GetReturnTypes();
+
+
+        PagingResponse<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq);
     }
 }

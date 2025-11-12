@@ -10,10 +10,18 @@ namespace KLS.Common
     {
         public const string SYS_IPADDRESS = "SYS_IPADDRESS";
 
-        public const string SYS_GOOGLEMAPS_APIKEY = "SYS_GOOGLEMAPS_APIKEY";
+        public const string ITEM_DEFAULT_TYPE = "ITEM_DEFAULT_TYPE";
+        public const string ITEM_DEFAULT_TAXABLE = "ITEM_DEFAULT_TAXABLE";
+        public const string ITEM_DEFAULT_WHOLEPROFIT = "ITEM_DEFAULT_WHOLEPROFIT";
+        public const string ITEM_DEFAULT_RETAILPROFIT = "ITEM_DEFAULT_RETAILPROFIT";
+        public const string ITEM_DEFAULT_MINPROFIT = "ITEM_DEFAULT_MINPROFIT";
 
         public const string PAYROLL_DEFAULT_PAYFREQ = "PAYROLL_DEFAULT_PAYFREQ";
         public const string PAYROLL_DEFAULT_BANK = "PAYROLL_DEFAULT_BANK";
         public const string PAYROLL_BEGINDAYOFWEEK = "PAYROLL_BEGINDAYOFWEEK";
+
+        public const string PAYMENT_DEFAULT_BANK = "PAYROLL_BEGINDAYOFWEEK";
+
+        public const string GOOGLEMAPS_APIKEY = "GOOGLEMAPS_APIKEY";
     }
 }

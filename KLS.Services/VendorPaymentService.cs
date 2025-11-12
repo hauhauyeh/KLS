@@ -2,6 +2,7 @@
 using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -13,28 +14,18 @@ namespace KLS.Services
 {
     public class VendorPaymentService : BaseService, IVendorPaymentService
     {
-        public VendorPaymentService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly ISystemSettingService _systemSettingService;
 
+        public VendorPaymentService(IUnitOfWork uow, ISystemSettingService systemSettingService) : base(uow)
+        {
+            _systemSettingService = systemSettingService;
         }
 
-        public PagingResponse<CheckRegister> GetCheckRegister(CheckRegisterReq checkRegisterReq)
+        public PagingResponse<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq)
         {
-            var registerlist = Uow.VendorPayments.GetCheckRegister(checkRegisterReq);
+            var vendorPaymentlist = Uow.VendorPayments.GetAllVendorPayments(vendorPaymentReq);
 
-            var totalRecords = Uow.VendorPayments.GetCheckRegister(checkRegisterReq).ToList().Count();
-
-            return new PagingResponse<CheckRegister>(totalRecords, checkRegisterReq.Pageno, checkRegisterReq.Pagesize)
-            {
-                RowData = registerlist,
-            };
-        }
-
-        public PagingResponse<VendorPaymentList> GetVendorPayment(VendorPaymentReq vendorPaymentReq)
-        {
-            var vendorPaymentlist = Uow.VendorPayments.GetVendorPayment(vendorPaymentReq);
-
-            var totalRecords = Uow.VendorPayments.CountAllVendorPayment(vendorPaymentReq);
+            var totalRecords = Uow.VendorPayments.CountAllVendorPayments(vendorPaymentReq);
 
             return new PagingResponse<VendorPaymentList>(totalRecords, vendorPaymentReq.Pageno, vendorPaymentReq.Pagesize)
             {
@@ -42,14 +33,48 @@ namespace KLS.Services
             };
         }
 
+        public VendorPayment GetById(int vendorPaymentId)
+        {
+            if (vendorPaymentId > 0)
+                return Uow.VendorPayments.GetById(vendorPaymentId);
+            else
+                return new VendorPayment
+                {
+                    PaymentDate = DateOnly.FromDateTime(DateTime.Now),
+                    PaymentMethod = EnumHelper.PaymentMethod.ACH.ToString(),
+                    FromAccountId = _systemSettingService.GetByKey<int>(GlobalKey.PAYMENT_DEFAULT_BANK),
+                    PaymentType = "Bill Payment"
+                };
+        }
+
+        public void DeleteVendorPayment(int vendorPaymentId)
+        {
+            var payment = GetById(vendorPaymentId);
+
+            if (payment != null && !payment.IsLocked)
+            {
+                Uow.VendorPayments.Find(c => c.VendorPaymentId == vendorPaymentId).ExecuteDelete();
+            }
+        }
+
+        public void VoidCheck(int vendorPaymentId)
+        {
+            Uow.VendorPayments.VoidCheck(vendorPaymentId);
+        }
+
         public void UnVoidCheck(int vendorPaymentId)
         {
             Uow.VendorPayments.UnVoidCheck(vendorPaymentId);
         }
 
-        public void VendorPaymentReturnCheck(VendorPaymentReturnReq checkReq)
+        public void VendorPaymentReturn(VendorPaymentReturnReq checkReq)
         {
-            Uow.VendorPayments.VendorPaymentReturnCheck(checkReq);
+            Uow.VendorPayments.VendorPaymentReturn(checkReq);
+        }
+
+        public void DeleteReturn(int vendorPaymentId)
+        {
+            Uow.VendorPayments.DeleteReturn(vendorPaymentId);
         }
 
         public List<string> GetReturnTypes()
@@ -67,6 +92,19 @@ namespace KLS.Services
             }
 
             return types;
+        }
+
+
+        public PagingResponse<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq)
+        {
+            var registerlist = Uow.VendorPayments.GetAllCheckRegister(checkRegisterReq);
+
+            var totalRecords = Uow.VendorPayments.CountAllCheckRegister(checkRegisterReq);
+
+            return new PagingResponse<CheckRegister>(totalRecords, checkRegisterReq.Pageno, checkRegisterReq.Pagesize)
+            {
+                RowData = registerlist,
+            };
         }
     }
 }

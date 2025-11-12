@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITempVendorPaymentRepository : IRepository<TempVendorPayment>
     {
-        IQueryable<TempVendorPayment> InjectTempVendorPayment(TempVendorPaymentListReq tempVendorPaymentListReq);
+        IQueryable<TempVendorPayment> Inject(TempVendorPaymentListReq tempReq);
     }
 }

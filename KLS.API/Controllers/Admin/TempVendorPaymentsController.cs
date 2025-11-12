@@ -1,15 +1,14 @@
 ﻿using KLS.API.Helpers;
 using KLS.Models;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "TempVendorPayment Management", GroupName = "Admin")]
+    [Display(Name = "Temp VendorPayment Management", GroupName = "Vendor")]
     public class TempVendorPaymentsController : BaseController
     {
         #region --- Member(s) ---
@@ -29,26 +28,18 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-        [HttpGet("{id}")]
-        public IActionResult GetById(int id)
-        {
-            return Ok(_tempVendorPaymentService.GetById(id));
-        }
-
 
         [HttpPost("Inject")]
-        public IActionResult Inject(TempVendorPaymentListReq tempVendorPaymentListReq)
+        public IActionResult Inject(TempVendorPaymentListReq tempReq)
         {
-            _tempVendorPaymentService.InjectTempVendorPayment(tempVendorPaymentListReq);
-
-            return Ok();
+            return Ok(_tempVendorPaymentService.Inject(tempReq));
         }
 
 
-        [HttpPost("Update")]
+        [HttpPut]
         public IActionResult Update([FromBody] TempVendorPayment tempVendorPayment)
         {
-            _tempVendorPaymentService.UpdateTempVendorPayment(tempVendorPayment);
+            _tempVendorPaymentService.Update(tempVendorPayment);
             return Ok();
         }
 

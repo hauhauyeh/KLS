@@ -9,10 +9,8 @@ namespace KLS.Services.Interfaces
 {
     public interface ITempVendorPaymentService
     {
-        TempVendorPayment? GetById(int tempVPId);
+        IEnumerable<TempVendorPayment> Inject(TempVendorPaymentListReq tempReq);
 
-        IQueryable<TempVendorPayment> InjectTempVendorPayment(TempVendorPaymentListReq tempVendorPaymentListReq);
-
-        void UpdateTempVendorPayment(TempVendorPayment tempVendorPayment);
+        void Update(TempVendorPayment tempVendorPayment);
     }
 }

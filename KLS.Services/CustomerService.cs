@@ -36,11 +36,6 @@ namespace KLS.Services
             };
         }
 
-        //public Payee? GetById(int payeeId)
-        //{
-        //    return Uow.Payees.Find(c => c.PayeeId == payeeId).Include(c => c.Customer).FirstOrDefault();
-        //}
-
         public CustomerDTO? GetById(int payeeId)
         {
             var payee = Uow.Payees.GetById(payeeId);
@@ -91,7 +86,7 @@ namespace KLS.Services
             var customer = Uow.Customers.GetById(customerDTO.PayeeId);
             var existingPayee = Uow.Payees.GetById(customerDTO.PayeeId);
 
-            var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.SYS_GOOGLEMAPS_APIKEY);
+            var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
             var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
 
             if (customer == null || existingPayee == null)

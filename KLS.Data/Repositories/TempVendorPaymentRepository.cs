@@ -19,19 +19,19 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<TempVendorPayment> InjectTempVendorPayment(TempVendorPaymentListReq tempVendorPaymentListReq)
+        public IQueryable<TempVendorPayment> Inject(TempVendorPaymentListReq tempReq)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            var PayeeIdParam = new SqlParameter("@PayeeId", tempVendorPaymentListReq.PayeeId);
+            var PayeeIdParam = new SqlParameter("@PayeeId", tempReq.PayeeId);
 
-            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", tempVendorPaymentListReq.VendorPaymentId);
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", tempReq.VendorPaymentId);
 
-            var PaymentTypeParam = (!string.IsNullOrEmpty(tempVendorPaymentListReq.PaymentType)) ? new SqlParameter("@PaymentType", tempVendorPaymentListReq.PaymentType) : new SqlParameter("@PaymentType", DBNull.Value);
+            var PaymentTypeParam = (!string.IsNullOrEmpty(tempReq.PaymentType)) ? new SqlParameter("@PaymentType", tempReq.PaymentType) : new SqlParameter("@PaymentType", DBNull.Value);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_Inject] @EmpId,@PayeeId,@VendorPaymentId,@PaymentType", EmpIdParam, PayeeIdParam, VendorPaymentIdParam, PaymentTypeParam);
 
-            return DbContext.TempVendorPayments.Where(c => c.VendorPaymentId == tempVendorPaymentListReq.VendorPaymentId && c.PayeeId == tempVendorPaymentListReq.PayeeId && c.EmpId == tempVendorPaymentListReq.EmpId).Include(c => c.Purchase).OrderBy(c => c.Purchase.ArrivalDate).ThenBy(c => c.TempVPId);
+            return DbContext.TempVendorPayments.Where(c => c.VendorPaymentId == tempReq.VendorPaymentId && c.PayeeId == tempReq.PayeeId && c.EmpId == UserContext.EmpId).Include(c => c.Purchase).OrderBy(c => c.Purchase.ArrivalDate).ThenBy(c => c.TempVPId);
         }
     }
 }

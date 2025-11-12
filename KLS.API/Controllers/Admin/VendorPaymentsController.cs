@@ -1,6 +1,5 @@
 ﻿using KLS.API.Helpers;
 using KLS.Models;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -10,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "VendorPmt Management", GroupName = "Vendor")]
+    [Display(Name = "Vendor Payment Management", GroupName = "Vendor")]
     public class VendorPaymentsController : BaseController
     {
         #region --- Member(s) ---
@@ -31,17 +30,52 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List VendorPayments")]
+        [DisplayName("List Vendor Payment")]
         public IActionResult List([FromQuery] VendorPaymentReq vendorPaymentReq)
         {
-            return Ok(_vendorPaymentService.GetVendorPayment(vendorPaymentReq));
+            return Ok(_vendorPaymentService.GetAllVendorPayments(vendorPaymentReq));
         }
 
 
-        [HttpPost("ReturnCheck")]
-        public IActionResult VendorPaymentReturnCheck([FromBody] VendorPaymentReturnReq checkReq)
+        [HttpGet("{paymentId}")]
+        public IActionResult GetById(int paymentId)
         {
-            _vendorPaymentService.VendorPaymentReturnCheck(checkReq);
+            return Ok(_vendorPaymentService.GetById(paymentId));
+        }
+
+
+        [HttpDelete("{paymentId}")]
+        [DisplayName("Delete Payment")]
+        public IActionResult Delete(int paymentId)
+        {
+            _vendorPaymentService.DeleteVendorPayment(paymentId);
+            return Ok();
+        }
+
+
+        [HttpPost("VoidCheck/{paymentId}")]
+        [DisplayName("Void Check")]
+        public IActionResult VoidCheck(int paymentId)
+        {
+            _vendorPaymentService.VoidCheck(paymentId);
+            return Ok();
+        }
+
+
+        [HttpPost("UnVoidCheck/{paymentId}")]
+        [DisplayName("UnVoid Check")]
+        public IActionResult UnVoidCheck(int paymentId)
+        {
+            _vendorPaymentService.UnVoidCheck(paymentId);
+            return Ok();
+        }
+
+
+        [HttpPost("Return")]
+        [DisplayName("Return Payment")]
+        public IActionResult Return([FromBody] VendorPaymentReturnReq checkReq)
+        {
+            _vendorPaymentService.VendorPaymentReturn(checkReq);
             return Ok();
         }
 

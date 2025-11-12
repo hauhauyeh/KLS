@@ -19,6 +19,8 @@ namespace KLS.Models
 
         public int? StageId { get; set; }
 
+        public string? StageName { get; set; }
+
         public int? PayeeId { get; set; }
 
         public DateOnly? PurchaseDate { get; set; }
@@ -58,6 +60,10 @@ namespace KLS.Models
         public decimal? ImportCommission { get; set; }
 
         public decimal? CustomDutyTotal { get; set; }
+
+        public int? PaymentStatusId { get; set; }
+
+        public string? PaymentStatusName { get; set; }
 
         [NotMapped]
         public bool IsPdfExist { get; set; }

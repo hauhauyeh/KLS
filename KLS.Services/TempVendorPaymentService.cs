@@ -1,7 +1,6 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
-using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,17 +16,12 @@ namespace KLS.Services
 
         }
 
-        public TempVendorPayment? GetById(int tempVPId)
+        public IEnumerable<TempVendorPayment> Inject(TempVendorPaymentListReq tempReq)
         {
-            return Uow.TempVendorPayments.GetById(tempVPId);
+            return Uow.TempVendorPayments.Inject(tempReq);
         }
 
-        public IQueryable<TempVendorPayment> InjectTempVendorPayment(TempVendorPaymentListReq tempVendorPaymentListReq)
-        {
-            return Uow.TempVendorPayments.InjectTempVendorPayment(tempVendorPaymentListReq);
-        }
-
-        public void UpdateTempVendorPayment(TempVendorPayment tempVendorPayment)
+        public void Update(TempVendorPayment tempVendorPayment)
         {
             var tempVendorPmt = Uow.TempVendorPayments.GetById(tempVendorPayment.TempVPId);
 
