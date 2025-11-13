@@ -53,7 +53,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("UpdateNotes")]
         public IActionResult UpdateNotes([FromBody] PurchaseOrder purchaseOrder)
         {
-            _purchaseOrderService.UpdateNotes(purchaseOrder);
+            _purchaseOrderService.UpdateNotes(purchaseOrder.POId, purchaseOrder.Notes);
 
             return Ok();
         }

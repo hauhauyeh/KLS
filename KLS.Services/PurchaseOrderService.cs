@@ -19,7 +19,7 @@ namespace KLS.Services
 
         public PagingResponse<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
         {
-            var purchaseOrders = Uow.PurchaseOrders.GetPurchaseOrders(purchaseOrderReq);
+            var purchaseOrders = Uow.PurchaseOrders.GetAllPurchaseOrders(purchaseOrderReq);
 
             var totalRecords = Uow.PurchaseOrders.CountAllPurchaseOrders(purchaseOrderReq);
 
@@ -34,18 +34,36 @@ namespace KLS.Services
             return Uow.PurchaseOrders.GetById(pOId);
         }
 
-        public void UpdateNotes(PurchaseOrder purchaseOrder)
+        public PurchaseOrderList? GetListById(int poId)
         {
-            var existing = GetById(purchaseOrder.POId);
-
-            if (existing != null)
+            var listReq = new PurchaseOrderReq
             {
-                existing.Notes = purchaseOrder.Notes;
-                existing.UpdatedAt = DateTime.UtcNow;
+                Id = poId
+            };
 
-                Uow.PurchaseOrders.Update(existing);
-                Uow.Commit();
-            }
+            return Uow.PurchaseOrders.GetAllPurchaseOrders(listReq).AsEnumerable().
+                FirstOrDefault();
+        }
+
+        //public void UpdateNotes(PurchaseOrder purchaseOrder)
+        //{
+        //    var existing = GetById(purchaseOrder.POId);
+
+        //    if (existing != null)
+        //    {
+        //        existing.Notes = purchaseOrder.Notes;
+        //        existing.UpdatedAt = DateTime.UtcNow;
+
+        //        Uow.PurchaseOrders.Update(existing);
+        //        Uow.Commit();
+        //    }
+        //}
+
+        public void UpdateNotes(int poId, string? notes)
+        {
+            Uow.PurchaseOrders.Find(c => c.POId == poId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.Notes, x => notes)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
         public void UpdateContainerNumber(PurchaseOrder purchaseOrder)
@@ -81,11 +99,11 @@ namespace KLS.Services
             Uow.PurchaseOrders.InjectPurchaseOrder(injectReq);
         }
 
-        public PurchaseOrder Checkout(PurchaseOrderCheckoutReq checkoutReq)
+        public PurchaseOrderList? Checkout(PurchaseOrderCheckoutReq checkoutReq)
         {
             var poId = Uow.PurchaseOrders.Checkout(checkoutReq);
 
-            return GetById(poId);
+            return GetListById(poId);
         }
 
         public void DeletePurchaseOrder(int poId)

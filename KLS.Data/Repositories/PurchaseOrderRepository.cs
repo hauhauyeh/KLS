@@ -19,11 +19,11 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PurchaseOrderList> GetPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
+        public IQueryable<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
         {
             var param = BuildPurchaseOrdersParam(purchaseOrderReq);
 
-            return DbContext.PurchaseOrderList.FromSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.PurchaseOrderList.FromSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
@@ -31,9 +31,9 @@ namespace KLS.Data.Repositories
             purchaseOrderReq.IsCount = true;
             var param = BuildPurchaseOrdersParam(purchaseOrderReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[10] as SqlParameter;
+            var output = param[11] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -53,6 +53,8 @@ namespace KLS.Data.Repositories
                  purchaseOrderReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", purchaseOrderReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
 
                 string.IsNullOrEmpty(purchaseOrderReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", purchaseOrderReq.Filterby),
+
+                purchaseOrderReq.Id.HasValue ? new SqlParameter("@Id", purchaseOrderReq.Id) : new SqlParameter("@Id", DBNull.Value),
 
                 string.IsNullOrEmpty(purchaseOrderReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", purchaseOrderReq.SortField),
 

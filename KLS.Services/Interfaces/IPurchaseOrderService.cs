@@ -13,7 +13,7 @@ namespace KLS.Services.Interfaces
 
         PurchaseOrder GetById(int pOId);
 
-        void UpdateNotes(PurchaseOrder purchaseOrder);
+        void UpdateNotes(int poId, string? notes);
 
         void UpdateContainerNumber(PurchaseOrder purchaseOrder);
 
@@ -21,7 +21,7 @@ namespace KLS.Services.Interfaces
 
         void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq);
 
-        PurchaseOrder Checkout(PurchaseOrderCheckoutReq checkoutReq);
+        PurchaseOrderList? Checkout(PurchaseOrderCheckoutReq checkoutReq);
 
         void DeletePurchaseOrder(int poId);
 
