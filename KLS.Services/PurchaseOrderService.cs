@@ -48,6 +48,20 @@ namespace KLS.Services
             }
         }
 
+        public void UpdateContainerNumber(PurchaseOrder purchaseOrder)
+        {
+            var existing = GetById(purchaseOrder.POId);
+
+            if (existing != null)
+            {
+                existing.ContainerNumber = purchaseOrder.ContainerNumber;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                Uow.PurchaseOrders.Update(existing);
+                Uow.Commit();
+            }
+        }
+
         public void UpdateVendorDocNumber(PurchaseOrder purchaseOrder)
         {
             var existing = GetById(purchaseOrder.POId);
@@ -82,6 +96,16 @@ namespace KLS.Services
             {
                 Uow.PurchaseOrders.Find(c => c.POId == poId).ExecuteDelete();
             }
+        }
+
+        public void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq)
+        {
+            Uow.PurchaseOrders.SaveAdvancePayment(advancePaymentReq);
+        }
+
+        public void DeleteAdvancePayment(int poId)
+        {
+            Uow.PurchaseOrders.DeleteAdvancePayment(poId);
         }
     }
 }

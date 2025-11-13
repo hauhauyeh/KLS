@@ -59,6 +59,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("UpdateContainerNumber")]
+        public IActionResult UpdateContainerNumber([FromBody] PurchaseOrder purchaseOrder)
+        {
+            _purchaseOrderService.UpdateContainerNumber(purchaseOrder);
+
+            return Ok();
+        }
+
+
         [HttpPost("UpdateVendorDocNumber")]
         public IActionResult UpdateVendorDocNumber([FromBody] PurchaseOrder purchaseOrder)
         {
@@ -90,6 +99,24 @@ namespace KLS.API.Controllers.Admin
         {
             _purchaseOrderService.DeletePurchaseOrder(poId);
 
+            return Ok();
+        }
+
+
+        [HttpPost("SaveAdvancePayment")]
+        [DisplayName("Save Advance Payment")]
+        public IActionResult SaveAdvancePayment([FromBody] POAdvancePaymentReq advancePaymentReq)
+        {
+            _purchaseOrderService.SaveAdvancePayment(advancePaymentReq);
+            return Ok();
+        }
+
+
+        [HttpDelete("DeleteAdvancePayment/{poId}")]
+        [DisplayName("Delete Advance Payment")]
+        public IActionResult DeleteAdvancePayment(int poId)
+        {
+            _purchaseOrderService.DeleteAdvancePayment(poId);
             return Ok();
         }
 

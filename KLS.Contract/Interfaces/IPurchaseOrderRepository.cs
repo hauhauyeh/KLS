@@ -16,5 +16,9 @@ namespace KLS.Contract.Interfaces
         void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq);
 
         int Checkout(PurchaseOrderCheckoutReq checkoutReq);
+
+        void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq);
+
+        void DeleteAdvancePayment(int poId);
     }
 }

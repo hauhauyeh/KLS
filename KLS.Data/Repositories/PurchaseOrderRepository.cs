@@ -121,5 +121,33 @@ namespace KLS.Data.Repositories
 
             return (NewPOIdParam.Value == DBNull.Value) ? 0 : Convert.ToInt32(NewPOIdParam.Value);
         }
+
+        public void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq)
+        {
+            var POIdParam = new SqlParameter("@POId", advancePaymentReq.POId);
+
+            var PaymentDateParam = advancePaymentReq.PaymentDate.HasValue
+                ? new SqlParameter("@PaymentDate", advancePaymentReq.PaymentDate)
+                : new SqlParameter("@PaymentDate", DBNull.Value);
+
+            var PaymentMethodParam = (!string.IsNullOrEmpty(advancePaymentReq.PaymentMethod))
+                ? new SqlParameter("@PaymentMethod", advancePaymentReq.PaymentMethod)
+                : new SqlParameter("@PaymentMethod", DBNull.Value);
+
+            var FromAccountIdParam = new SqlParameter("@FromAccountId", advancePaymentReq.FromAccountId);
+
+            var AdvanceTotalParam = advancePaymentReq.AdvanceTotal.HasValue
+                ? new SqlParameter("@AdvanceTotal", advancePaymentReq.AdvanceTotal)
+                : new SqlParameter("@AdvanceTotal", DBNull.Value);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_InsertAdvance] @POId,@PaymentDate,@PaymentMethod,@FromAccountId,@AdvanceTotal", POIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, AdvanceTotalParam);
+        }
+
+        public void DeleteAdvancePayment(int poId)
+        {
+            var POIdParam = new SqlParameter("@POId", poId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_DeleteAdvance] @POId", POIdParam);
+        }
     }
 }

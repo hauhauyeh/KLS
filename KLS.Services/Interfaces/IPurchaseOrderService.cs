@@ -15,6 +15,8 @@ namespace KLS.Services.Interfaces
 
         void UpdateNotes(PurchaseOrder purchaseOrder);
 
+        void UpdateContainerNumber(PurchaseOrder purchaseOrder);
+
         void UpdateVendorDocNumber(PurchaseOrder purchaseOrder);
 
         void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq);
@@ -22,5 +24,9 @@ namespace KLS.Services.Interfaces
         PurchaseOrder Checkout(PurchaseOrderCheckoutReq checkoutReq);
 
         void DeletePurchaseOrder(int poId);
+
+        void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq);
+
+        void DeleteAdvancePayment(int poId);
     }
 }
