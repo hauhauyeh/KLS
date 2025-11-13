@@ -23,11 +23,13 @@ namespace KLS.Services.Interfaces
 
         void UpdatePallet(int purchaseId, int? palletCount);
 
-        void UpdateNameDate(PurchaseUpdateReq updateReq);
+        PurchaseList? UpdateNameDate(PurchaseUpdateReq updateReq);
 
-        Purchase Checkout(PurchaseCheckoutReq checkoutReq);
+        PurchaseList? UpdateContainerNumber(int purchaseId, string? containerNumber);
 
-        void UpdatePartially(int purchaseId);
+        PurchaseList? Checkout(PurchaseCheckoutReq checkoutReq);
+
+        PurchaseList? UpdatePartially(int purchaseId);
 
         void InjectPurchase(PurchaseInjectReq injectReq);
 

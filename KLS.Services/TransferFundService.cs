@@ -44,7 +44,7 @@ namespace KLS.Services
                 Id = tfId
             };
 
-            return Uow.TransferFunds.GetAllTransferFunds(tfReq).ToList().FirstOrDefault();
+            return Uow.TransferFunds.GetAllTransferFunds(tfReq).AsEnumerable().FirstOrDefault();
         }
 
         public TransferFundList? SaveTransferFund(TransferFund transferFund)

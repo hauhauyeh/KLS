@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class PurchaseListReq:PagingRequest
+    public class PurchaseListReq : PagingRequest
     {
         public int? PayeeId { get; set; }
     }

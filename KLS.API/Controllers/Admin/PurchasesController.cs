@@ -100,8 +100,14 @@ namespace KLS.API.Controllers.Admin
         [HttpPut("UpdateNameDate")]
         public IActionResult UpdateNameDate([FromBody] PurchaseUpdateReq updateReq)
         {
-            _purchaseService.UpdateNameDate(updateReq);
-            return Ok();
+            return Ok(_purchaseService.UpdateNameDate(updateReq));
+        }
+
+
+        [HttpPut("UpdateContainer")]
+        public IActionResult UpdateContainer([FromBody] PurchaseUpdateReq updateReq)
+        {
+            return Ok(_purchaseService.UpdateContainerNumber(updateReq.PurchaseId, updateReq.ContainerNumber));
         }
 
 
@@ -116,8 +122,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPut("UpdatePartially/{purchaseId}")]
         public IActionResult UpdatePartially(int purchaseId)
         {
-            _purchaseService.UpdatePartially(purchaseId);
-            return Ok();
+            return Ok(_purchaseService.UpdatePartially(purchaseId));
         }
 
 

@@ -20,5 +20,7 @@ namespace KLS.Contract.Interfaces
         void UpdateNameDate(PurchaseUpdateReq updateReq);
 
         void UpdatePartially(int purchaseId);
+
+        void FreightBillLink(int purchaseId);
     }
 }

@@ -50,6 +50,16 @@ namespace KLS.Services
             return Uow.Purchases.GetById(purchaseId);
         }
 
+        public PurchaseList? GetListById(int purchaseId)
+        {
+            var listReq = new PurchaseListReq
+            {
+                Id = purchaseId
+            };
+
+            return Uow.Purchases.GetAllPurchase(listReq).AsEnumerable().FirstOrDefault();
+        }
+
         public void UpdateNotes(int purchaseId, string? notes)
         {
             Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
@@ -92,12 +102,14 @@ namespace KLS.Services
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
-        public void UpdateNameDate(PurchaseUpdateReq updateReq)
+        public PurchaseList? UpdateNameDate(PurchaseUpdateReq updateReq)
         {
             Uow.Purchases.UpdateNameDate(updateReq);
+
+            return GetListById(updateReq.PurchaseId);
         }
 
-        public Purchase Checkout(PurchaseCheckoutReq checkoutReq)
+        public PurchaseList? Checkout(PurchaseCheckoutReq checkoutReq)
         {
             var purchaseId = Uow.Purchases.Checkout(checkoutReq);
 
@@ -109,12 +121,25 @@ namespace KLS.Services
                 //_ItemManager.SendCostChangeNotification(item);
             }
 
-            return GetById(purchaseId);
+            return GetListById(purchaseId);
         }
 
-        public void UpdatePartially(int purchaseId)
+        public PurchaseList? UpdateContainerNumber(int purchaseId, string? containerNumber)
+        {
+            Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.ContainerNumber, x => containerNumber)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+
+            Uow.Purchases.FreightBillLink(purchaseId);
+
+            return GetListById(purchaseId);
+        }
+
+        public PurchaseList? UpdatePartially(int purchaseId)
         {
             Uow.Purchases.UpdatePartially(purchaseId);
+
+            return GetListById(purchaseId);
         }
 
         public void InjectPurchase(PurchaseInjectReq injectReq)
