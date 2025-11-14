@@ -120,6 +120,20 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("GetPODetailList/{poId}")]
+        public IActionResult GetPODetailList(int poId)
+        {
+            return Ok(_purchaseOrderService.GetPODetailList(poId));
+        }
+
+
+        [HttpPost("CopyToBill")]
+        public IActionResult CopyToBill([FromBody] POCopyToBillReq copyToBillReq)
+        {
+            return Ok(_purchaseOrderService.CopyToBill(copyToBillReq));
+        }
+
         #endregion
     }
 }

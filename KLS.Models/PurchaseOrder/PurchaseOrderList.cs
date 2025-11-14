@@ -40,5 +40,7 @@ namespace KLS.Models
         public string? Notes { get; set; }
 
         public int? PurchaseId { get; set; }
+
+        public bool IsPOCopyToBill { get { return PurchaseId > 0; } }
     }
 }

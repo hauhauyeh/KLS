@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class PurchaseOrderReq : PagingRequest
+    public class POCopyToBillReq
     {
-        public int? PayeeId { get; set; }
+        public int POId { get; set; }
 
-        public int? PurchaseId { get; set; }
+        public string? SortIds { get; set; }
     }
 }

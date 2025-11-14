@@ -51,5 +51,7 @@ namespace KLS.Models
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public bool IsPOCopyToBill { get { return PurchaseId > 0; } }
     }
 }

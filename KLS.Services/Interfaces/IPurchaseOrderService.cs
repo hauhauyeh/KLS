@@ -28,5 +28,9 @@ namespace KLS.Services.Interfaces
         void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq);
 
         void DeleteAdvancePayment(int poId);
+
+        IEnumerable<PurchaseOrderDetailList> GetPODetailList(int poId);
+
+        PurchaseOrderList? CopyToBill(POCopyToBillReq copyToBillReq);
     }
 }
