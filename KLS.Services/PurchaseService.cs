@@ -17,10 +17,12 @@ namespace KLS.Services
     public class PurchaseService : BaseService, IPurchaseService
     {
         private readonly IWebHostEnvironment _env;
+        private readonly IItemService _itemService;
 
-        public PurchaseService(IUnitOfWork uow, IWebHostEnvironment env) : base(uow)
+        public PurchaseService(IUnitOfWork uow, IWebHostEnvironment env, IItemService itemService) : base(uow)
         {
             _env = env;
+            _itemService = itemService;
         }
 
         public PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
@@ -118,7 +120,7 @@ namespace KLS.Services
 
             foreach (var item in itemCostChange)
             {
-                //_ItemManager.SendCostChangeNotification(item);
+                _itemService.SendCostChangeNotification(item);
             }
 
             return GetListById(purchaseId);

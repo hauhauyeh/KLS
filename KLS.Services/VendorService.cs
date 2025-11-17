@@ -163,5 +163,10 @@ namespace KLS.Services
             var maxId = Uow.Vendors.GetAll().Select(p => (int?)p.PayeeId).Max();
             return (maxId ?? 200000) + 1;
         }
+
+        public IEnumerable<VendorSearchDTO>? GetActiveVendors()
+        {
+            return Uow.Payees.Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString() && p.IsClosed == false).OrderBy(p => p.PayeeName).Select(p => new VendorSearchDTO { PayeeId = p.PayeeId, PayeeName = p.PayeeName });
+        }
     }
 }

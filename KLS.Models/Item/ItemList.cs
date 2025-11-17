@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,6 +41,7 @@ namespace KLS.Models
 
         public decimal? RetailPrice { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? RetailProfitPercent { get; set; }
 
         public decimal? RetailFactor { get; set; }
@@ -76,8 +78,10 @@ namespace KLS.Models
 
         public decimal? YTD { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? YTDSalesPercent { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? RecentCostPercent { get; set; }
 
         public decimal? FutureQty { get; set; }

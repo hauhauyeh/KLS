@@ -29,6 +29,8 @@ namespace KLS.Models
 
         public decimal? VendorTotal { get; set; }
 
+        public decimal? POTotal { get; set; }
+
         public DateOnly? PaymentDate { get; set; }
 
         public string? PaymentMethod { get; set; }

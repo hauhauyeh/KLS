@@ -13,6 +13,7 @@ namespace KLS.Models
         public Item()
         {
             this.CreatedAt = DateTime.UtcNow;
+            this.ItemCode = string.Empty;
         }
 
         [Key]
@@ -24,7 +25,7 @@ namespace KLS.Models
         [StringLength(50, MinimumLength = 2, ErrorMessage = "Minimum 2 characters required")]
         [RegularExpression(@"(?!^\d+$)^[a-zA-Z0-9-_]*$", ErrorMessage = "!,$,+,Space,w,r,h,x are Not Allowed.")]
         [Required(ErrorMessage = "Enter Code")]
-        public string? ItemCode { get; set; }
+        public string ItemCode { get; set; }
         public string? BarcodeW { get; set; }
         public string? BarcodeR { get; set; }
 
@@ -72,9 +73,17 @@ namespace KLS.Models
         public decimal? PaletteFactor { get; set; }
         public decimal? SaftyInventory { get; set; }
         public decimal? CaseWeight { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? CaseVolume { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? CaseLength { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? CaseWidth { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? CaseHeight { get; set; }
 
         public string? AisleNumber { get; set; }
@@ -105,6 +114,8 @@ namespace KLS.Models
         public decimal? M6 { get; set; }
 
         public decimal? YTD { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? YTDSalesPercent { get; set; }
         public decimal? FutureQty { get; set; }
         public decimal? TodayOpenInventory { get; set; }

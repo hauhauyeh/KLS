@@ -14,6 +14,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ISystemRoleService, SystemRoleService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();
             services.AddScoped<ISystemUserService, SystemUserService>();
+            services.AddScoped<ITwilioService, TwilioService>();
 
             services.AddScoped<IHolidayService, HolidayService>();
             services.AddScoped<IPayeeService, PayeeService>();

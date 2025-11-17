@@ -1,4 +1,5 @@
 ﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Item Management", GroupName = "Product")]
     public class ItemsController : BaseController
@@ -33,7 +34,19 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Item")]
         public IActionResult List([FromQuery] ItemListReq itemListReq)
         {
-            return Ok(_itemService.GetItems(itemListReq));
+            return Ok(_itemService.GetAllItems(itemListReq));
+        }
+
+
+        [HttpGet("{itemId}")]
+        public IActionResult GetById(int itemId)
+        {
+            var item = _itemService.GetById(itemId);
+
+            if (item == null)
+                return NotFound($"Item not found.");
+
+            return Ok(item);
         }
 
 
@@ -41,6 +54,66 @@ namespace KLS.API.Controllers.Admin
         public IActionResult Search([FromQuery] ItemSearchReq searchReq)
         {
             return Ok(_itemService.SearchItem(searchReq));
+        }
+
+
+        [HttpDelete("{itemId}")]
+        [DisplayName("Delete Item")]
+        public IActionResult Delete(int itemId)
+        {
+            _itemService.DeleteItem(itemId);
+            return Ok();
+        }
+
+
+        [HttpPut("Inactive/{itemId}")]
+        public IActionResult Inactive(int itemId)
+        {
+            _itemService.Inactive(itemId);
+            return Ok();
+        }
+
+
+        [HttpPost]
+        [DisplayName("Save Item")]
+        public IActionResult Save([FromBody] Item item)
+        {
+            if (_itemService.ItemCodeExists(item))
+                return Conflict("ItemCode already exists");
+
+            if (_itemService.ItemNameExists(item))
+                return Conflict("ItemName already exists");
+
+            return Ok(_itemService.SaveItem(item));
+        }
+
+
+        [HttpGet("CalcUnit")]
+        public IActionResult CalcUnit([FromQuery] ItemPackingReq packingReq)
+        {
+            return Ok(_itemService.GetCalcUnit(packingReq));
+        }
+
+
+        [HttpGet("CalcRetailPriceProfit")]
+        public IActionResult CalcRetailPriceProfit([FromQuery] ItemCalcRetail calcRetail)
+        {
+            return Ok(_itemService.CalcRetailPriceProfit(calcRetail));
+        }
+
+
+        [HttpGet("DefaultUnits")]
+        public IActionResult DefaultUnits()
+        {
+            return Ok(Enum.GetNames(typeof(EnumHelper.ItemDefaultUnit)).ToList());
+        }
+
+
+        [HttpGet("EditP1")]
+        [DisplayName("Edit P1")]
+        public IActionResult EditP1()
+        {
+            return Ok();
         }
 
         #endregion

@@ -9,10 +9,16 @@ namespace KLS.Contract.Interfaces
 {
     public interface IItemRepository : IRepository<Item>
     {
-        IQueryable<ItemList> GetItems(ItemListReq itemListReq);
+        IQueryable<ItemList> GetAllItems(ItemListReq itemListReq);
 
         int CountAllItems(ItemListReq itemListReq);
 
         IQueryable<ItemSearch>? SearchItem(ItemSearchReq searchReq);
+
+        void DeleteItem(int itemId);
+
+        ItemCalcUnit GetCalcUnit(ItemPackingReq packingReq);
+
+        ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
     }
 }

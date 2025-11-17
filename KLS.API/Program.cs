@@ -20,7 +20,13 @@ builder.Services.AddSingleton<DateTimeMiddleware>();
 builder.Services.AddSingleton<IJWTService, JWTService>();
 
 // Configure controllers and JSON options
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services
+    .AddControllers(options =>
+{
+    // Our custom binder for int?/decimal?/etc.
+    options.ModelBinderProviders.Insert(0, new NullableNumericModelBinderProvider());
+})
+    .AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNamingPolicy = null;
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;

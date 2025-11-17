@@ -121,10 +121,10 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("GetPODetailList/{poId}")]
-        public IActionResult GetPODetailList(int poId)
+        [HttpGet("GetPODetail/{poId}")]
+        public IActionResult GetPODetail(int poId)
         {
-            return Ok(_purchaseOrderService.GetPODetailList(poId));
+            return Ok(_purchaseOrderService.GetPODetail(poId));
         }
 
 

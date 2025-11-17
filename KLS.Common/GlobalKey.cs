@@ -23,5 +23,9 @@ namespace KLS.Common
         public const string PAYMENT_DEFAULT_BANK = "PAYROLL_BEGINDAYOFWEEK";
 
         public const string GOOGLEMAPS_APIKEY = "GOOGLEMAPS_APIKEY";
+
+        public const string TWILIO_SID = "TWILIO_SID";
+        public const string TWILIO_TOKEN = "TWILIO_TOKEN";
+        public const string TWILIO_FROM = "TWILIO_FROM";
     }
 }

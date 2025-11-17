@@ -21,7 +21,7 @@ namespace KLS.Contract.Interfaces
 
         void DeleteAdvancePayment(int poId);
 
-        IQueryable<PurchaseOrderDetailList> GetPODetailList(int poId);
+        IQueryable<PODetail> GetPODetail(int poId);
 
         void CopyToBill(POCopyToBillReq copyToBillReq);
     }

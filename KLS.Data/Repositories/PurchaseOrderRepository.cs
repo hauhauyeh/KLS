@@ -152,11 +152,11 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_DeleteAdvance] @POId", POIdParam);
         }
 
-        public IQueryable<PurchaseOrderDetailList> GetPODetailList(int poId)
+        public IQueryable<PODetail> GetPODetail(int poId)
         {
             var POIdParam = new SqlParameter("@POId", poId);
 
-            return DbContext.PurchaseOrderDetailList.FromSqlRaw("[dbo].[PurchaseOrder_GetDetail] @POID", POIdParam);
+            return DbContext.PODetail.FromSqlRaw("[dbo].[PurchaseOrder_GetDetail] @POId", POIdParam);
         }
 
         public void CopyToBill(POCopyToBillReq copyToBillReq)

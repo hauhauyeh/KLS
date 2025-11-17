@@ -58,6 +58,14 @@ namespace KLS.Common
             A = 2,  //Account
         }
 
+        public enum ItemDefaultUnit
+        {
+            Whole = 1,
+            Retail = 2
+            //Half = 3,
+            //X = 4
+        }
+
         public enum ReturnTypes
         {
             [Display(Name = "NSF")]

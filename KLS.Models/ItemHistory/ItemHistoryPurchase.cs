@@ -10,11 +10,11 @@ namespace KLS.Models
     public class ItemHistoryPurchase
     {
         [Key]
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         public int PurchaseId { get; set; }
 
-        public int VendorDocNumber { get; set; }
+        public string? VendorDocNumber { get; set; }
 
         public DateOnly? ArrivalDate { get; set; }
 

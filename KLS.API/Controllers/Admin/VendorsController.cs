@@ -87,6 +87,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_vendorService.SearchVendor(searchReq));
         }
 
+
+        [HttpGet("ActiveVendors")]
+        public IActionResult ActiveVendors()
+        {
+            return Ok(_vendorService.GetActiveVendors());
+        }
+
         #endregion
     }
 }

@@ -9,8 +9,6 @@ namespace KLS.Services.Interfaces
 {
     public interface IVendorService
     {
-        //IEnumerable<Payee> GetAllVendors();
-
         PagingResponse<VendorList> GetAllVendors(VendorListReq vendorListReq);
 
         VendorDTO? GetById(int payeeId);
@@ -24,5 +22,7 @@ namespace KLS.Services.Interfaces
         void DeleteVendor(int payeeId);
 
         IEnumerable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq);
+
+        IEnumerable<VendorSearchDTO>? GetActiveVendors();
     }
 }

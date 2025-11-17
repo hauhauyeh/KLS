@@ -258,6 +258,10 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ItemHistoryInventory> ItemHistoryInventory { get; set; }
 
+        public virtual DbSet<ItemCalcUnit> ItemCalcUnit { get; set; }
+
+        public virtual DbSet<PODetail> PODetail { get; set; }
+
         #endregion
     }
 }
