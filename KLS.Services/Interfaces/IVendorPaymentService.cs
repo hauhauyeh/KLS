@@ -23,6 +23,8 @@ namespace KLS.Services.Interfaces
 
         List<string> GetReturnTypes();
 
+        VendorPaymentList? SavePayNowPayment(PayNowReq payNowReq);
+
 
         PagingResponse<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq);
     }

@@ -169,5 +169,37 @@ namespace KLS.Data.Repositories
         {
 
         }
+
+        public int SavePayNowPayment(PayNowReq payNowReq)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", payNowReq.VendorPaymentId);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", payNowReq.PayeeId);
+
+            var PaymentDateParam = payNowReq.PaymentDate.HasValue ? new SqlParameter("@PaymentDate", payNowReq.PaymentDate) : new SqlParameter("@PaymentDate", DBNull.Value);
+
+            var PaymentMethodParam = (!string.IsNullOrEmpty(payNowReq.PaymentMethod)) ? new SqlParameter("@PaymentMethod", payNowReq.PaymentMethod) : new SqlParameter("@PaymentMethod", DBNull.Value);
+
+            var FromAccountIdParam = payNowReq.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", payNowReq.FromAccountId) : new SqlParameter("@FromAccountId", DBNull.Value);
+
+            var ReferenceIdParam = (!string.IsNullOrEmpty(payNowReq.ReferenceId)) ? new SqlParameter("@ReferenceId", payNowReq.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
+
+            var PaymentAmountParam = payNowReq.PaymentAmount.HasValue ? new SqlParameter("@PaymentAmount", payNowReq.PaymentAmount) : new SqlParameter("@PaymentAmount", DBNull.Value);
+
+            var NotesParam = (!string.IsNullOrEmpty(payNowReq.Notes)) ? new SqlParameter("@Notes", payNowReq.Notes) : new SqlParameter("@Notes", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewPaymentId = new SqlParameter()
+            {
+                ParameterName = "@NewPaymentId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_InsertPayNow] @VendorPaymentId,@PayeeId,@PaymentDate,@PaymentMethod,@FromAccountId,@ReferenceId,@PaymentAmount,@Notes,@EmpId,@NewPaymentId OUTPUT", VendorPaymentIdParam, PayeeIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, ReferenceIdParam, PaymentAmountParam, NotesParam, EmpIdParam, NewPaymentId);
+
+            return Convert.ToInt32(NewPaymentId.Value);
+        }
     }
 }

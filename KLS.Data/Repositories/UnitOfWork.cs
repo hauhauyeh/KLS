@@ -143,6 +143,8 @@ namespace KLS.Data.Repositories
         public ITempVendorPaymentRepository TempVendorPayments { get { return new TempVendorPaymentRepository(DbContext); } }
 
         public IDocumentTemplateRepository DocumentTemplates { get { return new DocumentTemplateRepository(DbContext); } }
+
+        public IItemImageRepository ItemImages { get { return new ItemImageRepository(DbContext); } }
     }
 }
 

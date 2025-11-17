@@ -24,5 +24,7 @@ namespace KLS.Contract.Interfaces
         void VendorPaymentReturn(VendorPaymentReturnReq checkReq);
 
         void DeleteReturn(int vendorPaymentId);
+
+        int SavePayNowPayment(PayNowReq payNowReq);
     }
 }

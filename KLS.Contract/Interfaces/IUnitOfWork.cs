@@ -116,6 +116,8 @@ namespace KLS.Contract.Interfaces
 
         IDocumentTemplateRepository DocumentTemplates { get; }
 
+        IItemImageRepository ItemImages { get; }
+
         void Commit();
     }
 }

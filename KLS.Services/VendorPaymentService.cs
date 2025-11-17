@@ -47,6 +47,16 @@ namespace KLS.Services
                 };
         }
 
+        public VendorPaymentList? GetListById(int vendorPaymentId)
+        {
+            var payNowReq = new VendorPaymentReq
+            {
+                Id = vendorPaymentId
+            };
+
+            return Uow.VendorPayments.GetAllVendorPayments(payNowReq).AsEnumerable().FirstOrDefault();
+        }
+
         public void DeleteVendorPayment(int vendorPaymentId)
         {
             var payment = GetById(vendorPaymentId);
@@ -92,6 +102,13 @@ namespace KLS.Services
             }
 
             return types;
+        }
+
+        public VendorPaymentList? SavePayNowPayment(PayNowReq payNowReq)
+        {
+            var newPaymentId = Uow.VendorPayments.SavePayNowPayment(payNowReq);
+
+            return GetListById(newPaymentId);
         }
 
 

@@ -1,5 +1,6 @@
 ﻿using KLS.API.Helpers;
 using KLS.Models;
+using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -84,6 +85,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult ReturnTypes()
         {
             return Ok(_vendorPaymentService.GetReturnTypes());
+        }
+
+
+        [HttpPost("SavePayNowPayment")]
+        [DisplayName("Add/Edit Pay Now Payment")]
+        public IActionResult Save([FromBody] PayNowReq payNowReq)
+        {
+            return Ok(_vendorPaymentService.SavePayNowPayment(payNowReq));
         }
 
         #endregion
