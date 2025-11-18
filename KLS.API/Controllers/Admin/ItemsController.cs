@@ -109,6 +109,35 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateDefautCost")]
+        public IActionResult UpdateDefautCost([FromBody] ItemUpdateReq updateReq)
+        {
+            _itemService.UpdateDefautCost(updateReq.ItemId, updateReq.DefaultCost);
+            return Ok();
+        }
+
+
+        [HttpPut("UpdateP1")]
+        public IActionResult UpdateP1([FromBody] ItemUpdateReq updateReq)
+        {
+            return Ok(_itemService.UpdateP1(updateReq.ItemId, updateReq.P1));
+        }
+
+
+        [HttpPut("UpdateRetailPrice")]
+        public IActionResult UpdateRetailPrice([FromBody] ItemUpdateReq updateReq)
+        {
+            return Ok(_itemService.UpdateRetailPrice(updateReq.ItemId, updateReq.RetailPrice));
+        }
+
+
+        [HttpPut("UpdateRetailProfit")]
+        public IActionResult UpdateRetailProfit([FromBody] ItemUpdateReq updateReq)
+        {
+            return Ok(_itemService.UpdateRetailProfit(updateReq.ItemId, updateReq.RetailProfitPercent));
+        }
+
+
         [HttpGet("EditP1")]
         [DisplayName("Edit P1")]
         public IActionResult EditP1()

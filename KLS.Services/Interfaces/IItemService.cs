@@ -33,6 +33,12 @@ namespace KLS.Services.Interfaces
 
         void UpdateDefautCost(int itemId, decimal? defaultCost);
 
+        Item UpdateP1(int itemId, decimal? p1);
+
+        Item UpdateRetailPrice(int itemId, decimal? retailPrice);
+
+        Item UpdateRetailProfit(int itemId, decimal? retailProfit);
+
         void SendCostChangeNotification(Item item);
     }
 }

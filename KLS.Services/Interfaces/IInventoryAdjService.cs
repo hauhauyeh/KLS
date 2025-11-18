@@ -9,7 +9,11 @@ namespace KLS.Services.Interfaces
 {
     public interface IInventoryAdjService
     {
-        PagingResponse<InventoryAdjList> GetinventoryAdj(InventoryAdjListReq inventoryAdjListReq);
+        PagingResponse<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq);
+
+        IEnumerable<InventoryAdjList> SaveInventoryAdj(InventoryAdj inventoryAdj);
+
+        void DeleteInventoryAdj(int adjId);
 
         void UpdateNotes(InventoryAdj inventoryAdj);
 

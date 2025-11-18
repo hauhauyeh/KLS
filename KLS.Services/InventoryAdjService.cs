@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +17,11 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<InventoryAdjList> GetinventoryAdj(InventoryAdjListReq inventoryAdjListReq)
+        public PagingResponse<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq)
         {
-            var inventoryAdjlist = Uow.InventoryAdjs.GetInventoryAdjs(inventoryAdjListReq);
+            var inventoryAdjlist = Uow.InventoryAdjs.GetAllInventoryAdj(inventoryAdjListReq);
 
-            var totalRecords = Uow.InventoryAdjs.CountAllInventoryAdjs(inventoryAdjListReq);
+            var totalRecords = Uow.InventoryAdjs.CountAllInventoryAdj(inventoryAdjListReq);
 
             return new PagingResponse<InventoryAdjList>(totalRecords, inventoryAdjListReq.Pageno, inventoryAdjListReq.Pagesize)
             {
@@ -31,6 +32,28 @@ namespace KLS.Services
         public InventoryAdj GetById(int adjId)
         {
             return Uow.InventoryAdjs.GetById(adjId);
+        }
+
+        public IEnumerable<InventoryAdjList> GetListById(int adjId)
+        {
+            var listReq = new InventoryAdjListReq
+            {
+                Id = adjId
+            };
+
+            return Uow.InventoryAdjs.GetAllInventoryAdj(listReq);
+        }
+
+        public IEnumerable<InventoryAdjList> SaveInventoryAdj(InventoryAdj inventoryAdj)
+        {
+            var newAdjId = Uow.InventoryAdjs.SaveInventoryAdj(inventoryAdj);
+
+            return GetListById(newAdjId);
+        }
+
+        public void DeleteInventoryAdj(int adjId)
+        {
+            Uow.InventoryAdjs.Find(c => c.AdjId == adjId).ExecuteDelete();
         }
 
         public void UpdateNotes(InventoryAdj inventoryAdj)

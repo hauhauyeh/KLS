@@ -45,20 +45,6 @@ namespace KLS.Services
                 FirstOrDefault();
         }
 
-        //public void UpdateNotes(PurchaseOrder purchaseOrder)
-        //{
-        //    var existing = GetById(purchaseOrder.POId);
-
-        //    if (existing != null)
-        //    {
-        //        existing.Notes = purchaseOrder.Notes;
-        //        existing.UpdatedAt = DateTime.UtcNow;
-
-        //        Uow.PurchaseOrders.Update(existing);
-        //        Uow.Commit();
-        //    }
-        //}
-
         public void UpdateNotes(int poId, string? notes)
         {
             Uow.PurchaseOrders.Find(c => c.POId == poId).ExecuteUpdate(setters => setters

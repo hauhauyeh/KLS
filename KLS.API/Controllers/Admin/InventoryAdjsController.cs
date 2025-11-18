@@ -1,6 +1,5 @@
 ﻿using KLS.API.Helpers;
 using KLS.Models;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -8,9 +7,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "InventoryAdj Management", GroupName = "Admin")]
+    [Display(Name = "Inventory Adjustment Management", GroupName = "Product")]
     public class InventoryAdjsController : BaseController
     {
         #region --- Member(s) ---
@@ -34,7 +33,25 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List InventoryAdj")]
         public IActionResult List([FromQuery] InventoryAdjListReq inventoryAdjListReq)
         {
-            return Ok(_inventoryAdjService.GetinventoryAdj(inventoryAdjListReq));
+            return Ok(_inventoryAdjService.GetAllInventoryAdj(inventoryAdjListReq));
+        }
+
+
+        [HttpPost]
+        [DisplayName("Save Adjustment")]
+        public IActionResult Save([FromBody] InventoryAdj inventoryAdj)
+        {
+            return Ok(_inventoryAdjService.SaveInventoryAdj(inventoryAdj));
+        }
+
+
+        [HttpDelete("{adjId}")]
+        [DisplayName("Delete Adjustment")]
+        public IActionResult Delete(int adjId)
+        {
+            _inventoryAdjService.DeleteInventoryAdj(adjId);
+
+            return Ok();
         }
 
 

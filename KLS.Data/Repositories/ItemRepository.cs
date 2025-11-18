@@ -6,6 +6,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -108,14 +109,29 @@ namespace KLS.Data.Repositories
 
             var RetailFactorParam = calcRetail.RetailFactor.HasValue ? new SqlParameter("@RetailFactor", calcRetail.RetailFactor) : new SqlParameter("@RetailFactor", DBNull.Value);
 
-            var RetailPriceParam = calcRetail.RetailPrice.HasValue ? new SqlParameter("@RetailPrice", calcRetail.RetailPrice) : new SqlParameter("@RetailPrice", DBNull.Value);
+            var RetailPriceParam = new SqlParameter("@RetailPrice", SqlDbType.Decimal)
+            {
+                Direction = ParameterDirection.InputOutput, // or Output if you never send initial value
+                Precision = 18,
+                Scale = 2,
+                Value = (object?)calcRetail.RetailPrice ?? DBNull.Value
+            };
 
-            var RetailProfitPercentParam = calcRetail.RetailProfitPercent.HasValue ? new SqlParameter("@RetailProfitPercent", calcRetail.RetailProfitPercent) : new SqlParameter("@RetailProfitPercent", DBNull.Value);
+            var RetailProfitPercentParam = new SqlParameter("@RetailProfitPercent", SqlDbType.Decimal)
+            {
+                Direction = ParameterDirection.InputOutput, // or Output
+                Precision = 18,
+                Scale = 4,
+                Value = (object?)calcRetail.RetailProfitPercent ?? DBNull.Value
+            };
 
             DbContext.Database.ExecuteSqlRaw("[Item_CalcRetailPriceAndProfit] @P1,@RetailUnit,@RetailFactor,@RetailPrice OUTPUT,@RetailProfitPercent OUTPUT", P1Param, RetailUnitParam, RetailFactorParam, RetailPriceParam, RetailProfitPercentParam);
 
-            calcRetail.RetailPrice = Convert.ToDecimal(RetailPriceParam.Value);
-            calcRetail.RetailProfitPercent = Convert.ToDecimal(RetailProfitPercentParam.Value);
+            if (RetailPriceParam.Value != DBNull.Value && RetailPriceParam.Value != null)
+                calcRetail.RetailPrice = Convert.ToDecimal(RetailPriceParam.Value);
+
+            if (RetailProfitPercentParam.Value != DBNull.Value && RetailProfitPercentParam.Value != null)
+                calcRetail.RetailProfitPercent = Convert.ToDecimal(RetailProfitPercentParam.Value);
 
             return calcRetail;
         }

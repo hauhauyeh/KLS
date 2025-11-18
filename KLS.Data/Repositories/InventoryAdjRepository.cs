@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
@@ -18,14 +19,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<InventoryAdjList> GetInventoryAdjs(InventoryAdjListReq inventoryAdjListReq)
+        public IQueryable<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq)
         {
             var param = BuildInventoryAdjsParam(inventoryAdjListReq);
 
             return DbContext.InventoryAdjList.FromSqlRaw("[dbo].[InventoryAdj_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllInventoryAdjs(InventoryAdjListReq inventoryAdjListReq)
+        public int CountAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq)
         {
             inventoryAdjListReq.IsCount = true;
             var param = BuildInventoryAdjsParam(inventoryAdjListReq);
@@ -66,6 +67,39 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public int SaveInventoryAdj(InventoryAdj inventoryAdj)
+        {
+            var AdjIdParam = new SqlParameter("@AdjId", inventoryAdj.AdjId);
+
+            var AdjDateParam = new SqlParameter("@AdjDate", inventoryAdj.AdjDate);
+
+            var AdjTypeParam = new SqlParameter("@AdjType", inventoryAdj.AdjType);
+
+            var NotesParam = string.IsNullOrEmpty(inventoryAdj.Notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", inventoryAdj.Notes);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewAdjId = new SqlParameter()
+            {
+                ParameterName = "@NewAdjNum",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            if (inventoryAdj.AdjId > 0)
+            {
+                DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_PartialUpdate] @AdjNum,@AdjDate,@AdjType,@Note,@EmpId", AdjIdParam, AdjDateParam, AdjTypeParam, NotesParam, EmpIdParam);
+
+                return inventoryAdj.AdjId;
+            }
+            else
+            {
+                DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_Insert] @AdjNum,@AdjDate,@AdjType,@Note,@EmpId,@NewAdjId OUTPUT", AdjIdParam, AdjDateParam, AdjTypeParam, NotesParam, EmpIdParam, NewAdjId);
+
+                return Convert.ToInt32(NewAdjId.Value);
+            }
         }
     }
 }
