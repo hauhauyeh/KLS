@@ -13,6 +13,8 @@ namespace KLS.Services.Interfaces
 
         IEnumerable<InventoryAdjList> SaveInventoryAdj(InventoryAdj inventoryAdj);
 
+        void InjectInventoryAdj(int adjId);
+
         void DeleteInventoryAdj(int adjId);
 
         void UpdateNotes(InventoryAdj inventoryAdj);

@@ -45,6 +45,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("Inject/{adjId}")]
+        public IActionResult Inject(int adjId)
+        {
+            _inventoryAdjService.InjectInventoryAdj(adjId);
+
+            return Ok();
+        }
+
+
         [HttpDelete("{adjId}")]
         [DisplayName("Delete Adjustment")]
         public IActionResult Delete(int adjId)

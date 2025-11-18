@@ -101,5 +101,14 @@ namespace KLS.Data.Repositories
                 return Convert.ToInt32(NewAdjId.Value);
             }
         }
+
+        public void InjectInventoryAdj(int adjId)
+        {
+            var AdjIdParam = new SqlParameter("@AdjId", adjId);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_Inject] @AdjId,@EmpId", AdjIdParam, EmpIdParam);
+        }
     }
 }

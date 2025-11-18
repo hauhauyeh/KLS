@@ -14,5 +14,7 @@ namespace KLS.Contract.Interfaces
         int CountAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq);
 
         int SaveInventoryAdj(InventoryAdj inventoryAdj);
+
+        void InjectInventoryAdj(int adjId);
     }
 }

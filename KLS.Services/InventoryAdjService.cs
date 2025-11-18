@@ -51,6 +51,11 @@ namespace KLS.Services
             return GetListById(newAdjId);
         }
 
+        public void InjectInventoryAdj(int adjId)
+        {
+            Uow.InventoryAdjs.InjectInventoryAdj(adjId);
+        }
+
         public void DeleteInventoryAdj(int adjId)
         {
             Uow.InventoryAdjs.Find(c => c.AdjId == adjId).ExecuteDelete();
