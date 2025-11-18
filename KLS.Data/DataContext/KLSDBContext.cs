@@ -80,6 +80,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<SalesStage>().ToTable("SalesStage");
             modelBuilder.Entity<TempVendorPayment>().ToTable("TempVendorPayment");
             modelBuilder.Entity<DocumentTemplate>().ToTable("DocumentTemplate");
+            modelBuilder.Entity<InventoryAdj>().ToTable("InventoryAdj");
+            modelBuilder.Entity<TempInventoryAdj>().ToTable("TempInventoryAdj");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -194,6 +196,10 @@ namespace KLS.Data.DataContext
 
         public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
 
+        public DbSet<InventoryAdj> InventoryAdjs { get; set; }
+
+        public DbSet<TempInventoryAdj> TempInventoryAdjs { get; set; }
+
         #endregion
 
         #region ---Virtual DBSET---
@@ -261,6 +267,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<ItemCalcUnit> ItemCalcUnit { get; set; }
 
         public virtual DbSet<PODetail> PODetail { get; set; }
+
+        public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
 
         #endregion
     }

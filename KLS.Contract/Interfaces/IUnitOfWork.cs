@@ -118,6 +118,10 @@ namespace KLS.Contract.Interfaces
 
         IItemImageRepository ItemImages { get; }
 
+        IInventoryAdjRepository InventoryAdjs { get; }
+
+        ITempInventoryAdjRepository TempInventoryAdjs { get; }
+
         void Commit();
     }
 }

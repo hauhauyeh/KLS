@@ -145,6 +145,10 @@ namespace KLS.Data.Repositories
         public IDocumentTemplateRepository DocumentTemplates { get { return new DocumentTemplateRepository(DbContext); } }
 
         public IItemImageRepository ItemImages { get { return new ItemImageRepository(DbContext); } }
+
+        public IInventoryAdjRepository InventoryAdjs { get { return new InventoryAdjRepository(DbContext); } }
+
+        public ITempInventoryAdjRepository TempInventoryAdjs { get { return new TempInventoryAdjRepository(DbContext); } }
     }
 }
 
