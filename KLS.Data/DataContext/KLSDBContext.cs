@@ -81,7 +81,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempVendorPayment>().ToTable("TempVendorPayment");
             modelBuilder.Entity<DocumentTemplate>().ToTable("DocumentTemplate");
             modelBuilder.Entity<InventoryAdj>().ToTable("InventoryAdj");
+            modelBuilder.Entity<InventoryAdjDetail>().ToTable("InventoryAdjDetail");
             modelBuilder.Entity<TempInventoryAdj>().ToTable("TempInventoryAdj");
+            modelBuilder.Entity<TempTransferFund>().ToTable("TempTransferFund");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -198,7 +200,11 @@ namespace KLS.Data.DataContext
 
         public DbSet<InventoryAdj> InventoryAdjs { get; set; }
 
+        public DbSet<InventoryAdjDetail> InventoryAdjDetails { get; set; }
+
         public DbSet<TempInventoryAdj> TempInventoryAdjs { get; set; }
+
+        public DbSet<TempTransferFund> TempTransferFunds { get; set; }
 
         #endregion
 

@@ -122,6 +122,10 @@ namespace KLS.Contract.Interfaces
 
         ITempInventoryAdjRepository TempInventoryAdjs { get; }
 
+        ITempTransferFundRepository TempTransferFunds { get; }
+
+        IInventoryAdjDetailRepository InventoryAdjDetails { get; }
+
         void Commit();
     }
 }

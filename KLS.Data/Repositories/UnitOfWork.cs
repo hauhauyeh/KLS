@@ -149,6 +149,10 @@ namespace KLS.Data.Repositories
         public IInventoryAdjRepository InventoryAdjs { get { return new InventoryAdjRepository(DbContext); } }
 
         public ITempInventoryAdjRepository TempInventoryAdjs { get { return new TempInventoryAdjRepository(DbContext); } }
+
+        public ITempTransferFundRepository TempTransferFunds { get { return new TempTransferFundRepository(DbContext); } }
+
+        public IInventoryAdjDetailRepository InventoryAdjDetails { get { return new InventoryAdjDetailRepository(DbContext); } }
     }
 }
 
