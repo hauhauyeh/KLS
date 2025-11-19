@@ -36,6 +36,38 @@ namespace KLS.API.Controllers.Admin
             return Ok(_transferFundService.GetAllDeposits(depositReq));
         }
 
+
+        [HttpGet("{tfId}")]
+        public IActionResult GetById(int tfId)
+        {
+            return Ok(_transferFundService.GetById(tfId));
+        }
+
+
+        [HttpPost]
+        [DisplayName("Save Deposit")]
+        public IActionResult Save([FromBody] TransferFund transferFund)
+        {
+            return Ok(_transferFundService.SaveDeposit(transferFund));
+        }
+
+
+        [HttpDelete("{tfId}")]
+        [DisplayName("Delete Deposit")]
+        public IActionResult Delete(int tfId)
+        {
+            _transferFundService.DeleteTransferFund(tfId);
+
+            return Ok();
+        }
+
+
+        [HttpPost("Inject/{tfId}")]
+        public IActionResult Inject(int tfId)
+        {
+            return Ok(_transferFundService.InjectDeposit(tfId));
+        }
+
         #endregion
     }
 }

@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Models.Deposit;
 using KLS.Services.Interfaces;
@@ -14,8 +15,11 @@ namespace KLS.Services
 {
     public class TransferFundService : BaseService, ITransferFundService
     {
-        public TransferFundService(IUnitOfWork uow) : base(uow)
+        private readonly IDeleteLogService _deleteLogService;
+
+        public TransferFundService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
         {
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<TransferFundList> GetAllTransferFunds(TFReq tFReq)
@@ -62,6 +66,10 @@ namespace KLS.Services
             {
                 Uow.TransferFunds.Find(c => c.TFId == tfId).ExecuteDelete();
                 //there is instead of delete trigger that's why we use ExecuteDelete.
+
+                string docType = tf.TFType == "DEPOSIT" ? EnumHelper.DocType.Deposit.ToString() : EnumHelper.DocType.Transfer.ToString();
+
+                _deleteLogService.Add(docType, tfId);
             }
         }
 
@@ -76,6 +84,28 @@ namespace KLS.Services
             {
                 RowData = list,
             };
+        }
+
+        public DepositList? GetDepositListById(int tfId)
+        {
+            var depositReq = new DepositReq
+            {
+                Id = tfId
+            };
+
+            return Uow.TransferFunds.GetAllDeposits(depositReq).AsEnumerable().FirstOrDefault();
+        }
+
+        public DepositList? SaveDeposit(TransferFund transferFund)
+        {
+            var newTFId = Uow.TransferFunds.SaveDeposit(transferFund);
+
+            return GetDepositListById(newTFId);
+        }
+
+        public IEnumerable<TempDepositList>? InjectDeposit(int tfId)
+        {
+            return Uow.TransferFunds.InjectDeposit(tfId);
         }
     }
 }

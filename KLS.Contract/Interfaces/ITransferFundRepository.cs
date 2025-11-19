@@ -17,8 +17,12 @@ namespace KLS.Contract.Interfaces
         int SaveTransferFund(TransferFund transferFund);
 
 
-        IEnumerable<DepositList> GetAllDeposits(DepositReq depositReq);
+        IQueryable<DepositList> GetAllDeposits(DepositReq depositReq);
 
         int CountAllDeposits(DepositReq depositReq);
+
+        int SaveDeposit(TransferFund transferFund);
+
+        IQueryable<TempDepositList>? InjectDeposit(int tfId);
     }
 }

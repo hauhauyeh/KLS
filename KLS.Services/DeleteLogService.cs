@@ -1,4 +1,6 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,20 @@ namespace KLS.Services
         public DeleteLogService(IUnitOfWork uow) : base(uow)
         {
 
+        }
+
+        public void Add(string docType, int docId)
+        {
+            var deleteLog = new DeleteLog()
+            {
+                LogDate = DateTime.UtcNow,
+                SourceDocType = docType,
+                SourceDocId = docId,
+                DeletedBy = UserContext.EmpId
+            };
+
+            Uow.DeleteLogs.Add(deleteLog);
+            Uow.Commit();
         }
     }
 }

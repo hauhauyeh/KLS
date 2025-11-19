@@ -1,4 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,25 @@ namespace KLS.Services
     public class TempTransferFundService : BaseService, ITempTransferFundService
     {
         public TempTransferFundService(IUnitOfWork uow) : base(uow)
+        {
+
+        }
+
+        public void Update(TempTransferFund tempTransfer)
+        {
+            var temp = Uow.TempTransferFunds.GetById(tempTransfer.TempTFId);
+
+            if (temp != null)
+            {
+                temp.Notes = tempTransfer.Notes;
+                temp.IsApplied = tempTransfer.IsApplied;
+
+                Uow.TempTransferFunds.Update(temp);
+                Uow.Commit();
+            }
+        }
+
+        public void AppliedAll(int tfId)
         {
 
         }

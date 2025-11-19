@@ -8,6 +8,6 @@ namespace KLS.Services.Interfaces
 {
     public interface IDeleteLogService
     {
-
+        void Add(string docType, int docId);
     }
 }

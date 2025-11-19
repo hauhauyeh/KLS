@@ -20,5 +20,9 @@ namespace KLS.Services.Interfaces
 
 
         PagingResponse<DepositList> GetAllDeposits(DepositReq depositReq);
+
+        DepositList? SaveDeposit(TransferFund transferFund);
+
+        IEnumerable<TempDepositList>? InjectDeposit(int tfId);
     }
 }

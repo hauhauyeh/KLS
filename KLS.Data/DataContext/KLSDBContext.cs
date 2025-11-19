@@ -278,6 +278,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<TempInventoryItem> TempInventoryItem { get; set; }
 
+        public virtual DbSet<TempDepositList> TempDepositList { get; set; }
+
         #endregion
     }
 }

@@ -77,5 +77,26 @@ namespace KLS.Common
             [Display(Name = "BANK ERROR")]
             BANKERROR = 4
         }
+
+        public enum DocType
+        {
+            GeneralJournal = 100,
+            Paycheck = 200,
+            PayrollTaxPayment = 210,
+            Purchase = 300,
+            Check = 310,
+            CreditCardCharge = 320,
+            BillPayment = 400,
+            BillCCard = 410,
+            Sales = 500,
+            SalesTaxPayment = 510,
+            CustomerPayment = 520,
+            CustomerRefund = 530,
+            OtherTaxPayment = 550,
+            InventoryAdj = 600,
+            LoanRepayment = 710,
+            Deposit = 800,
+            Transfer = 810
+        }
     }
 }

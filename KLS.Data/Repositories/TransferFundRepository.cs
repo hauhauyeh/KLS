@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
 using KLS.Models.Deposit;
@@ -112,7 +113,7 @@ namespace KLS.Data.Repositories
         }
 
 
-        public IEnumerable<DepositList> GetAllDeposits(DepositReq depositReq)
+        public IQueryable<DepositList> GetAllDeposits(DepositReq depositReq)
         {
             var param = BuildDepositParam(depositReq);
 
@@ -162,6 +163,55 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public int SaveDeposit(TransferFund tf)
+        {
+            var TFIdParam = new SqlParameter("@TFId", tf.TFId);
+
+            var TFDateParam = tf.TFDate.HasValue ? new SqlParameter("@TFDate", tf.TFDate) : new SqlParameter("@TFDate", DBNull.Value);
+
+            //var FromAccountIdParam = tf.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", tf.FromAccountId) : new SqlParameter("@FromAccountId", DBNull.Value);
+
+            var ToAccountIdParam = tf.ToAccountId.HasValue ? new SqlParameter("@ToAccountId", tf.ToAccountId) : new SqlParameter("@FromAccToAccountIdountId", DBNull.Value);
+
+            var TransferAmountParam = tf.TransferAmount.HasValue ? new SqlParameter("@TransferAmount", tf.TransferAmount) : new SqlParameter("@TransferAmount", DBNull.Value);
+
+            var CashbackAccountIdParam = tf.CashbackAccountId.HasValue ? new SqlParameter("@CashbackAccountId", tf.CashbackAccountId) : new SqlParameter("@CashbackAccountId", DBNull.Value);
+
+            var CashbackAmountParam = tf.CashbackAmount.HasValue ? new SqlParameter("@CashbackAmount", tf.CashbackAmount) : new SqlParameter("@CashbackAmount", DBNull.Value);
+
+            var CCFeeAmountParam = tf.CCFeeAmount.HasValue ? new SqlParameter("@CCFeeAmount", tf.CCFeeAmount) : new SqlParameter("@CCFeeAmount", DBNull.Value);
+
+            var RoundingOffParam = tf.RoundingOff.HasValue ? new SqlParameter("@RoundingOff", tf.RoundingOff) : new SqlParameter("@RoundingOff", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewTFId = new SqlParameter()
+            {
+                ParameterName = "@NewTFId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Deposit_Insert] @TFId,@TFDate,@ToAccountId,@TransferAmount,@CashbackAccountId,@CashbackAmount,@CCFeeAmount,@RoundingOff,@EmpId,@NewTFId OUTPUT", TFIdParam, TFDateParam, ToAccountIdParam, TransferAmountParam, CashbackAccountIdParam, CashbackAmountParam, CCFeeAmountParam, RoundingOffParam, EmpIdParam, NewTFId);
+
+            return Convert.ToInt32(NewTFId.Value);
+        }
+
+        public IQueryable<TempDepositList>? InjectDeposit(int tfId)
+        {
+            var TFIdParam = new SqlParameter("@TFId", tfId);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            //var PmtMethodParam = string.IsNullOrEmpty(injectReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", cart.PmtMethod);
+
+            //var StartDateParam = cart.StartDate.HasValue ? new SqlParameter("@StartDate", cart.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            //var EndDateParam = cart.EndDate.HasValue ? new SqlParameter("@EndDate", cart.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.TempDepositList.FromSqlRaw("[dbo].[Deposit_Inject] @TFId,@EmpId", TFIdParam, EmpIdParam);
         }
     }
 }
