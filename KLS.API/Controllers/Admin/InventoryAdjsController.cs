@@ -1,5 +1,6 @@
 ﻿using KLS.API.Helpers;
 using KLS.Models;
+using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -34,6 +35,18 @@ namespace KLS.API.Controllers.Admin
         public IActionResult List([FromQuery] InventoryAdjListReq inventoryAdjListReq)
         {
             return Ok(_inventoryAdjService.GetAllInventoryAdj(inventoryAdjListReq));
+        }
+
+
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var inventoryAdj = _inventoryAdjService.GetById(id);
+
+            if (inventoryAdj == null)
+                return NotFound($"InventoryAdj with ID {id} not found.");
+
+            return Ok(inventoryAdj);
         }
 
 
@@ -74,9 +87,9 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("UpdateDetailNotes")]
-        public IActionResult UpdateDetailNotes([FromBody] InventoryAdj inventoryAdj)
+        public IActionResult UpdateDetailNotes([FromBody] InventoryAdjList inventoryAdjList)
         {
-            _inventoryAdjService.UpdateDetailNotes(inventoryAdj);
+            _inventoryAdjService.UpdateDetailNotes(inventoryAdjList);
 
             return Ok();
         }

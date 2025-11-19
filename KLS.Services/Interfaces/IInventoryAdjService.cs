@@ -11,6 +11,8 @@ namespace KLS.Services.Interfaces
     {
         PagingResponse<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq);
 
+        InventoryAdj GetById(int adjId);
+
         IEnumerable<InventoryAdjList> SaveInventoryAdj(InventoryAdj inventoryAdj);
 
         void InjectInventoryAdj(int adjId);
@@ -19,6 +21,6 @@ namespace KLS.Services.Interfaces
 
         void UpdateNotes(InventoryAdj inventoryAdj);
 
-        void UpdateDetailNotes(InventoryAdj inventoryAdj);
+        void UpdateDetailNotes(InventoryAdjList inventoryAdjList);
     }
 }

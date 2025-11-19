@@ -83,20 +83,20 @@ namespace KLS.Data.Repositories
 
             var NewAdjId = new SqlParameter()
             {
-                ParameterName = "@NewAdjNum",
+                ParameterName = "@NewAdjId",
                 Direction = System.Data.ParameterDirection.Output,
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
             if (inventoryAdj.AdjId > 0)
             {
-                DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_PartialUpdate] @AdjNum,@AdjDate,@AdjType,@Note,@EmpId", AdjIdParam, AdjDateParam, AdjTypeParam, NotesParam, EmpIdParam);
+                DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_PartialUpdate] @AdjId,@AdjDate,@AdjType,@Notes,@EmpId", AdjIdParam, AdjDateParam, AdjTypeParam, NotesParam, EmpIdParam);
 
                 return inventoryAdj.AdjId;
             }
             else
             {
-                DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_Insert] @AdjNum,@AdjDate,@AdjType,@Note,@EmpId,@NewAdjId OUTPUT", AdjIdParam, AdjDateParam, AdjTypeParam, NotesParam, EmpIdParam, NewAdjId);
+                DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_Insert] @AdjId,@AdjDate,@AdjType,@Notes,@EmpId,@NewAdjId OUTPUT", AdjIdParam, AdjDateParam, AdjTypeParam, NotesParam, EmpIdParam, NewAdjId);
 
                 return Convert.ToInt32(NewAdjId.Value);
             }
@@ -104,11 +104,11 @@ namespace KLS.Data.Repositories
 
         public void InjectInventoryAdj(int adjId)
         {
-            var AdjIdParam = new SqlParameter("@AdjId", adjId);
-
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_Inject] @AdjId,@EmpId", AdjIdParam, EmpIdParam);
+            var AdjIdParam = new SqlParameter("@AdjId", adjId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_Inject] @EmpId,@AdjId", EmpIdParam, AdjIdParam);
         }
     }
 }

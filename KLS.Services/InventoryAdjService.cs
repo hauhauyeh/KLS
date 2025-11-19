@@ -75,18 +75,17 @@ namespace KLS.Services
             }
         }
 
-        public void UpdateDetailNotes(InventoryAdj inventoryAdj)
+        public void UpdateDetailNotes(InventoryAdjList inventoryAdjList)
         {
-            //var existing = Uow.InventoryAdjDetails.GetById(inventoryAdj.AdjDetailId);
+            var existing = Uow.InventoryAdjDetails.GetById(inventoryAdjList.AdjDetailId);
 
-            //if (existing != null)
-            //{
-            //    existing.Notes = inventoryAdj.Notes;
-            //    existing.UpdatedAt = DateTime.UtcNow;
+            if (existing != null)
+            {
+                existing.Notes = inventoryAdjList.DetailNotes;
 
-            //    Uow.InventoryAdjs.Update(existing);
-            //    Uow.Commit();
-            //}
+                Uow.InventoryAdjDetails.Update(existing);
+                Uow.Commit();
+            }
         }
     }
 }

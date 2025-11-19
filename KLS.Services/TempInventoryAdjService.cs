@@ -43,6 +43,7 @@ namespace KLS.Services
 
             tempItem.ItemCode = item.ItemCode;
             tempItem.ItemName = item.ItemName;
+            tempItem.ItemId = item.ItemId;
             tempItem.PackSize = item.PackSize;
             tempItem.NewQty = tempItem.NewQty ?? 0;
             tempItem.NewPrice = 0;
@@ -51,9 +52,12 @@ namespace KLS.Services
             tempAdj.InjectFrom(tempItem);
             tempAdj.ChangeStatus = EnumHelper.ChangeStatus.I.ToString();
             tempAdj.QtyDiffer = 0;
+            tempAdj.EmpId = UserContext.EmpId;
 
             Uow.TempInventoryAdjs.Add(tempAdj);
             Uow.Commit();
+
+            tempItem.TempAdjId = tempAdj.TempAdjId;
 
             return tempItem;
         }
