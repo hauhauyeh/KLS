@@ -57,6 +57,13 @@ namespace KLS.Services
             return Uow.VendorPayments.GetAllVendorPayments(payNowReq).AsEnumerable().FirstOrDefault();
         }
 
+        public VendorPayment? SaveVendorPayment(VendorPayment vendorPayment)
+        {
+            var newPaymentId = Uow.VendorPayments.SaveVendorPayment(vendorPayment);
+
+            return GetById(newPaymentId);
+        }
+
         public void DeleteVendorPayment(int vendorPaymentId)
         {
             var payment = GetById(vendorPaymentId);

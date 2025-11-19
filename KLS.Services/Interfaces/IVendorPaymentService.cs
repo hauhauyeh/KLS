@@ -13,6 +13,8 @@ namespace KLS.Services.Interfaces
 
         VendorPayment GetById(int vendorPaymentId);
 
+        VendorPayment? SaveVendorPayment(VendorPayment vendorPayment);
+
         void DeleteVendorPayment(int vendorPaymentId);
 
         void VoidCheck(int vendorPaymentId);

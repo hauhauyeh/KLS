@@ -45,6 +45,14 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("Save")]
+        [DisplayName("Add/Edit VendorPayment")]
+        public IActionResult Save([FromBody] VendorPayment vendorPayment)
+        {
+            return Ok(_vendorPaymentService.SaveVendorPayment(vendorPayment));
+        }
+
+
         [HttpDelete("{paymentId}")]
         [DisplayName("Delete Payment")]
         public IActionResult Delete(int paymentId)

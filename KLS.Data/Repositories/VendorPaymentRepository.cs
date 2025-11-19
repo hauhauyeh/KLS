@@ -134,6 +134,40 @@ namespace KLS.Data.Repositories
             return param;
         }
 
+        public int SaveVendorPayment(VendorPayment vendorPayment)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPayment.VendorPaymentId);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", vendorPayment.PayeeId);
+
+            var PaymentDateParam = vendorPayment.PaymentDate.HasValue ? new SqlParameter("@PaymentDate", vendorPayment.PaymentDate) : new SqlParameter("@PaymentDate", DBNull.Value);
+
+            var PaymentTypeParam = (!string.IsNullOrEmpty(vendorPayment.PaymentType)) ? new SqlParameter("@PaymentType", vendorPayment.PaymentType) : new SqlParameter("@PaymentType", DBNull.Value);
+
+            var PaymentMethodParam = (!string.IsNullOrEmpty(vendorPayment.PaymentMethod)) ? new SqlParameter("@PaymentMethod", vendorPayment.PaymentMethod) : new SqlParameter("@PaymentMethod", DBNull.Value);
+
+            var ReferenceIdParam = (!string.IsNullOrEmpty(vendorPayment.ReferenceId)) ? new SqlParameter("@ReferenceId", vendorPayment.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
+
+            var FromAccountIdParam = vendorPayment.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", vendorPayment.FromAccountId) : new SqlParameter("@FromAccountId", DBNull.Value);
+
+            var PaymentAmountParam = vendorPayment.PaymentAmount.HasValue ? new SqlParameter("@PaymentAmount", vendorPayment.PaymentAmount) : new SqlParameter("@PaymentAmount", DBNull.Value);
+
+            var NotesParam = (!string.IsNullOrEmpty(vendorPayment.Notes)) ? new SqlParameter("@Notes", vendorPayment.Notes) : new SqlParameter("@Notes", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewPaymentId = new SqlParameter()
+            {
+                ParameterName = "@NewPaymentId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_Insert] @VendorPaymentId,@PayeeId,@PaymentDate,@PaymentType,@PaymentMethod,@ReferenceId,@FromAccountId,@PaymentAmount,@Notes,@EmpId,@NewPaymentId OUTPUT", VendorPaymentIdParam, PayeeIdParam, PaymentDateParam, PaymentTypeParam, PaymentMethodParam, ReferenceIdParam, FromAccountIdParam, PaymentAmountParam, NotesParam, EmpIdParam, NewPaymentId);
+
+            return Convert.ToInt32(NewPaymentId.Value);
+        }
+
         public void VoidCheck(int vendorPaymentId)
         {
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);

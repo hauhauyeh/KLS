@@ -17,6 +17,8 @@ namespace KLS.Contract.Interfaces
 
         int CountAllVendorPayments(VendorPaymentReq vendorPaymentReq);
 
+        int SaveVendorPayment(VendorPayment vendorPayment);
+
         void VoidCheck(int vendorPaymentId);
 
         void UnVoidCheck(int vendorPaymentId);
