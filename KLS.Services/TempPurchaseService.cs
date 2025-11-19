@@ -26,7 +26,7 @@ namespace KLS.Services
 
         public IEnumerable<TempPurchaseItem>? GetTempPurchaseItems(TempPurchaseReq tempReq)
         {
-            return Uow.TempPayrollServices.GetTempPurchaseItems(tempReq);
+            return Uow.TempPurchases.GetTempPurchaseItems(tempReq);
         }
 
         public TempPurchaseItem CreateTempPurchase(TempPurchaseItem tempItem)

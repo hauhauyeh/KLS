@@ -276,6 +276,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
 
+        public virtual DbSet<TempInventoryItem> TempInventoryItem { get; set; }
+
         #endregion
     }
 }

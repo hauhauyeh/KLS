@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITempInventoryAdjRepository : IRepository<TempInventoryAdj>
     {
-
+        IQueryable<TempInventoryItem>? GetTempAdjItems(TempInventoryReq tempReq);
     }
 }
