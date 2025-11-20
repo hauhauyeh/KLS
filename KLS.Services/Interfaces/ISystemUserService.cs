@@ -28,5 +28,7 @@ namespace KLS.Services.Interfaces
         string ForgetPassword(string email, string url);
 
         bool ResetPassword(ResetPassword resetPassword);
+
+        void Logout();
     }
 }

@@ -1,16 +1,13 @@
 ﻿using KLS.API.Helpers;
-using KLS.Common;
 using KLS.Models;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Payroll Management", GroupName = "Employee")]
     public class PayrollsController : BaseController

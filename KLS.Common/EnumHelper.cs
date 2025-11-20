@@ -98,5 +98,13 @@ namespace KLS.Common
             Deposit = 800,
             Transfer = 810
         }
+
+        public enum Portal
+        {
+            Admin = 1,
+            Web = 2,
+            Sales = 3,
+            Timesheet = 4
+        }
     }
 }

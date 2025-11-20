@@ -1,6 +1,6 @@
-﻿using KLS.Common;
+﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Models;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -76,6 +76,15 @@ namespace KLS.API.Controllers.Admin
             if (!isReset)
                 return Unauthorized("Invalid reset link. Request a new one.");
 
+            return Ok();
+        }
+
+
+        [AuthorizeAdmin]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            _userService.Logout();
             return Ok();
         }
 

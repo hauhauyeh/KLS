@@ -56,8 +56,22 @@ namespace KLS.Services
             user.RefTokenExpire = DateTime.Now.AddDays(_jWTService.RefreshTokenValidity());
             UpdateToken(user);
 
-            var token = _jWTService.GenerateJwtToken(user);
             var role = _userRoleService.GetById(user.RoleId);
+
+            //--claim
+            var jwtClaim = new JWTClaim
+            {
+                Portal = EnumHelper.Portal.Web.ToString(),
+                Username = user.Username,
+                PayeeId = user.PayeeId,
+                UserId = user.UserId,
+                RefreshToken = refreshToken,
+                RefTokenExpire = user.RefTokenExpire,
+                RoleId = user.RoleId,
+                IsAdmin = role.IsAdmin
+            };
+
+            var token = _jWTService.GenerateJwtToken(jwtClaim);
 
             return new LoginResult
             {
@@ -72,42 +86,26 @@ namespace KLS.Services
 
         public LoginResult RefreshToken(RefreshTokenReq tokenReq)
         {
-            var userJson = _jWTService.ValidateExpiredToken(tokenReq.AccessToken);
+            var jwtClaim = _jWTService.ValidateExpiredToken(tokenReq.AccessToken);
 
-            if (string.IsNullOrEmpty(userJson))
+            if (jwtClaim == null)
                 return new LoginResult { Success = false, ErrorMessage = "Invalid or expired token." };
 
-            var user = JsonSerializer.Deserialize<UserAccount>(userJson);
-            if (user == null)
-                return new LoginResult { Success = false, ErrorMessage = "User info malformed." };
-
-            //var emp = _employeeService.GetById(user.PayeeId);
-
-            //if (emp == null)
-            //    return new LoginResult { Success = false, ErrorMessage = "User not found." };
-
-            if (user.RefToken != tokenReq.RefreshToken || user.RefTokenExpire <= DateTime.Now)
+            if (jwtClaim.RefreshToken != tokenReq.RefreshToken || jwtClaim.RefTokenExpire <= DateTime.Now)
                 return new LoginResult { Success = false, ErrorMessage = "Invalid or expired refresh token." };
 
+            var newToken = _jWTService.GenerateJwtToken(jwtClaim);
 
-            var newToken = _jWTService.GenerateJwtToken(user);
-
-            var role = _userRoleService.GetById(user.RoleId);
-
-            //var sortName = string.IsNullOrEmpty(emp.FirstName) || string.IsNullOrEmpty(emp.LastName)
-            //       ? ""
-            //       : emp.FirstName[0].ToString() + emp.LastName[0].ToString();
+            var role = _userRoleService.GetById(jwtClaim.RoleId);
 
             return new LoginResult
             {
                 Success = true,
                 Token = newToken,
-                RefreshToken = user.RefToken,
-                Username = user.Username,
+                RefreshToken = jwtClaim.RefreshToken,
+                Username = jwtClaim.Username,
                 IsAdmin = role.IsAdmin,
-                IsSalesRole = role?.IsSalesRole ?? false,
-                //EmpId = user.PayeeId,
-                //EmpSortName = sortName
+                IsSalesRole = role?.IsSalesRole ?? false
             };
         }
 

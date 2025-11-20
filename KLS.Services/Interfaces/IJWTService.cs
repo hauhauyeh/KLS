@@ -1,4 +1,6 @@
-﻿using System;
+﻿using KLS.Common;
+using KLS.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +10,14 @@ namespace KLS.Services.Interfaces
 {
     public interface IJWTService
     {
-        string GenerateJwtToken(object userPayload);
-        string ValidateJwtToken(string token);
-        string ValidateExpiredToken(string token);
+        string GenerateJwtToken(JWTClaim userPayload);
+
+        JWTClaim? ValidateJwtToken(string token);
+
+        JWTClaim? ValidateExpiredToken(string token);
+
         string GenerateRefreshToken();
+
         int RefreshTokenValidity();
     }
 }

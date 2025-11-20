@@ -105,8 +105,22 @@ namespace KLS.Services
             user.RefTokenExpire = DateTime.Now.AddDays(_jWTService.RefreshTokenValidity());
             UpdateToken(user);
 
-            var token = _jWTService.GenerateJwtToken(user);
             var role = _roleService.GetById(user.SystemRoleId);
+
+            //--claim
+            var jwtClaim = new JWTClaim
+            {
+                Portal = EnumHelper.Portal.Admin.ToString(),
+                Username = user.Username,
+                PayeeId = user.PayeeId,
+                UserId = user.SystemUserId,
+                RefreshToken = refreshToken,
+                RefTokenExpire = user.RefTokenExpire,
+                RoleId = user.SystemRoleId,
+                IsAdmin = role.IsAdmin
+            };
+
+            var token = _jWTService.GenerateJwtToken(jwtClaim);
 
             return new LoginResult
             {
@@ -125,27 +139,23 @@ namespace KLS.Services
 
         public LoginResult RefreshToken(RefreshTokenReq tokenReq)
         {
-            var userJson = _jWTService.ValidateExpiredToken(tokenReq.AccessToken);
+            var jwtClaim = _jWTService.ValidateExpiredToken(tokenReq.AccessToken);
 
-            if (string.IsNullOrEmpty(userJson))
+            if (jwtClaim == null)
                 return new LoginResult { Success = false, ErrorMessage = "Invalid or expired token." };
 
-            var user = JsonSerializer.Deserialize<SystemUser>(userJson);
-            if (user == null)
-                return new LoginResult { Success = false, ErrorMessage = "User info malformed." };
-
-            var emp = _employeeService.GetById(user.PayeeId);
+            var emp = _employeeService.GetById(jwtClaim.PayeeId);
 
             if (emp == null)
                 return new LoginResult { Success = false, ErrorMessage = "User not found." };
 
-            if (user.RefToken != tokenReq.RefreshToken || user.RefTokenExpire <= DateTime.Now)
+            if (jwtClaim.RefreshToken != tokenReq.RefreshToken || jwtClaim.RefTokenExpire <= DateTime.Now)
                 return new LoginResult { Success = false, ErrorMessage = "Invalid or expired refresh token." };
 
 
-            var newToken = _jWTService.GenerateJwtToken(user);
+            var newToken = _jWTService.GenerateJwtToken(jwtClaim);
 
-            var role = _roleService.GetById(user.SystemRoleId);
+            var role = _roleService.GetById(jwtClaim.RoleId);
 
             var sortName = string.IsNullOrEmpty(emp.FirstName) || string.IsNullOrEmpty(emp.LastName)
                    ? ""
@@ -155,11 +165,11 @@ namespace KLS.Services
             {
                 Success = true,
                 Token = newToken,
-                RefreshToken = user.RefToken,
-                Username = user.Username,
+                RefreshToken = jwtClaim.RefreshToken,
+                Username = jwtClaim.Username,
                 IsAdmin = role.IsAdmin,
                 IsSalesRole = role?.IsSalesRole ?? false,
-                EmpId = user.PayeeId,
+                EmpId = jwtClaim.PayeeId,
                 EmpSortName = sortName
             };
         }
@@ -202,7 +212,7 @@ namespace KLS.Services
         }
 
         public bool ResetPassword(ResetPassword resetPassword)
-        { 
+        {
             string? token = HttpUtility.UrlDecode(resetPassword.Token);
 
             var user = Uow.SystemUsers.Find(u => u.ResetTokenHash == token && u.ResetTokenExpire > DateTime.UtcNow).FirstOrDefault();
@@ -219,6 +229,21 @@ namespace KLS.Services
             Uow.Commit();
 
             return true;
+        }
+
+        public void Logout()
+        {
+            var user = GetById(UserContext.SystemUserId);
+
+            if (user != null)
+            {
+                user.RefToken = null;
+                user.RefTokenExpire = null;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                Uow.SystemUsers.Update(user);
+                Uow.Commit();
+            }
         }
     }
 }

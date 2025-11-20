@@ -1,6 +1,5 @@
 ﻿using KLS.API.Helpers;
 using KLS.Models;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -8,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "AR Management", GroupName = "Admin")]
     public class ARController : BaseController

@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.Options;
+﻿using KLS.Common;
+using KLS.Models;
+using KLS.Services.Interfaces;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text.Json;
 using System.Text;
-using KLS.Common;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using KLS.Services.Interfaces;
+using System.Text.Json;
 
 namespace KLS.Services
 {
@@ -21,11 +22,11 @@ namespace KLS.Services
             _key = Encoding.ASCII.GetBytes(_appSettings.Secret);
         }
 
-        public string GenerateJwtToken(object userPayload)
+        public string GenerateJwtToken(JWTClaim userClaim)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
-                new Claim("user", JsonSerializer.Serialize(userPayload))
+                new Claim("jwtclaim", JsonSerializer.Serialize(userClaim))
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -41,17 +42,17 @@ namespace KLS.Services
             return tokenHandler.WriteToken(token);
         }
 
-        public string ValidateJwtToken(string token)
+        public JWTClaim? ValidateJwtToken(string token)
         {
             return ValidateTokenInternal(token, validateLifetime: true);
         }
 
-        public string ValidateExpiredToken(string token)
+        public JWTClaim? ValidateExpiredToken(string token)
         {
             return ValidateTokenInternal(token, validateLifetime: false);
         }
 
-        private string ValidateTokenInternal(string token, bool validateLifetime)
+        private JWTClaim? ValidateTokenInternal(string token, bool validateLifetime)
         {
             try
             {
@@ -69,11 +70,20 @@ namespace KLS.Services
                 tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                return jwtToken.Claims.FirstOrDefault(x => x.Type == "user")?.Value ?? "";
+                var jwtJson = jwtToken.Claims.FirstOrDefault(x => x.Type == "jwtclaim")?.Value ?? "";
+
+                if (string.IsNullOrEmpty(jwtJson))
+                {
+                    return null;
+                }
+
+                return JsonSerializer.Deserialize<JWTClaim>(jwtJson);
+
+                //return jwtToken.Claims.FirstOrDefault(x => x.Type == "jwtclaim")?.Value ?? "";
             }
             catch
             {
-                return "";
+                return null;
             }
         }
 

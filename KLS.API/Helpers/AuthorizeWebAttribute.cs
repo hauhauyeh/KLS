@@ -1,17 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using KLS.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using System.Reflection;
-using System.ComponentModel;
 using Newtonsoft.Json;
-using KLS.Models;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace KLS.API.Helpers
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class AuthorizeAdminAttribute : Attribute, IAuthorizationFilter
+    public class AuthorizeWebAttribute : Attribute, IAuthorizationFilter
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {
@@ -25,10 +24,6 @@ namespace KLS.API.Helpers
 
                 if (!IsProtectedAction(context))
                     return;
-
-                //only employee can access api
-                if (!CurrentUser.PayeeId.ToString().StartsWith('1'))
-                    context.Result = new UnsupportedMediaTypeResult();
 
                 var isAdmin = Convert.ToBoolean(context.HttpContext.Items["IsAdmin"]?.ToString());
 

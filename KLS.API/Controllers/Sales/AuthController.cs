@@ -1,4 +1,5 @@
-﻿using KLS.Common;
+﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -47,6 +48,15 @@ namespace KLS.API.Controllers.Sales
                 return Unauthorized(result.ErrorMessage);
 
             return Ok(result);
+        }
+
+
+        [AuthorizeAdmin]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            _userService.Logout();
+            return Ok();
         }
 
         #endregion

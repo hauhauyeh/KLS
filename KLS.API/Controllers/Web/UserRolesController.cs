@@ -1,11 +1,13 @@
-﻿using KLS.Services.Interfaces;
+﻿using KLS.API.Helpers;
+using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
 {
+    [AuthorizeWeb]
     [Route("api/web/[controller]")]
-    [Display(Name = "UserRole Management", GroupName = "Web")]
+    [Display(Name = "Role Management", GroupName = "Web")]
     public class UserRolesController : BaseController
     {
         #region --- Member(s) ---

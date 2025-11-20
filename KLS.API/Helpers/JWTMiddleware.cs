@@ -1,6 +1,5 @@
 ﻿using KLS.Common;
 using KLS.Models;
-using KLS.Services;
 using KLS.Services.Interfaces;
 using System.Text.Json;
 
@@ -23,30 +22,49 @@ namespace KLS.API.Helpers
 
             if (token != null)
             {
-                var userJSON = _JWTService.ValidateJwtToken(token);
+                var jwtClaim = _JWTService.ValidateJwtToken(token);
 
-                if (!string.IsNullOrEmpty(userJSON))
+                if (jwtClaim != null)
                 {
                     // attach user to context on successful jwt validation
 
-                    var user = JsonSerializer.Deserialize<SystemUser>(userJSON);
+                    context.Items["CurrentUser"] = jwtClaim;
+                    context.Items["RefreshToken"] = jwtClaim.RefreshToken;
+                    UserContext.EmpId = jwtClaim.PayeeId;
+                    UserContext.SystemUserId = jwtClaim.UserId;
 
-                    if (user != null)
+                    // 🔑 Resolve scoped service correctly
+
+                    string? accessPermission = null;
+                    bool? isAdmin = null;
+
+                    if (jwtClaim.Portal == EnumHelper.Portal.Admin.ToString())
                     {
-                        context.Items["CurrentUser"] = user;
-                        UserContext.EmpId = user.PayeeId;
-
-                        context.Items["RefreshToken"] = user.RefToken;
-
-                        // 🔑 Resolve scoped service correctly
                         var roleService = context.RequestServices.GetRequiredService<ISystemRoleService>();
-                        var role = roleService.GetById(user.SystemRoleId);
+                        var role = roleService.GetById(jwtClaim.RoleId);
 
                         if (role != null)
                         {
-                            context.Items["AccessPermission"] = role.RoleAccess;
-                            context.Items["IsAdmin"] = role.IsAdmin;
+                            accessPermission = role.RoleAccess;
+                            isAdmin = role.IsAdmin;
                         }
+                    }
+                    else
+                    {
+                        var roleService = context.RequestServices.GetRequiredService<IUserRoleService>();
+                        var role = roleService.GetById(jwtClaim.RoleId);
+
+                        if (role != null)
+                        {
+                            accessPermission = role.RoleAccess;
+                            isAdmin = role.IsAdmin;
+                        }
+                    }
+
+                    if (accessPermission != null && isAdmin.HasValue)
+                    {
+                        context.Items["AccessPermission"] = accessPermission;
+                        context.Items["IsAdmin"] = isAdmin.Value;
                     }
                 }
             }
