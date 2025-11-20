@@ -2,6 +2,7 @@
 using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -16,11 +17,13 @@ namespace KLS.Services
     {
         private readonly ISystemSettingService _systemSettingService;
         private readonly IDeleteLogService _deleteLogService;
+        private IWebHostEnvironment _hostingEnvironment;
 
-        public VendorPaymentService(IUnitOfWork uow, ISystemSettingService systemSettingService, IDeleteLogService deleteLogService) : base(uow)
+        public VendorPaymentService(IUnitOfWork uow, ISystemSettingService systemSettingService, IDeleteLogService deleteLogService, IWebHostEnvironment hostingEnvironment) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _deleteLogService = deleteLogService;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public PagingResponse<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq)
@@ -122,6 +125,34 @@ namespace KLS.Services
             var newPaymentId = Uow.VendorPayments.SavePayNowPayment(payNowReq);
 
             return GetListById(newPaymentId);
+        }
+
+        public int ImportPayNow(ImportPayNow importPayNow)
+        {
+            var txCount = 0;
+
+            if (importPayNow.ExcelFile != null)
+            {
+                var excelfile = Path.Combine(_hostingEnvironment.WebRootPath, Constants.PayrollPath, importPayNow.ExcelFile.FileName);
+
+                GC.Collect();
+
+                if (System.IO.File.Exists(excelfile))
+                    System.IO.File.Delete(excelfile);
+
+                using (var fileStream = new FileStream(excelfile, FileMode.Create))
+                {
+                    importPayNow.ExcelFile.CopyTo(fileStream);
+                }
+
+                GC.Collect();
+
+                importPayNow.FilePath = excelfile;
+
+                txCount = Uow.VendorPayments.ImportPayNow(importPayNow);
+            }
+
+            return txCount;
         }
 
 

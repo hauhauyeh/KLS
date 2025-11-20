@@ -235,5 +235,27 @@ namespace KLS.Data.Repositories
 
             return Convert.ToInt32(NewPaymentId.Value);
         }
+
+        public int ImportPayNow(ImportPayNow importPayNow)
+        {
+            var PaymentMethodParam = new SqlParameter("@PaymentMethod", importPayNow.PaymentMethod);
+
+            var FromAccountIdParam = new SqlParameter("@FromAccountId", importPayNow.FromAccountId);
+
+            var FilePathParam = new SqlParameter("@FilePath", importPayNow.FilePath);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var txCount = new SqlParameter()
+            {
+                ParameterName = "@TxCount",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_Import] @PaymentMethod,@FromAccountId,@FilePath,@EmpId,@TxCount OUTPUT", PaymentMethodParam, FromAccountIdParam, FilePathParam, EmpIdParam, txCount);
+
+            return Convert.ToInt32(txCount.Value);
+        }
     }
 }

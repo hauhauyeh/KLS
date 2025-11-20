@@ -102,6 +102,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_vendorPaymentService.SavePayNowPayment(payNowReq));
         }
 
+
+        [HttpPost("ImportPayNow")]
+        [DisplayName("Import PayNow")]
+        public IActionResult ImportPayNow([FromForm] ImportPayNow importPayNow)
+        {
+            var result = _vendorPaymentService.ImportPayNow(importPayNow);
+            return Ok(result);
+        }
+
         #endregion
     }
 }

@@ -27,6 +27,8 @@ namespace KLS.Services.Interfaces
 
         VendorPaymentList? SavePayNowPayment(PayNowReq payNowReq);
 
+        int ImportPayNow(ImportPayNow importPayNow);
+
 
         PagingResponse<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq);
     }
