@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,11 @@ namespace KLS.Services
 {
     public class PurchaseOrderService : BaseService, IPurchaseOrderService
     {
-        public PurchaseOrderService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IDeleteLogService _deleteLogService;
 
+        public PurchaseOrderService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        {
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
@@ -99,6 +102,10 @@ namespace KLS.Services
             if (purchaseOrder != null && !purchaseOrder.PurchaseId.HasValue)
             {
                 Uow.PurchaseOrders.Find(c => c.POId == poId).ExecuteDelete();
+
+                string docType = EnumHelper.DocType.Purchase.ToString();
+
+                _deleteLogService.Add(docType, poId);
             }
         }
 

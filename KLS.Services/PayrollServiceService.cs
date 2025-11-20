@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,11 @@ namespace KLS.Services
 {
     public class PayrollServiceService : BaseService, IPayrollServiceService
     {
-        public PayrollServiceService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IDeleteLogService _deleteLogService;
 
+        public PayrollServiceService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        {
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<PayrollServiceDTO> GetAllPayrollService(PayrollServiceReq payrollServiceReq)
@@ -48,6 +51,10 @@ namespace KLS.Services
             if (payrollService != null && !payrollService.IsLocked)
             {
                 Uow.PayrollServices.Find(c => c.PayrollServiceId == payrollServiceId).ExecuteDelete();
+
+                string docType = EnumHelper.DocType.PayrollService.ToString();
+
+                _deleteLogService.Add(docType, payrollServiceId);
             }
         }
 

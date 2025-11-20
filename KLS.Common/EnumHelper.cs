@@ -96,7 +96,10 @@ namespace KLS.Common
             InventoryAdj = 600,
             LoanRepayment = 710,
             Deposit = 800,
-            Transfer = 810
+            Transfer = 810,
+            LoantoEmployee = 920,
+            OtherIncomingPayment = 940,
+            PayrollService = 930
         }
 
         public enum Portal

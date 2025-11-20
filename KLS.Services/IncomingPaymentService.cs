@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,11 @@ namespace KLS.Services
 {
     public class IncomingPaymentService : BaseService, IIncomingPaymentService
     {
-        public IncomingPaymentService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IDeleteLogService _deleteLogService;
 
+        public IncomingPaymentService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        {
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<IncomingPaymentList> GetIncomingPayment(IncomingPaymentListReq incomingPaymentReq)
@@ -48,6 +51,10 @@ namespace KLS.Services
             if (customerPayment != null && !customerPayment.IsLocked)
             {
                 Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).ExecuteDelete();
+
+                string docType = EnumHelper.DocType.OtherIncomingPayment.ToString();
+
+                _deleteLogService.Add(docType, customerPaymentId);
             }
         }
     }

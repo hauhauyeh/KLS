@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using System;
@@ -11,9 +12,11 @@ namespace KLS.Services
 {
     public class EmployeeAdvancePmtService : BaseService, IEmployeeAdvancePmtService
     {
-        public EmployeeAdvancePmtService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IDeleteLogService _deleteLogService;
 
+        public EmployeeAdvancePmtService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        {
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<EmployeeAdvancePmt> GetAllEmployeeAdvancePmt(EmployeeAdvancePmtReq empAdvanceReq)
@@ -48,6 +51,10 @@ namespace KLS.Services
             {
                 Uow.VendorPayments.RemoveById(vendorPaymentId);
                 Uow.Commit();
+
+                string docType = EnumHelper.DocType.LoantoEmployee.ToString();
+
+                _deleteLogService.Add(docType, vendorPaymentId);
             }
         }
     }

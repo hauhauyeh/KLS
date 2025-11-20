@@ -15,10 +15,12 @@ namespace KLS.Services
     public class VendorPaymentService : BaseService, IVendorPaymentService
     {
         private readonly ISystemSettingService _systemSettingService;
+        private readonly IDeleteLogService _deleteLogService;
 
-        public VendorPaymentService(IUnitOfWork uow, ISystemSettingService systemSettingService) : base(uow)
+        public VendorPaymentService(IUnitOfWork uow, ISystemSettingService systemSettingService, IDeleteLogService deleteLogService) : base(uow)
         {
             _systemSettingService = systemSettingService;
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq)
@@ -71,6 +73,10 @@ namespace KLS.Services
             if (payment != null && !payment.IsLocked)
             {
                 Uow.VendorPayments.Find(c => c.VendorPaymentId == vendorPaymentId).ExecuteDelete();
+
+                string docType = payment.PaymentType.ToString();
+
+                _deleteLogService.Add(docType, vendorPaymentId);
             }
         }
 

@@ -1,6 +1,8 @@
 ﻿using KLS.API.Helpers;
+using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
@@ -27,7 +29,65 @@ namespace KLS.API.Controllers.Web
 
         #region --- Method(s) ---
 
+        [HttpGet]
+        [DisplayName("List UserRole")]
+        public IActionResult List()
+        {
+            return Ok(_userRoleService.GetAllUserRoles());
+        }
 
+
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var role = _userRoleService.GetById(id);
+
+            if (role == null)
+                return NotFound($"User role with ID {id} not found.");
+
+            return Ok(role);
+        }
+
+
+        [HttpPost]
+        [DisplayName("Create UserRole")]
+        public IActionResult Create([FromBody] UserRole userRole)
+        {
+            if (_userRoleService.UserRoleNameExists(userRole))
+                return Conflict("Rolename already exists.");
+
+            var created = _userRoleService.CreateUserRole(userRole);
+
+            return Ok(created);
+        }
+
+
+        [HttpPut]
+        [DisplayName("Update UserRole")]
+        public IActionResult Update([FromBody] UserRole userRole)
+        {
+            if (_userRoleService.UserRoleNameExists(userRole))
+                return Conflict("Rolename already exists.");
+
+            var created = _userRoleService.UpdateUserRole(userRole);
+
+            return Ok(created);
+        }
+
+
+        [HttpDelete("{roleId}")]
+        [DisplayName("Delete UserRole")]
+        public IActionResult Delete(int roleId)
+        {
+            var existing = _userRoleService.GetById(roleId);
+
+            if (existing == null)
+                return NotFound($"User role with ID {roleId} not found.");
+
+            _userRoleService.DeleteUserRole(roleId);
+
+            return Ok();
+        }
 
         #endregion
     }

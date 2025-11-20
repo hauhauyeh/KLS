@@ -19,10 +19,12 @@ namespace KLS.Services
     public class PayrollDetailService : BaseService, IPayrollDetailService
     {
         private IWebHostEnvironment _hostingEnvironment;
+        private readonly IDeleteLogService _deleteLogService;
 
-        public PayrollDetailService(IUnitOfWork uow, IWebHostEnvironment hostingEnvironment) : base(uow)
+        public PayrollDetailService(IUnitOfWork uow, IWebHostEnvironment hostingEnvironment, IDeleteLogService deleteLogService) : base(uow)
         {
             _hostingEnvironment = hostingEnvironment;
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<PayrollList> GetAllPayrolls(PayrollReq payrollReq)
@@ -54,6 +56,10 @@ namespace KLS.Services
             if (payroll != null && !payroll.IsLocked)
             {
                 Uow.VendorPayments.Find(c => c.VendorPaymentId == vendorPaymentId).ExecuteDelete();
+
+                string docType = EnumHelper.DocType.Paycheck.ToString();
+
+                _deleteLogService.Add(docType, vendorPaymentId);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,11 @@ namespace KLS.Services
 {
     public class GeneralJournalService : BaseService, IGeneralJournalService
     {
-        public GeneralJournalService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IDeleteLogService _deleteLogService;
 
+        public GeneralJournalService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        {
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<GeneralJournal> GetAllGeneralJournals(GJReq gJReq)
@@ -50,6 +53,10 @@ namespace KLS.Services
                 Uow.GeneralJournals.Find(c => c.GJId == gjId).ExecuteDelete();
                 //Uow.GeneralJournals.RemoveById(gjId);
                 //Uow.Commit();
+
+                string docType = EnumHelper.DocType.GeneralJournal.ToString();
+
+                _deleteLogService.Add(docType, gjId);
             }
         }
 

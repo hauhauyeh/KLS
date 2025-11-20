@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,11 @@ namespace KLS.Services
 {
     public class InventoryAdjService : BaseService, IInventoryAdjService
     {
-        public InventoryAdjService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IDeleteLogService _deleteLogService;
 
+        public InventoryAdjService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        {
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq)
@@ -58,7 +61,18 @@ namespace KLS.Services
 
         public void DeleteInventoryAdj(int adjId)
         {
-            Uow.InventoryAdjs.Find(c => c.AdjId == adjId).ExecuteDelete();
+            //Uow.InventoryAdjs.Find(c => c.AdjId == adjId).ExecuteDelete();
+
+            var inventoryAdj = GetById(adjId);
+
+            if (inventoryAdj != null && !inventoryAdj.IsLocked)
+            {
+                Uow.InventoryAdjs.Find(c => c.AdjId == adjId).ExecuteDelete();
+
+                string docType = EnumHelper.DocType.InventoryAdj.ToString();
+
+                _deleteLogService.Add(docType, adjId);
+            }
         }
 
         public void UpdateNotes(InventoryAdj inventoryAdj)

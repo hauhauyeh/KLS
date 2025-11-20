@@ -18,11 +18,13 @@ namespace KLS.Services
     {
         private readonly IWebHostEnvironment _env;
         private readonly IItemService _itemService;
+        private readonly IDeleteLogService _deleteLogService;
 
-        public PurchaseService(IUnitOfWork uow, IWebHostEnvironment env, IItemService itemService) : base(uow)
+        public PurchaseService(IUnitOfWork uow, IWebHostEnvironment env, IItemService itemService, IDeleteLogService deleteLogService) : base(uow)
         {
             _env = env;
             _itemService = itemService;
+            _deleteLogService = deleteLogService;
         }
 
         public PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
@@ -156,6 +158,10 @@ namespace KLS.Services
             if (purchase != null && !purchase.IsLocked)
             {
                 Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
+
+                string docType = EnumHelper.DocType.Purchase.ToString();
+
+                _deleteLogService.Add(docType, purchaseId);
             }
         }
 
