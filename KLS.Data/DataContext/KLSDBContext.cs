@@ -84,6 +84,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<InventoryAdjDetail>().ToTable("InventoryAdjDetail");
             modelBuilder.Entity<TempInventoryAdj>().ToTable("TempInventoryAdj");
             modelBuilder.Entity<TempTransferFund>().ToTable("TempTransferFund");
+            modelBuilder.Entity<UserAccount>().ToTable("UserAccount");
+            modelBuilder.Entity<UserRole>().ToTable("UserRole");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -205,6 +207,10 @@ namespace KLS.Data.DataContext
         public DbSet<TempInventoryAdj> TempInventoryAdjs { get; set; }
 
         public DbSet<TempTransferFund> TempTransferFunds { get; set; }
+
+        public DbSet<UserAccount> UserAccounts { get; set; }
+
+        public DbSet<UserRole> UserRoles { get; set; }
 
         #endregion
 

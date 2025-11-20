@@ -153,6 +153,10 @@ namespace KLS.Data.Repositories
         public ITempTransferFundRepository TempTransferFunds { get { return new TempTransferFundRepository(DbContext); } }
 
         public IInventoryAdjDetailRepository InventoryAdjDetails { get { return new InventoryAdjDetailRepository(DbContext); } }
+
+        public IUserAccountRepository UserAccounts { get { return new UserAccountRepository(DbContext); } }
+
+        public IUserRoleRepository UserRoles { get { return new UserRoleRepository(DbContext); } }
     }
 }
 

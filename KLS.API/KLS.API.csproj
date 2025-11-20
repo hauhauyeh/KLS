@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\Web\" />
     <Folder Include="Hubs\" />
     <Folder Include="wwwroot\Images\category\" />
     <Folder Include="wwwroot\Images\item\" />

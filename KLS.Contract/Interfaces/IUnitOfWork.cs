@@ -126,6 +126,10 @@ namespace KLS.Contract.Interfaces
 
         IInventoryAdjDetailRepository InventoryAdjDetails { get; }
 
+        IUserAccountRepository UserAccounts { get; }
+
+        IUserRoleRepository UserRoles { get; }
+
         void Commit();
     }
 }
