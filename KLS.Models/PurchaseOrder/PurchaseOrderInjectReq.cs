@@ -9,7 +9,9 @@ namespace KLS.Models
 {
     public class PurchaseOrderInjectReq
     {
-        public int POId { get; set; }
+        //public int POId { get; set; }
+
+        public int PurchaseId { get; set; }
 
         public int EmpId { get; set; }
 

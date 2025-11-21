@@ -79,15 +79,15 @@ namespace KLS.Data.Repositories
 
             var PayeeIdParam = new SqlParameter("@PayeeId", injectReq.PayeeId);
 
-            var POIdParam = new SqlParameter("@POId", injectReq.POId);
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", injectReq.PurchaseId);
 
-            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Inject] @EmpId,@PayeeId,@POId", EmpIdParam, PayeeIdParam, POIdParam);
+            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Inject] @EmpId,@PayeeId,@PurchaseId", EmpIdParam, PayeeIdParam, PurchaseIdParam);
         }
 
         public int Checkout(PurchaseOrderCheckoutReq checkoutReq)
         {
             // int parameters
-            var POIdParam = new SqlParameter("@POId", (object?)checkoutReq.POId ?? 0);
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", (object?)checkoutReq.PurchaseId ?? 0);
 
             var PayeeIdParam = new SqlParameter("@PayeeId", checkoutReq.PayeeId);
 
@@ -98,9 +98,9 @@ namespace KLS.Data.Repositories
                 ? new SqlParameter("@PurchaseDate", ToDbDate(checkoutReq.PurchaseDate))
                 : new SqlParameter("@PurchaseDate", DBNull.Value);
 
-            var EstArrivalDateParam = checkoutReq.EstArrivalDate.HasValue
-                ? new SqlParameter("@EstArrivalDate", ToDbDate(checkoutReq.EstArrivalDate))
-                : new SqlParameter("@EstArrivalDate", DBNull.Value);
+            var ArrivalDateParam = checkoutReq.ArrivalDate.HasValue
+                ? new SqlParameter("@ArrivalDate", ToDbDate(checkoutReq.ArrivalDate))
+                : new SqlParameter("@ArrivalDate", DBNull.Value);
 
             // notes
             var NotesParam = string.IsNullOrWhiteSpace(checkoutReq.Notes)
@@ -119,7 +119,7 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
-            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Insert] @POId,@PayeeId,@PurchaseDate,@EstArrivalDate,@Notes,@EmpId,@NewPOId OUTPUT", POIdParam, PayeeIdParam, PurchaseDateParam, EstArrivalDateParam, NotesParam, EmpIdParam, NewPOIdParam);
+            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Insert] @PurchaseId,@PayeeId,@PurchaseDate,@ArrivalDate,@Notes,@EmpId,@NewPOId OUTPUT", PurchaseIdParam, PayeeIdParam, PurchaseDateParam, ArrivalDateParam, NotesParam, EmpIdParam, NewPOIdParam);
 
             return (NewPOIdParam.Value == DBNull.Value) ? 0 : Convert.ToInt32(NewPOIdParam.Value);
         }
@@ -152,11 +152,11 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_DeleteAdvance] @POId", POIdParam);
         }
 
-        public IQueryable<PODetail> GetPODetail(int poId)
+        public IQueryable<PODetail> GetPODetail(int purchaseId)
         {
-            var POIdParam = new SqlParameter("@POId", poId);
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
 
-            return DbContext.PODetail.FromSqlRaw("[dbo].[PurchaseOrder_GetDetail] @POId", POIdParam);
+            return DbContext.PODetail.FromSqlRaw("[dbo].[PurchaseOrder_GetDetail] @PurchaseId", PurchaseIdParam);
         }
 
         public void CopyToBill(POCopyToBillReq copyToBillReq)

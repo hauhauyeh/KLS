@@ -119,9 +119,9 @@ namespace KLS.Services
             Uow.PurchaseOrders.DeleteAdvancePayment(poId);
         }
 
-        public IEnumerable<PODetail> GetPODetail(int poId)
+        public IEnumerable<PODetail> GetPODetail(int purchaseId)
         {
-            return Uow.PurchaseOrders.GetPODetail(poId);
+            return Uow.PurchaseOrders.GetPODetail(purchaseId);
         }
 
         public PurchaseOrderList? CopyToBill(POCopyToBillReq copyToBillReq)

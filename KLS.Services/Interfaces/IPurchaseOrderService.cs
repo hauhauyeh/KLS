@@ -29,7 +29,7 @@ namespace KLS.Services.Interfaces
 
         void DeleteAdvancePayment(int poId);
 
-        IEnumerable<PODetail> GetPODetail(int poId);
+        IEnumerable<PODetail> GetPODetail(int purchaseId);
 
         PurchaseOrderList? CopyToBill(POCopyToBillReq copyToBillReq);
     }

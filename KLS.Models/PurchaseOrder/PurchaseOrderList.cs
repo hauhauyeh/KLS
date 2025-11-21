@@ -11,9 +11,13 @@ namespace KLS.Models
     public class PurchaseOrderList
     {
         [Key]
-        public int POId { get; set; }
+        public int PurchaseId { get; set; }
 
-        public int PONumber { get; set; }
+        //public int POId { get; set; }
+
+        //public int PONumber { get; set; }
+
+        public int PurchaseNumber { get; set; }
 
         public int PayeeId { get; set; }
 
@@ -23,25 +27,29 @@ namespace KLS.Models
 
         public string? ContainerNumber { get; set; }
 
-        public DateOnly? EstArrivalDate { get; set; }
+        //public DateOnly? EstArrivalDate { get; set; }
+
+        public DateOnly? ArrivalDate { get; set; }
 
         public string? PayeeName { get; set; }
 
         public decimal? VendorTotal { get; set; }
 
-        public decimal? POTotal { get; set; }
+        //public decimal? POTotal { get; set; }
 
-        public DateOnly? PaymentDate { get; set; }
+        public decimal? PurchaseTotal { get; set; }
 
-        public string? PaymentMethod { get; set; }
+        //public DateOnly? PaymentDate { get; set; }
 
-        public int? FromAccountId { get; set; }
+        //public string? PaymentMethod { get; set; }
 
-        public decimal? AdvanceTotal { get; set; }
+        //public int? FromAccountId { get; set; }
+
+        //public decimal? AdvanceTotal { get; set; }
 
         public string? Notes { get; set; }
 
-        public int? PurchaseId { get; set; }
+        //public int? PurchaseId { get; set; }
 
         public bool IsPOCopyToBill { get { return PurchaseId > 0; } }
     }
