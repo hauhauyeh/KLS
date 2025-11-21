@@ -19,13 +19,19 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int StorageId { get; set; }
 
-        public string? StorageName { get; set; }
-
-        public int? ParentId { get; set; }
-
         public string? DisplayName { get; set; }
 
-        public int? SortOrder { get; set; }
+        public string? Zone { get; set; }
+
+        public string? Section { get; set; }
+
+        public string? Aisle { get; set; }
+
+        public string? Bay { get; set; }
+
+        public string? Bin { get; set; }
+
+        public bool Inactive { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

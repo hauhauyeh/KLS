@@ -18,27 +18,27 @@ namespace KLS.Services
 
         public IEnumerable<ItemStorage>? GetAllStorages()
         {
-            return Uow.ItemStorages.GetAll().OrderBy(s => s.StorageName).ToList();
+            return Uow.ItemStorages.GetAll().OrderBy(s => s.Zone).ToList();
         }
 
-        public IEnumerable<ItemStorageTree> GetAllStorageTree()
-        {
-            var storage = Uow.ItemStorages.GetAll().OrderBy(c => c.StorageName).ToList();
+        //public IEnumerable<ItemStorageTree> GetAllStorageTree()
+        //{
+        //    var storage = Uow.ItemStorages.GetAll().OrderBy(c => c.Zone).ToList();
 
-            return BuildTree(storage, null);
-        }
+        //    return BuildTree(storage, null);
+        //}
 
-        private IEnumerable<ItemStorageTree> BuildTree(IEnumerable<ItemStorage> itemStorages, int? parentId)
-        {
-            return itemStorages.Where(x => x.ParentId == parentId).Select(x => new ItemStorageTree
-            {
-                StorageId = x.StorageId,
-                StorageName = x.StorageName,
-                DisplayName = x.DisplayName,
-                ParentId = x.ParentId,
-                ChildItemStorage = BuildTree(itemStorages, x.StorageId)
-            });
-        }
+        //private IEnumerable<ItemStorageTree> BuildTree(IEnumerable<ItemStorage> itemStorages, int? parentId)
+        //{
+        //    return itemStorages.Where(x => x.ParentId == parentId).Select(x => new ItemStorageTree
+        //    {
+        //        StorageId = x.StorageId,
+        //        Zone = x.Zone,
+        //        DisplayName = x.DisplayName,
+        //        ParentId = x.ParentId,
+        //        ChildItemStorage = BuildTree(itemStorages, x.StorageId)
+        //    });
+        //}
 
         public ItemStorage GetById(int id)
         {
@@ -47,7 +47,7 @@ namespace KLS.Services
 
         public bool NameExists(ItemStorage itemStorage)
         {
-            return Uow.ItemStorages.Exists(c => c.StorageName == itemStorage.StorageName && c.StorageId != itemStorage.StorageId);
+            return Uow.ItemStorages.Exists(c => c.Zone == itemStorage.Zone && c.StorageId != itemStorage.StorageId);
         }
 
         public ItemStorage CreateItemStorage(ItemStorage itemStorage)
@@ -64,10 +64,13 @@ namespace KLS.Services
 
             if (existing != null)
             {
-                existing.ParentId = itemStorage.ParentId;
-                existing.StorageName = itemStorage.StorageName;
                 existing.DisplayName = itemStorage.DisplayName;
-                existing.SortOrder = itemStorage.SortOrder;
+                existing.Zone = itemStorage.Zone;
+                existing.Section = itemStorage.Section;
+                existing.Aisle = itemStorage.Aisle;
+                existing.Bay = itemStorage.Bay;
+                existing.Bin = itemStorage.Bin;
+                existing.Inactive = itemStorage.Inactive;
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 Uow.ItemStorages.Update(existing);

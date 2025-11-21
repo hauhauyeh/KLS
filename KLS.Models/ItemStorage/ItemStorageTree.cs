@@ -10,21 +10,21 @@ namespace KLS.Models
 {
     public class ItemStorageTree
     {
-        [Key]
-        public int StorageId { get; set; }
+        //[Key]
+        //public int StorageId { get; set; }
 
-        public string? StorageName { get; set; }
+        //public string? StorageName { get; set; }
 
-        public int? ParentId { get; set; }
+        //public int? ParentId { get; set; }
 
-        public string? DisplayName { get; set; }
+        //public string? DisplayName { get; set; }
 
-        public IEnumerable<ItemStorageTree>? ChildItemStorage { get; set; }
+        //public IEnumerable<ItemStorageTree>? ChildItemStorage { get; set; }
 
-        public bool IsCollapsed { get; set; }
+        //public bool IsCollapsed { get; set; }
 
-        public bool HasChild { get { return ChildItemStorage != null && ChildItemStorage.Any(); } }
+        //public bool HasChild { get { return ChildItemStorage != null && ChildItemStorage.Any(); } }
 
-        public int ItemCount { get; set; }
+        //public int ItemCount { get; set; }
     }
 }

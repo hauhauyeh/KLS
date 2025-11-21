@@ -29,12 +29,12 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-        [HttpGet]
-        [DisplayName("List Storage")]
-        public IActionResult List()
-        {
-            return Ok(_itemStorageService.GetAllStorageTree());
-        }
+        //[HttpGet]
+        //[DisplayName("List Storage")]
+        //public IActionResult List()
+        //{
+        //    return Ok(_itemStorageService.GetAllStorageTree());
+        //}
 
 
         [HttpGet("Storage")]

@@ -11,7 +11,7 @@ namespace KLS.Services.Interfaces
     {
         IEnumerable<ItemStorage>? GetAllStorages();
 
-        IEnumerable<ItemStorageTree> GetAllStorageTree();
+        //IEnumerable<ItemStorageTree> GetAllStorageTree();
 
         ItemStorage GetById(int id);
 
