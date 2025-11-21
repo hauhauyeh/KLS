@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "General Journal Management", GroupName = "Admin")]
+    [Display(Name = "General Journal Management", GroupName = "Accounting")]
     public class GeneralJournalsController : BaseController
     {
         #region --- Member(s) ---

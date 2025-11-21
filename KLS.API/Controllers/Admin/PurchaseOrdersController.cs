@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "PurchaseOrder Management", GroupName = "Admin")]
+    [Display(Name = "Purchase Order Management", GroupName = "Vendor")]
     public class PurchaseOrdersController : BaseController
     {
         #region --- Member(s) ---

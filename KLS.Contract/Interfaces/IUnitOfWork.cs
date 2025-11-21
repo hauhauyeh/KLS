@@ -134,6 +134,8 @@ namespace KLS.Contract.Interfaces
 
         IItemTagRepository ItemTags { get; }
 
+        IItemUnitRepository ItemUnits { get; }
+
         void Commit();
     }
 }

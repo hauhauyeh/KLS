@@ -1,7 +1,6 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Services.Interfaces;
 using KLS.Services;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using KLS.Data.Repositories;
 
 namespace KLS.API.Helpers
@@ -70,6 +69,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IUserAccountService, UserAccountService>();
             services.AddScoped<IUserRoleService, UserRoleService>();
             services.AddScoped<IUnitService, UnitService>();
+            services.AddScoped<IItemTagService, ItemTagService>();
 
             return services;
         }

@@ -36,11 +36,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemTagService.GetAllItemTags());
         }
 
+
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
             return Ok(_itemTagService.GetById(id));
         }
+
 
         [HttpPost]
         [DisplayName("Create Item Tag")]
@@ -52,6 +54,7 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemTagService.CreateItemTag(itemTag));
         }
 
+
         [HttpPut]
         [DisplayName("Update Item Tag")]
         public IActionResult Update([FromBody] ItemTag itemTag)
@@ -61,6 +64,7 @@ namespace KLS.API.Controllers.Admin
 
             return Ok(_itemTagService.UpdateItemTag(itemTag));
         }
+
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Item Tag")]

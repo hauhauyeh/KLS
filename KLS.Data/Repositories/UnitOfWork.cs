@@ -161,6 +161,8 @@ namespace KLS.Data.Repositories
         public IUnitRepository Units { get { return new UnitRepository(DbContext); } }
 
         public IItemTagRepository ItemTags { get { return new ItemTagRepository(DbContext); } }
+
+        public IItemUnitRepository ItemUnits { get { return new ItemUnitRepository(DbContext); } }
     }
 }
 

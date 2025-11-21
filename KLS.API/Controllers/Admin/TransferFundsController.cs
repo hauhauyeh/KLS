@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Transfer Fund Management", GroupName = "Admin")]
+    [Display(Name = "Transfer Fund Management", GroupName = "Accounting")]
     public class TransferFundsController : BaseController
     {
         #region --- Member(s) ---
