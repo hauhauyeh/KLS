@@ -70,6 +70,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IUserRoleService, UserRoleService>();
             services.AddScoped<IUnitService, UnitService>();
             services.AddScoped<IItemTagService, ItemTagService>();
+            services.AddScoped<IItemNameDetailService, ItemNameDetailService>();
 
             return services;
         }

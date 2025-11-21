@@ -89,6 +89,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Unit>().ToTable("Unit");
             modelBuilder.Entity<ItemTag>().ToTable("ItemTag");
             modelBuilder.Entity<ItemUnit>().ToTable("ItemUnit");
+            modelBuilder.Entity<ItemNameDetail>().ToTable("ItemNameDetail");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -220,6 +221,8 @@ namespace KLS.Data.DataContext
         public DbSet<ItemTag> ItemTags { get; set; }
 
         public DbSet<ItemUnit> ItemUnits { get; set; }
+
+        public DbSet<ItemNameDetail> ItemNameDetails { get; set; }
 
         #endregion
 
