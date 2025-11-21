@@ -28,7 +28,6 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-
         [HttpPost("Inject")]
         public IActionResult Inject(TempVendorPaymentListReq tempReq)
         {

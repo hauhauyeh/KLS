@@ -69,6 +69,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ITempTransferFundService, TempTransferFundService>();
             services.AddScoped<IUserAccountService, UserAccountService>();
             services.AddScoped<IUserRoleService, UserRoleService>();
+            services.AddScoped<IUnitService, UnitService>();
 
             return services;
         }

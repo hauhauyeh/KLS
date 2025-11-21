@@ -157,6 +157,10 @@ namespace KLS.Data.Repositories
         public IUserAccountRepository UserAccounts { get { return new UserAccountRepository(DbContext); } }
 
         public IUserRoleRepository UserRoles { get { return new UserRoleRepository(DbContext); } }
+
+        public IUnitRepository Units { get { return new UnitRepository(DbContext); } }
+
+        public IItemTagRepository ItemTags { get { return new ItemTagRepository(DbContext); } }
     }
 }
 

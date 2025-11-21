@@ -86,6 +86,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempTransferFund>().ToTable("TempTransferFund");
             modelBuilder.Entity<UserAccount>().ToTable("UserAccount");
             modelBuilder.Entity<UserRole>().ToTable("UserRole");
+            modelBuilder.Entity<Unit>().ToTable("Unit");
+            modelBuilder.Entity<ItemTag>().ToTable("ItemTag");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -211,6 +213,10 @@ namespace KLS.Data.DataContext
         public DbSet<UserAccount> UserAccounts { get; set; }
 
         public DbSet<UserRole> UserRoles { get; set; }
+
+        public DbSet<Unit> Units { get; set; }
+
+        public DbSet<ItemTag> ItemTags { get; set; }
 
         #endregion
 
