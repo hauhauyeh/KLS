@@ -109,5 +109,10 @@ namespace KLS.Common
             Sales = 3,
             Timesheet = 4
         }
+
+        public enum DocumentTemplate
+        {
+            PO = 1
+        }
     }
 }

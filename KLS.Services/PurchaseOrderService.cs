@@ -14,6 +14,7 @@ namespace KLS.Services
     public class PurchaseOrderService : BaseService, IPurchaseOrderService
     {
         private readonly IDeleteLogService _deleteLogService;
+        private readonly ICompanyService _companyService;
 
         public PurchaseOrderService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
         {
@@ -133,6 +134,18 @@ namespace KLS.Services
 
         public string PrintPO(int purchaseId)
         {
+            var compnayInfo = _companyService.GetDefault();
+
+            var po = Uow.Reports.GetAllReportPO(purchaseId).ToList();
+            var poDetail = Uow.Reports.GetAllReportPODetail(purchaseId).ToList();
+
+            var rptPo = new RPTPoView
+            {
+                //Company = compnayInfo,
+                RPTPo = po,
+                RPTPoDetail = poDetail,
+            };
+
             var pdfPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "Pdf");
 
             return pdfPath;

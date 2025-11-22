@@ -165,5 +165,7 @@ namespace KLS.Data.Repositories
         public IItemUnitRepository ItemUnits { get { return new ItemUnitRepository(DbContext); } }
 
         public IItemNameDetailRepository ItemNameDetails { get { return new ItemNameDetailRepository(DbContext); } }
+
+        public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
     }
 }

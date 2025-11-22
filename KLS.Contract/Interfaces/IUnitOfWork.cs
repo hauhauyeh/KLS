@@ -138,6 +138,8 @@ namespace KLS.Contract.Interfaces
 
         IItemNameDetailRepository ItemNameDetails { get; }
 
+        IReportRepository Reports { get; }
+
         void Commit();
     }
 }
