@@ -54,11 +54,11 @@ namespace KLS.Services
                 return new Item
                 {
                     PaletteFactor = 50,
-                    DefaultUnit = EnumHelper.ItemDefaultUnit.Whole.ToString(),
-                    RetailFactor = 1,
-                    RetailPrice = 0,
-                    DefaultCost = 0,
-                    RetailProfitPercent = _systemSettingService.GetByKey<decimal>(GlobalKey.ITEM_DEFAULT_RETAILPROFIT),
+                    //DefaultUnit = EnumHelper.ItemDefaultUnit.Whole.ToString(),
+                    //RetailFactor = 1,
+                    //RetailPrice = 0,
+                    //DefaultCost = 0,
+                    //RetailProfitPercent = _systemSettingService.GetByKey<decimal>(GlobalKey.ITEM_DEFAULT_RETAILPROFIT),
                     IsTaxable = _systemSettingService.GetByKey<bool>(GlobalKey.ITEM_DEFAULT_TAXABLE),
                     ItemType = _systemSettingService.GetByKey<string>(GlobalKey.ITEM_DEFAULT_TYPE)
                 };
@@ -75,16 +75,6 @@ namespace KLS.Services
             return Uow.Items.Find(c => c.ItemName == itemName).FirstOrDefault();
         }
 
-        public Item? GetByBarcodeW(string barcodeW)
-        {
-            return Uow.Items.Find(c => c.BarcodeW == barcodeW).FirstOrDefault();
-        }
-
-        public Item? GetByBarcodeR(string barcodeR)
-        {
-            return Uow.Items.Find(c => c.BarcodeR == barcodeR).FirstOrDefault();
-        }
-
         public Item? GetBySearch(string itemCode)
         {
             if (string.IsNullOrEmpty(itemCode))
@@ -95,14 +85,6 @@ namespace KLS.Services
             if (item == null)
             {
                 item = GetByItemName(itemCode);
-
-                if (item == null)
-                {
-                    item = GetByBarcodeW(itemCode);
-
-                    if (item == null)
-                        item = GetByBarcodeR(itemCode);
-                }
             }
 
             return item;
@@ -146,30 +128,15 @@ namespace KLS.Services
                     oldItem.ItemType = item.ItemType;
                     oldItem.CategoryId = item.CategoryId;
                     oldItem.StorageId = item.StorageId;
-                    oldItem.BarcodeW = item.BarcodeW;
                     oldItem.ItemCode = item.ItemCode;
                     oldItem.ItemName = item.ItemName;
                     oldItem.ItemSearchTag = item.ItemSearchTag;
-                    oldItem.ItemForeignName = item.ItemForeignName;
-                    //oldItem.SpanishDesc = item.SpanishDesc;
                     oldItem.ItemBoxDesc = item.ItemBoxDesc;
                     oldItem.ItemLongDesc = item.ItemLongDesc;
                     oldItem.ItemBrand = item.ItemBrand;
 
                     oldItem.PackSize = item.PackSize;
                     oldItem.Pack1 = item.Pack1;
-                    oldItem.DefaultUnit = item.DefaultUnit;
-                    oldItem.WholeUnit = item.WholeUnit;
-                    oldItem.DisplayUnit = item.DisplayUnit;
-                    oldItem.RetailUnit = item.RetailUnit;
-                    oldItem.RetailFactor = item.RetailFactor;
-                    oldItem.RetailProfitPercent = item.RetailProfitPercent;
-                    oldItem.RetailPrice = item.RetailPrice;
-
-                    oldItem.DefaultCost = item.DefaultCost;
-                    oldItem.RecentCost = item.RecentCost;
-                    oldItem.P1 = item.P1;
-                    oldItem.MSRP = item.MSRP;
 
                     oldItem.PreferredVendorId = item.PreferredVendorId;
                     oldItem.PaletteFactor = item.PaletteFactor;
@@ -179,15 +146,11 @@ namespace KLS.Services
                     oldItem.CaseLength = item.CaseLength;
                     oldItem.CaseWidth = item.CaseWidth;
                     oldItem.CaseHeight = item.CaseHeight;
-                    oldItem.AisleNumber = item.AisleNumber;
-                    oldItem.BayNumber = item.BayNumber;
 
                     oldItem.Inactive = item.Inactive;
                     oldItem.IsTaxable = item.IsTaxable;
                     oldItem.IsHRExempt = item.IsHRExempt;
                     oldItem.IsHighlighted = item.IsHighlighted;
-                    oldItem.IsLabelPrint = item.IsLabelPrint;
-                    oldItem.IsSameDayReturn = item.IsSameDayReturn;
 
                     oldItem.UpdatedAt = DateTime.UtcNow;
 

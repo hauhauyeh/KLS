@@ -130,5 +130,12 @@ namespace KLS.Services
 
             return GetListById(copyToBillReq.POId);
         }
+
+        public string PrintPO(int purchaseId)
+        {
+            var pdfPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "Pdf");
+
+            return pdfPath;
+        }
     }
 }

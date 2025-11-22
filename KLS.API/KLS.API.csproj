@@ -20,6 +20,7 @@
     <Folder Include="wwwroot\BillPdf\" />
     <Folder Include="wwwroot\InvoicePdf\" />
     <Folder Include="wwwroot\BillPdf\" />
+    <Folder Include="wwwroot\Pdf\" />
     <Folder Include="wwwroot\Python\" />
     <Folder Include="wwwroot\Payroll\" />
   </ItemGroup>

@@ -89,7 +89,5 @@ namespace KLS.Models
         public decimal? OnHandQty { get; set; }
 
         public DateOnly? LastAdjDate { get; set; }
-
-        public decimal? TotalCost => (RecentCost ?? 0) + (FreightCost ?? 0);
     }
 }

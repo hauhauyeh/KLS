@@ -133,6 +133,19 @@ namespace KLS.API.Controllers.Admin
             return Ok(_purchaseOrderService.CopyToBill(copyToBillReq));
         }
 
+
+        [HttpGet("PrintPO/{purchaseId}")]
+        public IActionResult PrintPO(int purchaseId)
+        {
+            var poFilePath = _purchaseOrderService.PrintPO(purchaseId);
+
+            if (!System.IO.File.Exists(poFilePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(poFilePath, FileMode.Open, FileAccess.Read);
+            return File(fileStream, "application/pdf");
+        }
+
         #endregion
     }
 }

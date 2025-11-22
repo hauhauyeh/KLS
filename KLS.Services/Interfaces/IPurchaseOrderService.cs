@@ -32,5 +32,7 @@ namespace KLS.Services.Interfaces
         IEnumerable<PODetail> GetPODetail(int purchaseId);
 
         PurchaseOrderList? CopyToBill(POCopyToBillReq copyToBillReq);
+
+        string PrintPO(int purchaseId);
     }
 }
