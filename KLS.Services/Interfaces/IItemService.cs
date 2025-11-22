@@ -27,18 +27,18 @@ namespace KLS.Services.Interfaces
 
         Item? SaveItem(Item item);
 
-        ItemCalcUnit GetCalcUnit(ItemPackingReq packingReq);
+        //ItemCalcUnit GetCalcUnit(ItemPackingReq packingReq);
 
-        ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
+        //ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
 
-        void UpdateDefautCost(int itemId, decimal? defaultCost);
+        //void UpdateDefautCost(int itemId, decimal? defaultCost);
 
-        Item UpdateP1(int itemId, decimal? p1);
+        //Item UpdateP1(int itemId, decimal? p1);
 
-        Item UpdateRetailPrice(int itemId, decimal? retailPrice);
+        //Item UpdateRetailPrice(int itemId, decimal? retailPrice);
 
-        Item UpdateRetailProfit(int itemId, decimal? retailProfit);
+        //Item UpdateRetailProfit(int itemId, decimal? retailProfit);
 
-        void SendCostChangeNotification(Item item);
+        //void SendCostChangeNotification(Item item);
     }
 }

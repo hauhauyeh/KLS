@@ -122,7 +122,7 @@ namespace KLS.Services
 
             foreach (var item in itemCostChange)
             {
-                _itemService.SendCostChangeNotification(item);
+                //_itemService.SendCostChangeNotification(item);
             }
 
             return GetListById(purchaseId);

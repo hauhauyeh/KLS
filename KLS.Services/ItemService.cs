@@ -142,7 +142,7 @@ namespace KLS.Services
                     oldItem.PaletteFactor = item.PaletteFactor;
                     oldItem.SaftyInventory = item.SaftyInventory;
                     oldItem.CaseWeight = item.CaseWeight;
-                    oldItem.CaseVolume = item.CaseVolume;
+                    //oldItem.CaseVolume = item.CaseVolume;
                     oldItem.CaseLength = item.CaseLength;
                     oldItem.CaseWidth = item.CaseWidth;
                     oldItem.CaseHeight = item.CaseHeight;
@@ -202,130 +202,130 @@ namespace KLS.Services
             return Uow.Items.CalcRetailPriceProfit(calcRetail);
         }
 
-        public void UpdateDefautCost(int itemId, decimal? defaultCost)
-        {
-            var item = GetById(itemId);
+        //public void UpdateDefautCost(int itemId, decimal? defaultCost)
+        //{
+        //    var item = GetById(itemId);
 
-            if (item != null && item.ItemId > 0)
-            {
-                if (item.DefaultCost != defaultCost)
-                {
-                    item.DefaultCostB4 = item.DefaultCost;
-                    item.DefaultCost = defaultCost;
+        //    if (item != null && item.ItemId > 0)
+        //    {
+        //        if (item.DefaultCost != defaultCost)
+        //        {
+        //            item.DefaultCostB4 = item.DefaultCost;
+        //            item.DefaultCost = defaultCost;
 
-                    Uow.Items.Update(item);
-                    Uow.Commit();
+        //            Uow.Items.Update(item);
+        //            Uow.Commit();
 
-                    SendCostChangeNotification(item);
-                }
-            }
-        }
+        //            SendCostChangeNotification(item);
+        //        }
+        //    }
+        //}
 
-        public Item UpdateP1(int itemId, decimal? p1)
-        {
-            var item = GetById(itemId);
+        //public Item UpdateP1(int itemId, decimal? p1)
+        //{
+        //    var item = GetById(itemId);
 
-            if (item != null)
-            {
-                item.P1 = p1;
-                item.UpdatedAt = DateTime.UtcNow;
+        //    if (item != null)
+        //    {
+        //        item.P1 = p1;
+        //        item.UpdatedAt = DateTime.UtcNow;
 
-                var calcPrice = CalcRetailPriceProfit(new ItemCalcRetail
-                {
-                    P1 = p1,
-                    RetailUnit = item.RetailUnit,
-                    RetailFactor = item.RetailFactor,
-                    RetailProfitPercent = item.RetailProfitPercent
-                });
+        //        var calcPrice = CalcRetailPriceProfit(new ItemCalcRetail
+        //        {
+        //            P1 = p1,
+        //            RetailUnit = item.RetailUnit,
+        //            RetailFactor = item.RetailFactor,
+        //            RetailProfitPercent = item.RetailProfitPercent
+        //        });
 
-                item.RetailPrice = calcPrice.RetailPrice;
+        //        item.RetailPrice = calcPrice.RetailPrice;
 
-                Uow.Items.Update(item);
-                Uow.Commit();
-            }
+        //        Uow.Items.Update(item);
+        //        Uow.Commit();
+        //    }
 
-            return item!;
-        }
+        //    return item!;
+        //}
 
-        public Item UpdateRetailPrice(int itemId, decimal? retailPrice)
-        {
-            var item = GetById(itemId);
+        //public Item UpdateRetailPrice(int itemId, decimal? retailPrice)
+        //{
+        //    var item = GetById(itemId);
 
-            if (item != null)
-            {
-                item.RetailPrice = retailPrice;
-                item.UpdatedAt = DateTime.UtcNow;
+        //    if (item != null)
+        //    {
+        //        item.RetailPrice = retailPrice;
+        //        item.UpdatedAt = DateTime.UtcNow;
 
-                var calcPrice = CalcRetailPriceProfit(new ItemCalcRetail
-                {
-                    P1 = item.P1,
-                    RetailUnit = item.RetailUnit,
-                    RetailFactor = item.RetailFactor,
-                    RetailPrice = retailPrice
-                });
+        //        var calcPrice = CalcRetailPriceProfit(new ItemCalcRetail
+        //        {
+        //            P1 = item.P1,
+        //            RetailUnit = item.RetailUnit,
+        //            RetailFactor = item.RetailFactor,
+        //            RetailPrice = retailPrice
+        //        });
 
-                item.RetailProfitPercent = calcPrice.RetailProfitPercent;
+        //        item.RetailProfitPercent = calcPrice.RetailProfitPercent;
 
-                Uow.Items.Update(item);
-                Uow.Commit();
-            }
+        //        Uow.Items.Update(item);
+        //        Uow.Commit();
+        //    }
 
-            return item!;
-        }
+        //    return item!;
+        //}
 
-        public Item UpdateRetailProfit(int itemId, decimal? retailProfit)
-        {
-            var item = GetById(itemId);
+        //public Item UpdateRetailProfit(int itemId, decimal? retailProfit)
+        //{
+        //    var item = GetById(itemId);
 
-            if (item != null)
-            {
-                item.RetailProfitPercent = Utilities.Rounding(retailProfit / 100, 4);
-                item.UpdatedAt = DateTime.UtcNow;
+        //    if (item != null)
+        //    {
+        //        item.RetailProfitPercent = Utilities.Rounding(retailProfit / 100, 4);
+        //        item.UpdatedAt = DateTime.UtcNow;
 
-                var calcPrice = CalcRetailPriceProfit(new ItemCalcRetail
-                {
-                    P1 = item.P1,
-                    RetailUnit = item.RetailUnit,
-                    RetailFactor = item.RetailFactor,
-                    RetailProfitPercent = item.RetailProfitPercent
-                });
+        //        var calcPrice = CalcRetailPriceProfit(new ItemCalcRetail
+        //        {
+        //            P1 = item.P1,
+        //            RetailUnit = item.RetailUnit,
+        //            RetailFactor = item.RetailFactor,
+        //            RetailProfitPercent = item.RetailProfitPercent
+        //        });
 
-                item.RetailPrice = calcPrice.RetailPrice;
+        //        item.RetailPrice = calcPrice.RetailPrice;
 
-                Uow.Items.Update(item);
-                Uow.Commit();
-            }
+        //        Uow.Items.Update(item);
+        //        Uow.Commit();
+        //    }
 
-            return item!;
-        }
+        //    return item!;
+        //}
 
-        public void SendCostChangeNotification(Item item)
-        {
-            var perc = (item.DefaultCost - item.DefaultCostB4) / (item.DefaultCostB4 == 0 ? 1 : item.DefaultCostB4);
+        //public void SendCostChangeNotification(Item item)
+        //{
+        //    var perc = (item.DefaultCost - item.DefaultCostB4) / (item.DefaultCostB4 == 0 ? 1 : item.DefaultCostB4);
 
-            perc = Math.Abs(Utilities.Rounding(perc, 2) ?? 0) * 100;
+        //    perc = Math.Abs(Utilities.Rounding(perc, 2) ?? 0) * 100;
 
-            if (perc > 10)
-            {
-                var msg = "";
+        //    if (perc > 10)
+        //    {
+        //        var msg = "";
 
-                if (item.DefaultCost > item.DefaultCostB4)
-                    msg = "(" + item.ItemCode + ") " + item.ItemName + " +" + perc + "% to " + string.Format("{0:c}", item.DefaultCost);
-                else
-                    msg = "(" + item.ItemCode + ") " + item.ItemName + " -" + perc + "% to " + string.Format("{0:c}", item.DefaultCost);
+        //        if (item.DefaultCost > item.DefaultCostB4)
+        //            msg = "(" + item.ItemCode + ") " + item.ItemName + " +" + perc + "% to " + string.Format("{0:c}", item.DefaultCost);
+        //        else
+        //            msg = "(" + item.ItemCode + ") " + item.ItemName + " -" + perc + "% to " + string.Format("{0:c}", item.DefaultCost);
 
-                var employee = (from p in Uow.Payees.GetAll()
-                                join e in Uow.Employees.GetAll()
-                                on p.PayeeId equals e.PayeeId
-                                where e.IsPriceChangeNotify == true && p.IsClosed == false
-                                select p).AsEnumerable();
+        //        var employee = (from p in Uow.Payees.GetAll()
+        //                        join e in Uow.Employees.GetAll()
+        //                        on p.PayeeId equals e.PayeeId
+        //                        where e.IsPriceChangeNotify == true && p.IsClosed == false
+        //                        select p).AsEnumerable();
 
-                foreach (var emp in employee)
-                {
-                    if (!string.IsNullOrEmpty(emp.Phone1))
-                        _twilioService.SendMessage(emp.Phone1, msg);
-                }
-            }
-        }
+        //        foreach (var emp in employee)
+        //        {
+        //            if (!string.IsNullOrEmpty(emp.Phone1))
+        //                _twilioService.SendMessage(emp.Phone1, msg);
+        //        }
+        //    }
+        //}
     }
 }

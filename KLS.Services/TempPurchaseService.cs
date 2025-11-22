@@ -2,7 +2,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
 using System;
@@ -106,8 +105,8 @@ namespace KLS.Services
             tempItem.ItemCode = item.ItemCode;
             tempItem.ItemName = item.ItemName;
             tempItem.CaseWeight = item.CaseWeight;
-            tempItem.CaseVolume = item.CaseVolume;
-            tempItem.BillPrice = tempItem.BillPrice == 0 ? item.DefaultCost ?? 0 : 0;
+            //tempItem.CaseVolume = item.CaseVolume;
+            //tempItem.BillPrice = tempItem.BillPrice == 0 ? item.DefaultCost ?? 0 : 0;
             tempItem.FinalPrice = tempItem.BillPrice;
             tempItem.OrgPrice = tempItem.BillPrice;
             tempItem.LineType = EnumHelper.LineType.I.ToString();

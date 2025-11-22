@@ -88,54 +88,54 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("CalcUnit")]
-        public IActionResult CalcUnit([FromQuery] ItemPackingReq packingReq)
-        {
-            return Ok(_itemService.GetCalcUnit(packingReq));
-        }
+        //[HttpGet("CalcUnit")]
+        //public IActionResult CalcUnit([FromQuery] ItemPackingReq packingReq)
+        //{
+        //    return Ok(_itemService.GetCalcUnit(packingReq));
+        //}
 
 
-        [HttpGet("CalcRetailPriceProfit")]
-        public IActionResult CalcRetailPriceProfit([FromQuery] ItemCalcRetail calcRetail)
-        {
-            return Ok(_itemService.CalcRetailPriceProfit(calcRetail));
-        }
+        //[HttpGet("CalcRetailPriceProfit")]
+        //public IActionResult CalcRetailPriceProfit([FromQuery] ItemCalcRetail calcRetail)
+        //{
+        //    return Ok(_itemService.CalcRetailPriceProfit(calcRetail));
+        //}
 
 
-        [HttpGet("DefaultUnits")]
-        public IActionResult DefaultUnits()
-        {
-            return Ok(Enum.GetNames(typeof(EnumHelper.ItemDefaultUnit)).ToList());
-        }
+        //[HttpGet("DefaultUnits")]
+        //public IActionResult DefaultUnits()
+        //{
+        //    return Ok(Enum.GetNames(typeof(EnumHelper.ItemDefaultUnit)).ToList());
+        //}
 
 
-        [HttpPut("UpdateDefautCost")]
-        public IActionResult UpdateDefautCost([FromBody] ItemUpdateReq updateReq)
-        {
-            _itemService.UpdateDefautCost(updateReq.ItemId, updateReq.DefaultCost);
-            return Ok();
-        }
+        //[HttpPut("UpdateDefautCost")]
+        //public IActionResult UpdateDefautCost([FromBody] ItemUpdateReq updateReq)
+        //{
+        //    _itemService.UpdateDefautCost(updateReq.ItemId, updateReq.DefaultCost);
+        //    return Ok();
+        //}
 
 
-        [HttpPut("UpdateP1")]
-        public IActionResult UpdateP1([FromBody] ItemUpdateReq updateReq)
-        {
-            return Ok(_itemService.UpdateP1(updateReq.ItemId, updateReq.P1));
-        }
+        //[HttpPut("UpdateP1")]
+        //public IActionResult UpdateP1([FromBody] ItemUpdateReq updateReq)
+        //{
+        //    return Ok(_itemService.UpdateP1(updateReq.ItemId, updateReq.P1));
+        //}
 
 
-        [HttpPut("UpdateRetailPrice")]
-        public IActionResult UpdateRetailPrice([FromBody] ItemUpdateReq updateReq)
-        {
-            return Ok(_itemService.UpdateRetailPrice(updateReq.ItemId, updateReq.RetailPrice));
-        }
+        //[HttpPut("UpdateRetailPrice")]
+        //public IActionResult UpdateRetailPrice([FromBody] ItemUpdateReq updateReq)
+        //{
+        //    return Ok(_itemService.UpdateRetailPrice(updateReq.ItemId, updateReq.RetailPrice));
+        //}
 
 
-        [HttpPut("UpdateRetailProfit")]
-        public IActionResult UpdateRetailProfit([FromBody] ItemUpdateReq updateReq)
-        {
-            return Ok(_itemService.UpdateRetailProfit(updateReq.ItemId, updateReq.RetailProfitPercent));
-        }
+        //[HttpPut("UpdateRetailProfit")]
+        //public IActionResult UpdateRetailProfit([FromBody] ItemUpdateReq updateReq)
+        //{
+        //    return Ok(_itemService.UpdateRetailProfit(updateReq.ItemId, updateReq.RetailProfitPercent));
+        //}
 
 
         [HttpGet("EditP1")]
