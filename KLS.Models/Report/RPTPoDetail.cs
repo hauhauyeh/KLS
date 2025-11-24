@@ -10,11 +10,13 @@ namespace KLS.Models
     public class RPTPoDetail
     {
         [Key]
-        public int PODetailId { get; set; }
+        public int PurchaseDetailId { get; set; }
 
-        public int POId { get; set; }
+        public int PurchaseId { get; set; }
 
         public int ItemId { get; set; }
+
+        public string? LineType { get; set; }
 
         public string? Unit { get; set; }
 

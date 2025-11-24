@@ -14,6 +14,10 @@ namespace KLS.Models
         public Company()
         {
             this.CreatedAt = DateTime.UtcNow;
+            if (HasLogo)
+            {
+                LogoUrl = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Logo", "logo.png");
+            }
         }
 
         [Key]
@@ -61,5 +65,8 @@ namespace KLS.Models
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        [NotMapped]
+        public string? LogoUrl { get; set; }
     }
 }

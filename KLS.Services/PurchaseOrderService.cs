@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,14 @@ namespace KLS.Services
     {
         private readonly IDeleteLogService _deleteLogService;
         private readonly ICompanyService _companyService;
+        private readonly IPDFService _pdfService;
 
-        public PurchaseOrderService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        public PurchaseOrderService(IUnitOfWork uow, IDeleteLogService deleteLogService,
+            ICompanyService companyService, IPDFService pdfService) : base(uow)
         {
             _deleteLogService = deleteLogService;
+            _companyService = companyService;
+            _pdfService = pdfService;
         }
 
         public PagingResponse<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
@@ -136,19 +141,26 @@ namespace KLS.Services
         {
             var compnayInfo = _companyService.GetDefault();
 
-            var po = Uow.Reports.GetAllReportPO(purchaseId).ToList();
-            var poDetail = Uow.Reports.GetAllReportPODetail(purchaseId).ToList();
+            var poList = Uow.Reports.ReportPO(purchaseId);
+            var poDetail = Uow.Reports.ReportPODetail(purchaseId).ToList();
 
             var rptPo = new RPTPoView
             {
-                //Company = compnayInfo,
-                RPTPo = po,
-                RPTPoDetail = poDetail,
+                Company = compnayInfo,
+                RPTPo = poList,
+                RPTPoDetail = poDetail
             };
 
-            var pdfPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "Pdf");
+            var poTemplate = "~/Views/Pdf/PO.cshtml";
+            var pohtml = _pdfService.RenderTemplate(poTemplate, rptPo);
+            var pdf = _pdfService.HtmlToPDF(pohtml);
 
-            return pdfPath;
+            var filename = "PO-" + purchaseId.ToString() + ".pdf";
+            string poFile = Path.Combine(AppContext.BaseDirectory, "wwwroot", "Pdf", filename);
+
+            pdf.SaveAs(poFile);
+
+            return filename;
         }
     }
 }

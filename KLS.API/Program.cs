@@ -75,6 +75,20 @@ app.UseMiddleware<UserContextMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Everything here runs ONCE when the app starts
+using (var scope = app.Services.CreateScope())
+{
+    var settingService = scope.ServiceProvider.GetRequiredService<ISystemSettingService>();
+
+    var pdfKey = settingService.GetByKey<string>(GlobalKey.IRONPDF_KEY);
+
+    if (!string.IsNullOrEmpty(pdfKey))
+    {
+        IronPdf.License.LicenseKey = pdfKey;
+        Console.WriteLine("IronPDF license applied.");
+    }
+}
+
 app.MapControllers();
 
 app.Run();

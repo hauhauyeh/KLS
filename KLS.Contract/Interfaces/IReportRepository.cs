@@ -9,8 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface IReportRepository : IRepository<RPTPoView>
     {
-        IQueryable<RPTPo> GetAllReportPO(int purchaseId);
+        RPTPo ReportPO(int purchaseId);
 
-        IQueryable<RPTPo> GetAllReportPODetail(int poId);
+        IQueryable<RPTPoDetail> ReportPODetail(int poId);
     }
 }

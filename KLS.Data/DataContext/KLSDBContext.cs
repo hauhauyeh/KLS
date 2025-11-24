@@ -298,8 +298,6 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<TempDepositList> TempDepositList { get; set; }
 
-        public virtual DbSet<RPTPoView> RPTPoView { get; set; }
-
         public virtual DbSet<RPTPo> RPTPo { get; set; }
 
         public virtual DbSet<RPTPoDetail> RPTPoDetails { get; set; }

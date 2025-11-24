@@ -9,6 +9,6 @@ namespace KLS.Services.Interfaces
 {
     public interface ICompanyService
     {
-        IEnumerable<Company> GetDefault();
+        Company GetDefault();
     }
 }

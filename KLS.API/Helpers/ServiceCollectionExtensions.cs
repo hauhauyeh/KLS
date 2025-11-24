@@ -71,6 +71,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IUnitService, UnitService>();
             services.AddScoped<IItemTagService, ItemTagService>();
             services.AddScoped<IItemNameDetailService, ItemNameDetailService>();
+            services.AddScoped<IPDFService, PDFService>();
 
             return services;
         }

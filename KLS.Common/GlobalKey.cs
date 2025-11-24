@@ -27,5 +27,7 @@ namespace KLS.Common
         public const string TWILIO_SID = "TWILIO_SID";
         public const string TWILIO_TOKEN = "TWILIO_TOKEN";
         public const string TWILIO_FROM = "TWILIO_FROM";
+
+        public const string IRONPDF_KEY = "IRONPDF_KEY";
     }
 }

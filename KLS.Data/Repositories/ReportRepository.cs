@@ -18,18 +18,23 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<RPTPo> GetAllReportPO(int poId)
+        public RPTPo ReportPO(int purchaseId)
         {
-            var POIdParam = new SqlParameter("@POId", poId);
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
 
-            return DbContext.RPTPo.FromSqlRaw("[dbo].[Report_PO] @POId", POIdParam);
+            //return DbContext.RPTPo.FromSqlRaw("[dbo].[Report_PO] @PurchaseId", PurchaseIdParam)
+            //    .ToList().FirstOrDefault();
+
+            var results = DbContext.RPTPo.FromSqlRaw("[dbo].[Report_PO] @PurchaseId", PurchaseIdParam).AsNoTracking().ToList();
+
+            return results.FirstOrDefault();
         }
 
-        public IQueryable<RPTPo> GetAllReportPODetail(int poId)
+        public IQueryable<RPTPoDetail> ReportPODetail(int poId)
         {
             var POIdParam = new SqlParameter("@POId", poId);
 
-            return DbContext.RPTPo.FromSqlRaw("[dbo].[Report_PODetail] @POId", POIdParam);
+            return DbContext.RPTPoDetails.FromSqlRaw("[dbo].[Report_PODetail] @POId", POIdParam);
         }
     }
 }

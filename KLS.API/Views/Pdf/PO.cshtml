@@ -34,10 +34,10 @@
         height: 70px;
     }
 
-    /* important left Only Layout */
-    /* .left-width {
-                    width: 100%;
-                } */
+    /* Layout helper previously inline */
+    .left-width {
+        width: 100%;
+    }
 
     .highlight-dark {
         background-color: #333333;
@@ -259,19 +259,81 @@
     .justify-content-end {
         justify-content: end;
     }
+
+    /* ---- MOVED INLINE HELPERS ---- */
+
+    /* Company name text that was inline on the <span> */
+    .company-name-text {
+        font-family: 'Segoe UI';
+        font-size: 24px;
+        font-weight: bolder;
+        display: inline-block;
+        line-height: 1;
+    }
+
+    /* Logo sizing moved from inline height attr */
+    .img-logo {
+        height: 45px;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    /* Replaces inline col widths used in table colgroups */
+    .col-10 {
+        width: 10%;
+    }
+
+    .col-15 {
+        width: 15%;
+    }
+
+    .col-17 {
+        width: 17%;
+    }
+
+    .col-22 {
+        width: 22%;
+    }
+
+    .col-40 {
+        width: 40%;
+    }
+
+    .col-45 {
+        width: 45%;
+    }
+
+    .col-50 {
+        width: 50%;
+    }
+
+    .col-60 {
+        width: 60%;
+    }
+
+    .col-100 {
+        width: 100%;
+    }
+
+    /* small helpers for table cells if needed (keeps existing behavior) */
+    .td-text-right {
+        text-align: right;
+    }
+
+    .td-text-left {
+        text-align: left;
+    }
 </style>
 
 <!-- Left Only -->
-<!-- <div style="display: flex;"> -->
-<!-- <div class="left-width"> -->
 <div>
     <table class="main-table">
         <colgroup>
-            <col style="width: 10%;">
-            <col style="width: 15%;">
-            <col style="width: 45%;">
-            <col style="width: 15%;">
-            <col style="width: 15%;">
+            <col class="col-10" />
+            <col class="col-15" />
+            <col class="col-45" />
+            <col class="col-15" />
+            <col class="col-15" />
         </colgroup>
         <thead>
             <tr>
@@ -285,34 +347,37 @@
                 <td class="text-right">Ext Price</td>
             </tr>
         </thead>
-        @* <tbody>
-            @for (int i = 0; i < Model.PODetail.Count; i++)
+        <tbody>
+            @for (int i = 0; i < Model.RPTPoDetail.Count; i++)
             {
-                var itm = Model.PODetail[i];
+                var itm = Model.RPTPoDetail[i];
 
                 <tr>
                     <td class="no-overflow"><strong>@string.Format("{0:0.##}", itm.ShipQty)</strong> @itm.Unit</td>
-                    <td><span>@itm.ItemCode</span></td>
+                    <td><span>@itm.ItemName</span></td>
                     <td>
-                        <div style="line-height:1;">
-                            <strong>@itm.ItemDesc1</strong><br />
-                            @if (Model.IsChineseShow)
-                            {
-                                <span class="chinese font10">@itm.ItemDescX1</span>
-                                <span>&nbsp;</span>
-                                <span class="font11 upparcase">@itm.PackSize</span>
-                            }
-                            else
-                            {
-                                <span class="font11 upparcase">@itm.PackSize</span>
-                            }
-                        </div>
+                        @* If you want item desc back in the layout, uncomment and style accordingly *@
+                        @* <div style="line-height:1;">
+                    <strong>@itm.ItemDesc1</strong><br />
+                    @if (Model.IsChineseShow)
+                    {
+                    <span class="chinese font10">@itm.ItemDescX1</span>
+                    <span>&nbsp;</span>
+                    <span class="font11 upparcase">@itm.PackSize</span>
+                    }
+                    else
+                    {
+                    <span class="font11 upparcase">@itm.PackSize</span>
+                    }
+                    </div> *@
                     </td>
                     <td class="text-right">@string.Format("{0:c}", itm.FinalPrice)</td>
-                    <td class="text-right">@string.Format("{0:c}", itm.FinalTotal)</td>
+                    <td class="text-right">
+                        @* @string.Format("{0:c}", itm.FinalTotal) *@
+                    </td>
                 </tr>
             }
-        </tbody> *@
+        </tbody>
         <tfoot>
             <tr>
                 <td colspan="5"><div class="footer-height">&nbsp;</div></td>
@@ -321,76 +386,77 @@
     </table>
 
     <div class="main-table-header-grid left-width header-height">
-        @* <div class="comp-logo-grid">
+        <div class="comp-logo-grid">
             <div class="comp-name">
                 <div>
-                    @if (Model.IsUseLogo)
+                    @if (Model.Company.HasLogo)
                     {
-                        <img src="@Model.LogoUrl" class="img-fluid" height="45" />
+                        <img src="@Model.Company.LogoUrl" class="img-fluid img-logo" alt="Company logo" />
                     }
                     else
                     {
-                        <span style="font-family: 'Segoe UI'; font-size: 24px; font-weight:bolder;">@Model.CompanyInfo.CompanyName</span>
+                        <span class="company-name-text">@Model.Company.CompanyName</span>
                     }
                 </div>
             </div>
             <div class="comp-address">
-                @Model.CompanyInfo.Address<br />
-                @Model.CompanyInfo.City @Model.CompanyInfo.State
-                @Model.CompanyInfo.Zipcode<br />
-                @Model.CompanyInfo.Phone<br />
-                <strong>@Model.CompanyInfo.Website</strong>
+                @Model.Company.AddressLine1<br />
+                @Model.Company.City @Model.Company.State
+                @Model.Company.ZipCode<br />
+                @Model.Company.Phone<br />
+                <strong>@Model.Company.Website</strong>
             </div>
-        </div> *@
+        </div>
 
-        @* <div class="inv-info-grid">
+        <div class="inv-info-grid">
             <div class="d-flex justify-content-between">
                 <div class="invoice-label">Purchase Order</div>
                 <div class="invoice-barcode">
-                    @Model.PO.PONum
+                    *@Model.RPTPo.PurchaseNumber*
                 </div>
             </div>
             <table>
                 <colgroup>
-                    <col style="width: 40%;">
-                    <col style="width: 60%;">
+                    <col class="col-40" />
+                    <col class="col-60" />
                 </colgroup>
                 <tr>
                     <td class="invoice-info-label">Doc #</td>
-                    <td class="invoice-info">@Model.PO.VendorDocNum</td>
+                    <td class="invoice-info">@Model.RPTPo.VendorDocNumber</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">Order Date</td>
-                    <td class="invoice-info">@string.Format("{0:d}", Model.PO.PurchaseDate)</td>
+                    <td class="invoice-info">@string.Format("{0:d}", Model.RPTPo.PurchaseDate)</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">Estimate Arrival Date</td>
-                    <td class="invoice-info">@string.Format("{0:d}", Model.PO.ArrivalDate)</td>
+                    <td class="invoice-info">@string.Format("{0:d}", Model.RPTPo.ArrivalDate)</td>
                 </tr>
             </table>
-        </div> *@
+        </div>
 
-        @* <div class="ship-to-grid">
+        <div class="ship-to-grid">
             <div class="ship-to-label highlight-dark">Vendor Information</div>
             <div class="cust-name">
-                @Model.PO.PayeeName
+                @Model.RPTPo.PayeeName
             </div>
             <div class="cust-address">
-                @Model.PO.Address<br />
-                @Model.PO.City @Model.PO.State @Model.PO.ZipCode @Model.PO.Country<br />
-                @Model.PO.Phone1
+                @Model.RPTPo.Address<br />
+                @Model.RPTPo.City @Model.RPTPo.State @Model.RPTPo.ZipCode @Model.RPTPo.Country<br />
+                @Model.RPTPo.Phone1
             </div>
-        </div> *@
+        </div>
     </div>
+
     <div class="main-table-footer-grid footer-height">
         <div class="total-grid">
-            @* <table class="t2">
+            <table class="t2">
                 <colgroup>
-                    <col style="width: 17%;">
-                    <col style="width: 17%;">
-                    <col style="width: 22%;">
-                    <col style="width: 22%;">
-                    <col style="width: 22%;">
+                    <col class="col-17" />
+                    <col class="col-17" />
+                    <col class="col-22" />
+                    <col class="col-22" />
+                    <col class="col-22" />
                 </colgroup>
                 <tr>
                     <td>Total Item</td>
@@ -400,13 +466,19 @@
                     <td class="text-right">Total</td>
                 </tr>
                 <tr>
-                    <td>@Model.PODetail.Where(c => !c.ItemCode.StartsWith("@")).GroupBy(c => c.ItemCode).Count()</td>
-                    <td>@string.Format("{0:0.00}", Model.PODetail.Where(c => c.NormalizedUnit == "w").Sum(c => c.ShipQty))</td>
-                    <td class="text-right">@Model.TotalWeight lbs</td>
-                    <td class="text-right">@string.Format("{0:0.00}", Model.TotalVolume) cbm</td>
-                    <td class="text-right">@string.Format("{0:c}", Model.PO.PurchaseTotal)</td>
+                    <td>@Model.TotalItem</td>
+                    <td>
+                        @* @string.Format("{0:0.00}", Model.RPTPoDetail.Where(c => c.NormalizedUnit == "w").Sum(c => c.ShipQty)) *@
+                    </td>
+                    <td class="text-right">
+                        @* @Model.TotalWeight lbs *@
+                    </td>
+                    <td class="text-right">
+                        @* @string.Format("{0:0.00}", Model.TotalVolume) cbm *@
+                    </td>
+                    <td class="text-right">@string.Format("{0:c}", Model.RPTPo.PurchaseTotal)</td>
                 </tr>
-            </table> *@
+            </table>
         </div>
     </div>
 </div>

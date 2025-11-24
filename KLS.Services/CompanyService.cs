@@ -16,9 +16,9 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<Company> GetDefault()
+        public Company GetDefault()
         {
-            return Uow.Companies.GetAll().ToList();
+            return Uow.Companies.GetAll().FirstOrDefault();
         }
     }
 }
