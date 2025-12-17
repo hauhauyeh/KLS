@@ -1,6 +1,6 @@
 ﻿using KLS.Common;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;

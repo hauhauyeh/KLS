@@ -1,7 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
 using System;

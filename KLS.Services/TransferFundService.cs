@@ -1,8 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Models.Deposit;
-using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;
 using System;

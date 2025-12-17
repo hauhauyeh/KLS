@@ -1,7 +1,6 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
-using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;

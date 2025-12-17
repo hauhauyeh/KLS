@@ -2,7 +2,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
-using KLS.Models.Deposit;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;

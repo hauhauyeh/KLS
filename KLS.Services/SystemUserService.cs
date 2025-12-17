@@ -1,9 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;

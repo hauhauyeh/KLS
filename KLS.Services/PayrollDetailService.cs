@@ -1,7 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Models;
-using KLS.Services.Interfaces;
+using KLS.Contract.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;

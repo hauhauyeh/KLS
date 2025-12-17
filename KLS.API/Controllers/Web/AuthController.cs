@@ -1,6 +1,6 @@
 ﻿using KLS.Common;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KLS.API.Controllers.Web

@@ -1,7 +1,7 @@
 using KLS.API.Helpers;
 using KLS.Common;
+using KLS.Contract.Services;
 using KLS.Services;
-using KLS.Services.Interfaces;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -71,6 +71,7 @@ app.UseCors("corsapp");
 
 app.UseMiddleware<JWTMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

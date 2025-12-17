@@ -1,8 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
-using Omu.ValueInjecter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +12,9 @@ namespace KLS.Services
 {
     public class TempGeneralJournalService : BaseService, ITempGeneralJournalService
     {
-        private Interfaces.IAccountService _accountService;
+        private IAccountService _accountService;
 
-        public TempGeneralJournalService(IUnitOfWork uow, Interfaces.IAccountService AccountService) : base(uow)
+        public TempGeneralJournalService(IUnitOfWork uow, IAccountService AccountService) : base(uow)
         {
             _accountService = AccountService;
         }

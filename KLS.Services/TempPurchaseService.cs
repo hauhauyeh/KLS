@@ -1,7 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
 using System;
@@ -125,10 +125,10 @@ namespace KLS.Services
             var item = _itemService.GetBySearch(tempItem.ItemCode);
 
             if (item == null)
-                throw new InvalidOperationException("Item code not found");
+                throw new KeyNotFoundException("Item code not found");
 
             if (item.Inactive)
-                throw new InvalidOperationException("This product already discontinue");
+                throw new KeyNotFoundException("This product already discontinue");
 
             var unit = _itemUnitService.GetBaseUnit(item.ItemId);
 
@@ -168,10 +168,10 @@ namespace KLS.Services
             var account = _accountService.CheckAccount(tempItem.ItemCode);
 
             if (account == null)
-                throw new InvalidOperationException("Account not found");
+                throw new KeyNotFoundException("Account not found");
 
             if ((account.AccountType.CatName == EnumHelper.AccountCategory.Income.ToString() || account.AccountType.CatName == EnumHelper.AccountCategory.Liability.ToString()))
-                throw new InvalidOperationException("You can't add Income/Liability account");
+                throw new KeyNotFoundException("You can't add Income/Liability account");
 
             tempItem.ItemCode = account.AccountCode;
             tempItem.ItemName = account.AccountName;

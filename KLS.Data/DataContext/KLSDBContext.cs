@@ -1,6 +1,5 @@
 ﻿using KLS.Common;
 using KLS.Models;
-using KLS.Models.Deposit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System;

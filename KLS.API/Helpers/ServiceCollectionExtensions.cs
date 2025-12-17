@@ -1,7 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
-using KLS.Services.Interfaces;
 using KLS.Services;
 using KLS.Data.Repositories;
+using KLS.Contract.Services;
 
 namespace KLS.API.Helpers
 {

@@ -1,7 +1,6 @@
-﻿using KLS.Common;
-using KLS.Contract.Interfaces;
+﻿using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;

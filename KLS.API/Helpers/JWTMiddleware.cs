@@ -1,6 +1,5 @@
 ﻿using KLS.Common;
-using KLS.Models;
-using KLS.Services.Interfaces;
+using KLS.Contract.Services;
 using System.Text.Json;
 
 namespace KLS.API.Helpers

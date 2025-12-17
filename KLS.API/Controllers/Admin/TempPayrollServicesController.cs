@@ -1,6 +1,6 @@
 ﻿using KLS.API.Helpers;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 

@@ -1,6 +1,6 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
-using KLS.Services.Interfaces;
+using KLS.Contract.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;

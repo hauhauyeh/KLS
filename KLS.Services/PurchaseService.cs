@@ -1,7 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Models;
-using KLS.Services.Interfaces;
+using KLS.Contract.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IronPdf;
 
 namespace KLS.Services
 {

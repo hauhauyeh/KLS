@@ -1,6 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
@@ -11,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using KLS.Contract.Services;
 
 namespace KLS.Services
 {

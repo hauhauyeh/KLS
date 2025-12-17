@@ -1,6 +1,6 @@
 ﻿using KLS.API.Helpers;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -55,9 +55,6 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create Term")]
         public IActionResult Create([FromBody] Term term)
         {
-            if (_termService.ExistsName(term))
-                return Conflict("TermName already exists");
-
             return Ok(_termService.CreateTerm(term));
         }
 
@@ -66,9 +63,6 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update Term")]
         public IActionResult Update([FromBody] Term term)
         {
-            if (_termService.ExistsName(term))
-                return Conflict("TermName already exists");
-
             return Ok(_termService.UpdateTerm(term));
         }
 
@@ -77,9 +71,6 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Term")]
         public IActionResult Delete(int id)
         {
-            if (_termService.TermUsed(id))
-                return Conflict("You can't delete. it is assigned to payee.");
-
             _termService.DeleteTerm(id);
 
             return Ok();

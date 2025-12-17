@@ -1,8 +1,9 @@
 ﻿using KLS.Contract.Interfaces;
+using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,17 +17,17 @@ namespace KLS.Services
 
         }
 
-        public IQueryable<Term> GetAllTerms()
+        public IEnumerable<Term> GetAllTerms()
         {
             return Uow.Terms.GetAll().OrderBy(c => c.TermName);
         }
 
-        public ICollection<Term> GetActiveTerms()
+        public IEnumerable<Term> GetActiveTerms()
         {
-            return Uow.Terms.Find(c => c.Inactive == false).OrderBy(c => c.TermName).ToList();
+            return Uow.Terms.Find(c => c.Inactive == false).OrderBy(c => c.TermName);
         }
 
-        public Term GetById(int termId)
+        public Term? GetById(int termId)
         {
             return Uow.Terms.GetById(termId);
         }
@@ -44,6 +45,9 @@ namespace KLS.Services
 
         public Term CreateTerm(Term term)
         {
+            if (ExistsName(term))
+                throw new DuplicateNameException("Term name already exists.");
+
             Uow.Terms.Add(term);
             Uow.Commit();
 
@@ -53,30 +57,30 @@ namespace KLS.Services
         public Term? UpdateTerm(Term term)
         {
             var existing = GetById(term.TermId);
+            if (existing == null) return null;
 
-            if (existing != null)
-            {
-                existing.TermName = term.TermName;
-                existing.TermType = term.TermType;
-                existing.DueDays = term.DueDays;
-                //existing.DayOfMonth = term.DayOfMonth;
-                existing.Discount = term.Discount;
-                existing.Inactive = term.Inactive;
-                existing.Notes = term.Notes;
+            if (ExistsName(term))
+                throw new DuplicateNameException("Term name already exists.");
 
-                existing.UpdatedAt = DateTime.UtcNow;
+            // name uniqueness check stays in service
+            existing.UpdateTerm(term);
 
-                Uow.Terms.Update(existing);
-                Uow.Commit();
-            }
+            Uow.Terms.Update(existing);
+            Uow.Commit();
 
             return existing;
         }
 
         public void DeleteTerm(int termId)
         {
+            if (TermUsed(termId))
+                throw new DuplicateNameException("You can't delete this term because it is assigned to a payee.");
+
             Uow.Terms.RemoveById(termId);
             Uow.Commit();
         }
+
+        //private static TermDto Map(Term t)
+        //    => new(t.TermId, t.TermName, t.TermType, t.DueDays, t.Discount, t.Inactive, t.Notes);
     }
 }
