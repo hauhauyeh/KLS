@@ -19,6 +19,10 @@ namespace KLS.Models
 
         public int PurchaseNumber { get; set; }
 
+        public int? StageId { get; set; }
+
+        public string? StageName { get; set; }
+
         public int PayeeId { get; set; }
 
         public string? VendorDocNumber { get; set; }
@@ -51,6 +55,6 @@ namespace KLS.Models
 
         //public int? PurchaseId { get; set; }
 
-        public bool IsPOCopyToBill { get { return PurchaseId > 0; } }
+        public bool IsPOCopyToBill { get; }
     }
 }

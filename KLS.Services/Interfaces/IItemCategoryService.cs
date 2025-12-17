@@ -12,7 +12,7 @@ namespace KLS.Services.Interfaces
     {
         IQueryable<ItemCategory> GetAllCategory();
 
-        IEnumerable<ItemCategoryTree> GetAllCategoryTree();
+        IEnumerable<ItemCategory> GetAllCategoryTree();
 
         ItemCategory GetById(int id);
 

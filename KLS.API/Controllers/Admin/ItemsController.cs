@@ -1,5 +1,4 @@
 ﻿using KLS.API.Helpers;
-using KLS.Common;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -88,18 +87,18 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        //[HttpGet("CalcUnit")]
-        //public IActionResult CalcUnit([FromQuery] ItemPackingReq packingReq)
-        //{
-        //    return Ok(_itemService.GetCalcUnit(packingReq));
-        //}
+        [HttpGet("CalcUnit")]
+        public IActionResult CalcUnit([FromQuery] ItemPackingReq packingReq)
+        {
+            return Ok(_itemService.GetCalcUnit(packingReq));
+        }
 
 
-        //[HttpGet("CalcRetailPriceProfit")]
-        //public IActionResult CalcRetailPriceProfit([FromQuery] ItemCalcRetail calcRetail)
-        //{
-        //    return Ok(_itemService.CalcRetailPriceProfit(calcRetail));
-        //}
+        [HttpGet("CalcRetailPriceProfit")]
+        public IActionResult CalcRetailPriceProfit([FromQuery] ItemCalcRetail calcRetail)
+        {
+            return Ok(_itemService.CalcRetailPriceProfit(calcRetail));
+        }
 
 
         //[HttpGet("DefaultUnits")]

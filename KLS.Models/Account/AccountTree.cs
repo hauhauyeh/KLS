@@ -24,6 +24,8 @@ namespace KLS.Models
 
         public bool Inactive { get; set; }
 
+        public bool IsDefaultAccount { get; set; }
+
         public IEnumerable<AccountTree>? ChildAccounts { get; set; }
 
         public bool HasChild { get { return ChildAccounts != null && ChildAccounts.Any(); } }

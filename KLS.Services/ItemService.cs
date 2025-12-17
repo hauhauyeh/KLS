@@ -36,9 +36,13 @@ namespace KLS.Services
 
         public Item? GetById(int itemId)
         {
+            var item = new Item();
+
             if (itemId > 0)
             {
-                var item = Uow.Items.GetById(itemId);
+                item = Uow.Items.GetById(itemId);
+
+                item.ItemUnits = Uow.ItemUnits.Find(c => c.ItemId == itemId).ToList();
 
                 //var cataog = from c in Uow.ItemCatalog.GetAll()
                 //             join ic in Uow.ItemCatalogMap.GetAll() on c.CatalogId equals ic.CatalogId
@@ -46,23 +50,24 @@ namespace KLS.Services
                 //             select c;
 
                 //item.CatalogMaps = cataog.ToList();
-
-                return item;
             }
             else
             {
-                return new Item
+                item = new Item
                 {
                     PaletteFactor = 50,
                     //DefaultUnit = EnumHelper.ItemDefaultUnit.Whole.ToString(),
                     //RetailFactor = 1,
                     //RetailPrice = 0,
                     //DefaultCost = 0,
-                    //RetailProfitPercent = _systemSettingService.GetByKey<decimal>(GlobalKey.ITEM_DEFAULT_RETAILPROFIT),
                     IsTaxable = _systemSettingService.GetByKey<bool>(GlobalKey.ITEM_DEFAULT_TAXABLE),
                     ItemType = _systemSettingService.GetByKey<string>(GlobalKey.ITEM_DEFAULT_TYPE)
                 };
             }
+
+            item.DefaultRetailPercent = _systemSettingService.GetByKey<decimal>(GlobalKey.ITEM_DEFAULT_RETAILPROFIT);
+
+            return item;
         }
 
         public Item? GetByItemCode(string? itemCode)
@@ -135,14 +140,14 @@ namespace KLS.Services
                     oldItem.ItemLongDesc = item.ItemLongDesc;
                     oldItem.ItemBrand = item.ItemBrand;
 
+                    oldItem.SetPacking = item.SetPacking;
                     oldItem.PackSize = item.PackSize;
-                    oldItem.Pack1 = item.Pack1;
 
                     oldItem.PreferredVendorId = item.PreferredVendorId;
                     oldItem.PaletteFactor = item.PaletteFactor;
                     oldItem.SaftyInventory = item.SaftyInventory;
                     oldItem.CaseWeight = item.CaseWeight;
-                    //oldItem.CaseVolume = item.CaseVolume;
+                    oldItem.CaseVolumeInCubicMeter = item.CaseVolumeInCubicMeter;
                     oldItem.CaseLength = item.CaseLength;
                     oldItem.CaseWidth = item.CaseWidth;
                     oldItem.CaseHeight = item.CaseHeight;
@@ -157,6 +162,50 @@ namespace KLS.Services
                     Uow.Items.Update(oldItem);
                     Uow.Commit();
                 }
+
+                // --- sync ItemUnits (add / update) ---
+                var existingUnits = Uow.ItemUnits
+                    .Find(c => c.ItemId == item.ItemId)
+                    .ToList();
+
+                if (item.ItemUnits != null)
+                {
+                    foreach (var unit in item.ItemUnits)
+                    {
+                        if (unit.ItemUnitId == 0)
+                        {
+                            var baseUnitCost = existingUnits.FirstOrDefault(u => u.IsBaseUnit)?.RecentCost;
+
+                            // NEW UNIT: add
+                            unit.ItemId = item.ItemId;
+                            unit.RecentCost = baseUnitCost / unit.FactorToBase;
+                            Uow.ItemUnits.Add(unit);
+                        }
+                        else
+                        {
+                            // EXISTING UNIT: update
+                            var dbUnit = existingUnits
+                                .FirstOrDefault(u => u.ItemUnitId == unit.ItemUnitId);
+
+                            if (dbUnit != null)
+                            {
+                                dbUnit.Unit = unit.Unit;
+                                dbUnit.FactorToBase = unit.IsBaseUnit ? 1 : unit.FactorToBase;
+                                dbUnit.IsDefaultSalesUnit = unit.IsDefaultSalesUnit;
+                                //dbUnit.PricePercentToBase = unit.PricePercentToBase;
+                                dbUnit.Barcode = unit.Barcode;
+                                dbUnit.P1 = unit.P1;
+                                dbUnit.MSRP = unit.MSRP;
+                                dbUnit.MarketPrice = unit.MarketPrice;
+                                dbUnit.Inactive = unit.Inactive;
+
+                                Uow.ItemUnits.Update(dbUnit);
+                            }
+                        }
+                    }
+                }
+
+                Uow.Commit();
             }
             else
             {
@@ -192,7 +241,7 @@ namespace KLS.Services
             return GetById(item.ItemId);
         }
 
-        public ItemCalcUnit GetCalcUnit(ItemPackingReq packingReq)
+        public IEnumerable<ItemCalcUnit> GetCalcUnit(ItemPackingReq packingReq)
         {
             return Uow.Items.GetCalcUnit(packingReq);
         }

@@ -15,17 +15,24 @@ namespace KLS.Services
     public class TempPurchaseService : BaseService, ITempPurchaseService
     {
         private readonly IItemService _itemService;
+        private readonly IItemUnitService _itemUnitService;
         private readonly IAccountService _accountService;
 
-        public TempPurchaseService(IUnitOfWork uow, IItemService itemService, IAccountService accountService) : base(uow)
+        public TempPurchaseService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService) : base(uow)
         {
             _itemService = itemService;
+            _itemUnitService = itemUnitService;
             _accountService = accountService;
         }
 
         public IEnumerable<TempPurchaseItem>? GetTempPurchaseItems(TempPurchaseReq tempReq)
         {
             return Uow.TempPurchases.GetTempPurchaseItems(tempReq);
+        }
+
+        public TempPurchase? GetById(int tempId)
+        {
+            return Uow.TempPurchases.GetById(tempId);
         }
 
         public TempPurchaseItem CreateTempPurchase(TempPurchaseItem tempItem)
@@ -38,7 +45,7 @@ namespace KLS.Services
 
         public TempPurchaseItem UpdateTempPurchase(TempPurchaseItem tempPurchase)
         {
-            var existing = Uow.TempPurchases.GetById(tempPurchase.TempPurchaseId);
+            var existing = GetById(tempPurchase.TempPurchaseId);
 
             if (existing != null)
             {
@@ -54,6 +61,31 @@ namespace KLS.Services
 
                 if (existing.PurchaseDetailId.HasValue)
                     existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
+
+                existing.SetQtyBasedOnFlag();
+
+                Uow.TempPurchases.Update(existing);
+                Uow.Commit();
+
+                tempPurchase.InjectFrom(existing);
+            }
+
+            return tempPurchase;
+        }
+
+        public TempPurchaseItem UpdateUnit(TempPurchaseItem tempPurchase)
+        {
+            var existing = GetById(tempPurchase.TempPurchaseId);
+
+            if (existing != null)
+            {
+                var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId ?? 0, existing.Unit);
+
+                existing.Unit = itemUnit.Unit;
+                existing.FactorToBase = itemUnit.FactorToBase;
+
+                if (existing.PurchaseDetailId.HasValue)
+                    existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();                    
 
                 existing.SetQtyBasedOnFlag();
 
@@ -98,6 +130,8 @@ namespace KLS.Services
             if (item.Inactive)
                 throw new InvalidOperationException("This product already discontinue");
 
+            var unit = _itemUnitService.GetBaseUnit(item.ItemId);
+
             var itemCategory = Uow.ItemCategories.GetById(item.CategoryId ?? 0);
             tempItem.CustomDutyRate = itemCategory?.CustomDutyRate ?? 0;
 
@@ -105,11 +139,14 @@ namespace KLS.Services
             tempItem.ItemCode = item.ItemCode;
             tempItem.ItemName = item.ItemName;
             tempItem.CaseWeight = item.CaseWeight;
-            //tempItem.CaseVolume = item.CaseVolume;
-            //tempItem.BillPrice = tempItem.BillPrice == 0 ? item.DefaultCost ?? 0 : 0;
+            tempItem.ItemVolume = item.CaseVolumeInCubicMeter;
+            tempItem.BillPrice = tempItem.BillPrice == 0 ? unit.RecentCost ?? 0 : 0;
             tempItem.FinalPrice = tempItem.BillPrice;
             tempItem.OrgPrice = tempItem.BillPrice;
             tempItem.LineType = EnumHelper.LineType.I.ToString();
+
+            tempItem.Unit = unit.Unit;
+            tempItem.FactorToBase = unit.FactorToBase;
 
             var tempPurchase = new TempPurchase();
             tempPurchase.InjectFrom(tempItem);
@@ -144,6 +181,9 @@ namespace KLS.Services
             var tempPurchase = new TempPurchase();
             tempPurchase.InjectFrom(tempItem);
             tempPurchase.EmpId = UserContext.EmpId;
+            tempPurchase.BaseReceiveQty = tempItem.ReceiveQty;
+            tempPurchase.BaseFinalQty = tempItem.FinalQty;
+            tempPurchase.FactorToBase = 1;
 
             Uow.TempPurchases.Add(tempPurchase);
             Uow.Commit();

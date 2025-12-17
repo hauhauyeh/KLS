@@ -86,7 +86,6 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempTransferFund>().ToTable("TempTransferFund");
             modelBuilder.Entity<UserAccount>().ToTable("UserAccount");
             modelBuilder.Entity<UserRole>().ToTable("UserRole");
-            modelBuilder.Entity<Unit>().ToTable("Unit");
             modelBuilder.Entity<ItemTag>().ToTable("ItemTag");
             modelBuilder.Entity<ItemUnit>().ToTable("ItemUnit");
             modelBuilder.Entity<ItemNameDetail>().ToTable("ItemNameDetail");
@@ -216,8 +215,6 @@ namespace KLS.Data.DataContext
 
         public DbSet<UserRole> UserRoles { get; set; }
 
-        public DbSet<Unit> Units { get; set; }
-
         public DbSet<ItemTag> ItemTags { get; set; }
 
         public DbSet<ItemUnit> ItemUnits { get; set; }
@@ -298,9 +295,9 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<TempDepositList> TempDepositList { get; set; }
 
-        public virtual DbSet<RPTPo> RPTPo { get; set; }
+        public virtual DbSet<RptPO> RptPO { get; set; }
 
-        public virtual DbSet<RPTPoDetail> RPTPoDetails { get; set; }
+        public virtual DbSet<RptPODetail> RptPODetail { get; set; }
 
         #endregion
     }

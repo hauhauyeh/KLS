@@ -36,6 +36,7 @@ namespace KLS.Services
                            AccountCode = act.AccountCode,
                            AccountName = act.AccountName,
                            Inactive = act.Inactive,
+                           IsDefaultAccount = act.IsDefaultAccount,
                            ParentAccountId = act.ParentAccountId
                        }).ToList();
 
@@ -53,6 +54,7 @@ namespace KLS.Services
                 AccountName = x.AccountName,
                 ParentAccountId = x.ParentAccountId,
                 Inactive = x.Inactive,
+                IsDefaultAccount = x.IsDefaultAccount,
                 ChildAccounts = BuildTree(accounts, x.AccountId)
             });
         }
@@ -118,10 +120,15 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteAccount(int id)
+        public void DeleteAccount(int accountId)
         {
-            Uow.Accounts.RemoveById(id);
-            Uow.Commit();
+            var account = GetByAcctId(accountId);
+
+            if (account != null && !account.IsDefaultAccount)
+            {
+                Uow.Accounts.RemoveById(accountId);
+                Uow.Commit();
+            }
         }
 
         public Account? CheckAccount(string search)

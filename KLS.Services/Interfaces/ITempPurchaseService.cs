@@ -15,6 +15,8 @@ namespace KLS.Services.Interfaces
 
         TempPurchaseItem UpdateTempPurchase(TempPurchaseItem tempPurchase);
 
+        TempPurchaseItem UpdateUnit(TempPurchaseItem tempPurchase);
+
         void DeleteTempPurchase(int tempId);
 
         void ClearTempPurchase(TempPurchaseReq tempReq);

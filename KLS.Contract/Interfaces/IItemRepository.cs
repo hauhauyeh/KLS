@@ -17,7 +17,7 @@ namespace KLS.Contract.Interfaces
 
         void DeleteItem(int itemId);
 
-        ItemCalcUnit GetCalcUnit(ItemPackingReq packingReq);
+        IQueryable<ItemCalcUnit> GetCalcUnit(ItemPackingReq packingReq);
 
         ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
     }

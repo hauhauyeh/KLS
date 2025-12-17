@@ -27,9 +27,9 @@ namespace KLS.Services.Interfaces
 
         Item? SaveItem(Item item);
 
-        //ItemCalcUnit GetCalcUnit(ItemPackingReq packingReq);
+        IEnumerable<ItemCalcUnit> GetCalcUnit(ItemPackingReq packingReq);
 
-        //ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
+        ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
 
         //void UpdateDefautCost(int itemId, decimal? defaultCost);
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class RPTPo
+    public class RptPO
     {
         [Key]
         public int PurchaseId { get; set; }

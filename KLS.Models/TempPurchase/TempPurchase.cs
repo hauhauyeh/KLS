@@ -1,6 +1,5 @@
 ﻿using KLS.Common;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -37,7 +36,7 @@ namespace KLS.Models
 
         public int? AccountId { get; set; }
 
-        public string? UnitType { get; set; }
+        public int? ItemUnitId { get; set; }
 
         public string? Unit { get; set; }
 
@@ -77,9 +76,16 @@ namespace KLS.Models
             set { value = Utilities.Rounding(FinalQty * FinalPrice, 2); }
         }
 
-        public DateOnly? ExpiryDate { get; set; }
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? BaseReceiveQty { get; set; }
 
-        public decimal? RetailFactor { get; set; }
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? BaseFinalQty { get; set; }
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? FactorToBase { get; set; }
+
+        public DateOnly? ExpiryDate { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? DiscountPercent { get; set; }
@@ -90,6 +96,9 @@ namespace KLS.Models
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? CustomDutyRate { get; set; }
+
+        [Column(TypeName = "decimal(9,4)")]
+        public decimal? TariffPercent { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? DutySharePercent { get; set; }
@@ -135,6 +144,9 @@ namespace KLS.Models
                 ReceiveQty = OrdQty1;
                 FinalQty = OrdQty1;
             }
-        } 
+
+            BaseReceiveQty = Utilities.Rounding(ReceiveQty / FactorToBase, 6);
+            BaseFinalQty = Utilities.Rounding(FinalQty / FactorToBase, 6);
+        }
     }
 }

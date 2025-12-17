@@ -8,19 +8,19 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class RPTPoView
+    public class RptPOView
     {
         public Company? Company { get; set; }
 
-        public RPTPo? RPTPo { get; set; }
+        public RptPO? RptPO { get; set; }
 
-        public List<RPTPoDetail>? RPTPoDetail { get; set; }
+        public List<RptPODetail>? RptPODetail { get; set; }
 
         public int TotalItem
         {
             get
             {
-                return RPTPoDetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString()).GroupBy(c => c.ItemId).Count();
+                return RptPODetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString()).GroupBy(c => c.ItemId).Count();
             }
         }
     }

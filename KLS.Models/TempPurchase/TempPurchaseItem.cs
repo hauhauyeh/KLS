@@ -26,7 +26,7 @@ namespace KLS.Models
 
         public int? AccountId { get; set; }
 
-        public string? UnitType { get; set; }
+        public int? ItemUnitId { get; set; }
 
         public string? Unit { get; set; }
 
@@ -66,9 +66,16 @@ namespace KLS.Models
             set { value = Utilities.Rounding(FinalQty * FinalPrice, 2); }
         }
 
-        public DateOnly? ExpiryDate { get; set; }
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? BaseReceiveQty { get; set; }
 
-        public decimal? RetailFactor { get; set; }
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? BaseFinalQty { get; set; }
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? FactorToBase { get; set; }
+
+        public DateOnly? ExpiryDate { get; set; }
 
         public decimal? DiscountPercent { get; set; }
 
@@ -78,6 +85,9 @@ namespace KLS.Models
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? CustomDutyRate { get; set; }
+
+        [Column(TypeName = "decimal(9,4)")]
+        public decimal? TariffPercent { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? DutySharePercent { get; set; }
@@ -96,10 +106,15 @@ namespace KLS.Models
 
         public decimal? CaseWeight { get; set; }
 
-        public decimal? CaseVolume { get; set; }
+        public decimal? DutyPerCase { get; set; }
 
-        public decimal? WeightTotal { get { return UnitType == "W" ? Utilities.Rounding(FinalQty * CaseWeight, 2) : 0; } }
+        public decimal? FreightPerCase { get; set; }
 
-        public decimal? VolumeTotal { get { return UnitType == "W" ? Utilities.Rounding(FinalQty * CaseVolume, 2) : 0; } }
+        public decimal? WeightTotal { get { return Utilities.Rounding(BaseFinalQty * CaseWeight, 2); } }
+
+        public decimal? VolumeTotal { get { return Utilities.Rounding(BaseFinalQty * ItemVolume, 2); } }
+
+        public decimal? TotalDutyTariff => CustomDutyRate.HasValue || TariffPercent.HasValue ? (CustomDutyRate ?? 0m) + (TariffPercent ?? 0m)
+        : null;
     }
 }

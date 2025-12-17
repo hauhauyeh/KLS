@@ -49,6 +49,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateUnit")]
+        public IActionResult UpdateUnit([FromBody] TempPurchaseItem tempPurchase)
+        {
+            return Ok(_tempPurchaseService.UpdateUnit(tempPurchase));
+        }
+
+
         [HttpDelete("{tempId}")]
         public IActionResult Delete(int tempId)
         {

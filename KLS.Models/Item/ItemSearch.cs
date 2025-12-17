@@ -16,7 +16,7 @@ namespace KLS.Models
 
         public string? ItemName { get; set; }
 
-        public string? WholeUnit { get; set; }
+        public string? BaseUnit { get; set; }
 
         public decimal? LCloseQty { get; set; }
 

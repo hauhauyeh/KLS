@@ -1,6 +1,5 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
-using KLS.Data.Repositories;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -66,8 +65,8 @@ namespace KLS.Data.Repositories
                 new SqlParameter()
                 {
                     ParameterName = "@TotalCount",
-                    Direction = System.Data.ParameterDirection.Output,
-                    SqlDbType = System.Data.SqlDbType.Int
+                    Direction = ParameterDirection.Output,
+                    SqlDbType = SqlDbType.Int
                 }
             };
 
@@ -90,24 +89,20 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Item_Delete] @ItemId", ItemIdParam);
         }
 
-        public ItemCalcUnit GetCalcUnit(ItemPackingReq packingReq)
+        public IQueryable<ItemCalcUnit> GetCalcUnit(ItemPackingReq packingReq)
         {
-            var Pack1Param = string.IsNullOrEmpty(packingReq.Pack1) ? new SqlParameter("@Pack1", DBNull.Value) : new SqlParameter("@Pack1", packingReq.Pack1);
+            var SetPackingParam = string.IsNullOrEmpty(packingReq.SetPacking) ? new SqlParameter("@SetPacking", DBNull.Value) : new SqlParameter("@SetPacking", packingReq.SetPacking);
 
             var P1Param = packingReq.P1.HasValue ? new SqlParameter("@P1", packingReq.P1) : new SqlParameter("@P1", DBNull.Value);
 
-            var RetailProfitPercentParam = packingReq.RetailProfitPercent.HasValue ? new SqlParameter("@RetailProfitPercent", packingReq.RetailProfitPercent) : new SqlParameter("@RetailProfitPercent", DBNull.Value);
-
-            return DbContext.ItemCalcUnit.FromSqlRaw("[Item_CalcUnitFromPack1] @Pack1,@P1,@RetailProfitPercent", Pack1Param, P1Param, RetailProfitPercentParam).AsEnumerable().FirstOrDefault()!;
+            return DbContext.ItemCalcUnit.FromSqlRaw("[Item_CalcUnitFromPack1] @SetPacking,@P1", SetPackingParam, P1Param);
         }
 
         public ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail)
         {
             var P1Param = calcRetail.P1.HasValue ? new SqlParameter("@P1", calcRetail.P1) : new SqlParameter("@P1", DBNull.Value);
 
-            var RetailUnitParam = string.IsNullOrEmpty(calcRetail.RetailUnit) ? new SqlParameter("@RetailUnit", DBNull.Value) : new SqlParameter("@RetailUnit", calcRetail.RetailUnit);
-
-            var RetailFactorParam = calcRetail.RetailFactor.HasValue ? new SqlParameter("@RetailFactor", calcRetail.RetailFactor) : new SqlParameter("@RetailFactor", DBNull.Value);
+            var FactorToBaseParam = calcRetail.FactorToBase.HasValue ? new SqlParameter("@FactorToBase", calcRetail.FactorToBase) : new SqlParameter("@FactorToBase", DBNull.Value);
 
             var RetailPriceParam = new SqlParameter("@RetailPrice", SqlDbType.Decimal)
             {
@@ -125,7 +120,7 @@ namespace KLS.Data.Repositories
                 Value = (object?)calcRetail.RetailProfitPercent ?? DBNull.Value
             };
 
-            DbContext.Database.ExecuteSqlRaw("[Item_CalcRetailPriceAndProfit] @P1,@RetailUnit,@RetailFactor,@RetailPrice OUTPUT,@RetailProfitPercent OUTPUT", P1Param, RetailUnitParam, RetailFactorParam, RetailPriceParam, RetailProfitPercentParam);
+            DbContext.Database.ExecuteSqlRaw("[Item_CalcRetailPriceAndProfit] @P1,@FactorToBase,@RetailPrice OUTPUT,@RetailProfitPercent OUTPUT", P1Param, FactorToBaseParam, RetailPriceParam, RetailProfitPercentParam);
 
             if (RetailPriceParam.Value != DBNull.Value && RetailPriceParam.Value != null)
                 calcRetail.RetailPrice = Convert.ToDecimal(RetailPriceParam.Value);

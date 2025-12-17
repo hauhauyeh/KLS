@@ -80,7 +80,7 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [AuthorizeAdmin]
+        //[AuthorizeAdmin]
         [HttpPost("logout")]
         public IActionResult Logout()
         {

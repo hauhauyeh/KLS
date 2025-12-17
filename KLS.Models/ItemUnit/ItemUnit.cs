@@ -13,13 +13,19 @@ namespace KLS.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ItemUnitId { get; set; }
-        public int ItemId { get; set; }
-        public int UnitId { get; set; }
 
+        public int ItemId { get; set; }
+
+        public string Unit { get; set; }
+
+        [Column(TypeName = "decimal(18, 6)")]
         public decimal FactorToBase { get; set; }
+
+        //[Column(TypeName = "decimal(18, 4)")]
+        //public decimal? PricePercentToBase { get; set; }
+
         public bool IsBaseUnit { get; set; }
         public bool IsDefaultSalesUnit { get; set; }
-        public bool IsDefaultPurchaseUnit { get; set; }
 
         public string? Barcode { get; set; }
 
@@ -28,5 +34,21 @@ namespace KLS.Models
         public decimal? P1 { get; set; }
         public decimal? MSRP { get; set; }
         public decimal? MarketPrice { get; set; }
+
+        public bool Inactive { get; set; }
+
+        [NotMapped]
+        public string DisplayUnit
+        {
+            get
+            {
+                // If factor is 1 (base unit), show only the unit
+                if (FactorToBase == 1)
+                    return Unit;
+
+                // Otherwise show factor + unit
+                return $"{FactorToBase:0.####} {Unit}";
+            }
+        }
     }
 }

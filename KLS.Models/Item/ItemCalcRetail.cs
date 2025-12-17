@@ -11,9 +11,7 @@ namespace KLS.Models
     {
         public decimal? P1 { get; set; }
 
-        public string? RetailUnit { get; set; }
-
-        public decimal? RetailFactor { get; set; }
+        public decimal? FactorToBase { get; set; }
 
         public decimal? RetailPrice { get; set; }
 

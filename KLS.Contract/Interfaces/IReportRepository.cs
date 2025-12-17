@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IReportRepository : IRepository<RPTPoView>
+    public interface IReportRepository : IRepository<RptPOView>
     {
-        RPTPo ReportPO(int purchaseId);
+        RptPO ReportPO(int purchaseId);
 
-        IQueryable<RPTPoDetail> ReportPODetail(int poId);
+        IQueryable<RptPODetail> ReportPODetail(int purchaseId);
     }
 }

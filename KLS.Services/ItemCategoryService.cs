@@ -4,7 +4,7 @@ using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting.Internal;
+using Omu.ValueInjecter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +28,7 @@ namespace KLS.Services
             return Uow.ItemCategories.GetAll().OrderBy(c => c.CategoryName);
         }
 
-        public IEnumerable<ItemCategoryTree> GetAllCategoryTree()
+        public IEnumerable<ItemCategory> GetAllCategoryTree()
         {
             var category = Uow.ItemCategories.GetAll().OrderBy(c => c.CategoryName).ToList();
 
@@ -40,33 +40,20 @@ namespace KLS.Services
             return Uow.ItemCategories.GetById(id);
         }
 
-        //public void FlatTree(IEnumerable<ItemCategory> nodes)
-        //{
-        //    foreach (var node in nodes)
-        //    {
-        //        _FlatCategory.Add(new ItemCategory
-        //        {
-        //            CategoryId = node.CategoryId,
-        //            CategoryName = node.CategoryName,
-        //            ParentId = node.ParentId
-        //        });
-
-        //        if (node.ChildCategories != null)
-        //            FlatTree(node.ChildCategories);
-        //    }
-        //}
-
-        private IEnumerable<ItemCategoryTree> BuildTree(IEnumerable<ItemCategory> itemCategories, int? parentId)
+        private IEnumerable<ItemCategory> BuildTree(IEnumerable<ItemCategory> itemCategories, int? parentId)
         {
-            return itemCategories.Where(x => x.ParentId == parentId).Select(x => new ItemCategoryTree
-            {
-                CategoryId = x.CategoryId,
-                CategoryName = x.CategoryName,
-                DisplayName = x.DisplayName,
-                ImageUrl = x.ImageUrl,
-                ParentId = x.ParentId,
-                ChildCategories = BuildTree(itemCategories, x.CategoryId)
-            });
+            return itemCategories
+                .Where(x => x.ParentId == parentId)
+                .Select(x =>
+                {
+                    var item = new ItemCategory();
+                    item.InjectFrom(x); // Copies all matching properties
+
+                    // Build child categories
+                    item.ChildCategories = BuildTree(itemCategories, x.CategoryId).ToList();
+
+                    return item;
+                });
         }
 
         public bool NameExists(ItemCategory itemCategory)

@@ -30,7 +30,7 @@ namespace KLS.Models
         public string? ItemLongDesc { get; set; }
         public string? ItemBoxDesc { get; set; }
         public string? ItemBrand { get; set; }
-        public string? Pack1 { get; set; }
+        public string? SetPacking { get; set; }
         public string? PackSize { get; set; }
 
         public int? CategoryId { get; set; }
@@ -61,10 +61,19 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? CaseVolumeInCubicMeter { get; set; }
 
+        [Column(TypeName = "decimal(18, 6)")]
         public decimal? LCloseQty { get; set; }
+
+        [Column(TypeName = "decimal(18, 6)")]
         public decimal? LAvgCost { get; set; }
+
+        [Column(TypeName = "decimal(18, 6)")]
         public decimal? LInventoryValue { get; set; }
+
+        [Column(TypeName = "decimal(18, 6)")]
         public decimal? FutureQty { get; set; }
+
+        [Column(TypeName = "decimal(18, 6)")]
         public decimal? TodayOpenInventory { get; set; }
 
         public DateTime? ExpiryDate { get; set; }
@@ -103,5 +112,10 @@ namespace KLS.Models
 
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        public virtual ICollection<ItemUnit>? ItemUnits { get; set; }
+
+        [NotMapped]
+        public decimal? DefaultRetailPercent { get; set; }
     }
 }

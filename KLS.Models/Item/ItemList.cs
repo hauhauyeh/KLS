@@ -17,34 +17,40 @@ namespace KLS.Models
 
         public string? ItemName { get; set; }
 
-        public string? ItemForeignName { get; set; }
+        //public string? ItemForeignName { get; set; }
 
-        public string? PackSize { get; set; }
+        public string? SetPacking { get; set; }
 
-        public string? DefaultUnit { get; set; }
+        //public string? DefaultUnit { get; set; }
 
-        public string? WholeUnit { get; set; }
+        //public string? WholeUnit { get; set; }
 
         public DateOnly? LastCostDate { get; set; }
 
-        public decimal? RecentCost { get; set; }
+        //public decimal? RecentCost { get; set; }
 
-        public decimal? RecentCostB4 { get; set; }
+        //public decimal? RecentCostB4 { get; set; }
 
-        public int? CostIntervalDays { get; set; }
+        //public int? CostIntervalDays { get; set; }
 
-        public decimal? DefaultCost { get; set; }
+        //public decimal? DefaultCost { get; set; }
 
-        public decimal? FreightCost { get; set; }
+        //public decimal? FreightCost { get; set; }
 
-        public decimal? P1 { get; set; }
+        //public decimal? P1 { get; set; }
 
-        public decimal? RetailPrice { get; set; }
+        //public decimal? RetailPrice { get; set; }
 
-        [Column(TypeName = "decimal(18, 4)")]
-        public decimal? RetailProfitPercent { get; set; }
+        //[Column(TypeName = "decimal(18, 4)")]
+        //public decimal? RetailProfitPercent { get; set; }
 
-        public decimal? RetailFactor { get; set; }
+        //public decimal? RetailFactor { get; set; }
+
+        public string? BaseUnit { get; set; }
+
+        public decimal? BaseRecentCost { get; set; }
+
+        public decimal? BasePrice { get; set; }
 
         public decimal? SaftyInventory { get; set; }
 

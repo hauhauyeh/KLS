@@ -11,30 +11,25 @@ using System.Threading.Tasks;
 
 namespace KLS.Data.Repositories
 {
-    public class ReportRepository : KLSRepository<RPTPoView>, IReportRepository
+    public class ReportRepository : KLSRepository<RptPOView>, IReportRepository
     {
         public ReportRepository(KLSDBContext dbContext) : base(dbContext)
         {
 
         }
 
-        public RPTPo ReportPO(int purchaseId)
+        public RptPO ReportPO(int purchaseId)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
 
-            //return DbContext.RPTPo.FromSqlRaw("[dbo].[Report_PO] @PurchaseId", PurchaseIdParam)
-            //    .ToList().FirstOrDefault();
-
-            var results = DbContext.RPTPo.FromSqlRaw("[dbo].[Report_PO] @PurchaseId", PurchaseIdParam).AsNoTracking().ToList();
-
-            return results.FirstOrDefault();
+            return DbContext.RptPO.FromSqlRaw("[dbo].[Report_PO] @PurchaseId", PurchaseIdParam).AsEnumerable().SingleOrDefault()!;
         }
 
-        public IQueryable<RPTPoDetail> ReportPODetail(int poId)
+        public IQueryable<RptPODetail> ReportPODetail(int purchaseId)
         {
-            var POIdParam = new SqlParameter("@POId", poId);
+            var PurchaseIdParam = new SqlParameter("@purchaseId", purchaseId);
 
-            return DbContext.RPTPoDetails.FromSqlRaw("[dbo].[Report_PODetail] @POId", POIdParam);
+            return DbContext.RptPODetail.FromSqlRaw("[dbo].[Report_PODetail] @purchaseId", PurchaseIdParam);
         }
     }
 }

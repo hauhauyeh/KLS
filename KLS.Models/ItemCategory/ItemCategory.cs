@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -49,5 +48,10 @@ namespace KLS.Models
 
         [NotMapped]
         public IFormFile? CatFormFile { get; set; }
+
+        [NotMapped]
+        public ICollection<ItemCategory>? ChildCategories { get; set; }
+
+        public bool HasChild => ChildCategories != null && ChildCategories.Any();
     }
 }

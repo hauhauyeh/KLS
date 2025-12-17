@@ -1,5 +1,5 @@
 ﻿@using KLS.Common
-@model KLS.Models.RPTPoView
+@model KLS.Models.RptPOView
 
 <style>
     @@media print {
@@ -348,9 +348,9 @@
             </tr>
         </thead>
         <tbody>
-            @for (int i = 0; i < Model.RPTPoDetail.Count; i++)
+            @for (int i = 0; i < Model.RptPODetail.Count; i++)
             {
-                var itm = Model.RPTPoDetail[i];
+                var itm = Model.RptPODetail[i];
 
                 <tr>
                     <td class="no-overflow"><strong>@string.Format("{0:0.##}", itm.ShipQty)</strong> @itm.Unit</td>
@@ -412,7 +412,7 @@
             <div class="d-flex justify-content-between">
                 <div class="invoice-label">Purchase Order</div>
                 <div class="invoice-barcode">
-                    *@Model.RPTPo.PurchaseNumber*
+                    *@Model.RptPO.PurchaseNumber*
                 </div>
             </div>
             <table>
@@ -422,15 +422,15 @@
                 </colgroup>
                 <tr>
                     <td class="invoice-info-label">Doc #</td>
-                    <td class="invoice-info">@Model.RPTPo.VendorDocNumber</td>
+                    <td class="invoice-info">@Model.RptPO.VendorDocNumber</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">Order Date</td>
-                    <td class="invoice-info">@string.Format("{0:d}", Model.RPTPo.PurchaseDate)</td>
+                    <td class="invoice-info">@string.Format("{0:d}", Model.RptPO.PurchaseDate)</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">Estimate Arrival Date</td>
-                    <td class="invoice-info">@string.Format("{0:d}", Model.RPTPo.ArrivalDate)</td>
+                    <td class="invoice-info">@string.Format("{0:d}", Model.RptPO.ArrivalDate)</td>
                 </tr>
             </table>
         </div>
@@ -438,12 +438,12 @@
         <div class="ship-to-grid">
             <div class="ship-to-label highlight-dark">Vendor Information</div>
             <div class="cust-name">
-                @Model.RPTPo.PayeeName
+                @Model.RptPO.PayeeName
             </div>
             <div class="cust-address">
-                @Model.RPTPo.Address<br />
-                @Model.RPTPo.City @Model.RPTPo.State @Model.RPTPo.ZipCode @Model.RPTPo.Country<br />
-                @Model.RPTPo.Phone1
+                @Model.RptPO.Address<br />
+                @Model.RptPO.City @Model.RptPO.State @Model.RptPO.ZipCode @Model.RptPO.Country<br />
+                @Model.RptPO.Phone1
             </div>
         </div>
     </div>
@@ -476,7 +476,7 @@
                     <td class="text-right">
                         @* @string.Format("{0:0.00}", Model.TotalVolume) cbm *@
                     </td>
-                    <td class="text-right">@string.Format("{0:c}", Model.RPTPo.PurchaseTotal)</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.RptPO.PurchaseTotal)</td>
                 </tr>
             </table>
         </div>

@@ -130,8 +130,6 @@ namespace KLS.Contract.Interfaces
 
         IUserRoleRepository UserRoles { get; }
 
-        IUnitRepository Units { get; }
-
         IItemTagRepository ItemTags { get; }
 
         IItemUnitRepository ItemUnits { get; }

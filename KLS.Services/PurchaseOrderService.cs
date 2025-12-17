@@ -3,7 +3,6 @@ using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -141,18 +140,18 @@ namespace KLS.Services
         {
             var compnayInfo = _companyService.GetDefault();
 
-            var poList = Uow.Reports.ReportPO(purchaseId);
+            var po = Uow.Reports.ReportPO(purchaseId);
             var poDetail = Uow.Reports.ReportPODetail(purchaseId).ToList();
 
-            var rptPo = new RPTPoView
+            var rptPO = new RptPOView
             {
                 Company = compnayInfo,
-                RPTPo = poList,
-                RPTPoDetail = poDetail
+                RptPO = po,
+                RptPODetail = poDetail
             };
 
             var poTemplate = "~/Views/Pdf/PO.cshtml";
-            var pohtml = _pdfService.RenderTemplate(poTemplate, rptPo);
+            var pohtml = _pdfService.RenderTemplate(poTemplate, rptPO);
             var pdf = _pdfService.HtmlToPDF(pohtml);
 
             var filename = "PO-" + purchaseId.ToString() + ".pdf";
