@@ -20,7 +20,7 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<TempGeneralJournalList>? GetTempGJList(TempGJReq tempGJReq)
+        public IQueryable<TempGeneralJournalList>? GetList(TempGJReq tempGJReq)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 

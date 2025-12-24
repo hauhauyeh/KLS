@@ -22,17 +22,17 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PayrollServiceDTO> GetAllPayrollService(PayrollServiceReq payrollServiceReq)
+        public IQueryable<PayrollServiceDTO> GetPagedList(PayrollServiceReq payrollServiceReq)
         {
-            var param = BuildPayrollServiceParam(payrollServiceReq);
+            var param = BuildParam(payrollServiceReq);
 
             return DbContext.PayrollServiceDTO.FromSqlRaw("[dbo].[PayrollService_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllPayrollService(PayrollServiceReq payrollServiceReq)
+        public int Count(PayrollServiceReq payrollServiceReq)
         {
             payrollServiceReq.IsCount = true;
-            var param = BuildPayrollServiceParam(payrollServiceReq);
+            var param = BuildParam(payrollServiceReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[PayrollService_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -40,7 +40,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        public int SavePayrollService(PayrollService service)
+        public int Save(PayrollService service)
         {
             var PayrollServiceIdParam = new SqlParameter("@PayrollServiceId", service.PayrollServiceId);
 
@@ -136,7 +136,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(NewPayrollServiceId.Value);
         }
 
-        public void InjectPayrollService(int payrollServiceId, bool isClone)
+        public void Inject(int payrollServiceId, bool isClone)
         {
             var PayrollServiceIdParam = new SqlParameter("@PayrollServiceId", payrollServiceId);
 
@@ -154,7 +154,7 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[PayrollService_InjectEmp] @EmpId", EmpIdParam);
         }
 
-        private static object[] BuildPayrollServiceParam(PayrollServiceReq payrollServiceReq)
+        private static object[] BuildParam(PayrollServiceReq payrollServiceReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", payrollServiceReq.Pageno),

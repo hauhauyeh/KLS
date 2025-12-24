@@ -19,48 +19,50 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
+        public IQueryable<PurchaseOrderList> GetPagedList(PurchaseOrderReq purchaseOrderReq)
         {
-            var param = BuildPurchaseOrdersParam(purchaseOrderReq);
+            var param = BuildParam(purchaseOrderReq);
 
-            return DbContext.PurchaseOrderList.FromSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.PurchaseOrderList.FromSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
+        public int Count(PurchaseOrderReq purchaseOrderReq)
         {
             purchaseOrderReq.IsCount = true;
-            var param = BuildPurchaseOrdersParam(purchaseOrderReq);
+            var param = BuildParam(purchaseOrderReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
             var output = param[11] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildPurchaseOrdersParam(PurchaseOrderReq purchaseOrderReq)
+        private static object[] BuildParam(PurchaseOrderReq poReq)
         {
             object[] param = {
-                new SqlParameter("@Pageno", purchaseOrderReq.Pageno),
+                new SqlParameter("@Pageno", poReq.Pageno),
 
-                new SqlParameter("@Pagesize", purchaseOrderReq.Pagesize),
+                new SqlParameter("@Pagesize", poReq.Pagesize),
 
-                string.IsNullOrEmpty(purchaseOrderReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", purchaseOrderReq.Search),
+                string.IsNullOrEmpty(poReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", poReq.Search),
 
-                purchaseOrderReq.StartDate.HasValue ? new SqlParameter("@StartDate", purchaseOrderReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+                poReq.StartDate.HasValue ? new SqlParameter("@StartDate", poReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
 
-                purchaseOrderReq.EndDate.HasValue ? new SqlParameter("@EndDate", purchaseOrderReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+                poReq.EndDate.HasValue ? new SqlParameter("@EndDate", poReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
 
-                 purchaseOrderReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", purchaseOrderReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
+                poReq.PayeeId.HasValue ? new SqlParameter("@VendorId", poReq.PayeeId) : new SqlParameter("@VendorId", DBNull.Value),
 
-                string.IsNullOrEmpty(purchaseOrderReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", purchaseOrderReq.Filterby),
+                new SqlParameter("@EmpId", UserContext.EmpId),
 
-                purchaseOrderReq.Id.HasValue ? new SqlParameter("@Id", purchaseOrderReq.Id) : new SqlParameter("@Id", DBNull.Value),
+                string.IsNullOrEmpty(poReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", poReq.Filterby),
 
-                string.IsNullOrEmpty(purchaseOrderReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", purchaseOrderReq.SortField),
+                poReq.Id.HasValue ? new SqlParameter("@Id", poReq.Id) : new SqlParameter("@Id", DBNull.Value),
 
-                string.IsNullOrEmpty(purchaseOrderReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", purchaseOrderReq.SortOrder),
+                string.IsNullOrEmpty(poReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", poReq.SortField),
 
-                new SqlParameter("@IsCount", purchaseOrderReq.IsCount),
+                string.IsNullOrEmpty(poReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", poReq.SortOrder),
+
+                new SqlParameter("@IsCount", poReq.IsCount),
 
                 new SqlParameter()
                 {
@@ -73,7 +75,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq)
+        public void Inject(PurchaseOrderInjectReq injectReq)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
@@ -86,32 +88,24 @@ namespace KLS.Data.Repositories
 
         public int Checkout(PurchaseOrderCheckoutReq checkoutReq)
         {
-            // int parameters
-            var PurchaseIdParam = new SqlParameter("@PurchaseId", (object?)checkoutReq.PurchaseId ?? 0);
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", checkoutReq.PurchaseId);
 
             var PayeeIdParam = new SqlParameter("@PayeeId", checkoutReq.PayeeId);
 
-            // date parameters
-            object ToDbDate(DateOnly? d) => d.HasValue ? d.Value.ToDateTime(TimeOnly.MinValue) : DBNull.Value;
-
             var PurchaseDateParam = checkoutReq.PurchaseDate.HasValue
-                ? new SqlParameter("@PurchaseDate", ToDbDate(checkoutReq.PurchaseDate))
+                ? new SqlParameter("@PurchaseDate", checkoutReq.PurchaseDate)
                 : new SqlParameter("@PurchaseDate", DBNull.Value);
 
             var ArrivalDateParam = checkoutReq.ArrivalDate.HasValue
-                ? new SqlParameter("@ArrivalDate", ToDbDate(checkoutReq.ArrivalDate))
+                ? new SqlParameter("@ArrivalDate", checkoutReq.ArrivalDate)
                 : new SqlParameter("@ArrivalDate", DBNull.Value);
 
-            // notes
             var NotesParam = string.IsNullOrWhiteSpace(checkoutReq.Notes)
                 ? new SqlParameter("@Notes", DBNull.Value)
                 : new SqlParameter("@Notes", checkoutReq.Notes);
 
-            // emp
-
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            // output
             var NewPOIdParam = new SqlParameter
             {
                 ParameterName = "@NewPOId",
@@ -121,7 +115,7 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Insert] @PurchaseId,@PayeeId,@PurchaseDate,@ArrivalDate,@Notes,@EmpId,@NewPOId OUTPUT", PurchaseIdParam, PayeeIdParam, PurchaseDateParam, ArrivalDateParam, NotesParam, EmpIdParam, NewPOIdParam);
 
-            return (NewPOIdParam.Value == DBNull.Value) ? 0 : Convert.ToInt32(NewPOIdParam.Value);
+            return Convert.ToInt32(NewPOIdParam.Value);
         }
 
         public void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq)
@@ -161,13 +155,13 @@ namespace KLS.Data.Repositories
 
         public void CopyToBill(POCopyToBillReq copyToBillReq)
         {
-            var POIdParam = new SqlParameter("@POId", copyToBillReq.POId);
+            var POIdParam = new SqlParameter("@PurchaseId", copyToBillReq.PurchaseId);
 
-            var PayeeIdParam = new SqlParameter("@SortIds", copyToBillReq.SortIds);
+            var PayeeIdParam = new SqlParameter("@ItemsJson", copyToBillReq.ItemsJson);
 
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_CopyToBill] @POId,@SortIds,@EmpId", EmpIdParam, PayeeIdParam, POIdParam);
+            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_CopyToBill] @PurchaseId,@ItemsJson,@EmpId", EmpIdParam, PayeeIdParam, POIdParam);
         }
     }
 }

@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface IEmpJobService
     {
-        ICollection<EmpJob> GetAllJobs();
+        ICollection<EmpJob> GetList();
     }
 }

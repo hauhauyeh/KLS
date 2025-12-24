@@ -15,11 +15,11 @@ namespace KLS.Services
         {
         }
 
-        public PagingResponse<Transaction>? GetAllTransactions(TxReq txReq)
+        public PagingResponse<Transaction>? GetPagedList(TxReq txReq)
         {
-            var list = Uow.Transactions.GetAllTransactions(txReq).ToList();
+            var list = Uow.Transactions.GetPagedList(txReq).ToList();
 
-            var totalRecords = Uow.Transactions.CountAllTransactions(txReq);
+            var totalRecords = Uow.Transactions.Count(txReq);
 
             return new PagingResponse<Transaction>(totalRecords, txReq.Pageno, txReq.Pagesize)
             {
@@ -27,12 +27,7 @@ namespace KLS.Services
             };
         }
 
-        //public IEnumerable<TransactionDetail>? GetTxDetail(int txId)
-        //{
-        //    return Uow.TransactionDetails.Find(c => c.TxId == txId).OrderBy(c => c.TxDetailId);
-        //}
-
-        public ICollection<TransactionDetailList>? GetTxDetail(int txId)
+        public IEnumerable<TransactionDetailList>? GetTxDetail(int txId)
         {
             return Uow.TransactionDetails.GetTxDetail(txId).ToList();
         }

@@ -114,5 +114,11 @@ namespace KLS.Common
         {
             PO = 1
         }
+
+        public enum PurchaseDocType
+        {
+            PO = 1,
+            Bill = 2
+        }
     }
 }

@@ -9,12 +9,12 @@ namespace KLS.Contract.Services
 {
     public interface ITempSalesService
     {
-        TempSalesItem CreateTempSales();
+        TempSalesItem Create();
 
-        TempSalesItem UpdateTempSales();
+        TempSalesItem Update();
 
-        void DeleteTempSales(int tempId);
+        void Delete(int tempId);
 
-        void ClearTempSales(TempSalesReq tempReq);
+        void Clear(TempSalesReq tempReq);
     }
 }

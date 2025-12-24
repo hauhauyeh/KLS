@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Deposit")]
         public IActionResult List([FromQuery] DepositReq depositReq)
         {
-            return Ok(_transferFundService.GetAllDeposits(depositReq));
+            return Ok(_transferFundService.GetPagedDeposits(depositReq));
         }
 
 

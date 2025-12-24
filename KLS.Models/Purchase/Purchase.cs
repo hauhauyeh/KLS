@@ -59,6 +59,8 @@ namespace KLS.Models
 
         public bool IsLocked { get; set; }
 
+        public bool IsStartFromPO { get; set; }
+
         public bool IsFreightOnly { get; set; }
 
         public decimal? FreightInside { get; set; }
@@ -82,6 +84,9 @@ namespace KLS.Models
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        [NotMapped]
+        public bool IsBillStage => StageId == 6;
     }
 }
 

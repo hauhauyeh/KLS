@@ -9,17 +9,17 @@ namespace KLS.Contract.Services
 {
     public interface ISystemRoleService
     {
-        IEnumerable<SystemRole> GetAllRoles();
+        IEnumerable<SystemRole> GetList();
 
         SystemRole? GetById(int roleId);
 
-        bool RoleNameExists(SystemRole role);
+        bool NameExists(SystemRole role);
 
-        SystemRole CreateRole(SystemRole role);
+        SystemRole Create(SystemRole role);
 
-        SystemRole? UpdateRole(SystemRole role);
+        SystemRole? Update(SystemRole role);
 
-        void DeleteRole(int roleId);
+        void Delete(int roleId);
 
         bool RoleUsed(int roleId);
 

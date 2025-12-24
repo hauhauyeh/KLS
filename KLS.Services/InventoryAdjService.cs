@@ -20,15 +20,15 @@ namespace KLS.Services
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq)
+        public PagingResponse<InventoryAdjList> GetPagedList(InventoryAdjListReq inventoryAdjListReq)
         {
-            var inventoryAdjlist = Uow.InventoryAdjs.GetAllInventoryAdj(inventoryAdjListReq);
+            var list = Uow.InventoryAdjs.GetPagedList(inventoryAdjListReq);
 
-            var totalRecords = Uow.InventoryAdjs.CountAllInventoryAdj(inventoryAdjListReq);
+            var totalRecords = Uow.InventoryAdjs.Count(inventoryAdjListReq);
 
             return new PagingResponse<InventoryAdjList>(totalRecords, inventoryAdjListReq.Pageno, inventoryAdjListReq.Pagesize)
             {
-                RowData = inventoryAdjlist,
+                RowData = list,
             };
         }
 
@@ -44,22 +44,22 @@ namespace KLS.Services
                 Id = adjId
             };
 
-            return Uow.InventoryAdjs.GetAllInventoryAdj(listReq);
+            return Uow.InventoryAdjs.GetPagedList(listReq);
         }
 
-        public IEnumerable<InventoryAdjList> SaveInventoryAdj(InventoryAdj inventoryAdj)
+        public IEnumerable<InventoryAdjList> Save(InventoryAdj inventoryAdj)
         {
-            var newAdjId = Uow.InventoryAdjs.SaveInventoryAdj(inventoryAdj);
+            var newAdjId = Uow.InventoryAdjs.Save(inventoryAdj);
 
             return GetListById(newAdjId);
         }
 
-        public void InjectInventoryAdj(int adjId)
+        public void Inject(int adjId)
         {
-            Uow.InventoryAdjs.InjectInventoryAdj(adjId);
+            Uow.InventoryAdjs.Inject(adjId);
         }
 
-        public void DeleteInventoryAdj(int adjId)
+        public void Delete(int adjId)
         {
             //Uow.InventoryAdjs.Find(c => c.AdjId == adjId).ExecuteDelete();
 

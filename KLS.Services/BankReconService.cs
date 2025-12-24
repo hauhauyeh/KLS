@@ -17,7 +17,7 @@ namespace KLS.Services
 
         }
 
-        public List<BankReconList> GetAllBankRecon()
+        public List<BankReconList> GetList()
         {
             var qry = Uow.BankRecons.GetAll();
 
@@ -44,12 +44,12 @@ namespace KLS.Services
             return Uow.BankRecons.GetById(bankReconId);
         }
 
-        public bool ExistsBankRecon(BankRecon bankRecon)
+        public bool Exists(BankRecon bankRecon)
         {
             return Uow.BankRecons.Exists(c => c.AccountId == bankRecon.AccountId && c.StatementDate > bankRecon.StatementDate && bankRecon.BankReconId == 0);
         }
 
-        public BankRecon CreateBankRecon(BankRecon bankRecon)
+        public BankRecon Create(BankRecon bankRecon)
         {
             Uow.BankRecons.Add(bankRecon);
             Uow.Commit();
@@ -57,7 +57,7 @@ namespace KLS.Services
             return bankRecon;
         }
 
-        public BankRecon? UpdateBankRecon(BankRecon bankRecon)
+        public BankRecon? Update(BankRecon bankRecon)
         {
             var existing = GetById(bankRecon.BankReconId);
 
@@ -92,7 +92,7 @@ namespace KLS.Services
             }
         }
 
-        public void DeleteBankRecon(int bankReconId)
+        public void Delete(int bankReconId)
         {
             Uow.BankRecons.RemoveById(bankReconId);
             Uow.Commit();

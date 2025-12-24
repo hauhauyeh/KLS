@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Holiday")]
         public IActionResult List()
         {
-            return Ok(_holidayService.GetAllHolidays());
+            return Ok(_holidayService.GetList());
         }
 
 
@@ -56,7 +56,7 @@ namespace KLS.API.Controllers.Admin
             if (_holidayService.NameExists(holiday))
                 return Conflict("Holiday name already exists");
 
-            return Ok(_holidayService.CreateHoliday(holiday));
+            return Ok(_holidayService.Create(holiday));
         }
 
 
@@ -67,7 +67,7 @@ namespace KLS.API.Controllers.Admin
             if (_holidayService.NameExists(holiday))
                 return Conflict("Holiday name already exists");
 
-            return Ok(_holidayService.UpdateHoliday(holiday));
+            return Ok(_holidayService.Update(holiday));
         }
 
 
@@ -75,7 +75,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Holiday")]
         public IActionResult Delete(int id)
         {
-            _holidayService.DeleteHoliday(id);
+            _holidayService.Delete(id);
             return Ok();
         }
 

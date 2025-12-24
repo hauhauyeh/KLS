@@ -12,17 +12,17 @@ namespace KLS.Contract.Services
     {
         IQueryable<ItemCategory> GetAllCategory();
 
-        IEnumerable<ItemCategory> GetAllCategoryTree();
+        IEnumerable<ItemCategory> GetTree();
 
         ItemCategory GetById(int id);
 
         bool NameExists(ItemCategory itemCategory);
 
-        ItemCategory CreateCategory(ItemCategory itemCategory);
+        ItemCategory Create(ItemCategory itemCategory);
 
-        ItemCategory UpdateCategory(ItemCategory itemCategory);
+        ItemCategory Update(ItemCategory itemCategory);
 
-        void DeleteCategory(int categoryId);
+        void Delete(int categoryId);
 
         void SaveImage(ItemCategory category, HttpRequest request);
 

@@ -20,14 +20,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<EmailLogDTO> GetEmailLogs(EmailLogReq emailLogReq)
+        public IQueryable<EmailLogDTO> GetPagedList(EmailLogReq emailLogReq)
         {
             var param = BuildEmailLogsParam(emailLogReq);
 
             return DbContext.EmailLogDTO.FromSqlRaw("[dbo].[EmailLog_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllEmailLogs(EmailLogReq emailLogReq)
+        public int Count(EmailLogReq emailLogReq)
         {
             emailLogReq.IsCount = true;
             var param = BuildEmailLogsParam(emailLogReq);

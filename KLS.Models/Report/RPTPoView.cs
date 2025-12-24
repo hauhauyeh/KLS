@@ -23,5 +23,18 @@ namespace KLS.Models
                 return RptPODetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString()).GroupBy(c => c.ItemId).Count();
             }
         }
+
+        public decimal? TotalCase
+        {
+            get
+            {
+                return RptPODetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString()).Sum(c => c.BaseFinalQty);
+            }
+        }
+
+
+        public decimal? TotalWeight { get { return RptPODetail?.Sum(c => c.WeightTotal); } }
+
+        public decimal? TotalVolume { get { return RptPODetail?.Sum(c => c.VolumeTotal); } }
     }
 }

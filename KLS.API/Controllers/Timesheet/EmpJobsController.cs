@@ -28,7 +28,7 @@ namespace KLS.API.Controllers.Timesheet
         [HttpGet]
         public IActionResult List()
         {
-            return Ok(_empJobService.GetAllJobs());
+            return Ok(_empJobService.GetList());
         }
 
         #endregion

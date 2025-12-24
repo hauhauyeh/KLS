@@ -15,29 +15,10 @@ namespace KLS.Services
         {
         }
 
-        public IEnumerable<ItemStorage>? GetAllStorages()
+        public IEnumerable<ItemStorage>? GetList()
         {
             return Uow.ItemStorages.GetAll().OrderBy(s => s.Zone).ToList();
         }
-
-        //public IEnumerable<ItemStorageTree> GetAllStorageTree()
-        //{
-        //    var storage = Uow.ItemStorages.GetAll().OrderBy(c => c.Zone).ToList();
-
-        //    return BuildTree(storage, null);
-        //}
-
-        //private IEnumerable<ItemStorageTree> BuildTree(IEnumerable<ItemStorage> itemStorages, int? parentId)
-        //{
-        //    return itemStorages.Where(x => x.ParentId == parentId).Select(x => new ItemStorageTree
-        //    {
-        //        StorageId = x.StorageId,
-        //        Zone = x.Zone,
-        //        DisplayName = x.DisplayName,
-        //        ParentId = x.ParentId,
-        //        ChildItemStorage = BuildTree(itemStorages, x.StorageId)
-        //    });
-        //}
 
         public ItemStorage GetById(int id)
         {
@@ -49,7 +30,7 @@ namespace KLS.Services
             return Uow.ItemStorages.Exists(c => c.Zone == itemStorage.Zone && c.StorageId != itemStorage.StorageId);
         }
 
-        public ItemStorage CreateItemStorage(ItemStorage itemStorage)
+        public ItemStorage Create(ItemStorage itemStorage)
         {
             Uow.ItemStorages.Add(itemStorage);
             Uow.Commit();
@@ -57,7 +38,7 @@ namespace KLS.Services
             return itemStorage;
         }
 
-        public ItemStorage UpdateItemStorage(ItemStorage itemStorage)
+        public ItemStorage Update(ItemStorage itemStorage)
         {
             var existing = GetById(itemStorage.StorageId);
 
@@ -79,7 +60,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteItemStorage(int storageId)
+        public void Delete(int storageId)
         {
             Uow.ItemStorages.RemoveById(storageId);
             Uow.Commit();

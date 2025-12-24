@@ -19,14 +19,20 @@ namespace KLS.Services
             _accountService = AccountService;
         }
 
-        public IEnumerable<TempGeneralJournalList>? GetTempGJList(TempGJReq tempGJReq)
+        public IEnumerable<TempGeneralJournalList>? GetList(TempGJReq tempGJReq)
         {
-            return Uow.TempGeneralJournals.GetTempGJList(tempGJReq)?.ToList();
+            return Uow.TempGeneralJournals.GetList(tempGJReq)?.ToList();
         }
 
-        public TempGeneralJournalList? GetTempGJ(TempGJReq tempGJReq)
+        public TempGeneralJournalList? GetListById(TempGeneralJournal tempGJ)
         {
-            return GetTempGJList(tempGJReq)?.FirstOrDefault();
+            var tempGJReq = new TempGJReq
+            {
+                TempGJId = tempGJ.TempGJId,
+                GJId = tempGJ.GJId
+            };
+
+            return GetList(tempGJReq)?.FirstOrDefault();
         }
 
         public TempGeneralJournal GetById(int tempGJId)
@@ -34,7 +40,7 @@ namespace KLS.Services
             return Uow.TempGeneralJournals.GetById(tempGJId);
         }
 
-        public TempGeneralJournalList CreateTempGJ(TempGeneralJournal tempGJ)
+        public TempGeneralJournalList Create(TempGeneralJournal tempGJ)
         {
             tempGJ.EmpId = UserContext.EmpId;
             tempGJ.Amount = 0;
@@ -49,16 +55,10 @@ namespace KLS.Services
             Uow.TempGeneralJournals.Add(tempGJ);
             Uow.Commit();
 
-            var tempGJReq = new TempGJReq
-            {
-                TempGJId = tempGJ.TempGJId,
-                GJId = tempGJ.GJId
-            };
-
-            return GetTempGJ(tempGJReq);
+            return GetListById(tempGJ);
         }
 
-        public TempGeneralJournalList UpdateTempGJ(TempGeneralJournal tempGJ)
+        public TempGeneralJournalList Update(TempGeneralJournal tempGJ)
         {
             var existing = GetById(tempGJ.TempGJId);
 
@@ -80,16 +80,10 @@ namespace KLS.Services
                 Uow.Commit();
             }
 
-            var tempGJReq = new TempGJReq
-            {
-                TempGJId = tempGJ.TempGJId,
-                GJId = tempGJ.GJId
-            };
-
-            return GetTempGJ(tempGJReq);
+            return GetListById(tempGJ);
         }
 
-        public void DeleteTempGJ(int tempGJId)
+        public void Delete(int tempGJId)
         {
             Uow.TempGeneralJournals.RemoveById(tempGJId);
             Uow.Commit();

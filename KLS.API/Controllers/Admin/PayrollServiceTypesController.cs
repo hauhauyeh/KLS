@@ -26,9 +26,9 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        public IActionResult GetServiceTypes()
+        public IActionResult List()
         {
-            return Ok(_payrollServiceTypeService.GetServiceTypes());
+            return Ok(_payrollServiceTypeService.GetList());
         }
 
         #endregion

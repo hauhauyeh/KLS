@@ -9,13 +9,13 @@ namespace KLS.Contract.Interfaces
 {
     public interface IPayrollDetailRepository : IRepository<PayrollDetail>
     {
-        IQueryable<PayrollList> GetAllPayrolls(PayrollReq payrollReq);
+        IQueryable<PayrollList> GetPagedList(PayrollReq payrollReq);
 
-        int CountAllPayrolls(PayrollReq payrollReq);
+        int Count(PayrollReq payrollReq);
 
-        void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq);
+        void InjectEmp(PayrollInjectEmpReq injectEmpReq);
 
-        void InjectPayroll(int vendorPaymentId);
+        void Inject(int vendorPaymentId);
 
         ImportPayrollResp ImportPayroll(string excelfile);
 

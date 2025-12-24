@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Vendor Payment")]
         public IActionResult List([FromQuery] VendorPaymentReq vendorPaymentReq)
         {
-            return Ok(_vendorPaymentService.GetAllVendorPayments(vendorPaymentReq));
+            return Ok(_vendorPaymentService.GetPagedVendorPayments(vendorPaymentReq));
         }
 
 
@@ -48,7 +48,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Add/Edit VendorPayment")]
         public IActionResult Save([FromBody] VendorPayment vendorPayment)
         {
-            return Ok(_vendorPaymentService.SaveVendorPayment(vendorPayment));
+            return Ok(_vendorPaymentService.Save(vendorPayment));
         }
 
 
@@ -56,7 +56,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Payment")]
         public IActionResult Delete(int paymentId)
         {
-            _vendorPaymentService.DeleteVendorPayment(paymentId);
+            _vendorPaymentService.Delete(paymentId);
             return Ok();
         }
 
@@ -83,7 +83,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Return Payment")]
         public IActionResult Return([FromBody] VendorPaymentReturnReq checkReq)
         {
-            _vendorPaymentService.VendorPaymentReturn(checkReq);
+            _vendorPaymentService.Return(checkReq);
             return Ok();
         }
 
@@ -95,11 +95,11 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("SavePayNowPayment")]
+        [HttpPost("SavePayNow")]
         [DisplayName("Add/Edit Pay Now Payment")]
-        public IActionResult Save([FromBody] PayNowReq payNowReq)
+        public IActionResult SavePayNow([FromBody] PayNowReq payNowReq)
         {
-            return Ok(_vendorPaymentService.SavePayNowPayment(payNowReq));
+            return Ok(_vendorPaymentService.SavePayNow(payNowReq));
         }
 
 

@@ -9,8 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITransactionRepository : IRepository<Transaction>
     {
-        int CountAllTransactions(TxReq txReq);
+        IQueryable<Transaction> GetPagedList(TxReq txReq);
 
-        IQueryable<Transaction> GetAllTransactions(TxReq txReq);
+        int Count(TxReq txReq);
     }
 }

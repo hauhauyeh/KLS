@@ -9,14 +9,14 @@ namespace KLS.Contract.Services
 {
     public interface ITempInventoryAdjService
     {
-        IEnumerable<TempInventoryItem>? GetTempAdjItems(TempInventoryReq tempReq);
+        IEnumerable<TempInventoryItem>? GetList(TempInventoryReq tempReq);
 
-        TempInventoryItem CreateTempItem(TempInventoryItem tempItem);
+        TempInventoryItem Create(TempInventoryItem tempItem);
 
-        void UpdateTempItem(TempInventoryAdj tempAdj);
+        void Update(TempInventoryAdj tempAdj);
 
-        void DeleteTempItem(int tempAdjId);
+        void Delete(int tempAdjId);
 
-        void ClearTempItem(TempInventoryReq tempReq);
+        void Clear(TempInventoryReq tempReq);
     }
 }

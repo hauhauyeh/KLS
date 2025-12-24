@@ -8,8 +8,8 @@ namespace KLS.Models
 {
     public class POCopyToBillReq
     {
-        public int POId { get; set; }
+        public int PurchaseId { get; set; }
 
-        public string? SortIds { get; set; }
+        public string? ItemsJson { get; set; }
     }
 }

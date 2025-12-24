@@ -9,16 +9,16 @@ namespace KLS.Contract.Services
 {
     public interface IItemTagService
     {
-        IQueryable<ItemTag> GetAllItemTags();
+        IEnumerable<ItemTag> GetList();
 
         ItemTag GetById(int itemTagId);
 
-        bool ExistsTagName(ItemTag itemTag);
+        bool NameExists(ItemTag itemTag);
 
-        ItemTag CreateItemTag(ItemTag itemTag);
+        ItemTag Create(ItemTag itemTag);
 
-        ItemTag? UpdateItemTag(ItemTag itemTag);
+        ItemTag? Update(ItemTag itemTag);
 
-        void DeleteItemTag(int itemTagId);
+        void Delete(int itemTagId);
     }
 }

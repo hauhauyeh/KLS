@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface ISourceDocTypeService
     {
-        IEnumerable<SourceDocType>? GetAllDocTypes();
+        IEnumerable<SourceDocType>? GetList();
     }
 }

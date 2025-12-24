@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface IRecalculationLogService
     {
-        IQueryable<RecalculationLog> GetAllLogs();
+        IEnumerable<RecalculationLog> GetList();
     }
 }

@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface ITransferFundService
     {
-        PagingResponse<TransferFundList> GetAllTransferFunds(TFReq tFReq);
+        PagingResponse<TransferFundList> GetPagedTransferFunds(TFReq tFReq);
 
         TransferFund GetById(int tfId);
 
@@ -18,7 +18,7 @@ namespace KLS.Contract.Services
         void DeleteTransferFund(int tfId);
 
 
-        PagingResponse<DepositList> GetAllDeposits(DepositReq depositReq);
+        PagingResponse<DepositList> GetPagedDeposits(DepositReq depositReq);
 
         DepositList? SaveDeposit(TransferFund transferFund);
 

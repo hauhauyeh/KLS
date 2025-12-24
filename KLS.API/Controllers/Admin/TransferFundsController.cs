@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Transfer Fund")]
         public IActionResult List([FromQuery] TFReq tFReq)
         {
-            return Ok(_transferFundService.GetAllTransferFunds(tFReq));
+            return Ok(_transferFundService.GetPagedTransferFunds(tFReq));
         }
 
 

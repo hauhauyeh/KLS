@@ -16,15 +16,15 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<CustomerPaymentList> GetCustomerPayment(CustomerPaymentReq customerPaymentReq)
+        public PagingResponse<CustomerPaymentList> GetPagedList(CustomerPaymentReq customerPaymentReq)
         {
-            var loglist = Uow.CustomerPayments.GetCustomerPayment(customerPaymentReq);
+            var list = Uow.CustomerPayments.GetPagedList(customerPaymentReq);
 
-            var totalRecords = Uow.CustomerPayments.CountAllCustomerPayment(customerPaymentReq);
+            var totalRecords = Uow.CustomerPayments.Count(customerPaymentReq);
 
             return new PagingResponse<CustomerPaymentList>(totalRecords, customerPaymentReq.Pageno, customerPaymentReq.Pagesize)
             {
-                RowData = loglist,
+                RowData = list,
             };
         }
     }

@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface ICustomerPaymentService
     {
-        PagingResponse<CustomerPaymentList> GetCustomerPayment(CustomerPaymentReq customerPaymentReq);
+        PagingResponse<CustomerPaymentList> GetPagedList(CustomerPaymentReq customerPaymentReq);
     }
 }

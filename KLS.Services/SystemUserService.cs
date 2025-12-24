@@ -2,6 +2,7 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,14 +20,27 @@ namespace KLS.Services
         private readonly ISystemSettingService _settingService;
         private readonly ISystemRoleService _roleService;
         private readonly IEmailSettingService _emailSettingService;
+        private readonly IUserLogService _userLogService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SystemUserService(IUnitOfWork uow, IJWTService jWTService, IEmployeeService employeeService, ISystemSettingService settingService, ISystemRoleService roleService, IEmailSettingService emailSettingService) : base(uow)
+        public SystemUserService(
+            IUnitOfWork uow,
+            IJWTService jWTService,
+            IEmployeeService employeeService,
+            ISystemSettingService settingService,
+            ISystemRoleService roleService,
+            IEmailSettingService emailSettingService,
+            IUserLogService userLogService,
+            IHttpContextAccessor httpContextAccessor
+            ) : base(uow)
         {
             _jWTService = jWTService;
             _employeeService = employeeService;
             _settingService = settingService;
             _roleService = roleService;
             _emailSettingService = emailSettingService;
+            _userLogService = userLogService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public SystemUser? CheckEmpUsername(LoginReq loginReq)
@@ -73,7 +87,7 @@ namespace KLS.Services
             }
         }
 
-        public LoginResult LoginEmployee(LoginReq loginReq, string ipAddress)
+        public LoginResult LoginEmployee(LoginReq loginReq)
         {
             var user = CheckEmpUsername(loginReq);
 
@@ -91,6 +105,7 @@ namespace KLS.Services
             if (emp.HasOutsideAccess)
             {
                 var allowedIp = _settingService.GetByKey<string>(GlobalKey.SYS_IPADDRESS);
+                var ipAddress = Utilities.GetIpAddress(_httpContextAccessor.HttpContext);
 
                 if (ipAddress != allowedIp)
                 {
@@ -119,6 +134,8 @@ namespace KLS.Services
             };
 
             var token = _jWTService.GenerateJwtToken(jwtClaim);
+
+            _userLogService.Create(user.PayeeId);
 
             return new LoginResult
             {

@@ -16,14 +16,14 @@ namespace KLS.Services
 
         }
 
-        public IQueryable<Truck> GetAllTrucks()
+        public IEnumerable<Truck> GetList()
         {
             return Uow.Trucks.GetAll().OrderBy(c => c.TruckNumber);
         }
 
-        public ICollection<Truck> GetActiveTrucks()
+        public IEnumerable<Truck> GetActive()
         {
-            return Uow.Trucks.Find(c => c.Inactive == false).OrderBy(c => c.TruckNumber).ToList();
+            return Uow.Trucks.Find(c => c.Inactive == false).OrderBy(c => c.TruckNumber);
         }
 
         public Truck GetById(int id)
@@ -36,7 +36,7 @@ namespace KLS.Services
             return Uow.Trucks.Exists(c => c.TruckNumber.ToLower() == truck.TruckNumber.ToLower() && c.TruckId != truck.TruckId);
         }
 
-        public Truck CreateTruck(Truck truck)
+        public Truck Create(Truck truck)
         {
             Uow.Trucks.Add(truck);
             Uow.Commit();
@@ -44,7 +44,7 @@ namespace KLS.Services
             return truck;
         }
 
-        public Truck? UpdateTruck(Truck truck)
+        public Truck? Update(Truck truck)
         {
             var existing = GetById(truck.TruckId);
 
@@ -73,7 +73,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteTruck(int truckId)
+        public void Delete(int truckId)
         {
             Uow.Trucks.RemoveById(truckId);
             Uow.Commit();

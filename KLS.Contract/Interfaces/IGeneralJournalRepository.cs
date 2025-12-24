@@ -9,12 +9,12 @@ namespace KLS.Contract.Interfaces
 {
     public interface IGeneralJournalRepository : IRepository<GeneralJournal>
     {
-        IQueryable<GeneralJournal> GetAllGeneralJournals(GJReq gJReq);
+        IQueryable<GeneralJournal> GetPagedList(GJReq gJReq);
 
-        int CountAllGeneralJournals(GJReq gJReq);
+        int Count(GJReq gJReq);
 
-        int SaveGeneralJournal(GeneralJournal generalJournal);
+        int Save(GeneralJournal generalJournal);
 
-        void InjectGeneralJournal(int gjId, bool isClone);
+        void Inject(int gjId, bool isClone);
     }
 }

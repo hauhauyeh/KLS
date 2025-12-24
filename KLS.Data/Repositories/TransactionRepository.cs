@@ -18,14 +18,14 @@ namespace KLS.Data.Repositories
         {
         }
 
-        public IQueryable<Transaction> GetAllTransactions(TxReq txReq)
+        public IQueryable<Transaction> GetPagedList(TxReq txReq)
         {
             var param = BuildParam(txReq);
 
             return DbContext.Transactions.FromSqlRaw("[dbo].[Transaction_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@DocType,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllTransactions(TxReq txReq)
+        public int Count(TxReq txReq)
         {
             txReq.IsCount = true;
             var param = BuildParam(txReq);

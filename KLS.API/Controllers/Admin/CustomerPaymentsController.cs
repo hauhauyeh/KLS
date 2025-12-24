@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List CustomerPayment")]
         public IActionResult List([FromQuery] CustomerPaymentReq customerPaymentReq)
         {
-            return Ok(_customerPaymentService.GetCustomerPayment(customerPaymentReq));
+            return Ok(_customerPaymentService.GetPagedList(customerPaymentReq));
         }
 
         #endregion

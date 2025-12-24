@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface IEmailLogService
     {
-        PagingResponse<EmailLogDTO> GetEmailLogs(EmailLogReq emailLogReq);
+        PagingResponse<EmailLogDTO> GetPagedList(EmailLogReq emailLogReq);
     }
 }

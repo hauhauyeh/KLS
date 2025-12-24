@@ -16,7 +16,7 @@ namespace KLS.Services
 
         }
 
-        public IQueryable<DocumentTemplate> GetAllDocumentTemplate()
+        public IEnumerable<DocumentTemplate> GetList()
         {
             return Uow.DocumentTemplates.GetAll();
         }
@@ -26,12 +26,12 @@ namespace KLS.Services
             return Uow.DocumentTemplates.GetById(docTemplateId);
         }
 
-        public bool NameExists(DocumentTemplate documentTemplate)
+        public bool Exists(DocumentTemplate documentTemplate)
         {
             return Uow.DocumentTemplates.Exists(c => c.DocumentName.ToLower() == documentTemplate.DocumentName.ToLower() && c.DocTemplateId != documentTemplate.DocTemplateId);
         }
 
-        public DocumentTemplate CreateDocumentTemplate(DocumentTemplate documentTemplate)
+        public DocumentTemplate Create(DocumentTemplate documentTemplate)
         {
             Uow.DocumentTemplates.Add(documentTemplate);
             Uow.Commit();
@@ -39,7 +39,7 @@ namespace KLS.Services
             return documentTemplate;
         }
 
-        public DocumentTemplate? UpdateDocumentTemplate(DocumentTemplate documentTemplate)
+        public DocumentTemplate? Update(DocumentTemplate documentTemplate)
         {
             var existing = GetById(documentTemplate.DocTemplateId);
 
@@ -66,7 +66,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteDocumentTemplate(int docTemplateId)
+        public void Delete(int docTemplateId)
         {
             Uow.DocumentTemplates.RemoveById(docTemplateId);
             Uow.Commit();

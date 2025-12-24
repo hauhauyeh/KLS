@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List DocumentTemplate")]
         public IActionResult List()
         {
-            return Ok(_documentTemplateService.GetAllDocumentTemplate());
+            return Ok(_documentTemplateService.GetList());
         }
 
 
@@ -53,10 +53,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create DocumentTemplate ")]
         public IActionResult Create([FromBody] DocumentTemplate documentTemplate)
         {
-            if (_documentTemplateService.NameExists(documentTemplate))
+            if (_documentTemplateService.Exists(documentTemplate))
                 return Conflict("DocumentTemplate  name already exists");
 
-            return Ok(_documentTemplateService.CreateDocumentTemplate(documentTemplate));
+            return Ok(_documentTemplateService.Create(documentTemplate));
         }
 
 
@@ -64,10 +64,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update DocumentTemplate ")]
         public IActionResult Update([FromBody] DocumentTemplate documentTemplate)
         {
-            if (_documentTemplateService.NameExists(documentTemplate))
+            if (_documentTemplateService.Exists(documentTemplate))
                 return Conflict("DocumentTemplate name already exists");
 
-            return Ok(_documentTemplateService.UpdateDocumentTemplate(documentTemplate));
+            return Ok(_documentTemplateService.Update(documentTemplate));
         }
 
 
@@ -75,7 +75,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete DocumentTemplate")]
         public IActionResult Delete(int id)
         {
-            _documentTemplateService.DeleteDocumentTemplate(id);
+            _documentTemplateService.Delete(id);
             return Ok();
         }
 

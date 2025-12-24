@@ -45,15 +45,9 @@ namespace KLS.Models
 
         public bool IsLocked { get; set; }
 
-        public bool IsNormalPurchase { get; set; }
-
-        public bool IsPayNow { get; set; }
-
         public bool IsFreightOnly { get; set; }
 
         public decimal? FreightTotal { get; set; }
-
-        //public string? BillerName { get; set; }
 
         public int? PalletCount { get; set; }
 
@@ -64,6 +58,12 @@ namespace KLS.Models
         public int? PaymentStatusId { get; set; }
 
         public string? PaymentStatusName { get; set; }
+
+        public bool IsStartFromPO { get; set; }
+
+        public bool IsNormalPurchase { get; set; }
+
+        public bool IsPayNow { get; set; }
 
         [NotMapped]
         public bool IsPdfExist { get; set; }

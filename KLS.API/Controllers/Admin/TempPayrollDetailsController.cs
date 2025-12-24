@@ -31,7 +31,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet]
         public IActionResult List([FromQuery] int vendorPaymentId)
         {
-            return Ok(_tempPayrollDetailService.GetTempPayrollList(vendorPaymentId));
+            return Ok(_tempPayrollDetailService.GetList(vendorPaymentId));
         }
 
 

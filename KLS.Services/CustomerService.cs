@@ -22,11 +22,11 @@ namespace KLS.Services
             _systemSettingService = systemSettingService;
         }
 
-        public PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq)
+        public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
         {
-            var customerlist = Uow.Customers.GetAllCustomers(customerListReq);
+            var customerlist = Uow.Customers.GetPagedList(customerListReq);
 
-            var totalRecords = Uow.Customers.CountAllCustomers(customerListReq);
+            var totalRecords = Uow.Customers.Count(customerListReq);
 
             return new PagingResponse<CustomerList>(totalRecords, customerListReq.Pageno, customerListReq.Pagesize)
             {
@@ -53,12 +53,12 @@ namespace KLS.Services
             return customerDTO;
         }
 
-        public bool CustomerExists(CustomerDTO customerDTO)
+        public bool NameExists(CustomerDTO customerDTO)
         {
             return Uow.Payees.Exists(p => p.PayeeName.ToLower() == customerDTO.PayeeName.ToLower() && p.PayeeId != customerDTO.PayeeId && p.PayeeType == EnumHelper.PayeeType.E.ToString());
         }
 
-        public CustomerDTO CreateCustomer(CustomerDTO customerDTO)
+        public CustomerDTO Create(CustomerDTO customerDTO)
         {
             var newPayeeId = GetMaxCustomerId();
 
@@ -79,7 +79,7 @@ namespace KLS.Services
             return customerDTO;
         }
 
-        public CustomerDTO? UpdateCustomer(CustomerDTO customerDTO)
+        public CustomerDTO? Update(CustomerDTO customerDTO)
         {
             var customer = Uow.Customers.GetById(customerDTO.PayeeId);
             var existingPayee = Uow.Payees.GetById(customerDTO.PayeeId);
@@ -180,7 +180,7 @@ namespace KLS.Services
             return customerDTO;
         }
 
-        public void DeleteCustomer(int payeeId)
+        public void Delete(int payeeId)
         {
             Uow.Payees.RemoveById(payeeId);
             Uow.Commit();
@@ -192,9 +192,9 @@ namespace KLS.Services
             return (maxId ?? 300000) + 1;
         }
 
-        public ICollection<PayeeSearch>? SearchCustomer(PayeeSearchReq searchReq)
+        public ICollection<PayeeSearch>? Search(PayeeSearchReq searchReq)
         {
-            return Uow.Customers.SearchCustomer(searchReq)?.ToList();
+            return Uow.Customers.Search(searchReq)?.ToList();
         }
 
         private static MapLatLong? GetMapLatLong(string Address, string MapsAPIKEY)

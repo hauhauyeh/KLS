@@ -9,27 +9,27 @@ namespace KLS.Contract.Services
 {
     public interface IVendorPaymentService
     {
-        PagingResponse<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq);
+        PagingResponse<VendorPaymentList> GetPagedVendorPayments(VendorPaymentReq vendorPaymentReq);
 
         VendorPayment GetById(int vendorPaymentId);
 
-        VendorPayment? SaveVendorPayment(VendorPayment vendorPayment);
+        VendorPayment? Save(VendorPayment vendorPayment);
 
-        void DeleteVendorPayment(int vendorPaymentId);
+        void Delete(int vendorPaymentId);
 
         void VoidCheck(int vendorPaymentId);
 
         void UnVoidCheck(int vendorPaymentId);
 
-        void VendorPaymentReturn(VendorPaymentReturnReq checkReq);
+        void Return(VendorPaymentReturnReq checkReq);
 
         List<string> GetReturnTypes();
 
-        VendorPaymentList? SavePayNowPayment(PayNowReq payNowReq);
+        VendorPaymentList? SavePayNow(PayNowReq payNowReq);
 
         int ImportPayNow(ImportPayNow importPayNow);
 
 
-        PagingResponse<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq);
+        PagingResponse<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq);
     }
 }

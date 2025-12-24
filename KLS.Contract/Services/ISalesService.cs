@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface ISalesService
     {
-        PagingResponse<SalesList>? GetAllSales(SalesListReq salesListReq);
+        PagingResponse<SalesList>? GetPagedList(SalesListReq salesListReq);
 
         Sales GetById(int salesId);
 
@@ -19,7 +19,7 @@ namespace KLS.Contract.Services
 
         void UpdatePO(int salesId, string? custPO);
 
-        void DeleteSales(int salesId);
+        void Delete(int salesId);
 
         ICollection<string?> GetShipRoutes(DateOnly shipDate);
     }

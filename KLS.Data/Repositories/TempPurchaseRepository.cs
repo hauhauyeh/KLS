@@ -19,7 +19,7 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<TempPurchaseItem>? GetTempPurchaseItems(TempPurchaseReq tempReq)
+        public IQueryable<TempPurchaseItem>? GetList(TempPurchaseReq tempReq)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
@@ -31,7 +31,9 @@ namespace KLS.Data.Repositories
 
             var SortOrderParam = (!string.IsNullOrEmpty(tempReq.SortOrder)) ? new SqlParameter("@SortOrder", tempReq.SortOrder) : new SqlParameter("@SortOrder", DBNull.Value);
 
-            return DbContext.TempPurchaseItem.FromSqlRaw("[TempPurchase_GetList] @EmpId,@PayeeId,@PurchaseId,@SortField,@SortOrder", EmpIdParam, PayeeIdParam, PurchaseIdParam, SortFieldParam, SortOrderParam);
+            var IdParam = tempReq.TempId.HasValue ? new SqlParameter("@Id", tempReq.TempId) : new SqlParameter("@Id", DBNull.Value);
+
+            return DbContext.TempPurchaseItem.FromSqlRaw("[TempPurchase_GetList] @EmpId,@PayeeId,@PurchaseId,@SortField,@SortOrder,@Id", EmpIdParam, PayeeIdParam, PurchaseIdParam, SortFieldParam, SortOrderParam, IdParam);
         }
     }
 }

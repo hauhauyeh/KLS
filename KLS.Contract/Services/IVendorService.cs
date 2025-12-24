@@ -9,20 +9,20 @@ namespace KLS.Contract.Services
 {
     public interface IVendorService
     {
-        PagingResponse<VendorList> GetAllVendors(VendorListReq vendorListReq);
+        PagingResponse<VendorList> GetPagedList(VendorListReq vendorListReq);
 
         VendorDTO? GetById(int payeeId);
 
         bool VendorExists(VendorDTO vendorDTO);
 
-        VendorDTO CreateVendor(VendorDTO vendorDTO);
+        VendorDTO Create(VendorDTO vendorDTO);
 
-        VendorDTO? UpdateVendor(VendorDTO vendorDTO);
+        VendorDTO? Update(VendorDTO vendorDTO);
 
-        void DeleteVendor(int payeeId);
+        void Delete(int payeeId);
 
-        IEnumerable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq);
+        IEnumerable<VendorSearchDTO>? Search(PayeeSearchReq searchReq);
 
-        IEnumerable<VendorSearchDTO>? GetActiveVendors();
+        IEnumerable<VendorSearchDTO>? GetActive();
     }
 }

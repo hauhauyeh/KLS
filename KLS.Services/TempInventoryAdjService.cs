@@ -21,12 +21,12 @@ namespace KLS.Services
             _itemService = itemService;
         }
 
-        public IEnumerable<TempInventoryItem>? GetTempAdjItems(TempInventoryReq tempReq)
+        public IEnumerable<TempInventoryItem>? GetList(TempInventoryReq tempReq)
         {
             return Uow.TempInventoryAdjs.GetTempAdjItems(tempReq);
         }
 
-        public TempInventoryItem CreateTempItem(TempInventoryItem tempItem)
+        public TempInventoryItem Create(TempInventoryItem tempItem)
         {
             var item = _itemService.GetBySearch(tempItem.ItemCode);
 
@@ -62,7 +62,7 @@ namespace KLS.Services
             return tempItem;
         }
 
-        public void UpdateTempItem(TempInventoryAdj tempAdj)
+        public void Update(TempInventoryAdj tempAdj)
         {
             var existing = Uow.TempInventoryAdjs.GetById(tempAdj.TempAdjId);
 
@@ -80,7 +80,7 @@ namespace KLS.Services
             }
         }
 
-        public void DeleteTempItem(int tempAdjId)
+        public void Delete(int tempAdjId)
         {
             var temp = Uow.TempInventoryAdjs.GetById(tempAdjId);
 
@@ -100,7 +100,7 @@ namespace KLS.Services
             }
         }
 
-        public void ClearTempItem(TempInventoryReq tempReq)
+        public void Clear(TempInventoryReq tempReq)
         {
             Uow.TempInventoryAdjs.Find(c => c.EmpId == UserContext.EmpId && c.AdjId == tempReq.AdjId).ExecuteDelete();
         }

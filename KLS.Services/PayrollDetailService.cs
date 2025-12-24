@@ -5,8 +5,6 @@ using KLS.Contract.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting.Internal;
-using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,29 +25,29 @@ namespace KLS.Services
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<PayrollList> GetAllPayrolls(PayrollReq payrollReq)
+        public PagingResponse<PayrollList> GetPagedList(PayrollReq payrollReq)
         {
-            var payrolllist = Uow.PayrollDetails.GetAllPayrolls(payrollReq);
+            var list = Uow.PayrollDetails.GetPagedList(payrollReq);
 
-            var totalRecords = Uow.PayrollDetails.CountAllPayrolls(payrollReq);
+            var totalRecords = Uow.PayrollDetails.Count(payrollReq);
 
             return new PagingResponse<PayrollList>(totalRecords, payrollReq.Pageno, payrollReq.Pagesize)
             {
-                RowData = payrolllist,
+                RowData = list,
             };
         }
 
-        public void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq)
+        public void InjectEmp(PayrollInjectEmpReq injectEmpReq)
         {
-            Uow.PayrollDetails.InjectPayrollEmp(injectEmpReq);
+            Uow.PayrollDetails.InjectEmp(injectEmpReq);
         }
 
-        public void InjectPayroll(int vendorPaymentId)
+        public void Inject(int vendorPaymentId)
         {
-            Uow.PayrollDetails.InjectPayroll(vendorPaymentId);
+            Uow.PayrollDetails.Inject(vendorPaymentId);
         }
 
-        public void DeletePayroll(int vendorPaymentId)
+        public void Delete(int vendorPaymentId)
         {
             var payroll = Uow.VendorPayments.GetById(vendorPaymentId);
 

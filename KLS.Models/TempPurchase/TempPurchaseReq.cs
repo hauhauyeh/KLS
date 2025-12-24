@@ -15,5 +15,7 @@ namespace KLS.Models
         public string? SortField { get; set; }
 
         public string? SortOrder { get; set; }
+
+        public int? TempId { get; set; }
     }
 }

@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Services
 {
-    public interface IEmployeeAdvancePmtService
+    public interface IEmpAdvanceService
     {
-        PagingResponse<EmployeeAdvancePmt> GetAllEmployeeAdvancePmt(EmployeeAdvancePmtReq empAdvanceReq);
+        PagingResponse<EmpAdvance> GetPagedList(EmpAdvanceReq empAdvanceReq);
 
         VendorPayment? GetById(int vendorPaymentId);
 
-        VendorPayment SaveEmployeeAdvancePmt(EmployeeAdvancePmt employeeAdvancePmt);
+        VendorPayment Save(EmpAdvance empAdvance);
 
         void Delete(int vendorPaymentId);
     }

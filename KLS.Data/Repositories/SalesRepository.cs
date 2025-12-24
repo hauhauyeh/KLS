@@ -19,14 +19,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<SalesList> GetAllSales(SalesListReq salesListReq)
+        public IQueryable<SalesList> GetPagedList(SalesListReq salesListReq)
         {
             var param = BuildSalesParam(salesListReq);
 
             return DbContext.SalesList.FromSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllSales(SalesListReq salesListReq)
+        public int Count(SalesListReq salesListReq)
         {
             salesListReq.IsCount = true;
             var param = BuildSalesParam(salesListReq);

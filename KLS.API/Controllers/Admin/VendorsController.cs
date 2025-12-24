@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Vendors")]
         public IActionResult List([FromQuery] VendorListReq vendorReq)
         {
-            return Ok(_vendorService.GetAllVendors(vendorReq));
+            return Ok(_vendorService.GetPagedList(vendorReq));
         }
 
 
@@ -51,7 +51,7 @@ namespace KLS.API.Controllers.Admin
             if (_vendorService.VendorExists(vendorDTO))
                 return Conflict("Vendor name already exists.");
 
-            var created = _vendorService.CreateVendor(vendorDTO);
+            var created = _vendorService.Create(vendorDTO);
 
             return Ok(created);
         }
@@ -64,7 +64,7 @@ namespace KLS.API.Controllers.Admin
             if (_vendorService.VendorExists(vendorDTO))
                 return Conflict("Vendor name already exists.");
 
-            var created = _vendorService.UpdateVendor(vendorDTO);
+            var created = _vendorService.Update(vendorDTO);
 
             return Ok(created);
         }
@@ -74,7 +74,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Vendor")]
         public IActionResult Delete(int id)
         {
-            _vendorService.DeleteVendor(id);
+            _vendorService.Delete(id);
 
             return Ok();
         }
@@ -83,14 +83,14 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("Search")]
         public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
         {
-            return Ok(_vendorService.SearchVendor(searchReq));
+            return Ok(_vendorService.Search(searchReq));
         }
 
 
         [HttpGet("ActiveVendors")]
         public IActionResult ActiveVendors()
         {
-            return Ok(_vendorService.GetActiveVendors());
+            return Ok(_vendorService.GetActive());
         }
 
         #endregion

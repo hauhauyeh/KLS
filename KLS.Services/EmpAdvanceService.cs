@@ -10,22 +10,22 @@ using System.Threading.Tasks;
 
 namespace KLS.Services
 {
-    public class EmployeeAdvancePmtService : BaseService, IEmployeeAdvancePmtService
+    public class EmpAdvanceService : BaseService, IEmpAdvanceService
     {
         private readonly IDeleteLogService _deleteLogService;
 
-        public EmployeeAdvancePmtService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        public EmpAdvanceService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
         {
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<EmployeeAdvancePmt> GetAllEmployeeAdvancePmt(EmployeeAdvancePmtReq empAdvanceReq)
+        public PagingResponse<EmpAdvance> GetPagedList(EmpAdvanceReq empAdvanceReq)
         {
-            var empAdvanceList = Uow.EmployeeAdvancePmts.GetAllEmployeeAdvancePmt(empAdvanceReq);
+            var empAdvanceList = Uow.EmpAdvances.GetPagedList(empAdvanceReq);
 
-            var totalRecords = Uow.EmployeeAdvancePmts.CountAllEmployeeAdvancePmt(empAdvanceReq);
+            var totalRecords = Uow.EmpAdvances.Count(empAdvanceReq);
 
-            return new PagingResponse<EmployeeAdvancePmt>(totalRecords, empAdvanceReq.Pageno, empAdvanceReq.Pagesize)
+            return new PagingResponse<EmpAdvance>(totalRecords, empAdvanceReq.Pageno, empAdvanceReq.Pagesize)
             {
                 RowData = empAdvanceList
             };
@@ -36,9 +36,9 @@ namespace KLS.Services
             return Uow.VendorPayments.GetById(vendorPaymentId);
         }
 
-        public VendorPayment SaveEmployeeAdvancePmt(EmployeeAdvancePmt employeeAdvancePmt)
+        public VendorPayment Save(EmpAdvance empAdvance)
         {
-            var newVendorPaymentId = Uow.EmployeeAdvancePmts.SaveEmployeeAdvancePmt(employeeAdvancePmt);
+            var newVendorPaymentId = Uow.EmpAdvances.Save(empAdvance);
 
             return GetById(newVendorPaymentId);
         }

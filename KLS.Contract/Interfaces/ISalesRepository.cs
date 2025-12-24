@@ -9,8 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface ISalesRepository : IRepository<Sales>
     {
-        IQueryable<SalesList> GetAllSales(SalesListReq salesListReq);
+        IQueryable<SalesList> GetPagedList(SalesListReq salesListReq);
 
-        int CountAllSales(SalesListReq salesListReq);
+        int Count(SalesListReq salesListReq);
     }
 }

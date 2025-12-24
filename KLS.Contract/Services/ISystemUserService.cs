@@ -21,7 +21,7 @@ namespace KLS.Contract.Services
 
         void UpdateToken(SystemUser user);
 
-        LoginResult LoginEmployee(LoginReq loginReq, string ipAddress);
+        LoginResult LoginEmployee(LoginReq loginReq);
 
         LoginResult RefreshToken(RefreshTokenReq tokenReq);
 

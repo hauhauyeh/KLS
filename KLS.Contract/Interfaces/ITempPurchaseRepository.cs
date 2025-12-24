@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITempPurchaseRepository : IRepository<TempPurchase>
     {
-        IQueryable<TempPurchaseItem>? GetTempPurchaseItems(TempPurchaseReq tempReq);
+        IQueryable<TempPurchaseItem>? GetList(TempPurchaseReq tempReq);
     }
 }

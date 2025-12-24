@@ -33,14 +33,14 @@ namespace KLS.API.Controllers.Sales
         [DisplayName("List Customers")]
         public IActionResult List([FromQuery] CustomerListReq customerListReq)
         {
-            return Ok(_customerService.GetAllCustomers(customerListReq));
+            return Ok(_customerService.GetPagedList(customerListReq));
         }
 
 
         [HttpGet("Search")]
         public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
         {
-            return Ok(_customerService.SearchCustomer(searchReq));
+            return Ok(_customerService.Search(searchReq));
         }
 
         #endregion

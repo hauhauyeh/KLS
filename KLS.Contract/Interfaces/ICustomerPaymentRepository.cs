@@ -9,9 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface ICustomerPaymentRepository : IRepository<CustomerPayment>
     {
-        IQueryable<CustomerPaymentList> GetCustomerPayment(CustomerPaymentReq customerPaymentReq);
+        IQueryable<CustomerPaymentList> GetPagedList(CustomerPaymentReq customerPaymentReq);
 
-
-        int CountAllCustomerPayment(CustomerPaymentReq customerPaymentReq);
+        int Count(CustomerPaymentReq customerPaymentReq);
     }
 }

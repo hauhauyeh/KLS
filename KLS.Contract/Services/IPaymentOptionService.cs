@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface IPaymentOptionService
     {
-        IQueryable<PaymentOption> GetAllPaymentOption();
+        IEnumerable<PaymentOption> GetList();
     }
 }

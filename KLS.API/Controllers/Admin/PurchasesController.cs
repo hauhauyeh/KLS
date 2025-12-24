@@ -35,7 +35,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Bill Manager")]
         public IActionResult List([FromQuery] PurchaseListReq purchaseListReq)
         {
-            return Ok(_purchaseService.GetAllPurchase(purchaseListReq));
+            return Ok(_purchaseService.GetPagedList(purchaseListReq));
         }
 
 
@@ -129,7 +129,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Bill")]
         public IActionResult Delete(int purchaseId)
         {
-            _purchaseService.DeletePurchase(purchaseId);
+            _purchaseService.Delete(purchaseId);
 
             return Ok();
         }
@@ -138,7 +138,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Inject")]
         public IActionResult Inject([FromBody] PurchaseInjectReq injectReq)
         {
-            _purchaseService.InjectPurchase(injectReq);
+            _purchaseService.Inject(injectReq);
             return Ok();
         }
 

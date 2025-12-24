@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface ITimesheetService
     {
-        PagingResponse<Timesheet> GetAllTimesheets(TimesheetReq timesheetReq);
+        PagingResponse<Timesheet> GetPagedList(TimesheetReq timesheetReq);
 
         ICollection<TimesheetList>? GetWeeklyTimesheets(TimesheetReq timesheetReq);
 
@@ -17,11 +17,11 @@ namespace KLS.Contract.Services
 
         bool ValidateTime(Timesheet timesheet);
 
-        Timesheet SaveTimesheet(Timesheet timesheet);
+        Timesheet Save(Timesheet timesheet);
 
-        void DeleteTimesheet(int timesheetId);
+        void Delete(int timesheetId);
 
-        void InjectTimesheet(int timesheetId, bool isClone);
+        void Inject(int timesheetId, bool isClone);
 
         PayPeriod? GetPayPeriod();
 

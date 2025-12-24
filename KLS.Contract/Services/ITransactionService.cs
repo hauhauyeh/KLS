@@ -9,10 +9,8 @@ namespace KLS.Contract.Services
 {
     public interface ITransactionService
     {
-        PagingResponse<Transaction>? GetAllTransactions(TxReq txReq);
+        PagingResponse<Transaction>? GetPagedList(TxReq txReq);
 
-        //IEnumerable<TransactionDetail>? GetTxDetail(int txId);
-
-        ICollection<TransactionDetailList>? GetTxDetail(int txId);
+        IEnumerable<TransactionDetailList>? GetTxDetail(int txId);
     }
 }

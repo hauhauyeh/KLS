@@ -20,14 +20,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<CustomerList> GetAllCustomers(CustomerListReq customerListReq)
+        public IQueryable<CustomerList> GetPagedList(CustomerListReq customerListReq)
         {
             var param = BuildCustomersParam(customerListReq);
 
             return DbContext.CustomerList.FromSqlRaw("[dbo].[Customer_GetAllList] @Pageno,@Pagesize,@Search,@Filterby,@Content,@Sortby,@Category,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllCustomers(CustomerListReq customerListReq)
+        public int Count(CustomerListReq customerListReq)
         {
             customerListReq.IsCount = true;
             var param = BuildCustomersParam(customerListReq);
@@ -38,7 +38,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        public IQueryable<PayeeSearch>? SearchCustomer(PayeeSearchReq searchReq)
+        public IQueryable<PayeeSearch>? Search(PayeeSearchReq searchReq)
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 

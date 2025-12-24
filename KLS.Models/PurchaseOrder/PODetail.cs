@@ -12,10 +12,6 @@ namespace KLS.Models
         [Key]
         public int PurchaseDetailId { get; set; }
 
-        //public int PODetailId { get; set; }
-
-        //public int POId { get; set; }
-
         public int PurchaseId { get; set; }
 
         public string? ItemCode { get; set; }

@@ -29,18 +29,10 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-        //[HttpGet]
-        //[DisplayName("List Storage")]
-        //public IActionResult List()
-        //{
-        //    return Ok(_itemStorageService.GetAllStorageTree());
-        //}
-
-
-        [HttpGet("Storage")]
-        public IActionResult GetAllStorages()
+        [HttpGet]
+        public IActionResult List()
         {
-            return Ok(_itemStorageService.GetAllStorages());
+            return Ok(_itemStorageService.GetList());
         }
 
 
@@ -58,7 +50,7 @@ namespace KLS.API.Controllers.Admin
             if (_itemStorageService.NameExists(itemStorage))
                 return Conflict("Storage Name already exists");
 
-            return Ok(_itemStorageService.CreateItemStorage(itemStorage));
+            return Ok(_itemStorageService.Create(itemStorage));
         }
 
 
@@ -69,7 +61,7 @@ namespace KLS.API.Controllers.Admin
             if (_itemStorageService.NameExists(itemStorage))
                 return Conflict("Storage Name already exists");
 
-            return Ok(_itemStorageService.UpdateItemStorage(itemStorage));
+            return Ok(_itemStorageService.Update(itemStorage));
         }
 
 
@@ -77,7 +69,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete ItemStorage")]
         public IActionResult Delete(int id)
         {
-            _itemStorageService.DeleteItemStorage(id);
+            _itemStorageService.Delete(id);
 
             return Ok();
         }

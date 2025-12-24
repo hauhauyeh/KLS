@@ -19,28 +19,14 @@ namespace KLS.Data.Repositories
         {
         }
 
-        public IQueryable<TransferFundList> GetAllTransferFunds(TFReq tFReq)
+        public IQueryable<TransferFundList> GetPagedTransferFunds(TFReq tFReq)
         {
-            //var PagenoParam = new SqlParameter("@Pageno", tFReq.Pageno);
-
-            //var PagesizeParam = new SqlParameter("@Pagesize", tFReq.Pagesize);
-
-            //var SearchParam = (!string.IsNullOrEmpty(tFReq.Search)) ? new SqlParameter("@Search", tFReq.Search) : new SqlParameter("@Search", DBNull.Value);
-
-            //var StartDateParam = tFReq.StartDate.HasValue ? new SqlParameter("@StartDate", tFReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
-
-            //var EndDateParam = tFReq.EndDate.HasValue ? new SqlParameter("@EndDate", tFReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
-
-            //var TFIdParam = tFReq.Id.HasValue ? new SqlParameter("@TFId", tFReq.Id) : new SqlParameter("@TFId", DBNull.Value);
-
-            //var IsCountParam = new SqlParameter("@IsCount", tFReq.IsCount);
-
             var param = BuildTransferFundParam(tFReq);
 
             return DbContext.TransferFundList.FromSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllTransferFunds(TFReq tFReq)
+        public int CountTransferFunds(TFReq tFReq)
         {
             tFReq.IsCount = true;
             var param = BuildTransferFundParam(tFReq);
@@ -112,14 +98,14 @@ namespace KLS.Data.Repositories
         }
 
 
-        public IQueryable<DepositList> GetAllDeposits(DepositReq depositReq)
+        public IQueryable<DepositList> GetPagedDeposits(DepositReq depositReq)
         {
             var param = BuildDepositParam(depositReq);
 
             return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllDeposits(DepositReq depositReq)
+        public int CountDeposits(DepositReq depositReq)
         {
             depositReq.IsCount = true;
             var param = BuildDepositParam(depositReq);

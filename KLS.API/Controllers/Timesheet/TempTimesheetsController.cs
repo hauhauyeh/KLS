@@ -29,28 +29,28 @@ namespace KLS.API.Controllers.Timesheet
         [HttpGet("{timesheetId}")]
         public IActionResult List(int timesheetId)
         {
-            return Ok(_tempTimesheetService.GetTempTimesheetList(timesheetId));
+            return Ok(_tempTimesheetService.GetList(timesheetId));
         }
 
 
         [HttpPost]
         public IActionResult Create([FromBody] TempTimesheet tempTimesheet)
         {
-            return Ok(_tempTimesheetService.CreateTempTimesheet(tempTimesheet));
+            return Ok(_tempTimesheetService.Create(tempTimesheet));
         }
 
 
         [HttpPut]
         public IActionResult Update([FromBody] TempTimesheet tempTimesheet)
         {
-            return Ok(_tempTimesheetService.UpdateTempTimesheet(tempTimesheet));
+            return Ok(_tempTimesheetService.Update(tempTimesheet));
         }
 
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            _tempTimesheetService.DeleteTempTimesheet(id);
+            _tempTimesheetService.Delete(id);
 
             return Ok();
         }

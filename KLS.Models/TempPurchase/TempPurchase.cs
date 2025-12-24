@@ -15,7 +15,7 @@ namespace KLS.Models
         {
             ChangeStatus = EnumHelper.ChangeStatus.I.ToString();
             LineType = EnumHelper.LineType.I.ToString();
-            SetQtyBasedOnFlag();
+            FactorToBase = 1;
         }
 
         [Key]
@@ -23,76 +23,42 @@ namespace KLS.Models
         public int TempPurchaseId { get; set; }
 
         public int EmpId { get; set; }
-
         public int PayeeId { get; set; }
-
         public int PurchaseId { get; set; }
-
         public int? LineId { get; set; }
-
         public string? LineType { get; set; }
 
         public int? ItemId { get; set; }
-
         public int? AccountId { get; set; }
-
         public int? ItemUnitId { get; set; }
-
-        public string? Unit { get; set; }
-
+        public string? Unit { get; private set; }
         public string? Notes { get; set; }
 
-        public bool IsFree { get; set; }
+        public bool IsFree { get; private set; }
+        public bool IsOut { get; private set; }
+        public bool IsCRCG { get; private set; }
 
-        public bool IsOut { get; set; }
+        public decimal? OrdQty0 { get; private set; }
+        public decimal? OrdQty1 { get; private set; }
 
-        public bool IsCRCG { get; set; }
+        public decimal? ShipQty { get; private set; }
+        public decimal? BillQty { get; private set; }
+        public decimal? ReceiveQty { get; private set; }
+        public decimal? FinalQty { get; private set; }
 
-        public decimal? OrdQty0 { get; set; }
-
-        public decimal? ShipQty { get; set; }
-
-        public decimal? BillQty { get; set; }
-
-        public decimal? OrdQty1 { get; set; }
-
-        public decimal? ReceiveQty { get; set; }
-
-        public decimal? FinalQty { get; set; }
-
-        public decimal? BillPrice { get; set; }
-
-        public decimal? BillExtTotal
-        {
-            get { return Utilities.Rounding(BillQty * BillPrice, 2); }
-            set { value = Utilities.Rounding(BillQty * BillPrice, 2); }
-        }
-
-        public decimal? FinalPrice { get; set; }
-
-        public decimal? FinalExtTotal
-        {
-            get { return Utilities.Rounding(FinalQty * FinalPrice, 2); }
-            set { value = Utilities.Rounding(FinalQty * FinalPrice, 2); }
-        }
-
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? BaseReceiveQty { get; set; }
-
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? BaseFinalQty { get; set; }
+        public decimal? BillPrice { get; private set; }
+        public decimal? FinalPrice { get; private set; }
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? FactorToBase { get; set; }
 
-        public DateOnly? ExpiryDate { get; set; }
+        public DateOnly? ExpiryDate { get; private set; }
 
         [Column(TypeName = "decimal(18,4)")]
-        public decimal? DiscountPercent { get; set; }
+        public decimal? DiscountPercent { get; private set; }
+        public decimal? Discount { get; private set; }
+        public decimal? OrgPrice { get; private set; }
 
-        public decimal? Discount { get; set; }
-
-        public decimal? OrgPrice { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? CustomDutyRate { get; set; }
@@ -109,11 +75,16 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18,6)")]
         public decimal? VolumeSharePercent { get; set; }
 
-        public string? ChangeStatus { get; set; }
 
+        public string? ChangeStatus { get; set; }
         public int? PurchaseDetailId { get; set; }
 
+        public decimal? BillExtTotal => Utilities.Rounding((BillQty ?? 0m) * (BillPrice ?? 0m), 2);
 
+        public decimal? FinalExtTotal => Utilities.Rounding((FinalQty ?? 0m) * (FinalPrice ?? 0m), 2);
+
+
+        // Use it for Bill manager and Pay now
         public void SetQtyBasedOnFlag()
         {
             if (IsFree)
@@ -145,8 +116,111 @@ namespace KLS.Models
                 FinalQty = OrdQty1;
             }
 
-            BaseReceiveQty = Utilities.Rounding(ReceiveQty / FactorToBase, 6);
-            BaseFinalQty = Utilities.Rounding(FinalQty / FactorToBase, 6);
+            //BaseReceiveQty = Utilities.Rounding(ReceiveQty / FactorToBase, 6);
+            //BaseFinalQty = Utilities.Rounding(FinalQty / FactorToBase, 6);
         }
+
+        //Use only for PO
+        public void SetPOQtyBasedOnFlag()
+        {
+
+        }
+
+        public void ApplyCommonEdits(bool isFree, bool isOut, bool isCrcg, decimal? billPrice, decimal? finalPrice, string? notes, DateOnly? expiryDate)
+        {
+            IsFree = isFree;
+            IsOut = isOut;
+            IsCRCG = isCrcg;
+
+            BillPrice = billPrice;
+            FinalPrice = finalPrice;
+
+            Notes = notes;
+            ExpiryDate = expiryDate;
+        }
+
+        // PO: only ordered qty changes (and flags/notes/expiry/etc)
+        public void ApplyPO(decimal? ordQty0, decimal? ordQty1, decimal? shipQty)
+        {
+            OrdQty0 = ordQty0;
+            OrdQty1 = ordQty1;
+
+            ShipQty = shipQty;
+            BillQty = shipQty;
+
+            ApplyFlagRules(docType: EnumHelper.PurchaseDocType.PO);
+        }
+
+        // Bill:
+        public void ApplyBill(decimal? ordQty0, decimal? ordQty1)
+        {
+            OrdQty0 = ordQty0;
+            OrdQty1 = ordQty1;
+
+            ApplyFlagRules(docType: EnumHelper.PurchaseDocType.Bill);
+        }
+
+        public void ApplyUnit(string unit, decimal? factorToBase)
+        {
+            Unit = unit;
+            FactorToBase = factorToBase;
+        }
+
+        public void MarkChangeStatus(string changeStatus)
+        {
+            if (PurchaseDetailId.HasValue)
+                ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
+            else
+                ChangeStatus = changeStatus;
+        }
+
+        private void ApplyFlagRules(EnumHelper.PurchaseDocType docType)
+        {
+            if (docType == EnumHelper.PurchaseDocType.Bill)
+            {
+                if (IsFree)
+                {
+                    ShipQty = OrdQty0;
+                    BillQty = 0;
+                    ReceiveQty = OrdQty1;
+                    FinalQty = 0;
+                }
+                else if (IsOut)
+                {
+                    ShipQty = 0;
+                    BillQty = 0;
+                    ReceiveQty = 0;
+                    FinalQty = 0;
+                }
+                else if (IsCRCG)
+                {
+                    ShipQty = 0;
+                    BillQty = OrdQty0;
+                    ReceiveQty = 0;
+                    FinalQty = OrdQty1;
+                }
+                else
+                {
+                    ShipQty = OrdQty0;
+                    BillQty = OrdQty0;
+                    ReceiveQty = OrdQty1;
+                    FinalQty = OrdQty1;
+                }
+            }
+            else
+            {
+
+            }
+        }
+
+        //private void Validate(PurchaseDocType docType)
+        //{
+        //    if (docType == PurchaseDocType.PO)
+        //    {
+        //        // PO should not carry bill/final quantities
+        //        if ((ReceiveQty ?? 0) != 0 || (FinalQty ?? 0) != 0)
+        //            throw new InvalidOperationException("PO cannot have ReceiveQty/FinalQty.");
+        //    }
+        //}
     }
 }

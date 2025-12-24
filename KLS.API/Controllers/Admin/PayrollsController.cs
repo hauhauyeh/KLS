@@ -35,7 +35,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Payroll")]
         public IActionResult List([FromQuery] PayrollReq payrollReq)
         {
-            return Ok(_payrollDetailService.GetAllPayrolls(payrollReq));
+            return Ok(_payrollDetailService.GetPagedList(payrollReq));
         }
 
 
@@ -50,7 +50,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("InjectEmp")]
         public IActionResult InjectEmp([FromBody] PayrollInjectEmpReq injectEmpReq)
         {
-            _payrollDetailService.InjectPayrollEmp(injectEmpReq);
+            _payrollDetailService.InjectEmp(injectEmpReq);
             return Ok();
         }
 
@@ -58,7 +58,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Inject/{vendorPaymentId}")]
         public IActionResult Inject(int vendorPaymentId)
         {
-            _payrollDetailService.InjectPayroll(vendorPaymentId);
+            _payrollDetailService.Inject(vendorPaymentId);
 
             return Ok();
         }
@@ -77,7 +77,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Payroll")]
         public IActionResult Delete(int vendorPaymentId)
         {
-            _payrollDetailService.DeletePayroll(vendorPaymentId);
+            _payrollDetailService.Delete(vendorPaymentId);
             return Ok();
         }
 

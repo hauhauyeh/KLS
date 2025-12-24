@@ -35,7 +35,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Incoming Payment")]
         public IActionResult List([FromQuery] IncomingPaymentListReq incomingPaymentReq)
         {
-            return Ok(_incomingPaymentService.GetIncomingPayment(incomingPaymentReq));
+            return Ok(_incomingPaymentService.GetPagedList(incomingPaymentReq));
         }
 
 
@@ -55,7 +55,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Add/Edit Incoming Payment")]
         public IActionResult Save([FromBody] IncomingPaymentReq incomingPaymentReq)
         {
-            return Ok(_incomingPaymentService.SaveIncomingPayment(incomingPaymentReq));
+            return Ok(_incomingPaymentService.Save(incomingPaymentReq));
         }
 
 
@@ -63,7 +63,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Incoming Payment")]
         public IActionResult Delete(int id)
         {
-            _incomingPaymentService.DeleteIncomingPayment(id);
+            _incomingPaymentService.Delete(id);
 
             return Ok();
         }

@@ -21,11 +21,11 @@ namespace KLS.Services
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<TransferFundList> GetAllTransferFunds(TFReq tFReq)
+        public PagingResponse<TransferFundList> GetPagedTransferFunds(TFReq tFReq)
         {
-            var transferfundlist = Uow.TransferFunds.GetAllTransferFunds(tFReq);
+            var transferfundlist = Uow.TransferFunds.GetPagedTransferFunds(tFReq);
 
-            var totalRecords = Uow.TransferFunds.CountAllTransferFunds(tFReq);
+            var totalRecords = Uow.TransferFunds.CountTransferFunds(tFReq);
 
             //tFReq.IsCount = true;
 
@@ -47,7 +47,7 @@ namespace KLS.Services
                 Id = tfId
             };
 
-            return Uow.TransferFunds.GetAllTransferFunds(tfReq).AsEnumerable().FirstOrDefault();
+            return Uow.TransferFunds.GetPagedTransferFunds(tfReq).AsEnumerable().FirstOrDefault();
         }
 
         public TransferFundList? SaveTransferFund(TransferFund transferFund)
@@ -73,11 +73,11 @@ namespace KLS.Services
         }
 
 
-        public PagingResponse<DepositList> GetAllDeposits(DepositReq depositReq)
+        public PagingResponse<DepositList> GetPagedDeposits(DepositReq depositReq)
         {
-            var list = Uow.TransferFunds.GetAllDeposits(depositReq);
+            var list = Uow.TransferFunds.GetPagedDeposits(depositReq);
 
-            var totalRecords = Uow.TransferFunds.CountAllDeposits(depositReq);
+            var totalRecords = Uow.TransferFunds.CountDeposits(depositReq);
 
             return new PagingResponse<DepositList>(totalRecords, depositReq.Pageno, depositReq.Pagesize)
             {
@@ -92,7 +92,7 @@ namespace KLS.Services
                 Id = tfId
             };
 
-            return Uow.TransferFunds.GetAllDeposits(depositReq).AsEnumerable().FirstOrDefault();
+            return Uow.TransferFunds.GetPagedDeposits(depositReq).AsEnumerable().FirstOrDefault();
         }
 
         public DepositList? SaveDeposit(TransferFund transferFund)

@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List EmailLogs")]
         public IActionResult List([FromQuery] EmailLogReq emailLogReq)
         {
-            return Ok(_emailLogService.GetEmailLogs(emailLogReq));
+            return Ok(_emailLogService.GetPagedList(emailLogReq));
         }
 
         #endregion

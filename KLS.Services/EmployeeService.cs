@@ -17,12 +17,12 @@ namespace KLS.Services
         {
         }
 
-        public IEnumerable<EmployeeList> GetAllEmployees(EmpReq empReq)
+        public IEnumerable<EmployeeList> GetPagedList(EmpReq empReq)
         {
-            return Uow.Employees.GetAllEmployees(empReq);
+            return Uow.Employees.GetPagedList(empReq);
         }
 
-        public ICollection<EmployeeList> GetActiveEmployees()
+        public ICollection<EmployeeList> GetActive()
         {
             var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString()).OrderBy(c => c.PayeeName).ToList();
 
@@ -59,12 +59,12 @@ namespace KLS.Services
             return employeeDTO;
         }
 
-        public bool EmployeeExists(EmployeeDTO employeeDTO)
+        public bool NameExists(EmployeeDTO employeeDTO)
         {
             return Uow.Payees.Exists(p => p.PayeeName.ToLower() == employeeDTO.PayeeName.ToLower() && p.PayeeId != employeeDTO.PayeeId && p.PayeeType == EnumHelper.PayeeType.E.ToString());
         }
 
-        public EmployeeDTO CreateEmployee(EmployeeDTO employeeDTO)
+        public EmployeeDTO Create(EmployeeDTO employeeDTO)
         {
             var newPayeeId = GetMaxEmployeeId();
 
@@ -100,7 +100,7 @@ namespace KLS.Services
             return employeeDTO;
         }
 
-        public EmployeeDTO? UpdateEmployee(EmployeeDTO employeeDTO)
+        public EmployeeDTO? Update(EmployeeDTO employeeDTO)
         {
             var employee = Uow.Employees.GetById(employeeDTO.PayeeId);
             var existingPayee = Uow.Payees.GetById(employeeDTO.PayeeId);
@@ -199,15 +199,15 @@ namespace KLS.Services
             return employeeDTO;
         }
 
-        public void DeleteEmployee(int payeeId)
+        public void Delete(int payeeId)
         {
             Uow.Payees.RemoveById(payeeId);
             Uow.Commit();
         }
 
-        public IEnumerable<PayeeSearch>? SearchEmployee(PayeeSearchReq searchReq)
+        public IEnumerable<PayeeSearch>? Search(PayeeSearchReq searchReq)
         {
-            return Uow.Employees.SearchEmployee(searchReq);
+            return Uow.Employees.Search(searchReq);
         }
 
         private int GetMaxEmployeeId()

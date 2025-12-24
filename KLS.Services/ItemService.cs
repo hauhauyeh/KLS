@@ -22,11 +22,11 @@ namespace KLS.Services
             _twilioService = twilioService;
         }
 
-        public PagingResponse<ItemList> GetAllItems(ItemListReq itemListReq)
+        public PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq)
         {
-            var itemlist = Uow.Items.GetAllItems(itemListReq);
+            var itemlist = Uow.Items.GetPagedList(itemListReq);
 
-            var totalRecords = Uow.Items.CountAllItems(itemListReq);
+            var totalRecords = Uow.Items.Count(itemListReq);
 
             return new PagingResponse<ItemList>(totalRecords, itemListReq.Pageno, itemListReq.Pagesize)
             {
@@ -95,14 +95,14 @@ namespace KLS.Services
             return item;
         }
 
-        public IEnumerable<ItemSearch>? SearchItem(ItemSearchReq searchReq)
+        public IEnumerable<ItemSearch>? Search(ItemSearchReq searchReq)
         {
-            return Uow.Items.SearchItem(searchReq);
+            return Uow.Items.Search(searchReq);
         }
 
-        public void DeleteItem(int itemId)
+        public void Delete(int itemId)
         {
-            Uow.Items.DeleteItem(itemId);
+            Uow.Items.Delete(itemId);
         }
 
         public void Inactive(int itemId)
@@ -122,7 +122,7 @@ namespace KLS.Services
             return Uow.Items.Exists(c => c.ItemName.ToLower() == item.ItemName.ToLower() && c.ItemId != item.ItemId);
         }
 
-        public Item? SaveItem(Item item)
+        public Item? Save(Item item)
         {
             if (item.ItemId > 0)
             {

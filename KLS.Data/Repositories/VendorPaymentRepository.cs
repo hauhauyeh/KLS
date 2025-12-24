@@ -21,71 +21,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq)
-        {
-            var param = BuildCheckRegisterParam(checkRegisterReq);
-
-            return DbContext.CheckRegister.FromSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
-        }
-
-        public int CountAllCheckRegister(CheckRegisterReq checkRegisterReq)
-        {
-            checkRegisterReq.IsCount = true;
-            var param = BuildCheckRegisterParam(checkRegisterReq);
-
-            DbContext.Database.ExecuteSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
-
-            var output = param[12] as SqlParameter;
-            return Convert.ToInt32(output.Value);
-        }
-
-        private static object[] BuildCheckRegisterParam(CheckRegisterReq checkRegisterReq)
-        {
-            object[] param = {
-                new SqlParameter("@Pageno", checkRegisterReq.Pageno),
-
-                new SqlParameter("@Pagesize", checkRegisterReq.Pagesize),
-
-                string.IsNullOrEmpty(checkRegisterReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", checkRegisterReq.Search),
-
-                checkRegisterReq.StartDate.HasValue ? new SqlParameter("@StartDate", checkRegisterReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
-
-                checkRegisterReq.EndDate.HasValue ? new SqlParameter("@EndDate", checkRegisterReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
-
-                checkRegisterReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", checkRegisterReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
-
-                checkRegisterReq.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", checkRegisterReq.FromAccountId.Value) : new SqlParameter("@FromAccountId", DBNull.Value),
-
-                string.IsNullOrEmpty(checkRegisterReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", checkRegisterReq.PaymentMethod),
-
-                string.IsNullOrEmpty(checkRegisterReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", checkRegisterReq.Filterby),
-
-                string.IsNullOrEmpty(checkRegisterReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", checkRegisterReq.SortField),
-
-                string.IsNullOrEmpty(checkRegisterReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", checkRegisterReq.SortOrder),
-
-                new SqlParameter("@IsCount", checkRegisterReq.IsCount),
-
-                new SqlParameter()
-                {
-                    ParameterName = "@TotalCount",
-                    Direction = System.Data.ParameterDirection.Output,
-                    SqlDbType = System.Data.SqlDbType.Int
-                }
-            };
-
-            return param;
-        }
-
-
-        public IQueryable<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq)
+        public IQueryable<VendorPaymentList> GetPagedVendorPayments(VendorPaymentReq vendorPaymentReq)
         {
             var param = BuildVendorPaymentParam(vendorPaymentReq);
 
             return DbContext.VendorPaymentList.FromSqlRaw("[dbo].[VendorPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllVendorPayments(VendorPaymentReq vendorPaymentReq)
+        public int CountVendorPayments(VendorPaymentReq vendorPaymentReq)
         {
             vendorPaymentReq.IsCount = true;
             var param = BuildVendorPaymentParam(vendorPaymentReq);
@@ -134,7 +77,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public int SaveVendorPayment(VendorPayment vendorPayment)
+        public int Save(VendorPayment vendorPayment)
         {
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPayment.VendorPaymentId);
 
@@ -182,7 +125,7 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_DeleteVoidCheck] @VendorPaymentId", VendorPaymentIdParam);
         }
 
-        public void VendorPaymentReturn(VendorPaymentReturnReq checkReq)
+        public void Return(VendorPaymentReturnReq checkReq)
         {
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", checkReq.VendorPaymentId);
 
@@ -204,7 +147,7 @@ namespace KLS.Data.Repositories
 
         }
 
-        public int SavePayNowPayment(PayNowReq payNowReq)
+        public int SavePayNow(PayNowReq payNowReq)
         {
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", payNowReq.VendorPaymentId);
 
@@ -256,6 +199,63 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_Import] @PaymentMethod,@FromAccountId,@FilePath,@EmpId,@TxCount OUTPUT", PaymentMethodParam, FromAccountIdParam, FilePathParam, EmpIdParam, txCount);
 
             return Convert.ToInt32(txCount.Value);
+        }
+
+
+        public IQueryable<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq)
+        {
+            var param = BuildCheckRegisterParam(checkRegisterReq);
+
+            return DbContext.CheckRegister.FromSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
+        }
+
+        public int CountCheckRegister(CheckRegisterReq checkRegisterReq)
+        {
+            checkRegisterReq.IsCount = true;
+            var param = BuildCheckRegisterParam(checkRegisterReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
+
+            var output = param[12] as SqlParameter;
+            return Convert.ToInt32(output.Value);
+        }
+
+        private static object[] BuildCheckRegisterParam(CheckRegisterReq checkRegisterReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", checkRegisterReq.Pageno),
+
+                new SqlParameter("@Pagesize", checkRegisterReq.Pagesize),
+
+                string.IsNullOrEmpty(checkRegisterReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", checkRegisterReq.Search),
+
+                checkRegisterReq.StartDate.HasValue ? new SqlParameter("@StartDate", checkRegisterReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                checkRegisterReq.EndDate.HasValue ? new SqlParameter("@EndDate", checkRegisterReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                checkRegisterReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", checkRegisterReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
+
+                checkRegisterReq.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", checkRegisterReq.FromAccountId.Value) : new SqlParameter("@FromAccountId", DBNull.Value),
+
+                string.IsNullOrEmpty(checkRegisterReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", checkRegisterReq.PaymentMethod),
+
+                string.IsNullOrEmpty(checkRegisterReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", checkRegisterReq.Filterby),
+
+                string.IsNullOrEmpty(checkRegisterReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", checkRegisterReq.SortField),
+
+                string.IsNullOrEmpty(checkRegisterReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", checkRegisterReq.SortOrder),
+
+                new SqlParameter("@IsCount", checkRegisterReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+
+            return param;
         }
     }
 }

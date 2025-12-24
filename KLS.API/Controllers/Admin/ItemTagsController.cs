@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Item Tags")]
         public IActionResult List()
         {
-            return Ok(_itemTagService.GetAllItemTags());
+            return Ok(_itemTagService.GetList());
         }
 
 
@@ -48,10 +48,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create Item Tag")]
         public IActionResult Create([FromBody] ItemTag itemTag)
         {
-            if (_itemTagService.ExistsTagName(itemTag))
+            if (_itemTagService.NameExists(itemTag))
                 return Conflict("Tag name already exists");
 
-            return Ok(_itemTagService.CreateItemTag(itemTag));
+            return Ok(_itemTagService.Create(itemTag));
         }
 
 
@@ -59,10 +59,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update Item Tag")]
         public IActionResult Update([FromBody] ItemTag itemTag)
         {
-            if (_itemTagService.ExistsTagName(itemTag))
+            if (_itemTagService.NameExists(itemTag))
                 return Conflict("Tag name already exists");
 
-            return Ok(_itemTagService.UpdateItemTag(itemTag));
+            return Ok(_itemTagService.Update(itemTag));
         }
 
 
@@ -70,7 +70,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Item Tag")]
         public IActionResult Delete(int id)
         {
-            _itemTagService.DeleteItemTag(id);
+            _itemTagService.Delete(id);
 
             return Ok();
         }

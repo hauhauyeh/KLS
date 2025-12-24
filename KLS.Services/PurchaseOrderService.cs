@@ -1,8 +1,9 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
-using KLS.Models;
 using KLS.Contract.Services;
+using KLS.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,21 +26,16 @@ namespace KLS.Services
             _pdfService = pdfService;
         }
 
-        public PagingResponse<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq)
+        public PagingResponse<PurchaseOrderList> GetPagedList(PurchaseOrderReq purchaseOrderReq)
         {
-            var purchaseOrders = Uow.PurchaseOrders.GetAllPurchaseOrders(purchaseOrderReq);
+            var list = Uow.PurchaseOrders.GetPagedList(purchaseOrderReq);
 
-            var totalRecords = Uow.PurchaseOrders.CountAllPurchaseOrders(purchaseOrderReq);
+            var totalRecords = Uow.PurchaseOrders.Count(purchaseOrderReq);
 
             return new PagingResponse<PurchaseOrderList>(totalRecords, purchaseOrderReq.Pageno, purchaseOrderReq.Pagesize)
             {
-                RowData = purchaseOrders,
+                RowData = list,
             };
-        }
-
-        public PurchaseOrder GetById(int pOId)
-        {
-            return Uow.PurchaseOrders.GetById(pOId);
         }
 
         public PurchaseOrderList? GetListById(int poId)
@@ -49,48 +45,8 @@ namespace KLS.Services
                 Id = poId
             };
 
-            return Uow.PurchaseOrders.GetAllPurchaseOrders(listReq).AsEnumerable().
+            return Uow.PurchaseOrders.GetPagedList(listReq).AsEnumerable().
                 FirstOrDefault();
-        }
-
-        public void UpdateNotes(int poId, string? notes)
-        {
-            Uow.PurchaseOrders.Find(c => c.POId == poId).ExecuteUpdate(setters => setters
-            .SetProperty(x => x.Notes, x => notes)
-            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
-        }
-
-        public void UpdateContainerNumber(PurchaseOrder purchaseOrder)
-        {
-            var existing = GetById(purchaseOrder.POId);
-
-            if (existing != null)
-            {
-                existing.ContainerNumber = purchaseOrder.ContainerNumber;
-                existing.UpdatedAt = DateTime.UtcNow;
-
-                Uow.PurchaseOrders.Update(existing);
-                Uow.Commit();
-            }
-        }
-
-        public void UpdateVendorDocNumber(PurchaseOrder purchaseOrder)
-        {
-            var existing = GetById(purchaseOrder.POId);
-
-            if (existing != null)
-            {
-                existing.VendorDocNumber = purchaseOrder.VendorDocNumber;
-                existing.UpdatedAt = DateTime.UtcNow;
-
-                Uow.PurchaseOrders.Update(existing);
-                Uow.Commit();
-            }
-        }
-
-        public void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq)
-        {
-            Uow.PurchaseOrders.InjectPurchaseOrder(injectReq);
         }
 
         public PurchaseOrderList? Checkout(PurchaseOrderCheckoutReq checkoutReq)
@@ -100,29 +56,29 @@ namespace KLS.Services
             return GetListById(poId);
         }
 
-        public void DeletePurchaseOrder(int poId)
+        public void Delete(int PurchaseId)
         {
-            var purchaseOrder = GetById(poId);
+            var purchase = Uow.Purchases.GetById(PurchaseId);
 
-            if (purchaseOrder != null && !purchaseOrder.PurchaseId.HasValue)
+            if (purchase != null && purchase.StageId == 1)
             {
-                Uow.PurchaseOrders.Find(c => c.POId == poId).ExecuteDelete();
+                Uow.Purchases.Find(c => c.PurchaseId == PurchaseId).ExecuteDelete();
 
                 string docType = EnumHelper.DocType.Purchase.ToString();
 
-                _deleteLogService.Add(docType, poId);
+                _deleteLogService.Add(docType, PurchaseId);
             }
         }
 
-        public void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq)
-        {
-            Uow.PurchaseOrders.SaveAdvancePayment(advancePaymentReq);
-        }
+        //public void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq)
+        //{
+        //    Uow.PurchaseOrders.SaveAdvancePayment(advancePaymentReq);
+        //}
 
-        public void DeleteAdvancePayment(int poId)
-        {
-            Uow.PurchaseOrders.DeleteAdvancePayment(poId);
-        }
+        //public void DeleteAdvancePayment(int poId)
+        //{
+        //    Uow.PurchaseOrders.DeleteAdvancePayment(poId);
+        //}
 
         public IEnumerable<PODetail> GetPODetail(int purchaseId)
         {
@@ -133,7 +89,7 @@ namespace KLS.Services
         {
             Uow.PurchaseOrders.CopyToBill(copyToBillReq);
 
-            return GetListById(copyToBillReq.POId);
+            return GetListById(copyToBillReq.PurchaseId);
         }
 
         public string PrintPO(int purchaseId)
@@ -160,6 +116,15 @@ namespace KLS.Services
             pdf.SaveAs(poFile);
 
             return filename;
+        }
+
+        public PurchaseOrderList? UpdateToBillStage(int purchaseId)
+        {
+            Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.StageId, x => 6)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+
+            return GetListById(purchaseId);
         }
     }
 }

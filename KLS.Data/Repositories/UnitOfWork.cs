@@ -98,7 +98,7 @@ namespace KLS.Data.Repositories
 
         public IPaymentOptionRepository PaymentOptions { get { return new PaymentOptionRepository(DbContext); } }
 
-        public IEmployeeAdvancePmtRepository EmployeeAdvancePmts { get { return new EmployeeAdvancePmtRepository(DbContext); } }
+        public IEmpAdvanceRepository EmpAdvances { get { return new EmpAdvanceRepository(DbContext); } }
 
         public IPayrollServiceRepository PayrollServices { get { return new PayrollServiceRepository(DbContext); } }
 
@@ -163,6 +163,8 @@ namespace KLS.Data.Repositories
         public IItemUnitRepository ItemUnits { get { return new ItemUnitRepository(DbContext); } }
 
         public IItemNameDetailRepository ItemNameDetails { get { return new ItemNameDetailRepository(DbContext); } }
+
+        public IUserLogRepository UserLogs { get { return new UserLogRepository(DbContext); } }
 
         public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
     }

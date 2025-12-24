@@ -9,14 +9,14 @@ namespace KLS.Contract.Services
 {
     public interface ITempTimesheetService
     {
-        IEnumerable<TempTimesheet>? GetTempTimesheetList(int timesheetId);
+        IEnumerable<TempTimesheet>? GetList(int timesheetId);
 
         TempTimesheet GetById(int tempId);
 
-        TempTimesheet CreateTempTimesheet(TempTimesheet tempTimesheet);
+        TempTimesheet Create(TempTimesheet tempTimesheet);
 
-        TempTimesheet UpdateTempTimesheet(TempTimesheet tempTimesheet);
+        TempTimesheet Update(TempTimesheet tempTimesheet);
 
-        void DeleteTempTimesheet(int tempId);
+        void Delete(int tempId);
     }
 }

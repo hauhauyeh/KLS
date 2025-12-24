@@ -16,11 +16,11 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<EmailLogDTO> GetEmailLogs(EmailLogReq emailLogReq)
+        public PagingResponse<EmailLogDTO> GetPagedList(EmailLogReq emailLogReq)
         {
-            var loglist = Uow.EmailLogs.GetEmailLogs(emailLogReq);
+            var loglist = Uow.EmailLogs.GetPagedList(emailLogReq);
 
-            var totalRecords = Uow.EmailLogs.CountAllEmailLogs(emailLogReq);
+            var totalRecords = Uow.EmailLogs.Count(emailLogReq);
 
             return new PagingResponse<EmailLogDTO>(totalRecords, emailLogReq.Pageno, emailLogReq.Pagesize)
             {

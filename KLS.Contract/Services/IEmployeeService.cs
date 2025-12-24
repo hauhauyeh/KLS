@@ -9,20 +9,20 @@ namespace KLS.Contract.Services
 {
     public interface IEmployeeService
     {
-        IEnumerable<EmployeeList> GetAllEmployees(EmpReq empReq);
+        IEnumerable<EmployeeList> GetPagedList(EmpReq empReq);
 
-        ICollection<EmployeeList> GetActiveEmployees();
+        ICollection<EmployeeList> GetActive();
 
         EmployeeDTO? GetById(int payeeId);
 
-        bool EmployeeExists(EmployeeDTO employeeDTO);
+        bool NameExists(EmployeeDTO employeeDTO);
 
-        EmployeeDTO CreateEmployee(EmployeeDTO employeeDTO);
+        EmployeeDTO Create(EmployeeDTO employeeDTO);
 
-        EmployeeDTO? UpdateEmployee(EmployeeDTO payee);
+        EmployeeDTO? Update(EmployeeDTO payee);
 
-        void DeleteEmployee(int payeeId);
+        void Delete(int payeeId);
 
-        IEnumerable<PayeeSearch>? SearchEmployee(PayeeSearchReq searchReq);
+        IEnumerable<PayeeSearch>? Search(PayeeSearchReq searchReq);
     }
 }

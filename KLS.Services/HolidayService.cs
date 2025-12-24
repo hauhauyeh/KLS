@@ -15,7 +15,7 @@ namespace KLS.Services
         {
         }
 
-        public IEnumerable<Holiday> GetAllHolidays()
+        public IEnumerable<Holiday> GetList()
         {
             return Uow.Holidays.GetAll().OrderByDescending(h => h.HolidayDate).ToList();
         }
@@ -31,7 +31,7 @@ namespace KLS.Services
             && c.HolidayDate.Value == holiday.HolidayDate.Value && c.HolidayId != holiday.HolidayId);
         }
 
-        public Holiday CreateHoliday(Holiday holiday)
+        public Holiday Create(Holiday holiday)
         {
             Uow.Holidays.Add(holiday);
             Uow.Commit();
@@ -39,7 +39,7 @@ namespace KLS.Services
             return holiday;
         }
 
-        public Holiday? UpdateHoliday(Holiday holiday)
+        public Holiday? Update(Holiday holiday)
         {
             var existing = GetById(holiday.HolidayId);
 
@@ -57,7 +57,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteHoliday(int holidayId)
+        public void Delete(int holidayId)
         {
             Uow.Holidays.RemoveById(holidayId);
             Uow.Commit();

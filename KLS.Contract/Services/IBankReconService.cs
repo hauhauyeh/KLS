@@ -9,18 +9,18 @@ namespace KLS.Contract.Services
 {
     public interface IBankReconService
     {
-        List<BankReconList> GetAllBankRecon();
+        List<BankReconList> GetList();
 
         BankRecon GetById(int bankReconId);
 
-        bool ExistsBankRecon(BankRecon bankRecon);
+        bool Exists(BankRecon bankRecon);
 
-        BankRecon CreateBankRecon(BankRecon bankRecon);
+        BankRecon Create(BankRecon bankRecon);
 
-        BankRecon? UpdateBankRecon(BankRecon bankRecon);
+        BankRecon? Update(BankRecon bankRecon);
 
         void UpdateNotes(BankRecon bankRecon);
 
-        void DeleteBankRecon(int bankReconId);
+        void Delete(int bankReconId);
     }
 }

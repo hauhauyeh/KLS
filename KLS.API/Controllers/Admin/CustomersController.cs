@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Customers")]
         public IActionResult List([FromQuery] CustomerListReq customerListReq)
         {
-            return Ok(_customerService.GetAllCustomers(customerListReq));
+            return Ok(_customerService.GetPagedList(customerListReq));
         }
 
 
@@ -48,10 +48,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create Customer")]
         public IActionResult Create([FromBody] CustomerDTO customerDTO)
         {
-            if (_customerService.CustomerExists(customerDTO))
+            if (_customerService.NameExists(customerDTO))
                 return Conflict("Customer name already exists.");
 
-            var created = _customerService.CreateCustomer(customerDTO);
+            var created = _customerService.Create(customerDTO);
 
             return Ok(created);
         }
@@ -61,10 +61,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update Customer")]
         public IActionResult Update([FromBody] CustomerDTO customerDTO)
         {
-            if (_customerService.CustomerExists(customerDTO))
+            if (_customerService.NameExists(customerDTO))
                 return Conflict("Customer name already exists.");
 
-            var created = _customerService.UpdateCustomer(customerDTO);
+            var created = _customerService.Update(customerDTO);
 
             return Ok(created);
         }
@@ -74,7 +74,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Customer")]
         public IActionResult Delete(int id)
         {
-            _customerService.DeleteCustomer(id);
+            _customerService.Delete(id);
 
             return Ok();
         }
@@ -83,7 +83,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("Search")]
         public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
         {
-            return Ok(_customerService.SearchCustomer(searchReq));
+            return Ok(_customerService.Search(searchReq));
         }
 
         #endregion

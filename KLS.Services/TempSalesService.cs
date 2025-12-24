@@ -17,17 +17,17 @@ namespace KLS.Services
         {
         }
 
-        public TempSalesItem CreateTempSales()
+        public TempSalesItem Create()
         {
             throw new NotImplementedException();
         }
 
-        public TempSalesItem UpdateTempSales()
+        public TempSalesItem Update()
         {
             throw new NotImplementedException();
         }
 
-        public void DeleteTempSales(int tempId)
+        public void Delete(int tempId)
         {
             var temp = Uow.TempSales.GetById(tempId);
 
@@ -46,7 +46,7 @@ namespace KLS.Services
             }
         }
 
-        public void ClearTempSales(TempSalesReq tempReq)
+        public void Clear(TempSalesReq tempReq)
         {
             Uow.TempSales.Find(c => c.EmpId == UserContext.EmpId && c.SalesId == tempReq.SalesId && c.PayeeId == tempReq.PayeeId).ExecuteDelete();
         }

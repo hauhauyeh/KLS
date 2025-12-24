@@ -20,15 +20,15 @@ namespace KLS.Services
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<PayrollServiceDTO> GetAllPayrollService(PayrollServiceReq payrollServiceReq)
+        public PagingResponse<PayrollServiceDTO> GetPagedList(PayrollServiceReq payrollServiceReq)
         {
-            var payrollServicelist = Uow.PayrollServices.GetAllPayrollService(payrollServiceReq);
+            var list = Uow.PayrollServices.GetPagedList(payrollServiceReq);
 
-            var totalRecords = Uow.PayrollServices.CountAllPayrollService(payrollServiceReq);
+            var totalRecords = Uow.PayrollServices.Count(payrollServiceReq);
 
             return new PagingResponse<PayrollServiceDTO>(totalRecords, payrollServiceReq.Pageno, payrollServiceReq.Pagesize)
             {
-                RowData = payrollServicelist,
+                RowData = list,
             };
         }
 
@@ -37,14 +37,14 @@ namespace KLS.Services
             return Uow.PayrollServices.GetById(payrollServiceId);
         }
 
-        public PayrollService SavePayrollService(PayrollService service)
+        public PayrollService Save(PayrollService service)
         {
-            var payrollServiceId = Uow.PayrollServices.SavePayrollService(service);
+            var payrollServiceId = Uow.PayrollServices.Save(service);
 
             return GetById(payrollServiceId);
         }
 
-        public void DeletePayrollService(int payrollServiceId)
+        public void Delete(int payrollServiceId)
         {
             var payrollService = GetById(payrollServiceId);
 
@@ -58,9 +58,9 @@ namespace KLS.Services
             }
         }
 
-        public void InjectPayrollService(int payrollServiceId, bool isClone)
+        public void Inject(int payrollServiceId, bool isClone)
         {
-            Uow.PayrollServices.InjectPayrollService(payrollServiceId, isClone);
+            Uow.PayrollServices.Inject(payrollServiceId, isClone);
         }
 
         public void InjectEmployee()

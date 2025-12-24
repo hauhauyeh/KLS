@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Timesheet List")]
         public IActionResult List([FromQuery] TimesheetReq timesheetReq)
         {
-            return Ok(_timesheetService.GetAllTimesheets(timesheetReq));
+            return Ok(_timesheetService.GetPagedList(timesheetReq));
         }
 
 
@@ -58,7 +58,7 @@ namespace KLS.API.Controllers.Admin
             if (_timesheetService.ValidateTime(timeSheet))
                 return Conflict("Out Time must be greater than In Time.");
 
-            return Ok(_timesheetService.SaveTimesheet(timeSheet));
+            return Ok(_timesheetService.Save(timeSheet));
         }
 
 
@@ -66,7 +66,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Timesheet")]
         public IActionResult Delete(int timesheetId)
         {
-            _timesheetService.DeleteTimesheet(timesheetId);
+            _timesheetService.Delete(timesheetId);
 
             return Ok();
         }
@@ -75,7 +75,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Inject/{timesheetId}")]
         public IActionResult Inject(int timesheetId, [FromQuery] bool isClone)
         {
-            _timesheetService.InjectTimesheet(timesheetId, isClone);
+            _timesheetService.Inject(timesheetId, isClone);
 
             return Ok();
         }

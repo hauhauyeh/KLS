@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class EmployeeAdvancePmt
+    public class EmpAdvance
     {
         [Key]
         public int VendorPaymentId { get; set; }

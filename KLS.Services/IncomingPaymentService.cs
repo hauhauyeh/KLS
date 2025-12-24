@@ -20,11 +20,11 @@ namespace KLS.Services
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<IncomingPaymentList> GetIncomingPayment(IncomingPaymentListReq incomingPaymentReq)
+        public PagingResponse<IncomingPaymentList> GetPagedList(IncomingPaymentListReq incomingPaymentReq)
         {
-            var incomingPaymenList = Uow.IncomingPayments.GetIncomingPayments(incomingPaymentReq);
+            var incomingPaymenList = Uow.IncomingPayments.GetPagedList(incomingPaymentReq);
 
-            var totalRecords = Uow.IncomingPayments.CountAllIncomingPayments(incomingPaymentReq);
+            var totalRecords = Uow.IncomingPayments.Count(incomingPaymentReq);
 
             return new PagingResponse<IncomingPaymentList>(totalRecords, incomingPaymentReq.Pageno, incomingPaymentReq.Pagesize)
             {
@@ -37,14 +37,14 @@ namespace KLS.Services
             return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.Payee).FirstOrDefault()!;
         }
 
-        public CustomerPayment SaveIncomingPayment(IncomingPaymentReq incomingPaymentReq)
+        public CustomerPayment Save(IncomingPaymentReq incomingPaymentReq)
         {
-            var newCustomerPaymentId = Uow.IncomingPayments.SaveIncomingPayment(incomingPaymentReq);
+            var newCustomerPaymentId = Uow.IncomingPayments.Save(incomingPaymentReq);
 
             return GetById(newCustomerPaymentId);
         }
 
-        public void DeleteIncomingPayment(int customerPaymentId)
+        public void Delete(int customerPaymentId)
         {
             var customerPayment = GetById(customerPaymentId);
 

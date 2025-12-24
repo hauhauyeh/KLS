@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Logs")]
         public IActionResult List()
         {
-            return Ok(_recalculationLogService.GetAllLogs());
+            return Ok(_recalculationLogService.GetList());
         }
 
         #endregion

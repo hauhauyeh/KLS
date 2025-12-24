@@ -9,10 +9,10 @@ namespace KLS.Contract.Interfaces
 {
     public interface IIncomingPaymentRepository : IRepository<CustomerPayment>
     {
-        IQueryable<IncomingPaymentList> GetIncomingPayments(IncomingPaymentListReq incomingPaymentReq);
+        IQueryable<IncomingPaymentList> GetPagedList(IncomingPaymentListReq incomingPaymentReq);
 
-        int CountAllIncomingPayments(IncomingPaymentListReq incomingPaymentReq);
+        int Count(IncomingPaymentListReq incomingPaymentReq);
 
-        int SaveIncomingPayment(IncomingPaymentReq incomingPaymentReq);
+        int Save(IncomingPaymentReq incomingPaymentReq);
     }
 }

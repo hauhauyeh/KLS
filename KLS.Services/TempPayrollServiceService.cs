@@ -17,7 +17,7 @@ namespace KLS.Services
 
         }
 
-        public ICollection<TempPayrollService> GetTempServiceList(int payrollServiceId)
+        public IEnumerable<TempPayrollService> GetList(int payrollServiceId)
         {
             var services = Uow.TempPayrollServices.Find(c => c.EmpId == UserContext.EmpId && c.PayrollServiceId == payrollServiceId).ToList();
 
@@ -26,9 +26,7 @@ namespace KLS.Services
                 var payee = Uow.Payees.GetById(temp.PayeeId);
 
                 if (payee != null)
-                {
                     temp.PayeeName = payee.PayeeName;
-                }
             }
 
             return services;

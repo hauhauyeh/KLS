@@ -39,7 +39,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<IVendorPaymentService, VendorPaymentService>();
             services.AddScoped<IPaymentOptionService, PaymentOptionService>();
-            services.AddScoped<IEmployeeAdvancePmtService, EmployeeAdvancePmtService>();
+            services.AddScoped<IEmpAdvanceService, EmpAdvanceService>();
             services.AddScoped<IPayrollServiceService, PayrollServiceService>();
             services.AddScoped<IPayrollServiceTypeService, PayrollServiceTypeService>();
             services.AddScoped<ITempPayrollServiceService, TempPayrollServiceService>();
@@ -71,6 +71,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IItemTagService, ItemTagService>();
             services.AddScoped<IItemUnitService, ItemUnitService>();
             services.AddScoped<IItemNameDetailService, ItemNameDetailService>();
+            services.AddScoped<IUserLogService, UserLogService>();
             services.AddScoped<IPDFService, PDFService>();
 
             return services;

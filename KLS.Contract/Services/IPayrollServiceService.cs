@@ -9,15 +9,15 @@ namespace KLS.Contract.Services
 {
     public interface IPayrollServiceService
     {
-        PagingResponse<PayrollServiceDTO> GetAllPayrollService(PayrollServiceReq payrollServiceReq);
+        PagingResponse<PayrollServiceDTO> GetPagedList(PayrollServiceReq payrollServiceReq);
 
         PayrollService GetById(int payrollServiceId);
 
-        PayrollService SavePayrollService(PayrollService payrollService);
+        PayrollService Save(PayrollService payrollService);
 
-        void DeletePayrollService(int payrollId);
+        void Delete(int payrollId);
 
-        void InjectPayrollService(int payrollServiceId, bool isClone);
+        void Inject(int payrollServiceId, bool isClone);
 
         void InjectEmployee();
     }

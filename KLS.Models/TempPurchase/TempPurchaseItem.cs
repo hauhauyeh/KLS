@@ -52,25 +52,7 @@ namespace KLS.Models
 
         public decimal? BillPrice { get; set; }
 
-        public decimal? BillExtTotal
-        {
-            get { return Utilities.Rounding(BillQty * BillPrice, 2); }
-            set { value = Utilities.Rounding(BillQty * BillPrice, 2); }
-        }
-
         public decimal? FinalPrice { get; set; }
-
-        public decimal? FinalExtTotal
-        {
-            get { return Utilities.Rounding(FinalQty * FinalPrice, 2); }
-            set { value = Utilities.Rounding(FinalQty * FinalPrice, 2); }
-        }
-
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? BaseReceiveQty { get; set; }
-
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? BaseFinalQty { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? FactorToBase { get; set; }
@@ -90,13 +72,18 @@ namespace KLS.Models
         public decimal? TariffPercent { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? DutySharePercent { get; set; }
+        public decimal? DutySharePercent { get; private set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? ItemVolume { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? VolumeSharePercent { get; set; }
+        public decimal? VolumeSharePercent { get; private set; }
+
+
+        public decimal? BillExtTotal => Utilities.Rounding((BillQty ?? 0m) * (BillPrice ?? 0m), 2);
+
+        public decimal? FinalExtTotal => Utilities.Rounding((FinalQty ?? 0m) * (FinalPrice ?? 0m), 2);
 
 
 
@@ -109,6 +96,9 @@ namespace KLS.Models
         public decimal? DutyPerCase { get; set; }
 
         public decimal? FreightPerCase { get; set; }
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? BaseFinalQty { get; set; }
 
         public decimal? WeightTotal { get { return Utilities.Rounding(BaseFinalQty * CaseWeight, 2); } }
 

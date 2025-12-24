@@ -30,57 +30,10 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List PurchaseOrders")]
+        [DisplayName("List PO")]
         public IActionResult List([FromQuery] PurchaseOrderReq purchaseOrderReq)
         {
-            return Ok(_purchaseOrderService.GetAllPurchaseOrders(purchaseOrderReq));
-        }
-
-
-        [HttpGet("{poId}")]
-        public IActionResult GetById(int poId)
-        {
-            var purchaseOrder = _purchaseOrderService.GetById(poId);
-
-            if (purchaseOrder == null)
-                return NotFound($"PurchaseOrder with Id {poId} not found.");
-
-            return Ok(purchaseOrder);
-        }
-
-
-        [HttpPost("UpdateNotes")]
-        public IActionResult UpdateNotes([FromBody] PurchaseOrder purchaseOrder)
-        {
-            _purchaseOrderService.UpdateNotes(purchaseOrder.POId, purchaseOrder.Notes);
-
-            return Ok();
-        }
-
-
-        [HttpPost("UpdateContainerNumber")]
-        public IActionResult UpdateContainerNumber([FromBody] PurchaseOrder purchaseOrder)
-        {
-            _purchaseOrderService.UpdateContainerNumber(purchaseOrder);
-
-            return Ok();
-        }
-
-
-        [HttpPost("UpdateVendorDocNumber")]
-        public IActionResult UpdateVendorDocNumber([FromBody] PurchaseOrder purchaseOrder)
-        {
-            _purchaseOrderService.UpdateVendorDocNumber(purchaseOrder);
-
-            return Ok();
-        }
-
-
-        [HttpPost("Inject")]
-        public IActionResult Inject([FromBody] PurchaseOrderInjectReq injectReq)
-        {
-            _purchaseOrderService.InjectPurchaseOrder(injectReq);
-            return Ok();
+            return Ok(_purchaseOrderService.GetPagedList(purchaseOrderReq));
         }
 
 
@@ -92,32 +45,32 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpDelete("{poId}")]
+        [HttpDelete("{purchaseId}")]
         [DisplayName("Delete PO")]
-        public IActionResult Delete(int poId)
+        public IActionResult Delete(int purchaseId)
         {
-            _purchaseOrderService.DeletePurchaseOrder(poId);
+            _purchaseOrderService.Delete(purchaseId);
 
             return Ok();
         }
 
 
-        [HttpPost("SaveAdvancePayment")]
-        [DisplayName("Save Advance Payment")]
-        public IActionResult SaveAdvancePayment([FromBody] POAdvancePaymentReq advancePaymentReq)
-        {
-            _purchaseOrderService.SaveAdvancePayment(advancePaymentReq);
-            return Ok();
-        }
+        //[HttpPost("SaveAdvancePayment")]
+        //[DisplayName("Save Advance Payment")]
+        //public IActionResult SaveAdvancePayment([FromBody] POAdvancePaymentReq advancePaymentReq)
+        //{
+        //    _purchaseOrderService.SaveAdvancePayment(advancePaymentReq);
+        //    return Ok();
+        //}
 
 
-        [HttpDelete("DeleteAdvancePayment/{poId}")]
-        [DisplayName("Delete Advance Payment")]
-        public IActionResult DeleteAdvancePayment(int poId)
-        {
-            _purchaseOrderService.DeleteAdvancePayment(poId);
-            return Ok();
-        }
+        //[HttpDelete("DeleteAdvancePayment/{poId}")]
+        //[DisplayName("Delete Advance Payment")]
+        //public IActionResult DeleteAdvancePayment(int poId)
+        //{
+        //    _purchaseOrderService.DeleteAdvancePayment(poId);
+        //    return Ok();
+        //}
 
 
         [HttpGet("GetPODetail/{purchaseId}")]
@@ -144,6 +97,13 @@ namespace KLS.API.Controllers.Admin
 
             var fileStream = new FileStream(poFilePath, FileMode.Open, FileAccess.Read);
             return File(fileStream, "application/pdf");
+        }
+
+
+        [HttpPut("UpdateToBillStage/{purchaseId}")]
+        public IActionResult UpdateToBillStage(int purchaseId)
+        {
+            return Ok(_purchaseOrderService.UpdateToBillStage(purchaseId));
         }
 
         #endregion

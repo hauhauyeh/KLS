@@ -35,14 +35,14 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Employees")]
         public IActionResult List([FromQuery] EmpReq empReq)
         {
-            return Ok(_employeeService.GetAllEmployees(empReq));
+            return Ok(_employeeService.GetPagedList(empReq));
         }
 
 
         [HttpGet("Active")]
         public IActionResult GetActive()
         {
-            return Ok(_employeeService.GetActiveEmployees());
+            return Ok(_employeeService.GetActive());
         }
 
 
@@ -62,13 +62,13 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create Employee")]
         public IActionResult Create([FromBody] EmployeeDTO employeeDTO)
         {
-            if (_employeeService.EmployeeExists(employeeDTO))
+            if (_employeeService.NameExists(employeeDTO))
                 return Conflict("Employee name already exists.");
 
             if (!string.IsNullOrEmpty(employeeDTO.Username) && _userService.UserNameExists(employeeDTO.Username, employeeDTO.PayeeId))
                 return Conflict("Username already exists");
 
-            var created = _employeeService.CreateEmployee(employeeDTO);
+            var created = _employeeService.Create(employeeDTO);
 
             return Ok(created);
         }
@@ -78,13 +78,13 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update Employee")]
         public IActionResult Update([FromBody] EmployeeDTO employeeDTO)
         {
-            if (_employeeService.EmployeeExists(employeeDTO))
+            if (_employeeService.NameExists(employeeDTO))
                 return Conflict("Employee name already exists.");
 
             if (!string.IsNullOrEmpty(employeeDTO.Username) && _userService.UserNameExists(employeeDTO.Username, employeeDTO.PayeeId))
                 return Conflict("Username already exists");
 
-            var updated = _employeeService.UpdateEmployee(employeeDTO);
+            var updated = _employeeService.Update(employeeDTO);
 
             return Ok(updated);
         }
@@ -94,7 +94,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Employee")]
         public IActionResult Delete(int id)
         {
-            _employeeService.DeleteEmployee(id);
+            _employeeService.Delete(id);
 
             return Ok();
         }
@@ -103,7 +103,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("Search")]
         public IActionResult Search([FromQuery] PayeeSearchReq searchReq)
         {
-            return Ok(_employeeService.SearchEmployee(searchReq));
+            return Ok(_employeeService.Search(searchReq));
         }
 
         #endregion

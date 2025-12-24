@@ -16,7 +16,7 @@ namespace KLS.Services
 
         }
 
-        public IQueryable<PaymentOption> GetAllPaymentOption()
+        public IEnumerable<PaymentOption> GetList()
         {
             return Uow.PaymentOptions.GetAll();
         }

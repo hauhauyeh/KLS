@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface ITempPayrollServiceService
     {
-        ICollection<TempPayrollService> GetTempServiceList(int payrollServiceId);
+        IEnumerable<TempPayrollService> GetList(int payrollServiceId);
 
         TempPayrollService Create(TempPayrollService tempService);
 

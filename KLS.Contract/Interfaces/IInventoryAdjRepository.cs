@@ -9,12 +9,12 @@ namespace KLS.Contract.Interfaces
 {
     public interface IInventoryAdjRepository : IRepository<InventoryAdj>
     {
-        IQueryable<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq);
+        IQueryable<InventoryAdjList> GetPagedList(InventoryAdjListReq inventoryAdjListReq);
 
-        int CountAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq);
+        int Count(InventoryAdjListReq inventoryAdjListReq);
 
-        int SaveInventoryAdj(InventoryAdj inventoryAdj);
+        int Save(InventoryAdj inventoryAdj);
 
-        void InjectInventoryAdj(int adjId);
+        void Inject(int adjId);
     }
 }

@@ -9,16 +9,16 @@ namespace KLS.Contract.Services
 {
     public interface IDocumentTemplateService
     {
-        IQueryable<DocumentTemplate> GetAllDocumentTemplate();
+        IEnumerable<DocumentTemplate> GetList();
 
         DocumentTemplate? GetById(int docTemplateId);
 
-        bool NameExists(DocumentTemplate documentTemplate);
+        bool Exists(DocumentTemplate documentTemplate);
 
-        DocumentTemplate CreateDocumentTemplate(DocumentTemplate documentTemplate);
+        DocumentTemplate Create(DocumentTemplate documentTemplate);
 
-        DocumentTemplate? UpdateDocumentTemplate(DocumentTemplate documentTemplate);
+        DocumentTemplate? Update(DocumentTemplate documentTemplate);
 
-        void DeleteDocumentTemplate(int docTemplateId);
+        void Delete(int docTemplateId);
     }
 }

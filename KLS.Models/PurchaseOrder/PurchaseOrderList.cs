@@ -13,48 +13,59 @@ namespace KLS.Models
         [Key]
         public int PurchaseId { get; set; }
 
-        //public int POId { get; set; }
-
-        //public int PONumber { get; set; }
-
         public int PurchaseNumber { get; set; }
+
+        public string? PayeeName { get; set; }
 
         public int? StageId { get; set; }
 
         public string? StageName { get; set; }
 
-        public int PayeeId { get; set; }
-
-        public string? VendorDocNumber { get; set; }
+        public int? PayeeId { get; set; }
 
         public DateOnly? PurchaseDate { get; set; }
 
-        public string? ContainerNumber { get; set; }
-
-        //public DateOnly? EstArrivalDate { get; set; }
+        public DateOnly? EnterDate { get; set; }
 
         public DateOnly? ArrivalDate { get; set; }
 
-        public string? PayeeName { get; set; }
+        public DateOnly? InvoiceDate { get; set; }
+
+        public string? VendorDocNumber { get; set; }
+
+        public string? ContainerNumber { get; set; }
 
         public decimal? VendorTotal { get; set; }
 
-        //public decimal? POTotal { get; set; }
-
         public decimal? PurchaseTotal { get; set; }
 
-        //public DateOnly? PaymentDate { get; set; }
-
-        //public string? PaymentMethod { get; set; }
-
-        //public int? FromAccountId { get; set; }
-
-        //public decimal? AdvanceTotal { get; set; }
+        public decimal? AmountDue { get; set; }
 
         public string? Notes { get; set; }
 
-        //public int? PurchaseId { get; set; }
+        public bool IsLocked { get; set; }
 
-        public bool IsPOCopyToBill { get; }
+        public bool IsNormalPurchase { get; set; }
+
+        public bool IsPayNow { get; set; }
+
+        public bool IsFreightOnly { get; set; }
+
+        public decimal? FreightTotal { get; set; }
+
+        public int? PalletCount { get; set; }
+
+        public decimal? ImportCommission { get; set; }
+
+        public decimal? CustomDutyTotal { get; set; }
+
+        public int? PaymentStatusId { get; set; }
+
+        public string? PaymentStatusName { get; set; }
+
+        public bool IsBillStage => StageId == 6;
+
+        [NotMapped]
+        public bool IsPdfExist { get; set; }
     }
 }

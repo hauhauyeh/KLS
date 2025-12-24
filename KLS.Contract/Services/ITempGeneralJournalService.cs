@@ -9,14 +9,14 @@ namespace KLS.Contract.Services
 {
     public interface ITempGeneralJournalService
     {
-        IEnumerable<TempGeneralJournalList>? GetTempGJList(TempGJReq tempGJReq);
+        IEnumerable<TempGeneralJournalList>? GetList(TempGJReq tempGJReq);
 
         TempGeneralJournal GetById(int tempGJId);
 
-        TempGeneralJournalList CreateTempGJ(TempGeneralJournal tempGJ);
+        TempGeneralJournalList Create(TempGeneralJournal tempGJ);
 
-        TempGeneralJournalList UpdateTempGJ(TempGeneralJournal tempGJ);
+        TempGeneralJournalList Update(TempGeneralJournal tempGJ);
 
-        void DeleteTempGJ(int tempGJId);
+        void Delete(int tempGJId);
     }
 }

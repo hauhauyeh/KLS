@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet]
         public IActionResult List()
         {
-            return Ok(_purchaseStageService.GetAllPurchaseStages());
+            return Ok(_purchaseStageService.GetList());
         }
 
         #endregion

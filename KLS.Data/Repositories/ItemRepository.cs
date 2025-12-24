@@ -19,17 +19,17 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<ItemList> GetAllItems(ItemListReq itemListReq)
+        public IQueryable<ItemList> GetPagedList(ItemListReq itemListReq)
         {
-            var param = BuildGetItemsParam(itemListReq);
+            var param = BuildParam(itemListReq);
 
             return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@Content,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllItems(ItemListReq itemListReq)
+        public int Count(ItemListReq itemListReq)
         {
             itemListReq.IsCount = true;
-            var param = BuildGetItemsParam(itemListReq);
+            var param = BuildParam(itemListReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@Content,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -37,7 +37,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildGetItemsParam(ItemListReq itemListReq)
+        private static object[] BuildParam(ItemListReq itemListReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", itemListReq.Pageno),
@@ -73,7 +73,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public IQueryable<ItemSearch>? SearchItem(ItemSearchReq searchReq)
+        public IQueryable<ItemSearch>? Search(ItemSearchReq searchReq)
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 
@@ -82,7 +82,7 @@ namespace KLS.Data.Repositories
             return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
         }
 
-        public void DeleteItem(int itemId)
+        public void Delete(int itemId)
         {
             var ItemIdParam = new SqlParameter("@ItemId", itemId);
 

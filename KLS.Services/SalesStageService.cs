@@ -16,7 +16,7 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<SalesStage> GetAllSalesStages()
+        public IEnumerable<SalesStage> GetList()
         {
             return Uow.SalesStages.GetAll();
         }

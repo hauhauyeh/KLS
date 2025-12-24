@@ -1,5 +1,4 @@
-﻿using KLS.Common;
-using KLS.Contract.Services;
+﻿using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,8 +27,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("login")]
         public IActionResult EmpLogin(LoginReq loginReq)
         {
-            var ipAddress = Utilities.GetIpAddress(HttpContext);
-            var result = _userService.LoginEmployee(loginReq, ipAddress);
+            var result = _userService.LoginEmployee(loginReq);
 
             if (!result.Success)
                 return Unauthorized(result.ErrorMessage);
@@ -38,7 +36,7 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("refreshtoken")]
+        [HttpPost("RefreshToken")]
         public IActionResult RefreshToken([FromBody] RefreshTokenReq tokenReq)
         {
             var result = _userService.RefreshToken(tokenReq);

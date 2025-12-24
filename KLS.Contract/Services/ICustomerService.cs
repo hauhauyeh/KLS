@@ -9,18 +9,18 @@ namespace KLS.Contract.Services
 {
     public interface ICustomerService
     {
-        PagingResponse<CustomerList> GetAllCustomers(CustomerListReq customerListReq);
+        PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq);
 
         CustomerDTO? GetById(int payeeId);
 
-        bool CustomerExists(CustomerDTO customerDTO);
+        bool NameExists(CustomerDTO customerDTO);
 
-        CustomerDTO CreateCustomer(CustomerDTO customerDTO);
+        CustomerDTO Create(CustomerDTO customerDTO);
 
-        CustomerDTO? UpdateCustomer(CustomerDTO customerDTO);
+        CustomerDTO? Update(CustomerDTO customerDTO);
 
-        void DeleteCustomer(int payeeId);
+        void Delete(int payeeId);
 
-        ICollection<PayeeSearch>? SearchCustomer(PayeeSearchReq searchReq);
+        ICollection<PayeeSearch>? Search(PayeeSearchReq searchReq);
     }
 }

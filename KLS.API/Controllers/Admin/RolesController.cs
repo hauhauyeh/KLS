@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Role")]
         public IActionResult List()
         {
-            return Ok(_roleService.GetAllRoles());
+            return Ok(_roleService.GetList());
         }
 
 
@@ -53,10 +53,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create Role")]
         public IActionResult Create([FromBody] SystemRole role)
         {
-            if (_roleService.RoleNameExists(role))
+            if (_roleService.NameExists(role))
                 return Conflict("Rolename already exists.");
 
-            var created = _roleService.CreateRole(role);
+            var created = _roleService.Create(role);
 
             return Ok(created);
         }
@@ -66,10 +66,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update Role")]
         public IActionResult Update([FromBody] SystemRole role)
         {
-            if (_roleService.RoleNameExists(role))
+            if (_roleService.NameExists(role))
                 return Conflict("Rolename already exists.");
 
-            var updated = _roleService.UpdateRole(role);
+            var updated = _roleService.Update(role);
 
             return Ok(updated);
         }
@@ -87,7 +87,7 @@ namespace KLS.API.Controllers.Admin
             if (_roleService.RoleUsed(roleId))
                 return Conflict("This Role can't be deleted as it is linked to an employee.");
 
-            _roleService.DeleteRole(roleId);
+            _roleService.Delete(roleId);
 
             return Ok();
         }

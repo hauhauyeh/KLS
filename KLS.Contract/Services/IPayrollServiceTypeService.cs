@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface IPayrollServiceTypeService
     {
-        IEnumerable<PayrollServiceType>? GetServiceTypes();
+        IEnumerable<PayrollServiceType>? GetList();
     }
 }

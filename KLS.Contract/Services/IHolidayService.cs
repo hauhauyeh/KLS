@@ -9,16 +9,16 @@ namespace KLS.Contract.Services
 {
     public interface IHolidayService
     {
-        IEnumerable<Holiday> GetAllHolidays();
+        IEnumerable<Holiday> GetList();
 
         Holiday? GetById(int holidayId);
 
         bool NameExists(Holiday holiday);
 
-        Holiday CreateHoliday(Holiday holiday);
+        Holiday Create(Holiday holiday);
 
-        Holiday? UpdateHoliday(Holiday holiday);
+        Holiday? Update(Holiday holiday);
 
-        void DeleteHoliday(int holidayId);
+        void Delete(int holidayId);
     }
 }

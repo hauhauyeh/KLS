@@ -1,6 +1,8 @@
-﻿using System;
+﻿using KLS.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,9 +40,28 @@ namespace KLS.Models
 
         public string? Notes { get; set; }
 
-        //public int NormalizedUnit { get; set; }
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? BaseFinalQty { get; set; }
 
         public string? ItemName { get; set; }
+
+        public decimal? CaseWeight { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? CaseVolumeInCubicMeter { get; set; }
+
+        public string? SetPacking { get; set; }
+
+        public string? ItemCode { get; set; }
+
+        public decimal? FinalTotal
+        {
+            get { return Utilities.Rounding(FinalQty * FinalPrice, 2); }
+        }
+
+        public decimal? WeightTotal { get { return Utilities.Rounding(BaseFinalQty * CaseWeight, 2); } }
+
+        public decimal? VolumeTotal { get { return Utilities.Rounding(BaseFinalQty * CaseVolumeInCubicMeter, 2); } }
 
         //Change filed Name and Data Type as per Item Table (Pending)
         //public int Weight { get; set; }

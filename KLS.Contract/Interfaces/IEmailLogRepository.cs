@@ -9,8 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface IEmailLogRepository : IRepository<EmailLog>
     {
-        IQueryable<EmailLogDTO> GetEmailLogs(EmailLogReq emailLogReq);
+        IQueryable<EmailLogDTO> GetPagedList(EmailLogReq emailLogReq);
 
-        int CountAllEmailLogs(EmailLogReq emailLogReq);
+        int Count(EmailLogReq emailLogReq);
     }
 }

@@ -20,14 +20,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<GeneralJournal> GetAllGeneralJournals(GJReq gJReq)
+        public IQueryable<GeneralJournal> GetPagedList(GJReq gJReq)
         {
             var param = BuildGJParam(gJReq);
 
             return DbContext.GeneralJournals.FromSqlRaw("[dbo].[GeneralJournal_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllGeneralJournals(GJReq gJReq)
+        public int Count(GJReq gJReq)
         {
             gJReq.IsCount = true;
             var param = BuildGJParam(gJReq);
@@ -38,7 +38,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        public int SaveGeneralJournal(GeneralJournal generalJournal)
+        public int Save(GeneralJournal generalJournal)
         {
             var GJIdParam = new SqlParameter("@GJId", generalJournal.GJId);
 
@@ -60,7 +60,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(NewGJId.Value);
         }
 
-        public void InjectGeneralJournal(int gjId, bool isClone)
+        public void Inject(int gjId, bool isClone)
         {
             var GJIdParam = new SqlParameter("@GJId", gjId);
 

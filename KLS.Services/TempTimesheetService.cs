@@ -18,7 +18,7 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<TempTimesheet>? GetTempTimesheetList(int timesheetId)
+        public IEnumerable<TempTimesheet>? GetList(int timesheetId)
         {
             return Uow.TempTimesheets.Find(c => c.EmpId == UserContext.EmpId && c.TimesheetId == timesheetId).Include(c => c.EmpJob);
         }
@@ -28,7 +28,7 @@ namespace KLS.Services
             return Uow.TempTimesheets.Find(c => c.TempTimesheetId == tempId).Include(c => c.EmpJob).FirstOrDefault()!;
         }
 
-        public TempTimesheet CreateTempTimesheet(TempTimesheet tempTimesheet)
+        public TempTimesheet Create(TempTimesheet tempTimesheet)
         {
             //--For timesheeet portal
             //if (tempTimesheet.EmpId == 0)
@@ -40,7 +40,7 @@ namespace KLS.Services
             return GetById(tempTimesheet.TempTimesheetId);
         }
 
-        public TempTimesheet UpdateTempTimesheet(TempTimesheet tempTimesheet)
+        public TempTimesheet Update(TempTimesheet tempTimesheet)
         {
             Uow.TempTimesheets.Update(tempTimesheet);
             Uow.Commit();
@@ -48,7 +48,7 @@ namespace KLS.Services
             return tempTimesheet;
         }
 
-        public void DeleteTempTimesheet(int tempId)
+        public void Delete(int tempId)
         {
             Uow.TempTimesheets.RemoveById(tempId);
             Uow.Commit();

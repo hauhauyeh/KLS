@@ -31,7 +31,7 @@ namespace KLS.API.Controllers.Admin
         [HttpDelete("{tempId}")]
         public IActionResult Delete(int tempId)
         {
-            _tempSalesService.DeleteTempSales(tempId);
+            _tempSalesService.Delete(tempId);
             return Ok();
         }
 
@@ -39,7 +39,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Clear")]
         public IActionResult Clear([FromBody] TempSalesReq tempReq)
         {
-            _tempSalesService.ClearTempSales(tempReq);
+            _tempSalesService.Clear(tempReq);
             return Ok();
         }
 

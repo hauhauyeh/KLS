@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Item")]
         public IActionResult List([FromQuery] ItemListReq itemListReq)
         {
-            return Ok(_itemService.GetAllItems(itemListReq));
+            return Ok(_itemService.GetPagedList(itemListReq));
         }
 
 
@@ -52,7 +52,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("Search")]
         public IActionResult Search([FromQuery] ItemSearchReq searchReq)
         {
-            return Ok(_itemService.SearchItem(searchReq));
+            return Ok(_itemService.Search(searchReq));
         }
 
 
@@ -60,7 +60,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Item")]
         public IActionResult Delete(int itemId)
         {
-            _itemService.DeleteItem(itemId);
+            _itemService.Delete(itemId);
             return Ok();
         }
 
@@ -83,7 +83,7 @@ namespace KLS.API.Controllers.Admin
             if (_itemService.ItemNameExists(item))
                 return Conflict("ItemName already exists");
 
-            return Ok(_itemService.SaveItem(item));
+            return Ok(_itemService.Save(item));
         }
 
 

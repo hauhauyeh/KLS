@@ -35,7 +35,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Transaction")]
         public IActionResult List([FromQuery] TxReq txReq)
         {
-            return Ok(_transactionService.GetAllTransactions(txReq));
+            return Ok(_transactionService.GetPagedList(txReq));
         }
 
 
@@ -49,7 +49,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("GetDocTypes")]
         public IActionResult GetDocTypes()
         {
-            return Ok(_docTypeService.GetAllDocTypes());
+            return Ok(_docTypeService.GetList());
         }
 
         #endregion

@@ -16,7 +16,7 @@ namespace KLS.Services
 
         }
 
-        public ICollection<EmpJob> GetAllJobs()
+        public ICollection<EmpJob> GetList()
         {
             return Uow.EmpJobs.GetAll().OrderBy(c => c.Inactive).ThenBy(c => c.JobId).ToList();
         }

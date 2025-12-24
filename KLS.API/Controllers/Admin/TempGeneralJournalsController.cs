@@ -31,9 +31,9 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        public IActionResult GetTempGJList([FromQuery] TempGJReq tempGJReq)
+        public IActionResult List([FromQuery] TempGJReq tempGJReq)
         {
-            return Ok(_tempGJService.GetTempGJList(tempGJReq));
+            return Ok(_tempGJService.GetList(tempGJReq));
         }
 
 
@@ -43,21 +43,21 @@ namespace KLS.API.Controllers.Admin
             if (_accountService.CheckAccount(tempGJ.AccountId.ToString()?? "") == null)
                 return Conflict("Account is not found");
 
-            return Ok(_tempGJService.CreateTempGJ(tempGJ));
+            return Ok(_tempGJService.Create(tempGJ));
         }
 
 
         [HttpPut]
         public IActionResult Update([FromBody] TempGeneralJournal tempGJ)
         {
-            return Ok(_tempGJService.UpdateTempGJ(tempGJ));
+            return Ok(_tempGJService.Update(tempGJ));
         }
 
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            _tempGJService.DeleteTempGJ(id);
+            _tempGJService.Delete(id);
             return Ok();
         }
 

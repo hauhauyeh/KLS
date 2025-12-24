@@ -18,11 +18,11 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<SalesList> GetAllSales(SalesListReq salesListReq)
+        public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
         {
-            var sales = Uow.Sales.GetAllSales(salesListReq);
+            var sales = Uow.Sales.GetPagedList(salesListReq);
 
-            var totalRecords = Uow.Sales.CountAllSales(salesListReq);
+            var totalRecords = Uow.Sales.Count(salesListReq);
 
             // Get absolute path to wwwroot/InvoicePdf
             var invoicePDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "InvoicePdf");
@@ -93,7 +93,7 @@ namespace KLS.Services
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
-        public void DeleteSales(int salesId)
+        public void Delete(int salesId)
         {
             var sales = Uow.Sales.GetById(salesId);
 

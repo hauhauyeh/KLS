@@ -23,14 +23,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PayrollList> GetAllPayrolls(PayrollReq payrollReq)
+        public IQueryable<PayrollList> GetPagedList(PayrollReq payrollReq)
         {
             var param = BuildPayrollParam(payrollReq);
 
             return DbContext.PayrollList.FromSqlRaw("[dbo].[Payroll_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllPayrolls(PayrollReq payrollReq)
+        public int Count(PayrollReq payrollReq)
         {
             payrollReq.IsCount = true;
             var param = BuildPayrollParam(payrollReq);
@@ -75,7 +75,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq)
+        public void InjectEmp(PayrollInjectEmpReq injectEmpReq)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
@@ -86,7 +86,7 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_InjectEmp] @EmpId,@PayOption,@PayDate", EmpIdParam, PayOptionParam, PayDateParam);
         }
 
-        public void InjectPayroll(int vendorPaymentId)
+        public void Inject(int vendorPaymentId)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 

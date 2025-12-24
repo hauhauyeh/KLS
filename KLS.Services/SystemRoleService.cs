@@ -20,7 +20,7 @@ namespace KLS.Services
         {
         }
 
-        public IEnumerable<SystemRole> GetAllRoles()
+        public IEnumerable<SystemRole> GetList()
         {
             return Uow.SystemRoles
                       .GetAll()
@@ -33,14 +33,14 @@ namespace KLS.Services
             return Uow.SystemRoles.GetById(roleId);
         }
 
-        public bool RoleNameExists(SystemRole role)
+        public bool NameExists(SystemRole role)
         {
             return Uow.SystemRoles.Exists(r =>
                 r.RoleName!.ToLower() == role.RoleName!.ToLower() &&
                 r.SystemRoleId != role.SystemRoleId);
         }
 
-        public SystemRole CreateRole(SystemRole role)
+        public SystemRole Create(SystemRole role)
         {
             var cloneRole = GetById(role.CloneId);
 
@@ -53,7 +53,7 @@ namespace KLS.Services
             return role;
         }
 
-        public SystemRole? UpdateRole(SystemRole role)
+        public SystemRole? Update(SystemRole role)
         {
             var existing = GetById(role.SystemRoleId);
 
@@ -73,7 +73,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteRole(int roleId)
+        public void Delete(int roleId)
         {
             Uow.SystemRoles.RemoveById(roleId);
             Uow.Commit();

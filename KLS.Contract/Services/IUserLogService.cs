@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLS.Models
+namespace KLS.Contract.Services
 {
-    public class EmployeeAdvancePmtReq : PagingRequest
+    public interface IUserLogService
     {
-        public int? PayeeId { get; set; }
+        void Create(int payeeId);
     }
 }

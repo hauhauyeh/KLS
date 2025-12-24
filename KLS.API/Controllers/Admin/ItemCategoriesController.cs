@@ -35,7 +35,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Category")]
         public IActionResult List()
         {
-            return Ok(_itemCategoryService.GetAllCategoryTree());
+            return Ok(_itemCategoryService.GetTree());
         }
 
 
@@ -60,7 +60,7 @@ namespace KLS.API.Controllers.Admin
             if (_itemCategoryService.NameExists(itemCategory))
                 return Conflict("Category already exists");
 
-            var newcat = _itemCategoryService.CreateCategory(itemCategory);
+            var newcat = _itemCategoryService.Create(itemCategory);
 
             _itemCategoryService.SaveImage(newcat, Request);
 
@@ -75,7 +75,7 @@ namespace KLS.API.Controllers.Admin
             if (_itemCategoryService.NameExists(itemCategory))
                 return Conflict("Category already exists");
 
-            var newcat = _itemCategoryService.UpdateCategory(itemCategory);
+            var newcat = _itemCategoryService.Update(itemCategory);
 
             _itemCategoryService.SaveImage(newcat, Request);
 
@@ -87,7 +87,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Category")]
         public IActionResult Delete(int id)
         {
-            _itemCategoryService.DeleteCategory(id);
+            _itemCategoryService.Delete(id);
 
             return Ok();
         }

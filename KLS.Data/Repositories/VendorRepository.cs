@@ -19,17 +19,17 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<VendorList> GetVendors(VendorListReq vendorListReq)
+        public IQueryable<VendorList> GetPagedList(VendorListReq vendorListReq)
         {
-            var param = BuildVendorsParam(vendorListReq);
+            var param = BuildParam(vendorListReq);
 
             return DbContext.VendorList.FromSqlRaw("[dbo].[Vendor_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllVendors(VendorListReq vendorListReq)
+        public int Count(VendorListReq vendorListReq)
         {
             vendorListReq.IsCount = true;
-            var param = BuildVendorsParam(vendorListReq);
+            var param = BuildParam(vendorListReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[Vendor_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -37,7 +37,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildVendorsParam(VendorListReq vendorListReq)
+        private static object[] BuildParam(VendorListReq vendorListReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", vendorListReq.Pageno),
@@ -63,7 +63,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public IQueryable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq)
+        public IQueryable<VendorSearchDTO>? Search(PayeeSearchReq searchReq)
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 

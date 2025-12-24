@@ -15,7 +15,7 @@ namespace KLS.Services
         {
         }
 
-        public IEnumerable<SourceDocType>? GetAllDocTypes()
+        public IEnumerable<SourceDocType>? GetList()
         {
             return Uow.SourceDocTypes.GetAll();
         }

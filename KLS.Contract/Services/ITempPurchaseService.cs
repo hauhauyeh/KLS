@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.Common;
+using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,16 +10,16 @@ namespace KLS.Contract.Services
 {
     public interface ITempPurchaseService
     {
-        IEnumerable<TempPurchaseItem>? GetTempPurchaseItems(TempPurchaseReq tempReq);
+        IEnumerable<TempPurchaseItem>? GetList(TempPurchaseReq tempReq);
 
-        TempPurchaseItem CreateTempPurchase(TempPurchaseItem tempPurchase);
+        TempPurchaseItem Create(TempPurchaseItem tempPurchase, EnumHelper.PurchaseDocType docType);
 
-        TempPurchaseItem UpdateTempPurchase(TempPurchaseItem tempPurchase);
+        TempPurchaseItem Update(TempPurchaseItem tempPurchase, EnumHelper.PurchaseDocType docType);
 
         TempPurchaseItem UpdateUnit(TempPurchaseItem tempPurchase);
 
-        void DeleteTempPurchase(int tempId);
+        void Delete(int tempId);
 
-        void ClearTempPurchase(TempPurchaseReq tempReq);
+        void Clear(TempPurchaseReq tempReq);
     }
 }

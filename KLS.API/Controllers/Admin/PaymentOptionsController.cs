@@ -29,7 +29,7 @@ namespace KLS.API.Controllers.Admin
         [HttpGet]
         public IActionResult List()
         {
-            return Ok(_paymentOptionService.GetAllPaymentOption());
+            return Ok(_paymentOptionService.GetList());
         }
 
         #endregion

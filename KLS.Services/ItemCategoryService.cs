@@ -28,7 +28,7 @@ namespace KLS.Services
             return Uow.ItemCategories.GetAll().OrderBy(c => c.CategoryName);
         }
 
-        public IEnumerable<ItemCategory> GetAllCategoryTree()
+        public IEnumerable<ItemCategory> GetTree()
         {
             var category = Uow.ItemCategories.GetAll().OrderBy(c => c.CategoryName).ToList();
 
@@ -61,7 +61,7 @@ namespace KLS.Services
             return Uow.ItemCategories.Exists(c => c.CategoryName == itemCategory.CategoryName && c.CategoryId != itemCategory.CategoryId);
         }
 
-        public ItemCategory CreateCategory(ItemCategory itemCategory)
+        public ItemCategory Create(ItemCategory itemCategory)
         {
             itemCategory.Slug = SlugHelper.GenerateSlug(itemCategory.DisplayName);
 
@@ -71,7 +71,7 @@ namespace KLS.Services
             return itemCategory;
         }
 
-        public ItemCategory UpdateCategory(ItemCategory itemCategory)
+        public ItemCategory Update(ItemCategory itemCategory)
         {
             var existing = GetById(itemCategory.CategoryId);
 
@@ -99,7 +99,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteCategory(int categoryId)
+        public void Delete(int categoryId)
         {
             Uow.ItemCategories.RemoveById(categoryId);
             Uow.Commit();

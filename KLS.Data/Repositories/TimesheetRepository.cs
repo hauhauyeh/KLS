@@ -18,7 +18,7 @@ namespace KLS.Data.Repositories
         {
         }
 
-        public int SaveTimesheet(Timesheet timeSheet)
+        public int Save(Timesheet timeSheet)
         {
             var TimesheetIdParam = new SqlParameter("@TimesheetId", timeSheet.TimesheetId);
 
@@ -44,7 +44,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(NewTimesheetId.Value);
         }
 
-        public void InjectTimesheet(int timesheetId, bool isClone)
+        public void Inject(int timesheetId, bool isClone)
         {
             var TimesheetIdParam = new SqlParameter("@TimesheetId", timesheetId);
 

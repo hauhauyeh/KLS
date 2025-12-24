@@ -17,12 +17,12 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<Term> GetAllTerms()
+        public IEnumerable<Term> GetList()
         {
             return Uow.Terms.GetAll().OrderBy(c => c.TermName);
         }
 
-        public IEnumerable<Term> GetActiveTerms()
+        public IEnumerable<Term> GetActive()
         {
             return Uow.Terms.Find(c => c.Inactive == false).OrderBy(c => c.TermName);
         }
@@ -32,7 +32,7 @@ namespace KLS.Services
             return Uow.Terms.GetById(termId);
         }
 
-        public bool ExistsName(Term term)
+        public bool NameExists(Term term)
         {
             return Uow.Terms.Exists(c => c.TermName.ToLower() == term.TermName.ToLower() && c.TermId != term.TermId);
         }
@@ -43,9 +43,9 @@ namespace KLS.Services
             return Uow.Payees.Exists(c => c.TermId == term.TermId);
         }
 
-        public Term CreateTerm(Term term)
+        public Term Create(Term term)
         {
-            if (ExistsName(term))
+            if (NameExists(term))
                 throw new DuplicateNameException("Term name already exists.");
 
             Uow.Terms.Add(term);
@@ -54,12 +54,12 @@ namespace KLS.Services
             return term;
         }
 
-        public Term? UpdateTerm(Term term)
+        public Term? Update(Term term)
         {
             var existing = GetById(term.TermId);
             if (existing == null) return null;
 
-            if (ExistsName(term))
+            if (NameExists(term))
                 throw new DuplicateNameException("Term name already exists.");
 
             // name uniqueness check stays in service
@@ -71,7 +71,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteTerm(int termId)
+        public void Delete(int termId)
         {
             if (TermUsed(termId))
                 throw new DuplicateNameException("You can't delete this term because it is assigned to a payee.");

@@ -36,7 +36,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Payroll Service")]
         public IActionResult List([FromQuery] PayrollServiceReq payrollServiceReq)
         {
-            return Ok(_payrollService.GetAllPayrollService(payrollServiceReq));
+            return Ok(_payrollService.GetPagedList(payrollServiceReq));
         }
 
 
@@ -58,7 +58,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Save Payroll Service")]
         public IActionResult Save([FromBody] PayrollService payrollService)
         {
-            return Ok(_payrollService.SavePayrollService(payrollService));
+            return Ok(_payrollService.Save(payrollService));
         }
 
 
@@ -66,7 +66,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Payroll Service")]
         public IActionResult Delete(int payrollId)
         {
-            _payrollService.DeletePayrollService(payrollId);
+            _payrollService.Delete(payrollId);
             return Ok();
         }
 
@@ -74,7 +74,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Inject/{payrollServiceId}")]
         public IActionResult Inject(int payrollServiceId, [FromQuery] bool isClone)
         {
-            _payrollService.InjectPayrollService(payrollServiceId, isClone);
+            _payrollService.Inject(payrollServiceId, isClone);
 
             return Ok();
         }

@@ -19,7 +19,7 @@ namespace KLS.Data.Repositories
         {
         }
 
-        public IQueryable<EmployeeList> GetAllEmployees(EmpReq empReq)
+        public IQueryable<EmployeeList> GetPagedList(EmpReq empReq)
         {
             var param = BuildEmployeesParam(empReq);
 
@@ -42,7 +42,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public IQueryable<PayeeSearch>? SearchEmployee(PayeeSearchReq searchReq)
+        public IQueryable<PayeeSearch>? Search(PayeeSearchReq searchReq)
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 

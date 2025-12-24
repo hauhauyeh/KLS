@@ -9,18 +9,16 @@ namespace KLS.Contract.Services
 {
     public interface IItemStorageService
     {
-        IEnumerable<ItemStorage>? GetAllStorages();
-
-        //IEnumerable<ItemStorageTree> GetAllStorageTree();
+        IEnumerable<ItemStorage>? GetList();
 
         ItemStorage GetById(int id);
 
         bool NameExists(ItemStorage itemStorage);
 
-        ItemStorage CreateItemStorage(ItemStorage itemStorage);
+        ItemStorage Create(ItemStorage itemStorage);
 
-        ItemStorage UpdateItemStorage(ItemStorage itemStorage);
+        ItemStorage Update(ItemStorage itemStorage);
 
-        void DeleteItemStorage(int storageId);
+        void Delete(int storageId);
     }
 }

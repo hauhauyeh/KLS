@@ -36,7 +36,7 @@ namespace KLS.API.Controllers.Timesheet
         [HttpPost("Inject/{timesheetId}")]
         public IActionResult Inject(int timesheetId, [FromQuery] bool isClone)
         {
-            _timesheetService.InjectTimesheet(timesheetId, isClone);
+            _timesheetService.Inject(timesheetId, isClone);
 
             return Ok();
         }

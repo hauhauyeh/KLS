@@ -1,10 +1,8 @@
-﻿using KLS.Common;
-using KLS.Contract.Interfaces;
+﻿using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,17 +18,17 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<IncomingPaymentList> GetIncomingPayments(IncomingPaymentListReq incomingPaymentReq)
+        public IQueryable<IncomingPaymentList> GetPagedList(IncomingPaymentListReq incomingPaymentReq)
         {
-            var param = BuildIncomingPaymentsParam(incomingPaymentReq);
+            var param = BuildParam(incomingPaymentReq);
 
             return DbContext.IncomingPaymentList.FromSqlRaw("[dbo].[IncomingPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllIncomingPayments(IncomingPaymentListReq incomingPaymentReq)
+        public int Count(IncomingPaymentListReq incomingPaymentReq)
         {
             incomingPaymentReq.IsCount = true;
-            var param = BuildIncomingPaymentsParam(incomingPaymentReq);
+            var param = BuildParam(incomingPaymentReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[IncomingPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -38,7 +36,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildIncomingPaymentsParam(IncomingPaymentListReq incomingPaymentReq)
+        private static object[] BuildParam(IncomingPaymentListReq incomingPaymentReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", incomingPaymentReq.Pageno),
@@ -70,7 +68,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public int SaveIncomingPayment(IncomingPaymentReq incomingPaymentReq)
+        public int Save(IncomingPaymentReq incomingPaymentReq)
         {
             var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", incomingPaymentReq.CustomerPaymentId);
 

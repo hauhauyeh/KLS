@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List BankRecon")]
         public IActionResult List()
         {
-            return Ok(_bankReconService.GetAllBankRecon());
+            return Ok(_bankReconService.GetList());
         }
 
 
@@ -48,10 +48,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create BankRecon")]
         public IActionResult Create([FromBody] BankRecon bankRecon)
         {
-            if (_bankReconService.ExistsBankRecon(bankRecon))
+            if (_bankReconService.Exists(bankRecon))
                 return Conflict("You can only Reconciliation further statement date.");
 
-            return Ok(_bankReconService.CreateBankRecon(bankRecon));
+            return Ok(_bankReconService.Create(bankRecon));
         }
 
 
@@ -59,10 +59,10 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update BankRecon")]
         public IActionResult Update([FromBody] BankRecon bankRecon)
         {
-            if (_bankReconService.ExistsBankRecon(bankRecon))
+            if (_bankReconService.Exists(bankRecon))
                 return Conflict("You can only Reconciliation further statement date.");
 
-            return Ok(_bankReconService.UpdateBankRecon(bankRecon));
+            return Ok(_bankReconService.Update(bankRecon));
         }
 
 
@@ -79,10 +79,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete BankRecon")]
         public IActionResult Delete(int id)
         {
-            //if (_truckService.TermUsed(id))
-            //    return Conflict("You can't delete. it is assigned to payee.");
-
-            _bankReconService.DeleteBankRecon(id);
+            _bankReconService.Delete(id);
 
             return Ok();
         }

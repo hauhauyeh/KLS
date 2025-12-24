@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface IPurchaseService
     {
-        PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq);
+        PagingResponse<PurchaseList> GetPagedList(PurchaseListReq purchaseListReq);
 
         Purchase GetById(int purchaseId);
 
@@ -31,9 +31,9 @@ namespace KLS.Contract.Services
 
         PurchaseList? UpdatePartially(int purchaseId);
 
-        void InjectPurchase(PurchaseInjectReq injectReq);
+        void Inject(PurchaseInjectReq injectReq);
 
-        void DeletePurchase(int purchaseId);
+        void Delete(int purchaseId);
 
         void UploadBillPDF(PDFUploadReq pdfUploadReq);
     }

@@ -9,11 +9,11 @@ namespace KLS.Contract.Interfaces
 {
     public interface IPurchaseOrderRepository : IRepository<PurchaseOrder>
     {
-        IQueryable<PurchaseOrderList> GetAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq);
+        IQueryable<PurchaseOrderList> GetPagedList(PurchaseOrderReq purchaseOrderReq);
 
-        int CountAllPurchaseOrders(PurchaseOrderReq purchaseOrderReq);
+        int Count(PurchaseOrderReq purchaseOrderReq);
 
-        void InjectPurchaseOrder(PurchaseOrderInjectReq injectReq);
+        void Inject(PurchaseOrderInjectReq injectReq);
 
         int Checkout(PurchaseOrderCheckoutReq checkoutReq);
 

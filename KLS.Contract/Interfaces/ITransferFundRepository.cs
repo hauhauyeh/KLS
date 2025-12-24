@@ -9,16 +9,16 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITransferFundRepository : IRepository<TransferFund>
     {
-        IQueryable<TransferFundList> GetAllTransferFunds(TFReq tFReq);
+        IQueryable<TransferFundList> GetPagedTransferFunds(TFReq tFReq);
 
-        int CountAllTransferFunds(TFReq tFReq);
+        int CountTransferFunds(TFReq tFReq);
 
         int SaveTransferFund(TransferFund transferFund);
 
 
-        IQueryable<DepositList> GetAllDeposits(DepositReq depositReq);
+        IQueryable<DepositList> GetPagedDeposits(DepositReq depositReq);
 
-        int CountAllDeposits(DepositReq depositReq);
+        int CountDeposits(DepositReq depositReq);
 
         int SaveDeposit(TransferFund transferFund);
 

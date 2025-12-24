@@ -9,18 +9,18 @@ namespace KLS.Contract.Services
 {
     public interface ITruckService
     {
-        IQueryable<Truck> GetAllTrucks();
+        IEnumerable<Truck> GetList();
 
-        ICollection<Truck> GetActiveTrucks();
+        IEnumerable<Truck> GetActive();
 
         Truck GetById(int id);
 
         bool ExistsNumber(Truck truck);
 
-        Truck CreateTruck(Truck truck);
+        Truck Create(Truck truck);
 
-        Truck? UpdateTruck(Truck truck);
+        Truck? Update(Truck truck);
 
-        void DeleteTruck(int truckId);
+        void Delete(int truckId);
     }
 }

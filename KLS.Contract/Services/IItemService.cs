@@ -9,15 +9,15 @@ namespace KLS.Contract.Services
 {
     public interface IItemService
     {
-        PagingResponse<ItemList> GetAllItems(ItemListReq itemListReq);
+        PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq);
 
         Item? GetById(int itemId);
 
         Item? GetBySearch(string itemCode);
 
-        IEnumerable<ItemSearch>? SearchItem(ItemSearchReq searchReq);
+        IEnumerable<ItemSearch>? Search(ItemSearchReq searchReq);
 
-        void DeleteItem(int itemId);
+        void Delete(int itemId);
 
         void Inactive(int itemId);
 
@@ -25,7 +25,7 @@ namespace KLS.Contract.Services
 
         bool ItemNameExists(Item item);
 
-        Item? SaveItem(Item item);
+        Item? Save(Item item);
 
         IEnumerable<ItemCalcUnit> GetCalcUnit(ItemPackingReq packingReq);
 

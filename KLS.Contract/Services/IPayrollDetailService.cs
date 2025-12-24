@@ -10,15 +10,15 @@ namespace KLS.Contract.Services
 {
     public interface IPayrollDetailService
     {
-        PagingResponse<PayrollList> GetAllPayrolls(PayrollReq payrollDetailReq);
+        PagingResponse<PayrollList> GetPagedList(PayrollReq payrollReq);
 
-        void InjectPayrollEmp(PayrollInjectEmpReq injectEmpReq);
+        void InjectEmp(PayrollInjectEmpReq injectEmpReq);
 
-        void InjectPayroll(int vendorPaymentId);
+        void Inject(int vendorPaymentId);
 
-        void DeletePayroll(int vendorPaymentId);
+        void Delete(int vendorPaymentId);
 
-        ImportPayrollResp Import(IFormFile PayrollFile);
+        ImportPayrollResp Import(IFormFile payrollFile);
 
         void VoidCheck(int vendorPaymentId);
     }

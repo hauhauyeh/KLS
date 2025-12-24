@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITempGeneralJournalRepository : IRepository<TempGeneralJournal>
     {
-        IQueryable<TempGeneralJournalList>? GetTempGJList(TempGJReq tempGJReq);
+        IQueryable<TempGeneralJournalList>? GetList(TempGJReq tempGJReq);
     }
 }

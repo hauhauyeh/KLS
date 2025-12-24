@@ -19,17 +19,17 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
+        public IQueryable<PurchaseList> GetPagedList(PurchaseListReq purchaseListReq)
         {
-            var param = BuildPurchaseParam(purchaseListReq);
+            var param = BuildParam(purchaseListReq);
 
             return DbContext.PurchaseList.FromSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllPurchase(PurchaseListReq purchaseListReq)
+        public int Count(PurchaseListReq purchaseListReq)
         {
             purchaseListReq.IsCount = true;
-            var param = BuildPurchaseParam(purchaseListReq);
+            var param = BuildParam(purchaseListReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -37,7 +37,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        public void InjectPurchase(PurchaseInjectReq injectReq)
+        public void Inject(PurchaseInjectReq injectReq)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
@@ -136,7 +136,9 @@ namespace KLS.Data.Repositories
 
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            DbContext.Database.ExecuteSqlRaw("[Purchase_PartialUpdate] @PurchaseId,@EmpId", PurchaseIdParam, EmpIdParam);
+            var IsBillParam = new SqlParameter("@IsBill", true);
+
+            DbContext.Database.ExecuteSqlRaw("[Purchase_PartialUpdate] @PurchaseId,@EmpId,@IsBill", PurchaseIdParam, EmpIdParam, IsBillParam);
         }
 
         public void FreightBillLink(int purchaseId)
@@ -146,7 +148,7 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Purchase_FreightBillLink] @PurchaseId", PurchaseIdParam);
         }
 
-        private static object[] BuildPurchaseParam(PurchaseListReq purchaseListReq)
+        private static object[] BuildParam(PurchaseListReq purchaseListReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", purchaseListReq.Pageno),

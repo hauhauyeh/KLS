@@ -35,7 +35,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Order Manager")]
         public IActionResult List([FromQuery] SalesListReq salesListReq)
         {
-            return Ok(_salesService.GetAllSales(salesListReq));
+            return Ok(_salesService.GetPagedList(salesListReq));
         }
 
 
@@ -81,7 +81,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Sales")]
         public IActionResult Delete(int salesId)
         {
-            _salesService.DeleteSales(salesId);
+            _salesService.Delete(salesId);
             return Ok();
         }
 

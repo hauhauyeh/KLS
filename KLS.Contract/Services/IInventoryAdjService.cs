@@ -9,15 +9,15 @@ namespace KLS.Contract.Services
 {
     public interface IInventoryAdjService
     {
-        PagingResponse<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq);
+        PagingResponse<InventoryAdjList> GetPagedList(InventoryAdjListReq inventoryAdjListReq);
 
         InventoryAdj GetById(int adjId);
 
-        IEnumerable<InventoryAdjList> SaveInventoryAdj(InventoryAdj inventoryAdj);
+        IEnumerable<InventoryAdjList> Save(InventoryAdj inventoryAdj);
 
-        void InjectInventoryAdj(int adjId);
+        void Inject(int adjId);
 
-        void DeleteInventoryAdj(int adjId);
+        void Delete(int adjId);
 
         void UpdateNotes(InventoryAdj inventoryAdj);
 

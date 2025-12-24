@@ -9,16 +9,16 @@ namespace KLS.Contract.Services
 {
     public interface IGeneralJournalService
     {
-        PagingResponse<GeneralJournal> GetAllGeneralJournals(GJReq gjReq);
+        PagingResponse<GeneralJournal> GetPagedList(GJReq gjReq);
 
         GeneralJournal GetById(int gjId);
 
-        GeneralJournal SaveGeneralJournal(GeneralJournal generalJournal);
+        GeneralJournal Save(GeneralJournal generalJournal);
 
-        void DeleteGeneralJournal(int gjId);
+        void Delete(int gjId);
 
         void UpdateNotes(GeneralJournal gj);
 
-        void InjectGeneralJournal(int gjId, bool isClone);
+        void Inject(int gjId, bool isClone);
     }
 }

@@ -15,7 +15,7 @@ namespace KLS.Services
         {
         }
 
-        public IQueryable<ItemTag> GetAllItemTags()
+        public IEnumerable<ItemTag> GetList()
         {
             return Uow.ItemTags.GetAll().OrderBy(t => t.TagName);
         }
@@ -25,14 +25,14 @@ namespace KLS.Services
             return Uow.ItemTags.GetById(itemTagId);
         }
 
-        public bool ExistsTagName(ItemTag itemTag)
+        public bool NameExists(ItemTag itemTag)
         {
             return Uow.ItemTags.Exists(t =>
                 t.TagName.ToLower() == itemTag.TagName.ToLower()
                 && t.ItemTagId != itemTag.ItemTagId);
         }
 
-        public ItemTag CreateItemTag(ItemTag itemTag)
+        public ItemTag Create(ItemTag itemTag)
         {
             Uow.ItemTags.Add(itemTag);
             Uow.Commit();
@@ -40,7 +40,7 @@ namespace KLS.Services
             return itemTag;
         }
 
-        public ItemTag? UpdateItemTag(ItemTag itemTag)
+        public ItemTag? Update(ItemTag itemTag)
         {
             var existing = GetById(itemTag.ItemTagId);
 
@@ -56,7 +56,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteItemTag(int itemTagId)
+        public void Delete(int itemTagId)
         {
             Uow.ItemTags.RemoveById(itemTagId);
             Uow.Commit();

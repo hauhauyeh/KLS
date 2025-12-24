@@ -9,6 +9,6 @@ namespace KLS.Contract.Services
 {
     public interface IPurchaseStageService
     {
-        IEnumerable<PurchaseStage> GetAllPurchaseStages();
+        IEnumerable<PurchaseStage> GetList();
     }
 }

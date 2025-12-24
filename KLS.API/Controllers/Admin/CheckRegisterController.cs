@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List CheckRegister")]
         public IActionResult List([FromQuery] CheckRegisterReq checkRegisterReq)
         {
-            return Ok(_vendorPmtService.GetAllCheckRegister(checkRegisterReq));
+            return Ok(_vendorPmtService.GetPagedCheckRegister(checkRegisterReq));
         }
 
         #endregion

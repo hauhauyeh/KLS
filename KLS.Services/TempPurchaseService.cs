@@ -25,9 +25,9 @@ namespace KLS.Services
             _accountService = accountService;
         }
 
-        public IEnumerable<TempPurchaseItem>? GetTempPurchaseItems(TempPurchaseReq tempReq)
+        public IEnumerable<TempPurchaseItem>? GetList(TempPurchaseReq tempReq)
         {
-            return Uow.TempPurchases.GetTempPurchaseItems(tempReq);
+            return Uow.TempPurchases.GetList(tempReq);
         }
 
         public TempPurchase? GetById(int tempId)
@@ -35,70 +35,77 @@ namespace KLS.Services
             return Uow.TempPurchases.GetById(tempId);
         }
 
-        public TempPurchaseItem CreateTempPurchase(TempPurchaseItem tempItem)
+        public TempPurchaseItem GetListById(int payeeId, int purchaseId, int tempId)
         {
-            if (tempItem.LineType == EnumHelper.LineType.A.ToString() || tempItem.ItemCode.StartsWith('@'))
-                return AddAccount(tempItem);
-            else
-                return AddItem(tempItem);
+            var tempReq = new TempPurchaseReq
+            {
+                PayeeId = payeeId,
+                PurchaseId = purchaseId,
+                TempId = tempId
+            };
+
+            return Uow.TempPurchases.GetList(tempReq).AsEnumerable().FirstOrDefault();
         }
 
-        public TempPurchaseItem UpdateTempPurchase(TempPurchaseItem tempPurchase)
+        public TempPurchaseItem Create(TempPurchaseItem tempItem, EnumHelper.PurchaseDocType docType)
         {
-            var existing = GetById(tempPurchase.TempPurchaseId);
+            if (tempItem.LineType == EnumHelper.LineType.A.ToString() || tempItem.ItemCode.StartsWith('@'))
+                return AddAccount(tempItem, docType);
+            else
+                return AddItem(tempItem, docType);
+        }
+
+        public TempPurchaseItem Update(TempPurchaseItem dto, EnumHelper.PurchaseDocType docType)
+        {
+            var existing = GetById(dto.TempPurchaseId);
 
             if (existing != null)
             {
-                existing.OrdQty0 = tempPurchase.OrdQty0;
-                existing.OrdQty1 = tempPurchase.OrdQty1;
-                existing.BillPrice = tempPurchase.BillPrice;
-                existing.FinalPrice = tempPurchase.FinalPrice;
-                existing.IsFree = tempPurchase.IsFree;
-                existing.IsOut = tempPurchase.IsOut;
-                existing.IsCRCG = tempPurchase.IsCRCG;
-                existing.Notes = tempPurchase.Notes;
-                existing.ExpiryDate = tempPurchase.ExpiryDate;
+                existing.ApplyCommonEdits(dto.IsFree, dto.IsOut, dto.IsCRCG, dto.BillPrice, dto.FinalPrice, dto.Notes, dto.ExpiryDate);
+
+                if (docType == EnumHelper.PurchaseDocType.Bill)
+                    existing.ApplyBill(dto.OrdQty0, dto.OrdQty1);
+                else
+                    existing.ApplyPO(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
 
                 if (existing.PurchaseDetailId.HasValue)
                     existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
 
-                existing.SetQtyBasedOnFlag();
+                existing.CustomDutyRate = dto.CustomDutyRate;
+                existing.TariffPercent = dto.TariffPercent;
 
                 Uow.TempPurchases.Update(existing);
                 Uow.Commit();
 
-                tempPurchase.InjectFrom(existing);
+                dto.InjectFrom(existing);
             }
 
-            return tempPurchase;
+            return dto;
         }
 
-        public TempPurchaseItem UpdateUnit(TempPurchaseItem tempPurchase)
+        public TempPurchaseItem UpdateUnit(TempPurchaseItem dto)
         {
-            var existing = GetById(tempPurchase.TempPurchaseId);
+            var existing = GetById(dto.TempPurchaseId);
 
             if (existing != null)
             {
                 var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId ?? 0, existing.Unit);
 
-                existing.Unit = itemUnit.Unit;
-                existing.FactorToBase = itemUnit.FactorToBase;
+                existing.ApplyUnit(itemUnit.Unit, itemUnit.FactorToBase);
 
                 if (existing.PurchaseDetailId.HasValue)
-                    existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();                    
-
-                existing.SetQtyBasedOnFlag();
+                    existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
 
                 Uow.TempPurchases.Update(existing);
                 Uow.Commit();
 
-                tempPurchase.InjectFrom(existing);
+                dto.InjectFrom(existing);
             }
 
-            return tempPurchase;
+            return dto;
         }
 
-        public void DeleteTempPurchase(int tempId)
+        public void Delete(int tempId)
         {
             var temp = Uow.TempPurchases.GetById(tempId);
 
@@ -115,14 +122,14 @@ namespace KLS.Services
             }
         }
 
-        public void ClearTempPurchase(TempPurchaseReq tempReq)
+        public void Clear(TempPurchaseReq tempReq)
         {
             Uow.TempPurchases.Find(c => c.EmpId == UserContext.EmpId && c.PayeeId == tempReq.PayeeId && c.PurchaseId == tempReq.PurchaseId).ExecuteDelete();
         }
 
-        private TempPurchaseItem AddItem(TempPurchaseItem tempItem)
+        private TempPurchaseItem AddItem(TempPurchaseItem dto, EnumHelper.PurchaseDocType docType)
         {
-            var item = _itemService.GetBySearch(tempItem.ItemCode);
+            var item = _itemService.GetBySearch(dto.ItemCode);
 
             if (item == null)
                 throw new KeyNotFoundException("Item code not found");
@@ -130,70 +137,77 @@ namespace KLS.Services
             if (item.Inactive)
                 throw new KeyNotFoundException("This product already discontinue");
 
+            var tempPurchase = new TempPurchase();
+
             var unit = _itemUnitService.GetBaseUnit(item.ItemId);
 
             var itemCategory = Uow.ItemCategories.GetById(item.CategoryId ?? 0);
-            tempItem.CustomDutyRate = itemCategory?.CustomDutyRate ?? 0;
+            tempPurchase.CustomDutyRate = itemCategory?.CustomDutyRate ?? 0;
 
-            tempItem.ItemId = item.ItemId;
-            tempItem.ItemCode = item.ItemCode;
-            tempItem.ItemName = item.ItemName;
-            tempItem.CaseWeight = item.CaseWeight;
-            tempItem.ItemVolume = item.CaseVolumeInCubicMeter;
-            tempItem.BillPrice = tempItem.BillPrice == 0 ? unit.RecentCost ?? 0 : 0;
-            tempItem.FinalPrice = tempItem.BillPrice;
-            tempItem.OrgPrice = tempItem.BillPrice;
-            tempItem.LineType = EnumHelper.LineType.I.ToString();
-
-            tempItem.Unit = unit.Unit;
-            tempItem.FactorToBase = unit.FactorToBase;
-
-            var tempPurchase = new TempPurchase();
-            tempPurchase.InjectFrom(tempItem);
+            tempPurchase.PayeeId = dto.PayeeId;
+            tempPurchase.PurchaseId = dto.PurchaseId;
             tempPurchase.EmpId = UserContext.EmpId;
+            tempPurchase.ItemId = item.ItemId;
+            tempPurchase.ItemVolume = item.CaseVolumeInCubicMeter;
+            tempPurchase.LineType = EnumHelper.LineType.I.ToString();
+
+            var billPrice = (dto.BillPrice.HasValue && dto.BillPrice.Value != 0) ? dto.BillPrice : (unit.RecentCost ?? 0m);
+
+            tempPurchase.ApplyCommonEdits(dto.IsFree, dto.IsOut, dto.IsCRCG, billPrice, billPrice, dto.Notes, null);
+
+            tempPurchase.ApplyUnit(unit.Unit, unit.FactorToBase);
+
+            if (docType == EnumHelper.PurchaseDocType.Bill)
+                tempPurchase.ApplyBill(dto.OrdQty0, dto.OrdQty1);
+            else
+                tempPurchase.ApplyPO(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
 
             Uow.TempPurchases.Add(tempPurchase);
             Uow.Commit();
 
-            Uow.TempPurchases.Reload(tempPurchase);
-
-            tempItem.TempPurchaseId = tempPurchase.TempPurchaseId;
-            tempItem.LineId = tempPurchase.LineId;
-
-            return tempItem;
+            return GetListById(dto.PayeeId, dto.PurchaseId, tempPurchase.TempPurchaseId);
         }
 
-        private TempPurchaseItem AddAccount(TempPurchaseItem tempItem)
+        private TempPurchaseItem AddAccount(TempPurchaseItem tempItem, EnumHelper.PurchaseDocType docType)
         {
             var account = _accountService.CheckAccount(tempItem.ItemCode);
 
             if (account == null)
                 throw new KeyNotFoundException("Account not found");
 
-            if ((account.AccountType.CatName == EnumHelper.AccountCategory.Income.ToString() || account.AccountType.CatName == EnumHelper.AccountCategory.Liability.ToString()))
+            if (account.AccountType.CatName == EnumHelper.AccountCategory.Income.ToString() || account.AccountType.CatName == EnumHelper.AccountCategory.Liability.ToString())
                 throw new KeyNotFoundException("You can't add Income/Liability account");
 
-            tempItem.ItemCode = account.AccountCode;
-            tempItem.ItemName = account.AccountName;
-            tempItem.AccountId = account.AccountId;
-            tempItem.LineType = EnumHelper.LineType.A.ToString();
-
             var tempPurchase = new TempPurchase();
-            tempPurchase.InjectFrom(tempItem);
+
+            tempPurchase.PayeeId = tempItem.PayeeId;
+            tempPurchase.PurchaseId = tempItem.PurchaseId;
             tempPurchase.EmpId = UserContext.EmpId;
-            tempPurchase.BaseReceiveQty = tempItem.ReceiveQty;
-            tempPurchase.BaseFinalQty = tempItem.FinalQty;
-            tempPurchase.FactorToBase = 1;
+            tempPurchase.AccountId = account.AccountId;
+            tempPurchase.LineType = EnumHelper.LineType.A.ToString();
+
+            var billPrice = (tempItem.BillPrice.HasValue && tempItem.BillPrice.Value != 0) ? tempItem.BillPrice : 0;
+
+            tempPurchase.ApplyCommonEdits(tempItem.IsFree, tempItem.IsOut, tempItem.IsCRCG, billPrice, billPrice, null, null);
+
+            tempPurchase.ApplyBill(tempItem.OrdQty0, tempItem.OrdQty1);
+
+            //tempItem.ItemCode = account.AccountCode;
+            //tempItem.ItemName = account.AccountName;
+            //tempItem.AccountId = account.AccountId;
+            //tempItem.LineType = EnumHelper.LineType.A.ToString();
 
             Uow.TempPurchases.Add(tempPurchase);
             Uow.Commit();
 
-            Uow.TempPurchases.Reload(tempPurchase);
+            return GetListById(tempItem.PayeeId, tempItem.PurchaseId, tempPurchase.TempPurchaseId);
 
-            tempItem.TempPurchaseId = tempPurchase.TempPurchaseId;
-            tempItem.LineId = tempPurchase.LineId;
+            //Uow.TempPurchases.Reload(tempPurchase);
 
-            return tempItem;
+            //tempItem.TempPurchaseId = tempPurchase.TempPurchaseId;
+            //tempItem.LineId = tempPurchase.LineId;
+
+            //return tempItem;
         }
     }
 }

@@ -20,11 +20,11 @@ namespace KLS.Services
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<GeneralJournal> GetAllGeneralJournals(GJReq gJReq)
+        public PagingResponse<GeneralJournal> GetPagedList(GJReq gJReq)
         {
-            var list = Uow.GeneralJournals.GetAllGeneralJournals(gJReq);
+            var list = Uow.GeneralJournals.GetPagedList(gJReq);
 
-            var totalRecords = Uow.GeneralJournals.CountAllGeneralJournals(gJReq);
+            var totalRecords = Uow.GeneralJournals.Count(gJReq);
 
             return new PagingResponse<GeneralJournal>(totalRecords, gJReq.Pageno, gJReq.Pagesize)
             {
@@ -37,22 +37,20 @@ namespace KLS.Services
             return Uow.GeneralJournals.GetById(gjId);
         }
 
-        public GeneralJournal SaveGeneralJournal(GeneralJournal generalJournal)
+        public GeneralJournal Save(GeneralJournal generalJournal)
         {
-            var newGJId = Uow.GeneralJournals.SaveGeneralJournal(generalJournal);
+            var newGJId = Uow.GeneralJournals.Save(generalJournal);
 
             return GetById(newGJId);
         }
 
-        public void DeleteGeneralJournal(int gjId)
+        public void Delete(int gjId)
         {
             var gj = GetById(gjId);
 
             if (gj != null && !gj.IsLocked)
             {
                 Uow.GeneralJournals.Find(c => c.GJId == gjId).ExecuteDelete();
-                //Uow.GeneralJournals.RemoveById(gjId);
-                //Uow.Commit();
 
                 string docType = EnumHelper.DocType.GeneralJournal.ToString();
 
@@ -78,9 +76,9 @@ namespace KLS.Services
             }
         }
 
-        public void InjectGeneralJournal(int gjId, bool isClone)
+        public void Inject(int gjId, bool isClone)
         {
-            Uow.GeneralJournals.InjectGeneralJournal(gjId, isClone);
+            Uow.GeneralJournals.Inject(gjId, isClone);
         }
     }
 }

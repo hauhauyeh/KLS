@@ -26,15 +26,15 @@ namespace KLS.Services
             _hostingEnvironment = hostingEnvironment;
         }
 
-        public PagingResponse<VendorPaymentList> GetAllVendorPayments(VendorPaymentReq vendorPaymentReq)
+        public PagingResponse<VendorPaymentList> GetPagedVendorPayments(VendorPaymentReq vendorPaymentReq)
         {
-            var vendorPaymentlist = Uow.VendorPayments.GetAllVendorPayments(vendorPaymentReq);
+            var list = Uow.VendorPayments.GetPagedVendorPayments(vendorPaymentReq);
 
-            var totalRecords = Uow.VendorPayments.CountAllVendorPayments(vendorPaymentReq);
+            var totalRecords = Uow.VendorPayments.CountVendorPayments(vendorPaymentReq);
 
             return new PagingResponse<VendorPaymentList>(totalRecords, vendorPaymentReq.Pageno, vendorPaymentReq.Pagesize)
             {
-                RowData = vendorPaymentlist,
+                RowData = list,
             };
         }
 
@@ -59,17 +59,17 @@ namespace KLS.Services
                 Id = vendorPaymentId
             };
 
-            return Uow.VendorPayments.GetAllVendorPayments(payNowReq).AsEnumerable().FirstOrDefault();
+            return Uow.VendorPayments.GetPagedVendorPayments(payNowReq).AsEnumerable().FirstOrDefault();
         }
 
-        public VendorPayment? SaveVendorPayment(VendorPayment vendorPayment)
+        public VendorPayment? Save(VendorPayment vendorPayment)
         {
-            var newPaymentId = Uow.VendorPayments.SaveVendorPayment(vendorPayment);
+            var newPaymentId = Uow.VendorPayments.Save(vendorPayment);
 
             return GetById(newPaymentId);
         }
 
-        public void DeleteVendorPayment(int vendorPaymentId)
+        public void Delete(int vendorPaymentId)
         {
             var payment = GetById(vendorPaymentId);
 
@@ -93,9 +93,9 @@ namespace KLS.Services
             Uow.VendorPayments.UnVoidCheck(vendorPaymentId);
         }
 
-        public void VendorPaymentReturn(VendorPaymentReturnReq checkReq)
+        public void Return(VendorPaymentReturnReq checkReq)
         {
-            Uow.VendorPayments.VendorPaymentReturn(checkReq);
+            Uow.VendorPayments.Return(checkReq);
         }
 
         public void DeleteReturn(int vendorPaymentId)
@@ -120,9 +120,9 @@ namespace KLS.Services
             return types;
         }
 
-        public VendorPaymentList? SavePayNowPayment(PayNowReq payNowReq)
+        public VendorPaymentList? SavePayNow(PayNowReq payNowReq)
         {
-            var newPaymentId = Uow.VendorPayments.SavePayNowPayment(payNowReq);
+            var newPaymentId = Uow.VendorPayments.SavePayNow(payNowReq);
 
             return GetListById(newPaymentId);
         }
@@ -156,15 +156,15 @@ namespace KLS.Services
         }
 
 
-        public PagingResponse<CheckRegister> GetAllCheckRegister(CheckRegisterReq checkRegisterReq)
+        public PagingResponse<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq)
         {
-            var registerlist = Uow.VendorPayments.GetAllCheckRegister(checkRegisterReq);
+            var list = Uow.VendorPayments.GetPagedCheckRegister(checkRegisterReq);
 
-            var totalRecords = Uow.VendorPayments.CountAllCheckRegister(checkRegisterReq);
+            var totalRecords = Uow.VendorPayments.CountCheckRegister(checkRegisterReq);
 
             return new PagingResponse<CheckRegister>(totalRecords, checkRegisterReq.Pageno, checkRegisterReq.Pagesize)
             {
-                RowData = registerlist,
+                RowData = list,
             };
         }
     }

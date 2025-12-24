@@ -18,15 +18,15 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<VendorList> GetAllVendors(VendorListReq vendorListReq)
+        public PagingResponse<VendorList> GetPagedList(VendorListReq vendorListReq)
         {
-            var vendorlist = Uow.Vendors.GetVendors(vendorListReq);
+            var list = Uow.Vendors.GetPagedList(vendorListReq);
 
-            var totalRecords = Uow.Vendors.CountAllVendors(vendorListReq);
+            var totalRecords = Uow.Vendors.Count(vendorListReq);
 
             return new PagingResponse<VendorList>(totalRecords, vendorListReq.Pageno, vendorListReq.Pagesize)
             {
-                RowData = vendorlist,
+                RowData = list,
             };
         }
 
@@ -58,7 +58,7 @@ namespace KLS.Services
             return Uow.Payees.Exists(p => p.PayeeName.ToLower() == vendorDTO.PayeeName.ToLower() && p.PayeeId != vendorDTO.PayeeId && p.PayeeType == EnumHelper.PayeeType.E.ToString());
         }
 
-        public VendorDTO CreateVendor(VendorDTO vendorDTO)
+        public VendorDTO Create(VendorDTO vendorDTO)
         {
             var newPayeeId = GetMaxVendorId();
 
@@ -79,7 +79,7 @@ namespace KLS.Services
             return GetById(newPayeeId);
         }
 
-        public VendorDTO? UpdateVendor(VendorDTO vendorDTO)
+        public VendorDTO? Update(VendorDTO vendorDTO)
         {
             var vendor = Uow.Vendors.GetById(vendorDTO.PayeeId);
             var existingPayee = Uow.Payees.GetById(vendorDTO.PayeeId);
@@ -147,15 +147,15 @@ namespace KLS.Services
             return vendorDTO;
         }
 
-        public void DeleteVendor(int payeeId)
+        public void Delete(int payeeId)
         {
             Uow.Payees.RemoveById(payeeId);
             Uow.Commit();
         }
 
-        public IEnumerable<VendorSearchDTO>? SearchVendor(PayeeSearchReq searchReq)
+        public IEnumerable<VendorSearchDTO>? Search(PayeeSearchReq searchReq)
         {
-            return Uow.Vendors.SearchVendor(searchReq);
+            return Uow.Vendors.Search(searchReq);
         }
 
         public int GetMaxVendorId()
@@ -164,7 +164,7 @@ namespace KLS.Services
             return (maxId ?? 200000) + 1;
         }
 
-        public IEnumerable<VendorSearchDTO>? GetActiveVendors()
+        public IEnumerable<VendorSearchDTO>? GetActive()
         {
             return Uow.Payees.Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString() && p.IsClosed == false).OrderBy(p => p.PayeeName).Select(p => new VendorSearchDTO { PayeeId = p.PayeeId, PayeeName = p.PayeeName });
         }

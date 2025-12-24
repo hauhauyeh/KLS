@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List InventoryAdj")]
         public IActionResult List([FromQuery] InventoryAdjListReq inventoryAdjListReq)
         {
-            return Ok(_inventoryAdjService.GetAllInventoryAdj(inventoryAdjListReq));
+            return Ok(_inventoryAdjService.GetPagedList(inventoryAdjListReq));
         }
 
 
@@ -53,14 +53,14 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Save Adjustment")]
         public IActionResult Save([FromBody] InventoryAdj inventoryAdj)
         {
-            return Ok(_inventoryAdjService.SaveInventoryAdj(inventoryAdj));
+            return Ok(_inventoryAdjService.Save(inventoryAdj));
         }
 
 
         [HttpPost("Inject/{adjId}")]
         public IActionResult Inject(int adjId)
         {
-            _inventoryAdjService.InjectInventoryAdj(adjId);
+            _inventoryAdjService.Inject(adjId);
 
             return Ok();
         }
@@ -70,7 +70,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Adjustment")]
         public IActionResult Delete(int adjId)
         {
-            _inventoryAdjService.DeleteInventoryAdj(adjId);
+            _inventoryAdjService.Delete(adjId);
 
             return Ok();
         }

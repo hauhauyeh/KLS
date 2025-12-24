@@ -33,7 +33,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List General Journal")]
         public IActionResult List([FromQuery] GJReq gJReq)
         {
-            return Ok(_gjService.GetAllGeneralJournals(gJReq));
+            return Ok(_gjService.GetPagedList(gJReq));
         }
 
 
@@ -53,7 +53,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Add/Edit General Journal")]
         public IActionResult Save([FromBody] GeneralJournal generalJournal)
         {
-            return Ok(_gjService.SaveGeneralJournal(generalJournal));
+            return Ok(_gjService.Save(generalJournal));
         }
 
 
@@ -61,7 +61,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete General Journal")]
         public IActionResult Delete(int id)
         {
-            _gjService.DeleteGeneralJournal(id);
+            _gjService.Delete(id);
 
             return Ok();
         }
@@ -79,7 +79,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Inject/{gjId}")]
         public IActionResult Inject(int gjId, [FromQuery] bool isClone)
         {
-            _gjService.InjectGeneralJournal(gjId, isClone);
+            _gjService.Inject(gjId, isClone);
 
             return Ok();
         }

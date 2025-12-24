@@ -10,19 +10,19 @@ namespace KLS.API.Controllers.Admin
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Advance Payment Management", GroupName = "Employee")]
-    public class EmployeeAdvancePmtsController : BaseController
+    public class EmpAdvancesController : BaseController
     {
         #region --- Member(s) ---
 
-        private readonly IEmployeeAdvancePmtService _employeeAdvancePmt;
+        private readonly IEmpAdvanceService _empAdvanceService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public EmployeeAdvancePmtsController(IEmployeeAdvancePmtService employeeAdvancePmt)
+        public EmpAdvancesController(IEmpAdvanceService empAdvanceService)
         {
-            _employeeAdvancePmt = employeeAdvancePmt;
+            _empAdvanceService = empAdvanceService;
         }
 
         #endregion
@@ -30,33 +30,33 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List EmpAdvancePmt")]
-        public IActionResult List([FromQuery] EmployeeAdvancePmtReq empAdvanceReq)
+        [DisplayName("List Advance Payment")]
+        public IActionResult List([FromQuery] EmpAdvanceReq empAdvanceReq)
         {
-            return Ok(_employeeAdvancePmt.GetAllEmployeeAdvancePmt(empAdvanceReq));
+            return Ok(_empAdvanceService.GetPagedList(empAdvanceReq));
         }
 
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            return Ok(_employeeAdvancePmt.GetById(id));
+            return Ok(_empAdvanceService.GetById(id));
         }
 
 
         [HttpPost("Save")]
-        [DisplayName("Save EmpAdvancePmt")]
-        public IActionResult Save([FromBody] EmployeeAdvancePmt employeeAdvancePmt)
+        [DisplayName("Save Advance Payment")]
+        public IActionResult Save([FromBody] EmpAdvance empAdvance)
         {
-            return Ok(_employeeAdvancePmt.SaveEmployeeAdvancePmt(employeeAdvancePmt));
+            return Ok(_empAdvanceService.Save(empAdvance));
         }
 
 
         [HttpDelete("{id}")]
-        [DisplayName("Delete EmpAdvancePmt")]
+        [DisplayName("Delete Advance Payment")]
         public IActionResult Delete(int id)
         {
-            _employeeAdvancePmt.Delete(id);
+            _empAdvanceService.Delete(id);
             return Ok();
         }
 

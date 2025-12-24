@@ -68,7 +68,7 @@ namespace KLS.Contract.Interfaces
 
         IPaymentOptionRepository PaymentOptions { get; }
 
-        IEmployeeAdvancePmtRepository EmployeeAdvancePmts { get; }
+        IEmpAdvanceRepository EmpAdvances { get; }
 
         ITimesheetRepository Timesheets { get; }
 
@@ -135,6 +135,8 @@ namespace KLS.Contract.Interfaces
         IItemUnitRepository ItemUnits { get; }
 
         IItemNameDetailRepository ItemNameDetails { get; }
+
+        IUserLogRepository UserLogs { get; }
 
         IReportRepository Reports { get; }
 

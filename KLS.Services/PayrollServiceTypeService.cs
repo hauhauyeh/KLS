@@ -16,7 +16,7 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<PayrollServiceType>? GetServiceTypes()
+        public IEnumerable<PayrollServiceType>? GetList()
         {
             return Uow.PayrollServiceTypes.GetAll();
         }

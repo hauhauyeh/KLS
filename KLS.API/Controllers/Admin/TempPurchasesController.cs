@@ -1,4 +1,5 @@
 ﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -31,21 +32,21 @@ namespace KLS.API.Controllers.Admin
         [HttpGet]
         public IActionResult List([FromQuery] TempPurchaseReq tempReq)
         {
-            return Ok(_tempPurchaseService.GetTempPurchaseItems(tempReq));
+            return Ok(_tempPurchaseService.GetList(tempReq));
         }
 
 
         [HttpPost]
         public IActionResult Create([FromBody] TempPurchaseItem tempPurchase)
         {
-            return Ok(_tempPurchaseService.CreateTempPurchase(tempPurchase));
+            return Ok(_tempPurchaseService.Create(tempPurchase, EnumHelper.PurchaseDocType.Bill));
         }
 
 
         [HttpPut]
         public IActionResult Update([FromBody] TempPurchaseItem tempPurchase)
         {
-            return Ok(_tempPurchaseService.UpdateTempPurchase(tempPurchase));
+            return Ok(_tempPurchaseService.Update(tempPurchase, EnumHelper.PurchaseDocType.Bill));
         }
 
 
@@ -59,7 +60,7 @@ namespace KLS.API.Controllers.Admin
         [HttpDelete("{tempId}")]
         public IActionResult Delete(int tempId)
         {
-            _tempPurchaseService.DeleteTempPurchase(tempId);
+            _tempPurchaseService.Delete(tempId);
             return Ok();
         }
 
@@ -67,8 +68,22 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Clear")]
         public IActionResult Clear([FromBody] TempPurchaseReq tempReq)
         {
-            _tempPurchaseService.ClearTempPurchase(tempReq);
+            _tempPurchaseService.Clear(tempReq);
             return Ok();
+        }
+
+
+        [HttpPost("CreatePOItem")]
+        public IActionResult CreatePOItem([FromBody] TempPurchaseItem tempPurchase)
+        {
+            return Ok(_tempPurchaseService.Create(tempPurchase, EnumHelper.PurchaseDocType.PO));
+        }
+
+
+        [HttpPut("UpdatePOItem")]
+        public IActionResult UpdatePOItem([FromBody] TempPurchaseItem tempPurchase)
+        {
+            return Ok(_tempPurchaseService.Update(tempPurchase, EnumHelper.PurchaseDocType.PO));
         }
 
         #endregion

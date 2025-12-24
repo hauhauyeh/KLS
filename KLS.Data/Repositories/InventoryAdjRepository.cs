@@ -19,17 +19,17 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<InventoryAdjList> GetAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq)
+        public IQueryable<InventoryAdjList> GetPagedList(InventoryAdjListReq inventoryAdjListReq)
         {
-            var param = BuildInventoryAdjsParam(inventoryAdjListReq);
+            var param = BuildParam(inventoryAdjListReq);
 
             return DbContext.InventoryAdjList.FromSqlRaw("[dbo].[InventoryAdj_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllInventoryAdj(InventoryAdjListReq inventoryAdjListReq)
+        public int Count(InventoryAdjListReq inventoryAdjListReq)
         {
             inventoryAdjListReq.IsCount = true;
-            var param = BuildInventoryAdjsParam(inventoryAdjListReq);
+            var param = BuildParam(inventoryAdjListReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -37,7 +37,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildInventoryAdjsParam(InventoryAdjListReq inventoryAdjListReq)
+        private static object[] BuildParam(InventoryAdjListReq inventoryAdjListReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", inventoryAdjListReq.Pageno),
@@ -69,7 +69,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public int SaveInventoryAdj(InventoryAdj inventoryAdj)
+        public int Save(InventoryAdj inventoryAdj)
         {
             var AdjIdParam = new SqlParameter("@AdjId", inventoryAdj.AdjId);
 
@@ -102,7 +102,7 @@ namespace KLS.Data.Repositories
             }
         }
 
-        public void InjectInventoryAdj(int adjId)
+        public void Inject(int adjId)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 

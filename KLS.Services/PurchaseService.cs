@@ -26,11 +26,11 @@ namespace KLS.Services
             _deleteLogService = deleteLogService;
         }
 
-        public PagingResponse<PurchaseList> GetAllPurchase(PurchaseListReq purchaseListReq)
+        public PagingResponse<PurchaseList> GetPagedList(PurchaseListReq purchaseListReq)
         {
-            var bills = Uow.Purchases.GetAllPurchase(purchaseListReq);
+            var bills = Uow.Purchases.GetPagedList(purchaseListReq);
 
-            var totalRecords = Uow.Purchases.CountAllPurchase(purchaseListReq);
+            var totalRecords = Uow.Purchases.Count(purchaseListReq);
 
             // Get absolute path to wwwroot/BillPdf
             var billPDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
@@ -60,7 +60,7 @@ namespace KLS.Services
                 Id = purchaseId
             };
 
-            return Uow.Purchases.GetAllPurchase(listReq).AsEnumerable().FirstOrDefault();
+            return Uow.Purchases.GetPagedList(listReq).AsEnumerable().FirstOrDefault();
         }
 
         public void UpdateNotes(int purchaseId, string? notes)
@@ -145,12 +145,12 @@ namespace KLS.Services
             return GetListById(purchaseId);
         }
 
-        public void InjectPurchase(PurchaseInjectReq injectReq)
+        public void Inject(PurchaseInjectReq injectReq)
         {
-            Uow.Purchases.InjectPurchase(injectReq);
+            Uow.Purchases.Inject(injectReq);
         }
 
-        public void DeletePurchase(int purchaseId)
+        public void Delete(int purchaseId)
         {
             var purchase = GetById(purchaseId);
 

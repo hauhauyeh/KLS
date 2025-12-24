@@ -17,7 +17,7 @@ namespace KLS.Services
         {
         }
 
-        public PagingResponse<Timesheet> GetAllTimesheets(TimesheetReq timesheetReq)
+        public PagingResponse<Timesheet> GetPagedList(TimesheetReq timesheetReq)
         {
             var qry = BuildTimesheetQuery(timesheetReq, includeDetails: false);
 
@@ -120,7 +120,7 @@ namespace KLS.Services
             return false;
         }
 
-        public Timesheet SaveTimesheet(Timesheet timesheet)
+        public Timesheet Save(Timesheet timesheet)
         {
             //convert to utc
             var timezone = UserContext.UserTimezone;
@@ -130,20 +130,20 @@ namespace KLS.Services
             if (timesheet.OutTime.HasValue)
                 timesheet.OutTime = Utilities.ConvertToUtc(timesheet.OutTime.Value, timezone);
 
-            var timesheetId = Uow.Timesheets.SaveTimesheet(timesheet);
+            var timesheetId = Uow.Timesheets.Save(timesheet);
 
             return GetById(timesheetId);
         }
 
-        public void DeleteTimesheet(int timesheetId)
+        public void Delete(int timesheetId)
         {
             Uow.Timesheets.RemoveById(timesheetId);
             Uow.Commit();
         }
 
-        public void InjectTimesheet(int timesheetId, bool isClone)
+        public void Inject(int timesheetId, bool isClone)
         {
-            Uow.Timesheets.InjectTimesheet(timesheetId, isClone);
+            Uow.Timesheets.Inject(timesheetId, isClone);
         }
 
         public PayPeriod? GetPayPeriod()

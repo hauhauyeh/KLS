@@ -19,17 +19,17 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<CustomerPaymentList> GetCustomerPayment(CustomerPaymentReq customerPaymentReq)
+        public IQueryable<CustomerPaymentList> GetPagedList(CustomerPaymentReq customerPaymentReq)
         {
-            var param = BuildCustomerPaymentParam(customerPaymentReq);
+            var param = BuildPagedList(customerPaymentReq);
 
             return DbContext.CustomerPaymentList.FromSqlRaw("[dbo].[CustomerPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int CountAllCustomerPayment(CustomerPaymentReq customerPaymentReq)
+        public int Count(CustomerPaymentReq customerPaymentReq)
         {
             customerPaymentReq.IsCount = true;
-            var param = BuildCustomerPaymentParam(customerPaymentReq);
+            var param = BuildPagedList(customerPaymentReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -37,7 +37,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildCustomerPaymentParam(CustomerPaymentReq customerPaymentReq)
+        private static object[] BuildPagedList(CustomerPaymentReq customerPaymentReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", customerPaymentReq.Pageno),

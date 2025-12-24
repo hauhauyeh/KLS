@@ -29,8 +29,7 @@ namespace KLS.API.Controllers.Sales
         [HttpPost("login")]
         public IActionResult EmpLogin(LoginReq loginReq)
         {
-            var ipAddress = Utilities.GetIpAddress(HttpContext);
-            var result = _userService.LoginEmployee(loginReq, ipAddress);
+            var result = _userService.LoginEmployee(loginReq);
 
             if (!result.Success)
                 return Unauthorized(result.ErrorMessage);

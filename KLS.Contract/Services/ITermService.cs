@@ -10,19 +10,19 @@ namespace KLS.Contract.Services
 {
     public interface ITermService
     {
-        IEnumerable<Term> GetAllTerms();
+        IEnumerable<Term> GetList();
 
-        IEnumerable<Term> GetActiveTerms();
+        IEnumerable<Term> GetActive();
 
         Term? GetById(int termId);
 
-        bool ExistsName(Term term);
+        bool NameExists(Term term);
 
-        Term CreateTerm(Term term);
+        Term Create(Term term);
 
-        Term? UpdateTerm(Term term);
+        Term? Update(Term term);
 
-        void DeleteTerm(int termId);
+        void Delete(int termId);
 
         bool TermUsed(int termId);
     }
