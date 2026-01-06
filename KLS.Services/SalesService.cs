@@ -45,6 +45,16 @@ namespace KLS.Services
             return Uow.Sales.GetById(salesId);
         }
 
+        public SalesList? GetListById(int salesId)
+        {
+            var listReq = new SalesListReq
+            {
+                Id = salesId
+            };
+
+            return Uow.Sales.GetPagedList(listReq).AsEnumerable().FirstOrDefault();
+        }
+
         public Sales UpdateShipRoute(int salesId, string? shipRoute)
         {
             var sales = GetById(salesId);
@@ -89,8 +99,24 @@ namespace KLS.Services
         public void UpdatePO(int salesId, string? custPO)
         {
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
-            .SetProperty(x => x.CustomerPONumber, x => custPO)
+            .SetProperty(x => x.CustPONumber, x => custPO)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+        }
+
+        public void UpdateLoadSeparate(int salesId)
+        {
+            Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
+           .SetProperty(x => x.IsLoadSeparate, x => !x.IsLoadSeparate)
+           .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+        }
+
+        public SalesList UpdateCarrier(int salesId, int? shippingCarrierId)
+        {
+            Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
+           .SetProperty(x => x.ShippingCarrierId, x => shippingCarrierId)
+           .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+
+            return GetListById(salesId)!;
         }
 
         public void Delete(int salesId)
@@ -106,6 +132,32 @@ namespace KLS.Services
         public ICollection<string?> GetShipRoutes(DateOnly shipDate)
         {
             return Uow.Sales.Find(c => c.ShipDate == shipDate).OrderBy(c => c.ShipRoute).Select(c => c.ShipRoute).Distinct().ToList();
+        }
+
+        public void Inject(int salesId)
+        {
+            Uow.Sales.Inject(salesId);
+        }
+
+        public SalesList Checkout(SalesCheckoutReq checkoutReq)
+        {
+            var salesId = Uow.Sales.Checkout(checkoutReq);
+
+            return GetListById(salesId)!;
+        }
+
+        public SalesList UpdatePartially(int salesId)
+        {
+            Uow.Sales.UpdatePartially(salesId);
+
+            return GetListById(salesId)!;
+        }
+
+        public SalesList UpdateNameDate(SalesUpdateReq updateReq)
+        {
+            Uow.Sales.UpdateNameDate(updateReq);
+
+            return GetListById(updateReq.SalesId)!;
         }
     }
 }

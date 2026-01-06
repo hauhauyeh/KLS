@@ -16,5 +16,17 @@ namespace KLS.Models
         public string? Instruction { get; set; }
 
         public string? CustPONumber { get; set; }
+
+        public int? ShippingCarrierId { get; set; }
+
+
+        //for name and date change
+        public bool IsNameChange { get; set; }
+
+        public int? PayeeId { get; set; }
+
+        public bool IsDateChange { get; set; }
+
+        public DateOnly? ShipDate { get; set; }
     }
 }

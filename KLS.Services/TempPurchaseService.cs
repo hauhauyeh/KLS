@@ -91,7 +91,7 @@ namespace KLS.Services
             {
                 var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId ?? 0, existing.Unit);
 
-                existing.ApplyUnit(itemUnit.Unit, itemUnit.FactorToBase);
+                existing.ApplyUnit(itemUnit.Unit, itemUnit.ItemUnitId, itemUnit.FactorToBase);
 
                 if (existing.PurchaseDetailId.HasValue)
                     existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
@@ -137,25 +137,27 @@ namespace KLS.Services
             if (item.Inactive)
                 throw new KeyNotFoundException("This product already discontinue");
 
-            var tempPurchase = new TempPurchase();
+            var tempPurchase = new TempPurchase
+            {
+                PayeeId = dto.PayeeId,
+                PurchaseId = dto.PurchaseId,
+                EmpId = UserContext.EmpId,
+                ItemId = item.ItemId,
+                ItemVolume = item.CaseVolumeInCubicMeter,
+                LineType = EnumHelper.LineType.I.ToString(),
+                LineId = dto.LineId
+            };
 
             var unit = _itemUnitService.GetBaseUnit(item.ItemId);
 
             var itemCategory = Uow.ItemCategories.GetById(item.CategoryId ?? 0);
             tempPurchase.CustomDutyRate = itemCategory?.CustomDutyRate ?? 0;
 
-            tempPurchase.PayeeId = dto.PayeeId;
-            tempPurchase.PurchaseId = dto.PurchaseId;
-            tempPurchase.EmpId = UserContext.EmpId;
-            tempPurchase.ItemId = item.ItemId;
-            tempPurchase.ItemVolume = item.CaseVolumeInCubicMeter;
-            tempPurchase.LineType = EnumHelper.LineType.I.ToString();
-
             var billPrice = (dto.BillPrice.HasValue && dto.BillPrice.Value != 0) ? dto.BillPrice : (unit.RecentCost ?? 0m);
 
             tempPurchase.ApplyCommonEdits(dto.IsFree, dto.IsOut, dto.IsCRCG, billPrice, billPrice, dto.Notes, null);
 
-            tempPurchase.ApplyUnit(unit.Unit, unit.FactorToBase);
+            tempPurchase.ApplyUnit(unit.Unit, unit.ItemUnitId, unit.FactorToBase);
 
             if (docType == EnumHelper.PurchaseDocType.Bill)
                 tempPurchase.ApplyBill(dto.OrdQty0, dto.OrdQty1);
@@ -178,13 +180,15 @@ namespace KLS.Services
             if (account.AccountType.CatName == EnumHelper.AccountCategory.Income.ToString() || account.AccountType.CatName == EnumHelper.AccountCategory.Liability.ToString())
                 throw new KeyNotFoundException("You can't add Income/Liability account");
 
-            var tempPurchase = new TempPurchase();
-
-            tempPurchase.PayeeId = tempItem.PayeeId;
-            tempPurchase.PurchaseId = tempItem.PurchaseId;
-            tempPurchase.EmpId = UserContext.EmpId;
-            tempPurchase.AccountId = account.AccountId;
-            tempPurchase.LineType = EnumHelper.LineType.A.ToString();
+            var tempPurchase = new TempPurchase
+            {
+                PayeeId = tempItem.PayeeId,
+                PurchaseId = tempItem.PurchaseId,
+                EmpId = UserContext.EmpId,
+                AccountId = account.AccountId,
+                LineType = EnumHelper.LineType.A.ToString(),
+                LineId = tempItem.LineId
+            };
 
             var billPrice = (tempItem.BillPrice.HasValue && tempItem.BillPrice.Value != 0) ? tempItem.BillPrice : 0;
 
@@ -192,22 +196,10 @@ namespace KLS.Services
 
             tempPurchase.ApplyBill(tempItem.OrdQty0, tempItem.OrdQty1);
 
-            //tempItem.ItemCode = account.AccountCode;
-            //tempItem.ItemName = account.AccountName;
-            //tempItem.AccountId = account.AccountId;
-            //tempItem.LineType = EnumHelper.LineType.A.ToString();
-
             Uow.TempPurchases.Add(tempPurchase);
             Uow.Commit();
 
             return GetListById(tempItem.PayeeId, tempItem.PurchaseId, tempPurchase.TempPurchaseId);
-
-            //Uow.TempPurchases.Reload(tempPurchase);
-
-            //tempItem.TempPurchaseId = tempPurchase.TempPurchaseId;
-            //tempItem.LineId = tempPurchase.LineId;
-
-            //return tempItem;
         }
     }
 }

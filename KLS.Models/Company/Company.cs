@@ -13,11 +13,9 @@ namespace KLS.Models
     {
         public Company()
         {
-            this.CreatedAt = DateTime.UtcNow;
+            CreatedAt = DateTime.UtcNow;
             if (HasLogo)
-            {
                 LogoUrl = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Logo", "logo.png");
-            }
         }
 
         [Key]
@@ -34,7 +32,7 @@ namespace KLS.Models
 
         public string? TaxId { get; set; }
 
-        public decimal? BaseCurrency { get; set; }
+        public string? BaseCurrency { get; set; }
 
         public string? TimeZone { get; set; }
 
@@ -68,5 +66,14 @@ namespace KLS.Models
 
         [NotMapped]
         public string? LogoUrl { get; set; }
+
+        [NotMapped]
+        public string FullAddress
+        {
+            get
+            {
+                return string.Join(", ", new[] { AddressLine1, City, State, ZipCode, CountryCode }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            }
+        }
     }
 }

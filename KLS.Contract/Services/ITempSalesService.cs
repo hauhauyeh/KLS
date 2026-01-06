@@ -9,12 +9,18 @@ namespace KLS.Contract.Services
 {
     public interface ITempSalesService
     {
-        TempSalesItem Create();
+        IEnumerable<TempSalesItem>? GetList(TempSalesReq tempReq);
 
-        TempSalesItem Update();
+        TempSalesItem Create(TempSalesItem tempItem);
+
+        TempSalesItem Update(TempSalesItem tempItem);
 
         void Delete(int tempId);
 
         void Clear(TempSalesReq tempReq);
+
+        IEnumerable<PayeeSearch>? DraftCustomers();
+
+        IEnumerable<ItemSearch> Search(TempSalesReq tempReq);
     }
 }

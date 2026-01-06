@@ -206,7 +206,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildCheckRegisterParam(checkRegisterReq);
 
-            return DbContext.CheckRegister.FromSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
+            return DbContext.CheckRegister.FromSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountCheckRegister(CheckRegisterReq checkRegisterReq)
@@ -214,7 +214,7 @@ namespace KLS.Data.Repositories
             checkRegisterReq.IsCount = true;
             var param = BuildCheckRegisterParam(checkRegisterReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CheckRegister_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@FromAccountId,@PaymentMethod,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
             var output = param[12] as SqlParameter;
             return Convert.ToInt32(output.Value);

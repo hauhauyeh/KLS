@@ -93,6 +93,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_vendorService.GetActive());
         }
 
+
+        [HttpGet("ShippingCarriers")]
+        public IActionResult ShippingCarriers()
+        {
+            return Ok(_vendorService.ShippingCarriers());
+        }
+
         #endregion
     }
 }

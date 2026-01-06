@@ -160,9 +160,10 @@ namespace KLS.Models
             ApplyFlagRules(docType: EnumHelper.PurchaseDocType.Bill);
         }
 
-        public void ApplyUnit(string unit, decimal? factorToBase)
+        public void ApplyUnit(string unit, int? itemUnitId, decimal? factorToBase)
         {
             Unit = unit;
+            ItemUnitId = itemUnitId;
             FactorToBase = factorToBase;
         }
 

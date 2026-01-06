@@ -11,13 +11,13 @@ namespace KLS.Contract.Services
     {
         PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq);
 
-        CustomerDTO? GetById(int payeeId);
+        CustomerDto? GetById(int payeeId);
 
-        bool NameExists(CustomerDTO customerDTO);
+        bool NameExists(CustomerDto customerDto);
 
-        CustomerDTO Create(CustomerDTO customerDTO);
+        CustomerDto Create(CustomerDto customerDto);
 
-        CustomerDTO? Update(CustomerDTO customerDTO);
+        CustomerDto? Update(CustomerDto customerDto);
 
         void Delete(int payeeId);
 

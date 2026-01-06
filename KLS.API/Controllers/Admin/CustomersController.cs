@@ -46,27 +46,23 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Customer")]
-        public IActionResult Create([FromBody] CustomerDTO customerDTO)
+        public IActionResult Create([FromBody] CustomerDto customerDto)
         {
-            if (_customerService.NameExists(customerDTO))
+            if (_customerService.NameExists(customerDto))
                 return Conflict("Customer name already exists.");
 
-            var created = _customerService.Create(customerDTO);
-
-            return Ok(created);
+            return Ok(_customerService.Create(customerDto));
         }
 
 
         [HttpPut]
         [DisplayName("Update Customer")]
-        public IActionResult Update([FromBody] CustomerDTO customerDTO)
+        public IActionResult Update([FromBody] CustomerDto customerDto)
         {
-            if (_customerService.NameExists(customerDTO))
+            if (_customerService.NameExists(customerDto))
                 return Conflict("Customer name already exists.");
 
-            var created = _customerService.Update(customerDTO);
-
-            return Ok(created);
+            return Ok(_customerService.Update(customerDto));
         }
 
 

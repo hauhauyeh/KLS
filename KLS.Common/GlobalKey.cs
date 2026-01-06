@@ -20,7 +20,7 @@ namespace KLS.Common
         public const string PAYROLL_DEFAULT_BANK = "PAYROLL_DEFAULT_BANK";
         public const string PAYROLL_BEGINDAYOFWEEK = "PAYROLL_BEGINDAYOFWEEK";
 
-        public const string PAYMENT_DEFAULT_BANK = "PAYROLL_BEGINDAYOFWEEK";
+        public const string PAYMENT_DEFAULT_BANK = "PAYMENT_DEFAULT_BANK";
 
         public const string GOOGLEMAPS_APIKEY = "GOOGLEMAPS_APIKEY";
 

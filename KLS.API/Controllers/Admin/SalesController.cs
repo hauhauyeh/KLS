@@ -1,6 +1,8 @@
 ﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -77,6 +79,23 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateLoadSeparate/{salesId}")]
+        [DisplayName("Update Load Separate")]
+        public IActionResult UpdateLoadSeparate(int salesId)
+        {
+            _salesService.UpdateLoadSeparate(salesId);
+            return Ok();
+        }
+
+
+        [HttpPut("UpdateCarrier")]
+        [DisplayName("Update Carrier")]
+        public IActionResult UpdateCarrier([FromBody] SalesUpdateReq updateReq)
+        {
+            return Ok(_salesService.UpdateCarrier(updateReq.SalesId, updateReq.ShippingCarrierId));
+        }
+
+
         [HttpDelete("{salesId}")]
         [DisplayName("Delete Sales")]
         public IActionResult Delete(int salesId)
@@ -105,6 +124,37 @@ namespace KLS.API.Controllers.Admin
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             return File(fileStream, "application/pdf");
         }
+
+
+        [HttpPost("Inject/{salesId}")]
+        public IActionResult Inject(int salesId)
+        {
+            _salesService.Inject(salesId);
+            return Ok();
+        }
+
+
+        [HttpPost("Checkout")]
+        [DisplayName("Checkout")]
+        public IActionResult Checkout([FromBody] SalesCheckoutReq checkoutReq)
+        {
+            return Ok(_salesService.Checkout(checkoutReq));
+        }
+
+
+        [HttpPut("UpdatePartially/{salesId}")]
+        public IActionResult UpdatePartially(int salesId)
+        {
+            return Ok(_salesService.UpdatePartially(salesId));
+        }
+
+
+        [HttpPut("UpdateNameDate")]
+        public IActionResult UpdateNameDate([FromBody] SalesUpdateReq updateReq)
+        {
+            return Ok(_salesService.UpdateNameDate(updateReq));
+        }
+
 
         #endregion
     }

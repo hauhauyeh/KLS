@@ -1,6 +1,6 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
-using KLS.Data.Repositories;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildSalesParam(salesListReq);
 
-            return DbContext.SalesList.FromSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.SalesList.FromSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int Count(SalesListReq salesListReq)
@@ -31,9 +31,9 @@ namespace KLS.Data.Repositories
             salesListReq.IsCount = true;
             var param = BuildSalesParam(salesListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[9] as SqlParameter;
+            var output = param[10] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -54,6 +54,8 @@ namespace KLS.Data.Repositories
 
                 //string.IsNullOrEmpty(salesListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", salesListReq.Filterby),
 
+                salesListReq.Id.HasValue ? new SqlParameter("@Id", salesListReq.Id) : new SqlParameter("@Id", DBNull.Value),
+
                 string.IsNullOrEmpty(salesListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", salesListReq.SortField),
 
                 string.IsNullOrEmpty(salesListReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", salesListReq.SortOrder),
@@ -69,6 +71,73 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public void Inject(int salesId)
+        {
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+
+            DbContext.Database.ExecuteSqlRaw("[Sales_Inject] @EmpId,@SalesId", EmpIdParam, SalesIdParam);
+        }
+
+        public int Checkout(SalesCheckoutReq checkoutReq)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", checkoutReq.SalesId);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", checkoutReq.PayeeId);
+
+            var ShipDateParam = checkoutReq.ShipDate.HasValue ? new SqlParameter("@ShipDate", checkoutReq.ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
+
+            var ShipRouteParam = (!string.IsNullOrEmpty(checkoutReq.ShipRoute)) ? new SqlParameter("@ShipRoute", checkoutReq.ShipRoute) : new SqlParameter("@ShipRoute", DBNull.Value);
+
+            var InstructionParam = (!string.IsNullOrEmpty(checkoutReq.Instruction)) ? new SqlParameter("@Instruction", checkoutReq.Instruction) : new SqlParameter("@Instruction", DBNull.Value);
+
+            var StageIdParam = checkoutReq.StageId.HasValue ? new SqlParameter("@StageId", checkoutReq.StageId) : new SqlParameter("@StageId", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewSalesId = new SqlParameter()
+            {
+                ParameterName = "@NewSalesId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[Sales_Insert] @SalesId,@PayeeId,@ShipDate,@ShipRoute,@Instruction,@StageId,@EmpId,@NewSalesId OUTPUT", SalesIdParam, PayeeIdParam, ShipDateParam, ShipRouteParam, InstructionParam, StageIdParam, EmpIdParam, NewSalesId);
+
+            return Convert.ToInt32(NewSalesId.Value);
+        }
+
+        public void UpdatePartially(int salesId)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw("[Sales_PartialUpdate] @SalesId,@EmpId", SalesIdParam, EmpIdParam);
+        }
+
+        public void UpdateNameDate(SalesUpdateReq updateReq)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", updateReq.SalesId);
+
+            var IsNameChangeParam = new SqlParameter("@IsNameChange", updateReq.IsNameChange);
+
+            var PayeeIdParam = updateReq.PayeeId.HasValue
+                ? new SqlParameter("@PayeeId", updateReq.PayeeId)
+                : new SqlParameter("@PayeeId", DBNull.Value);
+
+            var IsDateChangeParam = new SqlParameter("@IsDateChange", updateReq.IsDateChange);
+
+            var ShipDateParam = updateReq.ShipDate.HasValue
+                ? new SqlParameter("@ShipDate", updateReq.ShipDate)
+                : new SqlParameter("@ShipDate", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw("[Sales_Update] @SalesId,@IsNameChange,@PayeeId,@IsDateChange,@ShipDate,@EmpId", SalesIdParam, IsNameChangeParam, PayeeIdParam, IsDateChangeParam, ShipDateParam, EmpIdParam);
         }
     }
 }

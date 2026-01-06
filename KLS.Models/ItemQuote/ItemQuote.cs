@@ -19,9 +19,20 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ItemQuoteId { get; set; }
 
+        public int PayeeId { get; set; }
+
         public int ItemId { get; set; }
 
-        public int PayeeId { get; set; }
+        public int ItemUnitId { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? MarkupPercent { get; set; }
+
+        public decimal? TargetPrice { get; set; }
+
+        public decimal? NewPrice { get; set; }
+
+        public decimal? OldPrice { get; set; }
 
         public bool Inactive { get; set; }
 

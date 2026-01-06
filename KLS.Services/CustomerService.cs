@@ -2,9 +2,12 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Omu.ValueInjecter;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,10 +19,14 @@ namespace KLS.Services
     public class CustomerService : BaseService, ICustomerService
     {
         private readonly ISystemSettingService _systemSettingService;
+        private readonly ICompanyService _companyService;
+        private readonly ITermService _termService;
 
-        public CustomerService(IUnitOfWork uow, ISystemSettingService systemSettingService) : base(uow)
+        public CustomerService(IUnitOfWork uow, ISystemSettingService systemSettingService, ITermService termService, ICompanyService companyService) : base(uow)
         {
             _systemSettingService = systemSettingService;
+            _companyService = companyService;
+            _termService = termService;
         }
 
         public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
@@ -34,7 +41,7 @@ namespace KLS.Services
             };
         }
 
-        public CustomerDTO? GetById(int payeeId)
+        public CustomerDto? GetById(int payeeId)
         {
             var payee = Uow.Payees.GetById(payeeId);
             var customer = Uow.Customers.GetById(payeeId);
@@ -42,94 +49,114 @@ namespace KLS.Services
             if (payee == null && customer == null)
                 return null;
 
-            var customerDTO = new CustomerDTO();
+            var dto = new CustomerDto();
 
             if (payee != null)
-                customerDTO.InjectFrom(payee);
+                dto.InjectFrom(payee);
 
             if (customer != null)
-                customerDTO.InjectFrom(customer);
+                dto.InjectFrom(customer);
 
-            return customerDTO;
+            //salesrep name
+            if (dto.SalesRepId.HasValue)
+                dto.SalesRepName = Uow.Payees.GetById(dto.SalesRepId.Value)?.PayeeName;
+
+            //term name
+            if (dto.TermId.HasValue)
+                dto.TermName = _termService.GetById(dto.TermId.Value)?.TermName;
+
+            return dto;
         }
 
-        public bool NameExists(CustomerDTO customerDTO)
+        public bool NameExists(CustomerDto dto)
         {
-            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == customerDTO.PayeeName.ToLower() && p.PayeeId != customerDTO.PayeeId && p.PayeeType == EnumHelper.PayeeType.E.ToString());
+            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == dto.PayeeName.ToLower() && p.PayeeId != dto.PayeeId && p.PayeeType == EnumHelper.PayeeType.E.ToString());
         }
 
-        public CustomerDTO Create(CustomerDTO customerDTO)
+        public CustomerDto Create(CustomerDto dto)
         {
             var newPayeeId = GetMaxCustomerId();
 
             var payee = new Payee();
-            payee.InjectFrom(customerDTO);
+            payee.InjectFrom(dto);
             payee.PayeeId = newPayeeId;
             payee.PayeeType = EnumHelper.PayeeType.C.ToString();
+
+            var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
+            var latlong = GetMapLatLong(payee.FullAddress, mapAPIKey);
+            var distance = GetDistance(dto.FullAddress, mapAPIKey);
+
+            if (latlong != null)
+            {
+                payee.GoogleLat = latlong.Latitude;
+                payee.GoogleLong = latlong.Longitude;
+                payee.GooglePlaceId = latlong.PlaceId;
+                payee.FormatAddress = latlong.FormatAddress;
+                payee.Distance = distance;
+            }
 
             Uow.Payees.Add(payee);
 
             var customer = new Customer();
-            customer.InjectFrom(customerDTO);
+            customer.InjectFrom(dto);
             customer.PayeeId = newPayeeId;
 
             Uow.Customers.Add(customer);
             Uow.Commit();
 
-            return customerDTO;
+            return GetById(newPayeeId);
         }
 
-        public CustomerDTO? Update(CustomerDTO customerDTO)
+        public CustomerDto? Update(CustomerDto dto)
         {
-            var customer = Uow.Customers.GetById(customerDTO.PayeeId);
-            var existingPayee = Uow.Payees.GetById(customerDTO.PayeeId);
+            var customer = Uow.Customers.GetById(dto.PayeeId);
+            var existingPayee = Uow.Payees.GetById(dto.PayeeId);
 
             var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
             var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
+            var distance = GetDistance(dto.FullAddress, mapAPIKey);
 
             if (customer == null || existingPayee == null)
                 return null;
 
             // --- Update Payee Fields ---
-            existingPayee.PayeeName = customerDTO.PayeeName;
-            existingPayee.Address = customerDTO.Address;
-            existingPayee.GoogleAddress = customerDTO.GoogleAddress;
-            existingPayee.GoogleMapLink = customerDTO.GoogleMapLink;
-            existingPayee.City = customerDTO.City;
-            existingPayee.State = customerDTO.State;
-            existingPayee.ZipCode = customerDTO.ZipCode;
-            existingPayee.Email = customerDTO.Email;
-            existingPayee.EmailInvoice = customerDTO.EmailInvoice;
-            existingPayee.EmailStmt = customerDTO.EmailStmt;
-            existingPayee.TermId = customerDTO.TermId;
-            existingPayee.IsClosed = customerDTO.IsClosed;
-            existingPayee.IsDelinquent = customerDTO.IsDelinquent;
-            existingPayee.GracePeriod = customerDTO.GracePeriod;
-            existingPayee.StartDate = customerDTO.StartDate;
-            existingPayee.Notes = customerDTO.Notes;
-            existingPayee.PhoneDesc1 = customerDTO.PhoneDesc1;
-            existingPayee.Phone1 = customerDTO.Phone1;
-            existingPayee.PhoneDesc2 = customerDTO.PhoneDesc2;
-            existingPayee.Phone2 = customerDTO.Phone2;
-            existingPayee.PhoneDesc3 = customerDTO.PhoneDesc3;
-            existingPayee.Phone3 = customerDTO.Phone3;
-            existingPayee.PhoneDesc4 = customerDTO.PhoneDesc4;
-            existingPayee.Phone4 = customerDTO.Phone4;
-            existingPayee.PhoneDesc5 = customerDTO.PhoneDesc5;
-            existingPayee.Phone5 = customerDTO.Phone5;
-            existingPayee.PhoneDesc6 = customerDTO.PhoneDesc6;
-            existingPayee.Phone6 = customerDTO.Phone6;
-
-
+            existingPayee.PayeeName = dto.PayeeName;
+            existingPayee.Address = dto.Address;
+            existingPayee.GoogleAddress = dto.GoogleAddress;
+            existingPayee.GoogleMapLink = dto.GoogleMapLink;
+            existingPayee.City = dto.City;
+            existingPayee.State = dto.State;
+            existingPayee.ZipCode = dto.ZipCode;
+            existingPayee.Email = dto.Email;
+            existingPayee.EmailInvoice = dto.EmailInvoice;
+            existingPayee.EmailStmt = dto.EmailStmt;
+            existingPayee.TermId = dto.TermId;
+            existingPayee.IsClosed = dto.IsClosed;
+            existingPayee.IsDelinquent = dto.IsDelinquent;
+            existingPayee.GracePeriod = dto.GracePeriod;
+            existingPayee.StartDate = dto.StartDate;
+            existingPayee.Notes = dto.Notes;
+            existingPayee.PhoneDesc1 = dto.PhoneDesc1;
+            existingPayee.Phone1 = dto.Phone1;
+            existingPayee.PhoneDesc2 = dto.PhoneDesc2;
+            existingPayee.Phone2 = dto.Phone2;
+            existingPayee.PhoneDesc3 = dto.PhoneDesc3;
+            existingPayee.Phone3 = dto.Phone3;
+            existingPayee.PhoneDesc4 = dto.PhoneDesc4;
+            existingPayee.Phone4 = dto.Phone4;
+            existingPayee.PhoneDesc5 = dto.PhoneDesc5;
+            existingPayee.Phone5 = dto.Phone5;
+            existingPayee.PhoneDesc6 = dto.PhoneDesc6;
+            existingPayee.Phone6 = dto.Phone6;
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
             if (latlong != null)
             {
-                existingPayee.GoogleLat = customerDTO.GoogleLat;
-                existingPayee.GoogleLong = customerDTO.GoogleLong;
-                existingPayee.GooglePlaceId = customerDTO.GooglePlaceId;
-                existingPayee.FormatAddress = customerDTO.FormatAddress;
-                existingPayee.Distance = customerDTO.Distance;
+                existingPayee.GoogleLat = latlong.Latitude;
+                existingPayee.GoogleLong = latlong.Longitude;
+                existingPayee.GooglePlaceId = latlong.PlaceId;
+                existingPayee.FormatAddress = latlong.FormatAddress;
+                existingPayee.Distance = distance;
             }
 
             Uow.Payees.Update(existingPayee);
@@ -138,46 +165,45 @@ namespace KLS.Services
 
             if (customer != null)
             {
-                customer.Region = customer.Region;
-                customer.DefaultRoute = customer.DefaultRoute;
-                customer.TextOrderConfirm = customer.TextOrderConfirm;
-                customer.TextInvoice = customer.TextInvoice;
-                customer.TextStatement = customer.TextStatement;
-                customer.TextPricesheet = customer.TextPricesheet;
-                customer.TextACH = customer.TextACH;
-                customer.OGSort = customer.OGSort;
-                customer.IsAutoPayment = customerDTO.IsAutoPayment;
-                customer.SalesRepId = customerDTO.SalesRepId;
-                //customer.DefaultBasePriceId = customerDTO.DefaultBasePriceId;
-                customer.ShareQuoteId = customerDTO.ShareQuoteId;
-                customer.IsShareBasePrice = customerDTO.IsShareBasePrice;
-                customer.BillId = customerDTO.BillId;
-                customer.CallSchedule = customerDTO.CallSchedule;
-                customer.IsApproved = customerDTO.IsApproved;
-                customer.IsStatementPrint = customerDTO.IsStatementPrint;
-                customer.IsStatementEmail = customerDTO.IsStatementEmail;
-                customer.IsPriceEmail = customerDTO.IsPriceEmail;
-                customer.IsInvoiceEmail = customerDTO.IsInvoiceEmail;
-                customer.IsEditGuide = customerDTO.IsEditGuide;
-                customer.IsOrderingEnabled = customerDTO.IsOrderingEnabled;
-                customer.IsInvoiceEmail = customerDTO.IsInvoiceEmail;
-                customer.IsLinkOwnShared = customerDTO.IsLinkOwnShared;
-                customer.PriceShow = customerDTO.PriceShow;
-                customer.IsPromotionEnabled = customerDTO.IsPromotionEnabled;
-                customer.BaseMarkup = customerDTO.BaseMarkup;
-                customer.TaxRate = customerDTO.TaxRate;
-                customer.RCExpireDate = customerDTO.RCExpireDate;
-                customer.RCNumber = customerDTO.RCNumber;
-                customer.IsHRTaxable = customerDTO.IsHRTaxable;
-                customer.CreditLimit = customerDTO.CreditLimit;
-                customer.MinOrder = customerDTO.MinOrder;
+                customer.Region = dto.Region;
+                customer.DefaultRoute = dto.DefaultRoute;
+                customer.TextOrderConfirm = dto.TextOrderConfirm;
+                customer.TextInvoice = dto.TextInvoice;
+                customer.TextStatement = dto.TextStatement;
+                customer.TextPricesheet = dto.TextPricesheet;
+                customer.TextACH = dto.TextACH;
+                customer.OGSort = dto.OGSort;
+                customer.IsAutoPayment = dto.IsAutoPayment;
+                customer.SalesRepId = dto.SalesRepId;
+                customer.ShareQuoteId = dto.ShareQuoteId;
+                customer.IsShareBasePrice = dto.IsShareBasePrice;
+                customer.BillId = dto.BillId;
+                customer.CallSchedule = dto.CallSchedule;
+                customer.IsApproved = dto.IsApproved;
+                customer.IsStatementPrint = dto.IsStatementPrint;
+                customer.IsStatementEmail = dto.IsStatementEmail;
+                customer.IsPriceEmail = dto.IsPriceEmail;
+                customer.IsInvoiceEmail = dto.IsInvoiceEmail;
+                customer.IsEditGuide = dto.IsEditGuide;
+                customer.IsOrderingEnabled = dto.IsOrderingEnabled;
+                customer.IsInvoiceEmail = dto.IsInvoiceEmail;
+                customer.IsLinkOwnShared = dto.IsLinkOwnShared;
+                customer.PriceShow = dto.PriceShow;
+                customer.IsPromotionEnabled = dto.IsPromotionEnabled;
+                customer.BaseMarkup = dto.BaseMarkup;
+                customer.TaxRate = dto.TaxRate;
+                customer.RCExpireDate = dto.RCExpireDate;
+                customer.RCNumber = dto.RCNumber;
+                customer.IsHRTaxable = dto.IsHRTaxable;
+                customer.CreditLimit = dto.CreditLimit;
+                customer.MinOrder = dto.MinOrder;
 
                 Uow.Customers.Update(customer);
             }
 
             Uow.Commit();
 
-            return customerDTO;
+            return GetById(customer.PayeeId);
         }
 
         public void Delete(int payeeId)
@@ -197,47 +223,110 @@ namespace KLS.Services
             return Uow.Customers.Search(searchReq)?.ToList();
         }
 
-        private static MapLatLong? GetMapLatLong(string Address, string MapsAPIKEY)
+        private MapLatLong? GetMapLatLong(string address, string mapsApiKey)
         {
             try
             {
-                if (string.IsNullOrEmpty(MapsAPIKEY))
+                if (string.IsNullOrWhiteSpace(address) || string.IsNullOrWhiteSpace(mapsApiKey))
                     return null;
 
-                string apiurl = "https://maps.googleapis.com/maps/api/geocode/xml?sensor=false&key=" + MapsAPIKEY;
-                string param = HttpUtility.UrlEncode(Address);
-                apiurl = apiurl + "&address=" + param;
-
-                string jsonData;
+                var url =
+                    "https://maps.googleapis.com/maps/api/geocode/xml" +
+                    "?sensor=false" +
+                    "&key=" + Uri.EscapeDataString(mapsApiKey) +
+                    "&address=" + Uri.EscapeDataString(address);
 
                 using var httpClient = new HttpClient();
-                var request = new HttpRequestMessage(HttpMethod.Get, apiurl);
-                var response = httpClient.Send(request);
-                using var reader = new StreamReader(response.Content.ReadAsStream());
-                jsonData = reader.ReadToEnd();
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                using var response = httpClient.Send(request);
 
-                XmlDocument doc = new();
-                doc.LoadXml(jsonData);
+                if (!response.IsSuccessStatusCode)
+                    return null;
 
-                XmlNodeList parentNode = doc.GetElementsByTagName("location");
-                XmlNode? placeIdNode = doc.GetElementsByTagName("place_id")[0];
-                XmlNode? addressNode = doc.GetElementsByTagName("formatted_address")[0];
-                var lat = "";
-                var lng = "";
+                var xml = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                if (string.IsNullOrWhiteSpace(xml))
+                    return null;
 
-                foreach (XmlNode childrenNode in parentNode)
-                {
-                    lat = childrenNode.SelectSingleNode("lat").InnerText;
-                    lng = childrenNode.SelectSingleNode("lng").InnerText;
-                }
+                var doc = new XmlDocument();
+                doc.LoadXml(xml);
+
+                // Ensure Google returned OK
+                var status = doc.SelectSingleNode("/GeocodeResponse/status")?.InnerText;
+                if (!string.Equals(status, "OK", StringComparison.OrdinalIgnoreCase))
+                    return null;
+
+                var latNode = doc.SelectSingleNode("/GeocodeResponse/result/geometry/location/lat");
+                var lngNode = doc.SelectSingleNode("/GeocodeResponse/result/geometry/location/lng");
+                var placeIdNode = doc.SelectSingleNode("/GeocodeResponse/result/place_id");
+                var formattedAddressNode = doc.SelectSingleNode("/GeocodeResponse/result/formatted_address");
+
+                if (latNode == null || lngNode == null)
+                    return null;
+
+                // Normalize decimal formatting
+                var lat = double.Parse(latNode.InnerText, CultureInfo.InvariantCulture)
+                                .ToString(CultureInfo.InvariantCulture);
+                var lng = double.Parse(lngNode.InnerText, CultureInfo.InvariantCulture)
+                                .ToString(CultureInfo.InvariantCulture);
 
                 return new MapLatLong
                 {
-                    Latitude = Convert.ToString(lat),
-                    Longitude = Convert.ToString(lng),
-                    PlaceId = Convert.ToString(placeIdNode.InnerText),
-                    FormatAddress = Convert.ToString(addressNode.InnerText)
+                    Latitude = lat,
+                    Longitude = lng,
+                    PlaceId = placeIdNode?.InnerText ?? string.Empty,
+                    FormatAddress = formattedAddressNode?.InnerText ?? string.Empty
                 };
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        private string? GetDistance(string? address, string mapsApiKey)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(mapsApiKey) || string.IsNullOrWhiteSpace(address))
+                    return null;
+
+                var company = _companyService.GetDefault();
+                var originAddress = company?.FullAddress;
+
+                if (string.IsNullOrWhiteSpace(originAddress))
+                    return null;
+
+                var url =
+                    "https://maps.googleapis.com/maps/api/distancematrix/json" +
+                    "?key=" + Uri.EscapeDataString(mapsApiKey) +
+                    "&origins=" + Uri.EscapeDataString(originAddress) +
+                    "&destinations=" + Uri.EscapeDataString(address);
+
+                using var httpClient = new HttpClient();
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                using var response = httpClient.Send(request);
+
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                if (string.IsNullOrWhiteSpace(json))
+                    return null;
+
+                var root = JObject.Parse(json);
+
+                // API-level status: { "status": "OK" }
+                var apiStatus = (string?)root["status"];
+                if (!string.Equals(apiStatus, "OK", StringComparison.OrdinalIgnoreCase))
+                    return null;
+
+                // Element-level status: rows[0].elements[0].status
+                var elementStatus = (string?)root["rows"]?[0]?["elements"]?[0]?["status"];
+                if (!string.Equals(elementStatus, "OK", StringComparison.OrdinalIgnoreCase))
+                    return null;
+
+                // Distance text: rows[0].elements[0].distance.text
+                return (string?)root["rows"]?[0]?["elements"]?[0]?["distance"]?["text"];
             }
             catch (Exception ex)
             {

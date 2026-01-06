@@ -53,6 +53,20 @@ namespace KLS.Models
 
         public string? PaymentStatusName { get; set; }
 
+        public int? ShippingCarrierId { get; set; }
+
+        public string? ShippingCarrierName { get; set; }
+
+        public string? TermName { get; set; }
+
+        public bool IsCreditHold { get; set; }
+
+        public decimal? PayeePastDue { get; set; }
+
+        public decimal? Balance { get; set; }
+
+        public int? MaxInvoiceAgingDays { get; set; }
+
 
         [NotMapped]
         public bool IsPdfExist { get; set; }

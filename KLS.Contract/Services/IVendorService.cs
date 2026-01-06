@@ -24,5 +24,7 @@ namespace KLS.Contract.Services
         IEnumerable<VendorSearchDTO>? Search(PayeeSearchReq searchReq);
 
         IEnumerable<VendorSearchDTO>? GetActive();
+
+        IEnumerable<VendorSearchDTO>? ShippingCarriers();
     }
 }

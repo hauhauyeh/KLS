@@ -168,5 +168,21 @@ namespace KLS.Services
         {
             return Uow.Payees.Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString() && p.IsClosed == false).OrderBy(p => p.PayeeName).Select(p => new VendorSearchDTO { PayeeId = p.PayeeId, PayeeName = p.PayeeName });
         }
+
+        public IEnumerable<VendorSearchDTO>? ShippingCarriers()
+        {
+            var payees = Uow.Payees.Find(p => p.PayeeType == EnumHelper.PayeeType.V.ToString() && !p.IsClosed);
+            var vendors = Uow.Vendors.Find(v => v.IsShippingCarrier);
+
+            return (from p in payees
+                    join v in vendors on p.PayeeId equals v.PayeeId
+                    orderby p.PayeeName
+                    select new VendorSearchDTO
+                    {
+                        PayeeId = p.PayeeId,
+                        PayeeName = p.PayeeName
+                    })
+                   .ToList();
+        }
     }
 }

@@ -4,8 +4,6 @@ using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -137,8 +135,8 @@ namespace KLS.Services
 
                 GC.Collect();
 
-                if (System.IO.File.Exists(excelfile))
-                    System.IO.File.Delete(excelfile);
+                if (File.Exists(excelfile))
+                    File.Delete(excelfile);
 
                 using (var fileStream = new FileStream(excelfile, FileMode.Create))
                 {

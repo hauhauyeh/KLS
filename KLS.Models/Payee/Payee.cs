@@ -96,20 +96,13 @@ namespace KLS.Models
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
-
-        public Employee? Employee { get; set; }
-
-        public Customer? Customer { get; set; }
-
-        public Vendor? Vendor { get; set; }
-
         public virtual string FullAddress
         {
             get
             {
-                return Address + ", " + City + ", " + State + ", " + ZipCode;
+                return string.Join(", ", new[] { Address, City, State, ZipCode }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
             }
         }
-
     }
 }

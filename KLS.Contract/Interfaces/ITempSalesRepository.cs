@@ -9,5 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITempSalesRepository : IRepository<TempSales>
     {
+        IQueryable<TempSalesItem>? GetList(TempSalesReq tempReq);
+
+        IQueryable<ItemSearch> Search(TempSalesReq tempReq);
     }
 }

@@ -57,13 +57,10 @@ namespace KLS.Models
 
         public bool IsShareBasePrice { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? TaxRate { get; set; }
         
         public string? CallSchedule { get; set; }
-        
-        //public DateOnly? LastOrderDate { get; set; }
-        
-        //public DateOnly? FirstDueDate { get; set; }
         
         public DateTime? LastCallingTime { get; set; }
         
@@ -92,8 +89,6 @@ namespace KLS.Models
         public string? Market { get; set; }
         
         public string? Lang { get; set; }
-        
-        //public int? AvgPayDay { get; set; }
         
         public decimal? MinOrder { get; set; }
         

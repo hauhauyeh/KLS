@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class CustomerDTO
+    public class CustomerDto
     {
         [Key]
         public int PayeeId { get; set; }
@@ -124,8 +124,6 @@ namespace KLS.Models
 
         public int? BillId { get; set; }
 
-        //public string? DefaultBasePriceId { get; set; }
-
         public int? ShareQuoteId { get; set; }
 
         public bool IsShareBasePrice { get; set; }
@@ -134,10 +132,6 @@ namespace KLS.Models
         public decimal? TaxRate { get; set; }
 
         public string? CallSchedule { get; set; }
-
-        //public DateOnly? LastOrderDate { get; set; }
-
-        //public DateOnly? FirstDueDate { get; set; }
 
         public DateTime? LastCallingTime { get; set; }
 
@@ -167,8 +161,6 @@ namespace KLS.Models
 
         public string? Lang { get; set; }
 
-        //public int? AvgPayDay { get; set; }
-
         public decimal? MinOrder { get; set; }
 
         public string? SquareId { get; set; }
@@ -181,5 +173,17 @@ namespace KLS.Models
         public int? ShippingCarrierId { get; set; }
 
         public bool IsOnlineRegister { get; set; }
+
+        public string FullAddress
+        {
+            get
+            {
+                return string.Join(", ", new[] { Address, City, State, ZipCode }.Where(x => !string.IsNullOrWhiteSpace(x)));
+            }
+        }
+
+        public string? TermName { get; set; }
+
+        public string? SalesRepName { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,5 +13,53 @@ namespace KLS.Models
     {
         [Key]
         public int TempSalesId { get; set; }
+
+        public int SalesId { get; set; }
+        public int PayeeId { get; set; }
+
+        public int? LineId { get; set; }
+        public string? LineType { get; set; }
+
+        public int? ItemId { get; set; }
+        public int? AccountId { get; set; }
+        public int? ItemUnitId { get; set; }
+        public string? Unit { get; set; }
+
+        public bool IsFree { get; set; }
+        public bool IsOut { get; set; }
+        public bool IsCRCG { get; set; }
+
+        public decimal? OrdQty { get; set; }
+        public decimal? ShipQty { get; set; }
+        public decimal? BillQty { get; set; }
+
+
+        public decimal? UnitPrice { get; set; }
+        public string? Notes { get; set; }
+
+        public bool IsTaxable { get; set; }
+
+        public decimal? OrgPrice { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? DiscountPercent { get; set; }
+
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? FactorToBase { get; set; }
+
+        public bool IsStrike { get; set; }
+
+
+        public decimal? ExtTotal => Utilities.Rounding((BillQty ?? 0m) * (UnitPrice ?? 0m), 2);
+
+        public string? ItemName { get; set; }
+
+        public string? ItemCode { get; set; }
+
+        public string? PackSize { get; set; }
+
+        public decimal? CaseWeight { get; set; }
+
+        public decimal? CaseTotal => Utilities.Rounding(OrdQty / FactorToBase, 6);
     }
 }
