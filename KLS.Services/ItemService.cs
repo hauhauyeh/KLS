@@ -170,6 +170,8 @@ namespace KLS.Services
 
                 if (item.ItemUnits != null)
                 {
+                    Uow.ItemUnits.Find(x => x.ItemId == item.ItemId).ExecuteUpdate(s => s.SetProperty(x => x.IsDefaultSalesUnit, false));
+
                     foreach (var unit in item.ItemUnits)
                     {
                         if (unit.ItemUnitId == 0)

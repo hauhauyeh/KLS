@@ -130,9 +130,13 @@ namespace KLS.Data.Repositories
 
         public ITempSalesRepository TempSales { get { return new TempSalesRepository(DbContext); } }
 
+        public ITempBombSalesRepository TempBombSales { get { return new TempBombSalesRepository(DbContext); } }
+
         public ITempPurchaseRepository TempPurchases { get { return new TempPurchaseRepository(DbContext); } }
 
         public IItemQuoteRepository ItemQuotes { get { return new ItemQuoteRepository(DbContext); } }
+
+        public ITempItemQuoteRepository TempItemQuotes { get { return new TempItemQuoteRepository(DbContext); } }
 
         public IItemHistoryRepository ItemHistories { get { return new ItemHistoryRepository(DbContext); } }
 
@@ -165,6 +169,8 @@ namespace KLS.Data.Repositories
         public IItemNameDetailRepository ItemNameDetails { get { return new ItemNameDetailRepository(DbContext); } }
 
         public IUserLogRepository UserLogs { get { return new UserLogRepository(DbContext); } }
+
+        public ISalesRouteRepository SalesRoutes { get { return new SalesRouteRepository(DbContext); } }
 
         public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
     }

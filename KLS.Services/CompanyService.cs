@@ -18,7 +18,16 @@ namespace KLS.Services
 
         public Company GetDefault()
         {
-            return Uow.Companies.GetAll().FirstOrDefault();
+            var company = Uow.Companies.GetAll().FirstOrDefault();
+
+            company.NextWorkingDate = GetNextWorkDate();
+
+            return company;
+        }
+
+        public DateOnly GetNextWorkDate()
+        {
+            return Uow.Companies.GetNextWorkDate();
         }
     }
 }

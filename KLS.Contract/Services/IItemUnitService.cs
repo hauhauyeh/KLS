@@ -13,6 +13,10 @@ namespace KLS.Contract.Services
 
         ItemUnit GetBaseUnit(int itemId);
 
+        ItemUnit GetSalesUnit(int itemId);
+
         ItemUnit GetNextUnit(int itemId, string unit);
+
+        ItemPrice GetItemPriceByCustomer(int payeeId, int itemId, int? itemUnitId);
     }
 }

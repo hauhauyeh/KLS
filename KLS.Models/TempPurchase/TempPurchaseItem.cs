@@ -72,13 +72,13 @@ namespace KLS.Models
         public decimal? TariffPercent { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? DutySharePercent { get; private set; }
+        public decimal? DutySharePercent { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? ItemVolume { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? VolumeSharePercent { get; private set; }
+        public decimal? VolumeSharePercent { get; set; }
 
 
         public decimal? BillExtTotal => Utilities.Rounding((BillQty ?? 0m) * (BillPrice ?? 0m), 2);
@@ -100,9 +100,49 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18,6)")]
         public decimal? BaseFinalQty { get; set; }
 
-        public decimal? WeightTotal { get { return Utilities.Rounding(BaseFinalQty * CaseWeight, 2); } }
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? BaseBillQty { get { return Utilities.Rounding(BillQty / FactorToBase, 6); } }
 
-        public decimal? VolumeTotal { get { return Utilities.Rounding(BaseFinalQty * ItemVolume, 2); } }
+
+        public decimal? BillVolumeTotal { get { return Utilities.Rounding(BaseBillQty * ItemVolume, 2); } }
+
+        public decimal? FinalVolumeTotal { get { return Utilities.Rounding(BaseFinalQty * ItemVolume, 2); } }
+
+        public decimal? BillWeightTotal { get { return Utilities.Rounding(BaseBillQty * CaseWeight, 2); } }
+
+        public decimal? FinalWeightTotal { get { return Utilities.Rounding(BaseFinalQty * CaseWeight, 2); } }
+
+        public decimal? BillCases
+        {
+            get
+            {
+                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(BillQty / FactorToBase, 6) : 0;
+            }
+        }
+
+        public decimal? FinalCases
+        {
+            get
+            {
+                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(FinalQty / FactorToBase, 6) : 0;
+            }
+        }
+
+        public decimal? FreightInsideTotal
+        {
+            get
+            {
+                return (LineType == EnumHelper.LineType.A.ToString() && ItemCode == "@COGSF") ? FinalExtTotal : 0;
+            }
+        }
+
+        public decimal? CustomDutyInsideTotal
+        {
+            get
+            {
+                return (LineType == EnumHelper.LineType.A.ToString() && ItemCode == "@CD") ? FinalExtTotal : 0;
+            }
+        }
 
         public decimal? TotalDutyTariff => CustomDutyRate.HasValue || TariffPercent.HasValue ? (CustomDutyRate ?? 0m) + (TariffPercent ?? 0m)
         : null;

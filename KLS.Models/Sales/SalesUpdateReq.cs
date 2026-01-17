@@ -19,6 +19,8 @@ namespace KLS.Models
 
         public int? ShippingCarrierId { get; set; }
 
+        public decimal? ShippingCharge { get; set; }
+
 
         //for name and date change
         public bool IsNameChange { get; set; }

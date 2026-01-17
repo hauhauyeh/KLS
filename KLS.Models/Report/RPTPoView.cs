@@ -16,25 +16,28 @@ namespace KLS.Models
 
         public List<RptPODetail>? RptPODetail { get; set; }
 
-        public int TotalItem
+        public int TotalItems
         {
             get
             {
-                return RptPODetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString()).GroupBy(c => c.ItemId).Count();
+                return RptPODetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString())
+                    .GroupBy(c => c.ItemId).Count();
             }
         }
 
-        public decimal? TotalCase
+        public decimal? TotalCases
         {
             get
             {
-                return RptPODetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString()).Sum(c => c.BaseFinalQty);
+                return RptPODetail.Where(c => c.LineType == EnumHelper.LineType.I.ToString())
+                    .Sum(c => c.BaseBillQty);
             }
         }
-
 
         public decimal? TotalWeight { get { return RptPODetail?.Sum(c => c.WeightTotal); } }
 
         public decimal? TotalVolume { get { return RptPODetail?.Sum(c => c.VolumeTotal); } }
+
+        public bool IsChineseShow { get; set; }
     }
 }

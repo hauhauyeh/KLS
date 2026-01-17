@@ -22,7 +22,7 @@ namespace KLS.Services
             return Uow.Employees.GetPagedList(empReq);
         }
 
-        public ICollection<EmployeeList> GetActive()
+        public IEnumerable<EmployeeList> GetActive()
         {
             var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString()).OrderBy(c => c.PayeeName).ToList();
 

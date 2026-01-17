@@ -24,14 +24,9 @@ namespace KLS.Services
 
             var totalRecords = Uow.Sales.Count(salesListReq);
 
-            // Get absolute path to wwwroot/InvoicePdf
-            var invoicePDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "InvoicePdf");
-
             foreach (var invoice in sales)
             {
-                var filePath = Path.Combine(invoicePDfPath, invoice.SalesNumber + ".pdf");
-
-                invoice.IsPdfExist = File.Exists(filePath);
+                invoice.IsPdfExist = IsInvoicePdfExist(invoice.SalesNumber);
             }
 
             return new PagingResponse<SalesList>(totalRecords, salesListReq.Pageno, salesListReq.Pagesize)
@@ -77,7 +72,7 @@ namespace KLS.Services
                 }
                 else
                 {
-                    sales.ShipRoute = shipRoute;
+                    sales.ShipRoute = string.IsNullOrEmpty(shipRoute) ? null : shipRoute;
                 }
 
                 sales.UpdatedAt = DateTime.UtcNow;
@@ -158,6 +153,66 @@ namespace KLS.Services
             Uow.Sales.UpdateNameDate(updateReq);
 
             return GetListById(updateReq.SalesId)!;
+        }
+
+        public SalesList InsertShippingCharge(SalesUpdateReq updateReq)
+        {
+            Uow.Sales.InsertShippingCharge(updateReq);
+
+            return GetListById(updateReq.SalesId)!;
+        }
+
+        public bool IsInvoicePdfExist(int salesNumber)
+        {
+            // Get absolute path to wwwroot/InvoicePdf
+            var invoicePDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "InvoicePdf");
+
+            var filePath = Path.Combine(invoicePDfPath, salesNumber + ".pdf");
+
+            return File.Exists(filePath);
+        }
+
+        public IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq)
+        {
+            return Uow.Sales.GetByDateRoute(dateRouteReq);
+        }
+
+
+        public IEnumerable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate)
+        {
+            var summary = Uow.Sales.ShipRouteSummary(shipDate)?.ToList();
+
+            if (summary == null) return null;
+
+            var routeDetail = Uow.Sales.ShipRouteDetail(shipDate)?.ToList();
+
+            foreach (var s in summary)
+            {
+                s.ShipRouteDetails = routeDetail?.Where(c => c.ShipRoute == s.ShipRoute).ToList();
+            }
+
+            return summary;
+        }
+
+        public void UpdateRouteOrder(List<ShipRouteDetail> routeDetails)
+        {
+            foreach (var route in routeDetails)
+            {
+                Uow.Sales.Find(c => c.SalesId == route.SalesId).ExecuteUpdate(setters => setters
+                .SetProperty(x => x.RouteOrder, x => route.RouteOrder)
+                .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+            }
+        }
+
+        public void UpdateRoute(List<ShipRouteDetail> routeDetails)
+        {
+            foreach (var route in routeDetails)
+            {
+                Uow.Sales.Find(c => c.SalesId == route.SalesId).ExecuteUpdate(setters => setters
+                .SetProperty(x => x.ShipRoute, x => route.ShipRoute)
+                .SetProperty(x => x.IsLoadSeparate, x => route.IsLoadSeparate)
+                .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+            }
         }
     }
 }

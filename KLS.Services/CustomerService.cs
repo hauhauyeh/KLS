@@ -20,13 +20,15 @@ namespace KLS.Services
     {
         private readonly ISystemSettingService _systemSettingService;
         private readonly ICompanyService _companyService;
+        private readonly IItemQuoteService _itemQuoteService;
         private readonly ITermService _termService;
 
-        public CustomerService(IUnitOfWork uow, ISystemSettingService systemSettingService, ITermService termService, ICompanyService companyService) : base(uow)
+        public CustomerService(IUnitOfWork uow, ISystemSettingService systemSettingService, ITermService termService, ICompanyService companyService, IItemQuoteService itemQuoteService) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _companyService = companyService;
             _termService = termService;
+            _itemQuoteService = itemQuoteService;
         }
 
         public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
@@ -65,6 +67,8 @@ namespace KLS.Services
             if (dto.TermId.HasValue)
                 dto.TermName = _termService.GetById(dto.TermId.Value)?.TermName;
 
+            dto.OwnListCount = _itemQuoteService.OwnCount(payeeId);
+
             return dto;
         }
 
@@ -96,6 +100,7 @@ namespace KLS.Services
             }
 
             Uow.Payees.Add(payee);
+            Uow.Commit();
 
             var customer = new Customer();
             customer.InjectFrom(dto);

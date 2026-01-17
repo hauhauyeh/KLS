@@ -120,6 +120,8 @@ namespace KLS.Models
 
         public bool HasOwnList { get; set; }
 
+        public int OwnListCount { get; set; }
+
         public int? SalesRepId { get; set; }
 
         public int? BillId { get; set; }
@@ -127,6 +129,11 @@ namespace KLS.Models
         public int? ShareQuoteId { get; set; }
 
         public bool IsShareBasePrice { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? BaseMarkup { get; set; }
+
+        public bool IsBaseToRecentCost { get; set; }
 
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? TaxRate { get; set; }
@@ -166,9 +173,6 @@ namespace KLS.Models
         public string? SquareId { get; set; }
 
         public bool IsPromotionEnabled { get; set; }
-
-        [Column(TypeName = "decimal(18, 4)")]
-        public decimal? BaseMarkup { get; set; }
 
         public int? ShippingCarrierId { get; set; }
 

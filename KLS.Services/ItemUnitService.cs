@@ -17,12 +17,17 @@ namespace KLS.Services
 
         public List<ItemUnit> GetByItemId(int itemId)
         {
-            return Uow.ItemUnits.Find(c => c.ItemId == itemId).OrderBy(i => i.ItemUnitId).ToList();
+            return Uow.ItemUnits.Find(c => c.ItemId == itemId && c.Inactive == false).OrderBy(i => i.ItemUnitId).ToList();
         }
 
         public ItemUnit GetBaseUnit(int itemId)
         {
             return Uow.ItemUnits.Find(c => c.ItemId == itemId && c.IsBaseUnit).FirstOrDefault()!;
+        }
+
+        public ItemUnit GetSalesUnit(int itemId)
+        {
+            return Uow.ItemUnits.Find(c => c.ItemId == itemId && c.IsDefaultSalesUnit).FirstOrDefault()!;
         }
 
         public ItemUnit GetNextUnit(int itemId, string unit)
@@ -33,6 +38,11 @@ namespace KLS.Services
             if (idx < 0) return units[0];           // default
 
             return units[(idx + 1) % units.Count];  // cycle
+        }
+
+        public ItemPrice GetItemPriceByCustomer(int payeeId, int itemId, int? itemUnitId)
+        {
+            return Uow.ItemUnits.GetItemPriceByCustomer(payeeId, itemId, itemUnitId);
         }
     }
 }

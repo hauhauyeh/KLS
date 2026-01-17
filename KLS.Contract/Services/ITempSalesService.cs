@@ -15,6 +15,8 @@ namespace KLS.Contract.Services
 
         TempSalesItem Update(TempSalesItem tempItem);
 
+        TempSalesItem UpdateUnit(TempSalesItem tempItem);
+
         void Delete(int tempId);
 
         void Clear(TempSalesReq tempReq);

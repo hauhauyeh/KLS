@@ -75,6 +75,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempSales>().ToTable("TempSales", tb => tb.HasTrigger("TRG_Insert_TempSalesSetLineId"));
             modelBuilder.Entity<TempPurchase>().ToTable("TempPurchase", tb => tb.HasTrigger("TRG_Insert_TempPurchaseSetLineId"));
             modelBuilder.Entity<ItemQuote>().ToTable("ItemQuote");
+            modelBuilder.Entity<TempItemQuote>().ToTable("TempItemQuote");
             modelBuilder.Entity<PurchaseStage>().ToTable("PurchaseStage");
             modelBuilder.Entity<SalesStage>().ToTable("SalesStage");
             modelBuilder.Entity<TempVendorPayment>().ToTable("TempVendorPayment");
@@ -89,6 +90,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ItemUnit>().ToTable("ItemUnit");
             modelBuilder.Entity<ItemNameDetail>().ToTable("ItemNameDetail");
             modelBuilder.Entity<UserLog>().ToTable("UserLog");
+            modelBuilder.Entity<TempBombSales>().ToTable("TempBombSales");
+            modelBuilder.Entity<SalesRoute>().ToTable("SalesRoute");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -191,9 +194,13 @@ namespace KLS.Data.DataContext
 
         public DbSet<TempSales> TempSales { get; set; }
 
+        public DbSet<TempBombSales> TempBombSales { get; set; }
+
         public DbSet<TempPurchase> TempPurchases { get; set; }
 
         public DbSet<ItemQuote> ItemQuotes { get; set; }
+
+        public DbSet<TempItemQuote> TempItemQuotes { get; set; }
 
         public DbSet<PurchaseStage> PurchaseStages { get; set; }
 
@@ -222,6 +229,8 @@ namespace KLS.Data.DataContext
         public DbSet<ItemNameDetail> ItemNameDetails { get; set; }
 
         public DbSet<UserLog> UserLogs { get; set; }
+
+        public DbSet<SalesRoute> SalesRoutes { get; set; }
 
         #endregion
 
@@ -289,6 +298,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ItemCalcUnit> ItemCalcUnit { get; set; }
 
+        public virtual DbSet<ItemPrice> ItemPrice { get; set; }
+
         public virtual DbSet<PODetail> PODetail { get; set; }
 
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
@@ -298,6 +309,15 @@ namespace KLS.Data.DataContext
         public virtual DbSet<TempDepositList> TempDepositList { get; set; }
 
         public virtual DbSet<TempSalesItem> TempSalesItem { get; set; }
+
+        public virtual DbSet<BombSalesItem> BombSalesItem { get; set; }
+
+        public virtual DbSet<TempItemQuoteList> TempItemQuoteList { get; set; }
+
+        public virtual DbSet<ShipRouteSummary> ShipRouteSummary { get; set; }
+
+        public virtual DbSet<ShipRouteDetail> ShipRouteDetail { get; set; }
+
 
         public virtual DbSet<RptPO> RptPO { get; set; }
 

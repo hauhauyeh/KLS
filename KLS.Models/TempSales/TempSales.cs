@@ -49,7 +49,7 @@ namespace KLS.Models
         public decimal? ShipQty { get; private set; }
         public decimal? BillQty { get; private set; }
 
-        public decimal? UnitPrice { get; private set; }
+        public decimal? UnitPrice { get; set; }
 
         public decimal? ExtTotal => Utilities.Rounding((BillQty ?? 0m) * (UnitPrice ?? 0m), 2);
 
@@ -109,9 +109,10 @@ namespace KLS.Models
             ApplyFlagRules();
         }
 
-        public void ApplyUnit(string unit, decimal? factorToBase)
+        public void ApplyUnit(string unit, int? itemUnitId, decimal? factorToBase)
         {
             Unit = unit;
+            ItemUnitId = itemUnitId;
             FactorToBase = factorToBase;
         }
     }

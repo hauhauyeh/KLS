@@ -16,13 +16,13 @@ namespace KLS.Models
 
         public int PayeeId { get; set; }
 
-        public int? VendorDocNumber { get; set; }
+        public string? VendorDocNumber { get; set; }
 
         public DateOnly? PurchaseDate { get; set; }
 
         public DateOnly? ArrivalDate { get; set; }
 
-        public decimal? PurchaseTotal { get; set; }
+        public decimal? VendorTotal { get; set; }
 
         public string? PayeeName { get; set; }
 

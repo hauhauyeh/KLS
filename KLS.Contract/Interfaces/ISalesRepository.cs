@@ -20,5 +20,13 @@ namespace KLS.Contract.Interfaces
         void UpdatePartially(int salesId);
 
         void UpdateNameDate(SalesUpdateReq updateReq);
+
+        void InsertShippingCharge(SalesUpdateReq updateReq);
+
+        IQueryable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate);
+
+        IQueryable<ShipRouteDetail>? ShipRouteDetail(DateOnly shipDate);
+
+        IQueryable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq);
     }
 }

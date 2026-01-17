@@ -10,5 +10,7 @@ namespace KLS.Contract.Services
     public interface ICompanyService
     {
         Company GetDefault();
+
+        DateOnly GetNextWorkDate();
     }
 }

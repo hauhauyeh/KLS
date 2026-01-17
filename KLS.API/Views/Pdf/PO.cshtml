@@ -353,15 +353,15 @@
                 var itm = Model.RptPODetail[i];
 
                 <tr>
-                    <td class="no-overflow"><strong>@string.Format("{0:0.##}", itm.ShipQty)</strong> @itm.Unit</td>
-                    <td><span>@itm.ItemName</span></td>
+                    <td class="no-overflow"><strong>@string.Format("{0:0.##}", itm.BillQty)</strong> @itm.Unit</td>
+                    <td><span>@itm.ItemCode</span></td>
                     <td>
                         @* If you want item desc back in the layout, uncomment and style accordingly *@
-                        @* <div style="line-height:1;">
-                            <strong>@itm.ItemDesc1</strong><br />
+                        <div style="line-height:1;">
+                            <strong>@itm.ItemName</strong><br />
                             @if (Model.IsChineseShow)
                             {
-                                <span class="chinese font10">@itm.ItemDescX1</span>
+                                <span class="chinese font10"></span>
                                 <span>&nbsp;</span>
                                 <span class="font11 upparcase">@itm.PackSize</span>
                             }
@@ -369,11 +369,11 @@
                             {
                                 <span class="font11 upparcase">@itm.PackSize</span>
                             }
-                        </div> *@
+                        </div>
                     </td>
-                    <td class="text-right">@string.Format("{0:c}", itm.FinalPrice)</td>
+                    <td class="text-right">@string.Format("{0:c}", itm.BillPrice)</td>
                     <td class="text-right">
-                        @string.Format("{0:c}", itm.FinalTotal)
+                        @string.Format("{0:c}", itm.BillTotal)
                     </td>
                 </tr>
             }
@@ -466,9 +466,9 @@
                     <td class="text-right">Total</td>
                 </tr>
                 <tr>
-                    <td>@Model.TotalItem</td>
+                    <td>@Model.TotalItems</td>
                     <td>
-                        @string.Format("{0:0.00}", Model.TotalCase)
+                        @string.Format("{0:0.00}", Model.TotalCases)
                     </td>
                     <td class="text-right">
                         @Model.TotalWeight lbs
@@ -476,7 +476,7 @@
                     <td class="text-right">
                         @string.Format("{0:0.00}", Model.TotalVolume) cbm
                     </td>
-                    <td class="text-right">@string.Format("{0:c}", Model.RptPO.PurchaseTotal)</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.RptPO.VendorTotal)</td>
                 </tr>
             </table>
         </div>

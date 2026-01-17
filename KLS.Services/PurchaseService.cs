@@ -33,13 +33,14 @@ namespace KLS.Services
             var totalRecords = Uow.Purchases.Count(purchaseListReq);
 
             // Get absolute path to wwwroot/BillPdf
-            var billPDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
+            //var billPDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
 
             foreach (PurchaseList bill in bills)
             {
-                var filePath = Path.Combine(billPDfPath, bill.PurchaseNumber + ".pdf");
+                bill.IsPdfExist = IsBillPdfExist(bill.PurchaseNumber);
 
-                bill.IsPdfExist = File.Exists(filePath);
+                //var filePath = Path.Combine(billPDfPath, bill.PurchaseNumber + ".pdf");
+                //bill.IsPdfExist = File.Exists(filePath);
             }
 
             return new PagingResponse<PurchaseList>(totalRecords, purchaseListReq.Pageno, purchaseListReq.Pagesize)
@@ -196,6 +197,16 @@ namespace KLS.Services
                     pdfUploadReq.PDFFile?.CopyTo(fileStream);
                 }
             }
+        }
+
+        public bool IsBillPdfExist(int purchaseNumber)
+        {
+            // Get absolute path to wwwroot/BillPdf
+            var billPDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
+
+            var filePath = Path.Combine(billPDfPath, purchaseNumber + ".pdf");
+
+            return File.Exists(filePath);
         }
     }
 }

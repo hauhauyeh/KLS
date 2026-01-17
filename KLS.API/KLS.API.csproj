@@ -17,9 +17,6 @@
     <Folder Include="wwwroot\Images\category\" />
     <Folder Include="wwwroot\Images\item\" />
     <Folder Include="wwwroot\KLS\category\" />
-    <Folder Include="wwwroot\BillPdf\" />
-    <Folder Include="wwwroot\InvoicePdf\" />
-    <Folder Include="wwwroot\BillPdf\" />
     <Folder Include="wwwroot\Logo\" />
     <Folder Include="wwwroot\Pdf\" />
     <Folder Include="wwwroot\Python\" />

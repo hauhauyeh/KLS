@@ -62,12 +62,45 @@ namespace KLS.Services
 
             if (existing != null)
             {
+                //set default price when click o button
+                if (tempItem.IsDefaultPrice && tempItem.LineType == EnumHelper.LineType.I.ToString())
+                {
+                    var itemPrice = _itemUnitService.GetItemPriceByCustomer(tempItem.PayeeId, existing.ItemId ?? 0, existing.ItemUnitId);
+                    tempItem.UnitPrice = itemPrice.DefaultPrice;
+                }
+
                 existing.ApplyEdits(tempItem.OrdQty, tempItem.IsFree, tempItem.IsOut, tempItem.IsCRCG, tempItem.UnitPrice, tempItem.Notes);
 
                 if (existing.SalesDetailId.HasValue)
                     existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
 
                 existing.IsStrike = tempItem.IsStrike;
+
+                Uow.TempSales.Update(existing);
+                Uow.Commit();
+
+                tempItem.InjectFrom(existing);
+                tempItem.IsDefaultPrice = false;
+            }
+
+            return tempItem;
+        }
+
+        public TempSalesItem UpdateUnit(TempSalesItem tempItem)
+        {
+            var existing = GetById(tempItem.TempSalesId);
+
+            if (existing != null)
+            {
+                var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId ?? 0, existing.Unit);
+                var itemPrice = _itemUnitService.GetItemPriceByCustomer(existing.PayeeId, existing.ItemId ?? 0, itemUnit.ItemUnitId);
+
+                existing.ApplyUnit(itemUnit.Unit, itemUnit.ItemUnitId, itemUnit.FactorToBase);
+
+                existing.UnitPrice = itemPrice.DefaultPrice;
+
+                if (existing.SalesDetailId.HasValue)
+                    existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
 
                 Uow.TempSales.Update(existing);
                 Uow.Commit();
@@ -138,12 +171,14 @@ namespace KLS.Services
                 LineId = tempItem.LineId
             };
 
-            decimal? custPrice = 0;
+            var itemPrice = _itemUnitService.GetItemPriceByCustomer(tempItem.PayeeId, item.ItemId, null);
+
+            decimal? custPrice = itemPrice.DefaultPrice;
             var unitPrice = (tempItem.UnitPrice.HasValue && tempItem.UnitPrice.Value != 0) ? tempItem.UnitPrice : (custPrice ?? 0m);
 
             tempSales.ApplyEdits(tempItem.OrdQty, tempItem.IsFree, tempItem.IsOut, tempItem.IsCRCG, unitPrice, tempItem.Notes);
 
-            //tempSales.ApplyUnit(unit.Unit, unit.FactorToBase);
+            tempSales.ApplyUnit(itemPrice.DefaultUnit, itemPrice.ItemUnitId, itemPrice.FactorToBase);
 
             Uow.TempSales.Add(tempSales);
             Uow.Commit();

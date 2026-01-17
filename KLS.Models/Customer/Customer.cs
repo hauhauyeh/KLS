@@ -51,11 +51,14 @@ namespace KLS.Models
         
         public int? BillId { get; set; }
         
-        //public string? DefaultBasePriceId { get; set; }
-        
         public int? ShareQuoteId { get; set; }
 
         public bool IsShareBasePrice { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? BaseMarkup { get; set; }
+
+        public bool IsBaseToRecentCost { get; set; }
 
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? TaxRate { get; set; }
@@ -96,9 +99,6 @@ namespace KLS.Models
         
         public bool IsPromotionEnabled { get; set; }
 
-        [Column(TypeName = "decimal(18, 4)")]
-        public decimal? BaseMarkup { get; set; }
-        
         public int? ShippingCarrierId { get; set; }
         
         public bool IsOnlineRegister { get; set; }

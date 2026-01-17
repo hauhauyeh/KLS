@@ -60,6 +60,8 @@ namespace KLS.Models
 
         public bool HasLogo { get; set; }
 
+        public string? MapsLatLong { get; set; }
+
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
@@ -75,5 +77,8 @@ namespace KLS.Models
                 return string.Join(", ", new[] { AddressLine1, City, State, ZipCode, CountryCode }.Where(x => !string.IsNullOrWhiteSpace(x)));
             }
         }
+
+        [NotMapped]
+        public DateOnly NextWorkingDate { get; set; }
     }
 }

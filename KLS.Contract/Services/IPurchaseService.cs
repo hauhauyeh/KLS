@@ -36,5 +36,7 @@ namespace KLS.Contract.Services
         void Delete(int purchaseId);
 
         void UploadBillPDF(PDFUploadReq pdfUploadReq);
+
+        bool IsBillPdfExist(int purchaseNumber);
     }
 }

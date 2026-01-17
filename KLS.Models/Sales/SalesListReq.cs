@@ -9,5 +9,7 @@ namespace KLS.Models
     public class SalesListReq : PagingRequest
     {
         public int? PayeeId { get; set; }
+
+        public string? ShipRoute { get; set; }
     }
 }

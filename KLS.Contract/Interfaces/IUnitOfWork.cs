@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -102,9 +103,13 @@ namespace KLS.Contract.Interfaces
 
         ITempSalesRepository TempSales { get; }
 
+        ITempBombSalesRepository TempBombSales { get; }
+
         ITempPurchaseRepository TempPurchases { get; }
 
         IItemQuoteRepository ItemQuotes { get; }
+
+        ITempItemQuoteRepository TempItemQuotes { get; }
 
         IItemHistoryRepository ItemHistories { get; }
 
@@ -137,6 +142,8 @@ namespace KLS.Contract.Interfaces
         IItemNameDetailRepository ItemNameDetails { get; }
 
         IUserLogRepository UserLogs { get; }
+
+        ISalesRouteRepository SalesRoutes { get; }
 
         IReportRepository Reports { get; }
 

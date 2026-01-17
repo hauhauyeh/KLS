@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,9 +11,11 @@ namespace KLS.Models
     public class ItemHistoryPurchase
     {
         [Key]
-        public string Id { get; set; }
+        public int PurchaseDetailId { get; set; }
 
         public int PurchaseId { get; set; }
+
+        public int PurchaseNumber { get; set; }
 
         public string? VendorDocNumber { get; set; }
 
@@ -37,5 +40,9 @@ namespace KLS.Models
         public decimal? FreightTotal { get; set; }
 
         public string? Type { get; set; }
+
+
+        [NotMapped]
+        public bool IsPdfExist { get; set; }
     }
 }

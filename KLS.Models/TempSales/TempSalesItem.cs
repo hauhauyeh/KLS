@@ -60,6 +60,15 @@ namespace KLS.Models
 
         public decimal? CaseWeight { get; set; }
 
-        public decimal? CaseTotal => Utilities.Rounding(OrdQty / FactorToBase, 6);
+        public decimal? CaseTotal
+        {
+            get
+            {
+                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(OrdQty / FactorToBase, 6) : 0;
+            }
+        }
+
+        [NotMapped]
+        public bool IsDefaultPrice { get; set; }
     }
 }

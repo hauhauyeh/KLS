@@ -38,7 +38,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("Purchase")]
-        [DisplayName("Purchase History")]
+        [DisplayName("Cost History")]
         public IActionResult Purchase([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetPurchaseHistory(itemHistoryReq));
@@ -50,6 +50,18 @@ namespace KLS.API.Controllers.Admin
         public IActionResult Inventory([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetInventoryHistory(itemHistoryReq));
+        }
+
+
+        [HttpGet("SalesCost")]
+        [DisplayName("Cost + Sales History")]
+        public IActionResult SalesCost([FromQuery] ItemHistoryReq itemHistoryReq)
+        {
+            return Ok(new
+            {
+                Sales = _itemHistoryService.GetSalesHistory(itemHistoryReq),
+                Purchase = _itemHistoryService.GetPurchaseHistory(itemHistoryReq).ToList().Take(5)
+            });
         }
 
         #endregion

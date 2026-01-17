@@ -34,5 +34,20 @@ namespace KLS.Contract.Services
         SalesList UpdatePartially(int salesId);
 
         SalesList UpdateNameDate(SalesUpdateReq updateReq);
+
+        SalesList InsertShippingCharge(SalesUpdateReq updateReq);
+
+        bool IsInvoicePdfExist(int salesNumber);
+
+        IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq);
+
+
+        //--Routing
+
+        IEnumerable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate);
+
+        void UpdateRouteOrder(List<ShipRouteDetail> routeDetails);
+
+        void UpdateRoute(List<ShipRouteDetail> routeDetails);
     }
 }

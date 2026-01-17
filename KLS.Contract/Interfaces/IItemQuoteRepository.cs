@@ -9,6 +9,10 @@ namespace KLS.Contract.Interfaces
 {
     public interface IItemQuoteRepository : IRepository<ItemQuote>
     {
+        int Build(ItemQuoteBuildReq buildReq);
 
+        void Inject(int payeeId);
+
+        void Save(int payeeId);
     }
 }

@@ -27,7 +27,11 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-
+        [HttpGet]
+        public IActionResult GetDefault()
+        {
+            return Ok(_companyService.GetDefault());
+        }
 
         #endregion
     }

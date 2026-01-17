@@ -1,8 +1,6 @@
 ﻿using KLS.API.Helpers;
-using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -112,6 +110,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("GetByDateRoute")]
+        public IActionResult GetByDateRoute([FromQuery] SalesDateRouteReq dateRouteReq)
+        {
+            return Ok(_salesService.GetByDateRoute(dateRouteReq));
+        }
+
+
         [HttpGet("SeePDF/{salesNumber}")]
         [DisplayName("See PDF Image")]
         public IActionResult SeePdf(int salesNumber)
@@ -153,6 +158,13 @@ namespace KLS.API.Controllers.Admin
         public IActionResult UpdateNameDate([FromBody] SalesUpdateReq updateReq)
         {
             return Ok(_salesService.UpdateNameDate(updateReq));
+        }
+
+
+        [HttpPut("ShippingCharge")]
+        public IActionResult ShippingCharge([FromBody] SalesUpdateReq updateReq)
+        {
+            return Ok(_salesService.InsertShippingCharge(updateReq));
         }
 
 

@@ -55,8 +55,10 @@ namespace KLS.API.Helpers
             services.AddScoped<IPurchaseService, PurchaseService>();
             services.AddScoped<ITempPurchaseService, TempPurchaseService>();
             services.AddScoped<ITempSalesService, TempSalesService>();
+            services.AddScoped<ITempBombSalesService, TempBombSalesService>();
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IItemQuoteService, ItemQuoteService>();
+            services.AddScoped<ITempItemQuoteService, TempItemQuoteService>();
             services.AddScoped<IItemHistoryService, ItemHistoryService>();
             services.AddScoped<ISalesStageService, SalesStageService>();
             services.AddScoped<IPurchaseStageService, PurchaseStageService>();
@@ -72,6 +74,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IItemUnitService, ItemUnitService>();
             services.AddScoped<IItemNameDetailService, ItemNameDetailService>();
             services.AddScoped<IUserLogService, UserLogService>();
+            services.AddScoped<ISalesRouteService, SalesRouteService>();
             services.AddScoped<IPDFService, PDFService>();
 
             return services;

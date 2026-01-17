@@ -2,8 +2,8 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,13 +17,18 @@ namespace KLS.Services
         private readonly IDeleteLogService _deleteLogService;
         private readonly ICompanyService _companyService;
         private readonly IPDFService _pdfService;
+        private readonly IWebHostEnvironment _env;
 
-        public PurchaseOrderService(IUnitOfWork uow, IDeleteLogService deleteLogService,
-            ICompanyService companyService, IPDFService pdfService) : base(uow)
+        public PurchaseOrderService(IUnitOfWork uow,
+            IDeleteLogService deleteLogService,
+            ICompanyService companyService,
+            IPDFService pdfService, 
+            IWebHostEnvironment env) : base(uow)
         {
             _deleteLogService = deleteLogService;
             _companyService = companyService;
             _pdfService = pdfService;
+            _env = env;
         }
 
         public PagingResponse<PurchaseOrderList> GetPagedList(PurchaseOrderReq purchaseOrderReq)
@@ -108,14 +113,16 @@ namespace KLS.Services
 
             var poTemplate = "~/Views/Pdf/PO.cshtml";
             var pohtml = _pdfService.RenderTemplate(poTemplate, rptPO);
-            var pdf = _pdfService.HtmlToPDF(pohtml);
 
-            var filename = "PO-" + purchaseId.ToString() + ".pdf";
-            string poFile = Path.Combine(AppContext.BaseDirectory, "wwwroot", "Pdf", filename);
+            var fileName = "PO-" + purchaseId.ToString() + ".pdf";
+            string poFile = Path.Combine(_env.WebRootPath, "Pdf", fileName);
 
-            pdf.SaveAs(poFile);
+            using (var pdf = _pdfService.HtmlToPDF(pohtml))
+            {
+                pdf.SaveAs(poFile);
+            }
 
-            return filename;
+            return poFile;
         }
 
         public PurchaseOrderList? UpdateToBillStage(int purchaseId)

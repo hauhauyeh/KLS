@@ -9,6 +9,6 @@ namespace KLS.Contract.Interfaces
 {
     public interface ICompanyRepository : IRepository<Company>
     {
-
+        DateOnly GetNextWorkDate();
     }
 }

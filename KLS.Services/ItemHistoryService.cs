@@ -11,19 +11,37 @@ namespace KLS.Services
 {
     public class ItemHistoryService : BaseService, IItemHistoryService
     {
-        public ItemHistoryService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IPurchaseService _purchaseService;
+        private readonly ISalesService _salesService;
 
+        public ItemHistoryService(IUnitOfWork uow, IPurchaseService purchaseService, ISalesService salesService) : base(uow)
+        {
+            _purchaseService = purchaseService;
+            _salesService = salesService;
         }
 
         public IEnumerable<ItemHistorySales> GetSalesHistory(ItemHistoryReq itemHistoryReq)
         {
-            return Uow.ItemHistories.GetSalesHistory(itemHistoryReq);
+            var salesItems = Uow.ItemHistories.GetSalesHistory(itemHistoryReq).ToList();
+
+            foreach (var item in salesItems)
+            {
+                item.IsPdfExist = _salesService.IsInvoicePdfExist(item.SalesNumber);
+            }
+
+            return salesItems;
         }
 
         public IEnumerable<ItemHistoryPurchase> GetPurchaseHistory(ItemHistoryReq itemHistoryReq)
         {
-            return Uow.ItemHistories.GetPurchaseHistory(itemHistoryReq);
+            var billItems = Uow.ItemHistories.GetPurchaseHistory(itemHistoryReq).ToList();
+
+            foreach (var item in billItems)
+            {
+                item.IsPdfExist = _purchaseService.IsBillPdfExist(item.PurchaseNumber);
+            }
+
+            return billItems;
         }
 
         public IEnumerable<ItemHistoryInventory> GetInventoryHistory(ItemHistoryReq itemHistoryReq)
