@@ -95,7 +95,7 @@ namespace KLS.API.Controllers.Admin
             if (!System.IO.File.Exists(poFilePath))
                 return NotFound("File not found.");
 
-            var fileStream = new FileStream(poFilePath, FileMode.Open, FileAccess.Read);
+            var fileStream = new FileStream(poFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return File(fileStream, "application/pdf");
         }
 

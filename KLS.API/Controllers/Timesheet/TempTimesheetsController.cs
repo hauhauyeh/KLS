@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Timesheet
 {
-    [Route("api/[controller]")]
+    [Route("api/timesheet/[controller]")]
     [Display(Name = "Temp Timesheet Management", GroupName = "Employee")]
     public class TempTimesheetsController : BaseController
     {

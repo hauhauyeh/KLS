@@ -1,0 +1,723 @@
+﻿@using KLS.Common
+@using KLS.Models.Reports
+@model RptInvoice
+@{
+    var colSpan = 4;
+
+    if (Model.HasDiscount)
+        colSpan = 7;
+
+    int rows = 0;
+
+    foreach (var sd in Model.Statement.Details)
+    {
+        rows += sd.Sales.Count(); // individual invoices
+        rows += 1;              // month total row
+    }
+
+    int totalStatementHeight = rows * 15 + 10; // estimate in pixels
+    int maxRightPanelHeight = 800;             // total right-panel-bottom height
+    int remainingHeight = maxRightPanelHeight - totalStatementHeight;
+
+    int promoCardHeight = 90; // estimate
+    int maxPromoCount = Math.Max(0, remainingHeight / promoCardHeight);
+
+    //var visiblePromos = Model.Promotions?.Take(maxPromoCount);
+}
+
+<style>
+
+    @@media print {
+        @@page {
+            size: letter;
+            margin-top: 0.2in;
+            margin-bottom: 0.1in;
+            margin-left: 0.2in;
+            margin-right: 0.2in;
+        }
+    }
+
+    body {
+        margin: 0;
+        font-size: 15px;
+        font-family: Calibri;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        padding: 0;
+        table-layout: fixed !important;
+    }
+
+    .header-height {
+        height: 245px;
+    }
+
+    .footer-height {
+        height: 160px;
+    }
+
+    .left-width {
+        /* width: 76%; */
+        width: 76%;
+        margin-right: 24%;
+    }
+
+    .middle-width {
+        width: 1%;
+    }
+
+    .right-width {
+        width: 23%;
+        break-inside: auto;
+        page-break-inside: auto;
+    }
+
+    .right-panel-fixed {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 23%; /* match your original .right-width */
+        overflow: hidden;
+    }
+
+    .highlight-dark {
+        background-color: #333333;
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .highlight-small {
+        background-color: #e6e6e6;
+        border-radius: 4px;
+        padding: 0px 6px 1px 6px;
+    }
+
+    .font10 {
+        font-size: 10px;
+    }
+
+    .font11 {
+        font-size: 11px;
+    }
+
+    .font12 {
+        font-size: 12px;
+    }
+
+    .upparcase {
+        text-transform: uppercase;
+    }
+
+    .font600 {
+        font-weight: 600;
+    }
+
+    .chinese {
+        font-family: 'Microsoft YaHei';
+    }
+
+    .text-left {
+        text-align: left;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .no-overflow {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    /*INVOICE DETAIL*/
+    .main-table tbody td {
+        font-size: 15px;
+        padding-bottom: 6px !important;
+        vertical-align: top;
+    }
+
+    .main-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /*INVOICE DETAIL -> GROUP-HEADER*/
+    .invoice-item-group {
+        background-color: grey;
+        color: white;
+        font-size: 15px;
+        font-weight: 500;
+        padding: 2px 10px 2px;
+        /* line-height: 1; */
+    }
+
+    .invoice-cat-group {
+        font-size: 11px;
+        font-weight: 400;
+    }
+
+    /*INVOICE HEADER*/
+    .main-table-header-grid {
+        position: fixed;
+        top: 0;
+        display: grid;
+        grid-template-rows: 135px 110px; /* Two rows */
+        grid-template-columns: 50% 10% 40%; /* Default column setting */
+    }
+
+    .comp-logo-grid {
+        grid-column: 1 / span 2;
+    }
+
+    .comp-name {
+        font-family: "Impact";
+        /* font-size: 26px; */
+        font-size: 18px;
+        line-height: 1;
+        padding-left: 10px;
+        margin-bottom: 10px;
+    }
+
+    .comp-address {
+        font-size: 12px;
+        line-height: 1.3;
+        padding-left: 10px;
+    }
+
+    .inv-info-grid {
+        grid-column: 3 / span 1;
+    }
+
+    .invoice-label {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .invoice-info-label {
+        font-size: 11px !important;
+        font-weight: bold;
+        text-align: left;
+        border: 1px solid;
+        padding: 3px 5px !important;
+    }
+
+    .invoice-info {
+        font-size: 12.5px;
+        text-align: center;
+        border: 1px solid;
+        padding: 3px 5px !important;
+    }
+
+    .ship-to-grid {
+        grid-column: 1 / span 2;
+    }
+
+    .ship-to-label {
+        padding: 3px 5px;
+        padding-left: 10px;
+        margin-bottom: 5px;
+    }
+
+    .cust-name {
+        font-size: 15px;
+        font-weight: bold;
+        line-height: 1.2;
+        padding-left: 5px;
+        padding-bottom: 3px;
+    }
+
+    .cust-address {
+        font-size: 13px;
+        padding-left: 5px;
+        line-height: 1.3;
+    }
+
+    .instruction-grid {
+        grid-column: 3 / span 1;
+    }
+
+    .instruction-label {
+        padding: 3px 5px;
+        padding-left: 0px;
+        margin-bottom: 3px;
+    }
+
+    .instruction {
+        font-size: 11px;
+        line-height: 1.1;
+        padding-left: 5px;
+    }
+
+    /*INVOICE FOOTER*/
+    .main-table-footer-grid {
+        position: fixed;
+        bottom: 0;
+        display: grid;
+        grid-template-rows: 20px 80px 60px; /* 3 rows */
+        grid-template-columns: 40% 35% 25%; /* Default column setting */
+    }
+
+    .driver-note-grid {
+        grid-column: 1 / span 3;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .payment-grid {
+        grid-column: 1 / span 1;
+    }
+
+    .t1 {
+        width: 100%;
+        height: 100%;
+        border-spacing: 0;
+    }
+
+        .t1 td {
+            font-size: 12px;
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+    .Signature-grid {
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        grid-column: 2 / span 1;
+    }
+
+    .total-grid {
+        grid-column: 3 / span 1;
+    }
+
+    .t2 {
+        width: 100%;
+        height: 100%;
+        border-spacing: 0;
+    }
+
+        .t2 td {
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid black;
+            /* width: 50%; */
+            padding-left: 3px;
+            padding-right: 5px;
+        }
+
+    .fineprint-grid {
+        grid-column: 1 / span 3;
+        margin-top: 2px;
+        text-align: justify;
+        font-size: 9px;
+        line-height: 1.1;
+        color: #333333 !important;
+    }
+
+    /*******************/
+    /* INVOICE SIDEBAR */
+    /*******************/
+
+    .invoice-barcode {
+        font-family: 'Free 3 of 9' !important;
+        font-size: 45px;
+        text-align: center;
+        padding-bottom: 6px;
+    }
+
+    .route-info-table {
+        margin-bottom: 9px;
+    }
+
+        .route-info-table td {
+            border: 1px solid;
+            padding: 3px 5px;
+        }
+
+    .route-info-label {
+        font-size: 11px;
+        font-weight:;
+        text-align: left;
+    }
+
+    .route-info {
+        font-size: 12.5px;
+        text-align: center;
+    }
+
+    .load-separate {
+        background-color: black;
+        color: white;
+        border-radius: 5px;
+        padding: 0px 10px;
+    }
+
+    .statement-label {
+        text-align: center;
+        padding: 3px 5px;
+    }
+
+    .statement-table {
+        margin-top: 5px;
+        margin-bottom: 10px;
+        table-layout: auto !important;
+    }
+
+        .statement-table td {
+            font-size: 11px;
+            padding: 2px 5px;
+            white-space: nowrap;
+        }
+
+    .promo-header {
+        background-color: black;
+        color: white;
+        font-size: 16px !important;
+        line-height: 1.3;
+        font-weight: bold;
+        border-radius: 4px;
+        text-align: center;
+        padding: 3px;
+        margin-bottom: 6px;
+    }
+
+    .promo-card {
+        margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px grey solid;
+        padding: 6px;
+        line-height: 1.5;
+        font-family: 'segoe ui';
+        font-size: 12px;
+        font-weight: bold;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .promo-name {
+        font-family: "Arial";
+        font-size: 12px;
+        font-style: italic;
+        padding-bottom: 3px;
+    }
+
+    .promo-desc {
+        padding-left: 5px;
+    }
+
+    .promo-desc2 {
+    }
+</style>
+
+<div style="display: flex;">
+    <div class="left-width">
+        <!-- ✅ Top margin for fixed header, bottom for footer -->
+        <div>
+            <table class="main-table">
+                <colgroup>
+                    @if (Model.HasDiscount)
+                    {
+                        <col style="width: 11%;">
+                        <col style="width: 47%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 10%;">
+                    }
+                    else
+                    {
+                        <col style="width: 17%;">
+                        <col style="width: 61%;">
+                        <col style="width: 10%;">
+                        <col style="width: 12%;">
+                    }
+                </colgroup>
+                <thead>
+                    <tr>
+                        <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var itmdetail in Model.InvoiceDetails)
+                    {
+                        if (itmdetail.IsGroup)
+                        {
+                            <tr>
+                                <td colspan="@colSpan">
+                                    <div class="invoice-item-group">
+                                        @itmdetail.ItemName
+                                        <div class="invoice-cat-group">@itmdetail.CatInvoiceDesc</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td class="no-overflow">
+                                    <strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit
+                                </td>
+                                <td>
+                                    <span style="line-height:1;">
+                                        <strong>@itmdetail.ItemName</strong><br />
+                                        <span class="font10 chinese">@itmdetail.ItemName2</span>&nbsp;
+                                        <span class="font11 upparcase">@itmdetail.PackSize</span>
+                                        @if (!string.IsNullOrEmpty(itmdetail.Notes))
+                                        {
+                                            <span class="highlight-small font12">@itmdetail.Notes</span>
+                                        }
+                                    </span>
+                                </td>
+                                @if (Model.HasDiscount)
+                                {
+                                    @* <td class="text-right font11">@string.Format("{0:c}", itmdetail.OrgPrice)</td>
+                                    <td class="text-right font11">@string.Format("{0:0.#%}", itmdetail.Discount)</td> *@
+                                }
+                                <td class="text-right font12">@string.Format("{0:c}", itmdetail.UnitPrice)</td>
+                                <td class="text-right font12">@string.Format("{0:c}", itmdetail.ExtTotal)</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="@colSpan"><div class="footer-height">&nbsp;</div></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- 🔁 Header and footer still fixed -->
+        <div class="main-table-header-grid left-width header-height">
+            <!-- your header content remains unchanged -->
+            <div class="comp-logo-grid">
+                <div class="comp-name">
+                    @if (Model.HasDiscount)
+                    {
+                        <div>
+                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bold;">@Model.Company.CompanyName</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bolder; font-style: italic;">KLS</span>
+                            <span> FOOD SERVICE</span>
+                        </div>
+                    }
+
+                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                </div>
+                <div class="comp-address">
+                    @Model.Company.AddressLine1<br />
+                    @Model.Company.City @Model.Company.State
+                    @Model.Company.ZipCode<br />
+                    @Model.Company.Phone<br />
+                    <strong>@Model.Company.Website</strong>
+                </div>
+            </div>
+            <div class="inv-info-grid">
+                <div class="invoice-label">
+                    <span>INVOICE</span>
+                </div>
+                <table>
+                    <colgroup>
+                        <col style="width: 40%;">
+                        <col style="width: 60%;">
+                    </colgroup>
+                    <tr>
+                        <td class="invoice-info-label">Invoice #</td>
+                        <td class="invoice-info">@Model.Invoice.SalesNumber</td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Invoice Date</td>
+                        <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Terms</td>
+                        <td class="invoice-info" style="white-space:nowrap;">
+                            @Model.Invoice.TermName
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Total Weight</td>
+                        <td class="invoice-info">@string.Format("{0:0.00}", Model.TotalWeight)</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="ship-to-grid">
+                <div class="ship-to-label highlight-dark">Ship To</div>
+                <div class="cust-name">
+                    @Model.Invoice.ShipName
+                </div>
+                <div class="cust-address">
+                    @Model.Invoice.ShipAddress<br />
+                    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
+                    @Model.Invoice.ShipPhone1
+                </div>
+            </div>
+            <div class="instruction-grid">
+                <div class="instruction-label highlight-dark">Instruction</div>
+                <div class="instruction">@Model.Invoice.Instruction</div>
+            </div>
+        </div>
+
+        <div class="main-table-footer-grid left-width footer-height">
+            <!-- your footer content remains unchanged -->
+            <div class="driver-note-grid">
+                @if (Model.Invoice.IsPastDue)
+                {
+                    <strong>Driver please pick up @string.Format("{0:c}", Model.Invoice.PayeePastDue)</strong>
+                }
+            </div>
+            <div class="payment-grid">
+                <table class="t1">
+                    <colgroup>
+                        <col style="width: 18%;">
+                        <col style="width: 41%;">
+                        <col style="width: 41%;">
+                    </colgroup>
+                    <tr>
+                        <td style="font-weight: bold; vertical-align: top;">Check</td>
+                        <td style="vertical-align: bottom;">#</td>
+                        <td style="vertical-align: bottom;">$</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; vertical-align: top;">Cash</td>
+                        <td style="vertical-align: bottom;">Init</td>
+                        <td style="vertical-align: bottom;">$</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="Signature-grid" style="position: relative;">
+                <span style="font-size: 12px; font-weight: bold; padding-left: 3px;">Signature</span>
+                <span style="position: absolute; bottom:2px; left:0; font-size: 10px; padding-left: 3px;">Recevied above in good conditions</span>
+            </div>
+            <div class="total-grid">
+                <table class="t2">
+                    <colgroup>
+                        <col style="width: 40%;">
+                        <col style="width: 60%;">
+                    </colgroup>
+                    <tr>
+                        <td class="text-right">Subtotal</td>
+                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.SubTotal)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right">Tax</td>
+                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.TaxTotal)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right">Total</td>
+                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.SalesTotal)</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="fineprint-grid">
+                @Model.Company.InvoiceFinePrint
+            </div>
+        </div>
+    </div>
+
+    <div class="middle-width"></div>
+
+    <div class="right-width right-panel-fixed">
+        <!-- Sidebar content remains unchanged -->
+        <div class="invoice-barcode">
+            *@Model.Invoice.SalesNumber*
+        </div>
+        <table class="route-info-table">
+            <colgroup>
+                <col style="width: 40%;">
+                <col style="width: 60%;">
+            </colgroup>
+            <tr>
+                <td class="route-info-label">Route</td>
+                <td class="route-info">
+                    @if (Model.Invoice.IsLoadSeparate)
+                    {
+                        <strong class="load-separate">@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder Of @Model.Invoice.RouteDrops</strong>
+                    }
+                    else
+                    {
+                        <strong>@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder Of @Model.Invoice.RouteDrops</strong>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td class="route-info-label">Sales Rep</td>
+                <td class="route-info">@Model.Invoice.SalesRepName</td>
+            </tr>
+            <tr>
+                <td class="route-info-label">Truck #</td>
+                <td class="route-info">#@Model.Invoice.TruckNumber</td>
+            </tr>
+            <tr>
+                <td class="route-info-label">Driver</td>
+                <td class="route-info">@Model.Invoice.DriverName</td>
+            </tr>
+        </table>
+
+        @if (Model.Statement.Details.Count > 0)
+        {
+            <div class="statement-label highlight-dark">
+                <span>Statement</span>
+            </div>
+            <table class="statement-table">
+                @foreach (var sd in Model.Statement.Details)
+                {
+                    foreach (var s in sd.Sales)
+                    {
+                        <tr>
+                            <td>@string.Format("{0:d}", s.ShipDate)</td>
+                            <td>@s.SalesNumber</td>
+                            <td class="text-right">
+                                @string.Format("{0:c}", s.AmountDue)
+                                @if (s.IsPastDue)
+                                {
+                                    <span>*</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    <tr>
+                        <td colspan="3" class="text-right"><strong>@string.Format("{0:c}", sd.MonthTotal)</strong></td>
+                    </tr>
+                }
+
+                <tr>
+                    <td colspan="3" class="text-right">
+                        <strong>@string.Format("{0:c}", Model.Statement.Payee.PayeeTotalDue)</strong>
+                    </td>
+                </tr>
+            </table>
+        }
+
+        @* @if (visiblePromos.Any() && Model.Statement.IsPromotionEnabled)
+        {
+            <div class="promo-header">Promotion</div>
+            @foreach (var p in visiblePromos)
+            {
+                <div class="promo-card">
+                    <div></div>
+                    <div>
+                        <div class="promo-desc-wrap">
+                            <div class="promo-name">@p.PromoName</div>
+                            <div class="promo-desc">@p.PromoDesc</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        } *@
+    </div>
+</div>

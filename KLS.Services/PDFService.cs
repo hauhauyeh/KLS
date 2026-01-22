@@ -1,4 +1,5 @@
 ﻿using IronPdf;
+using IronPdf.Rendering;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using Razor.Templating.Core;
@@ -12,23 +13,15 @@ namespace KLS.Services
 {
     public class PDFService : BaseService, IPDFService
     {
+        private static readonly ChromePdfRenderer _renderer = CreateRenderer();
+
         public PDFService(IUnitOfWork uow) : base(uow)
         {
         }
 
         public PdfDocument HtmlToPDF(string html)
         {
-            var chromePdf = new ChromePdfRenderer();
-
-            chromePdf.RenderingOptions.PrintHtmlBackgrounds = true;
-            chromePdf.RenderingOptions.CssMediaType = IronPdf.Rendering.PdfCssMediaType.Print;
-            chromePdf.RenderingOptions.PaperSize = IronPdf.Rendering.PdfPaperSize.Letter;
-            chromePdf.RenderingOptions.MarginBottom = 5;
-            chromePdf.RenderingOptions.MarginTop = 8;
-            chromePdf.RenderingOptions.MarginLeft = 8;
-            chromePdf.RenderingOptions.MarginRight = 8;
-
-            var pdf = chromePdf.RenderHtmlAsPdf(html);
+            var pdf = _renderer.RenderHtmlAsPdf(html);
 
             string footerHtml = @"
             <div style='font-size:12px;margin-bottom:5px'>
@@ -50,6 +43,19 @@ namespace KLS.Services
         public string RenderTemplate(string templatePath, object model)
         {
             return RazorTemplateEngine.RenderAsync(templatePath, model).Result;
+        }
+
+        private static ChromePdfRenderer CreateRenderer()
+        {
+            var renderer = new ChromePdfRenderer();
+            renderer.RenderingOptions.PrintHtmlBackgrounds = true;
+            renderer.RenderingOptions.CssMediaType = PdfCssMediaType.Print;
+            renderer.RenderingOptions.PaperSize = PdfPaperSize.Letter;
+            renderer.RenderingOptions.MarginBottom = 5;
+            renderer.RenderingOptions.MarginTop = 8;
+            renderer.RenderingOptions.MarginLeft = 8;
+            renderer.RenderingOptions.MarginRight = 8;
+            return renderer;
         }
     }
 }

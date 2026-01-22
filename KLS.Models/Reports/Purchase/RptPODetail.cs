@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLS.Models
+namespace KLS.Models.Reports
 {
     public class RptPODetail
     {

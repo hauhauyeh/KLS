@@ -172,6 +172,8 @@ namespace KLS.Data.Repositories
 
         public ISalesRouteRepository SalesRoutes { get { return new SalesRouteRepository(DbContext); } }
 
+        public IPrintLogRepository PrintLogs { get { return new PrintLogRepository(DbContext); } }
+
         public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
     }
 }

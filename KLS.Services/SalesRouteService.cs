@@ -18,6 +18,11 @@ namespace KLS.Services
             _truckService = truckService;
         }
 
+        public SalesRoute? GetByDateRoute(DateOnly? shipDate, string? shipRoute)
+        {
+            return Uow.SalesRoutes.Find(c => c.ShipDate == shipDate && c.ShipRoute == shipRoute).FirstOrDefault();
+        }
+
         public IEnumerable<AssignTruck>? GetAssignTrucks(DateOnly shipDate)
         {
             var trucks = _truckService.GetActive().ToList();
@@ -76,7 +81,7 @@ namespace KLS.Services
             var existing = Uow.SalesRoutes.Find(sr => sr.ShipDate == shipDate).ToList();
 
             foreach (var row in existing)
-                Uow.SalesRoutes.Remove(row);
+                Uow.SalesRoutes.RemoveById(row.SalesRouteId);
 
             // Always insert in the same order as incoming list
             foreach (var row in incoming)

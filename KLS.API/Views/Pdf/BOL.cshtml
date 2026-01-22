@@ -1,0 +1,169 @@
+﻿@using KLS.Common
+@using KLS.Models.Reports
+@model RptInvoice
+@{
+    var itemsize = 15;
+    var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails.Count, itemsize);
+
+    if (totalpage == 0)
+        totalpage = 1;
+
+    var colSpan = 6;
+}
+
+<style>
+
+    @@media print {
+        @@page {
+            size: letter;
+            margin-top: 0.2in;
+            margin-bottom: 0.2in;
+            margin-left: 0.2in;
+            margin-right: 0.2in;
+        }
+    }
+
+    body {
+        margin: 0;
+        font-size: 15px;
+        font-family: Calibri;
+    }
+
+    h2, h3 {
+        text-align: center;
+        margin-bottom: 5px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+
+    th, td {
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: left;
+    }
+
+    .section {
+        margin-bottom: 10px;
+    }
+
+    .small-text {
+        font-size: 12px;
+    }
+
+    .button-container {
+        text-align: center;
+        margin-top: 10px;
+    }
+</style>
+
+<h2>BILL OF LANDING</h2>
+<h3>@Model.Company.CompanyName</h3>
+<p style="text-align: center;">
+    @Model.Company.AddressLine1<br />
+    @Model.Company.City @Model.Company.State
+    @Model.Company.ZipCode<br />
+    @Model.Company.Phone<br />
+    <strong>@Model.Company.Website</strong>
+</p>
+
+<div class="section">
+    <strong>1. SHIPPER (Seller) INFORMATION</strong><br>
+    <strong>Company:</strong> @Model.Company.CompanyName <br>
+    <strong>Address:</strong> @Model.Company.AddressLine1, @Model.Company.City, @Model.Company.State @Model.Company.ZipCode <br>
+    <strong>Phone:</strong> @Model.Company.Phone
+</div>
+
+<div class="section">
+    <strong>2. CONSIGNEE (Buyer) INFORMATION</strong><br>
+    <strong>Company:</strong> @Model.Invoice.ShipName<br>
+    <strong>Address:</strong> @Model.Invoice.ShipAddress <br />
+    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
+    <strong>Phone:</strong> @Model.Invoice.ShipPhone1
+</div>
+
+<div class="section">
+    <strong>3. CARRIER INFORMATION</strong><br>
+    <strong>Carrier Name:</strong> @Model.ShippingCarrier.PayeeName<br>
+    <strong>Address:</strong> @Model.ShippingCarrier.Address<br />
+    @Model.ShippingCarrier.City @Model.ShippingCarrier.State @Model.ShippingCarrier.ZipCode<br />
+    <strong>Truck/Trailer #:</strong> <br>
+    <strong>Driver’s Name:</strong>
+</div>
+
+<div class="section">
+    <strong>4. SHIPPING DETAILS</strong><br>
+    <strong>BOL Number:</strong> @Model.Invoice.SalesNumber <br>
+    <strong>Pickup Date:</strong> @string.Format("{0:d}", Model.Invoice.ShipDate) <br>
+    <strong>Delivery Date:</strong> @string.Format("{0:d}", Model.Invoice.ShipDate) <br>
+    <strong>Freight Terms:</strong> ☐ Prepaid ☐ Collect ☐ Third-Party
+</div>
+
+<div class="section">
+    <strong>5. COMMODITY DETAILS</strong>
+    <table>
+        <tr>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Weight (lbs)</th>
+            <th>Total Palette Count</th>
+        </tr>
+        <tr>
+            <td>Packaged Snack Foods</td>
+            <td>@string.Format("{0:0.##}", Model.TotalCases) Cases (@Model.TotalItems Items)</td>
+            <td>@string.Format("{0:0.00}", Model.TotalWeight)</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+</div>
+
+<div class="section">
+    <strong>6. SPECIAL HANDLING INSTRUCTIONS</strong><br>
+    ☐ Refrigerated (Temp: _____ °F) ☐ Fragile ☐ Hazardous ☐ Other: _______________
+</div>
+
+<div class="section">
+    <strong>7. TERMS OF SHIPMENT</strong><br>
+    ☐ FOB Origin ☐ FOB Destination ☐ CIF ☐ Other: ____________________
+</div>
+
+<div class="section">
+    <strong>8. DECLARED VALUE</strong><br>
+    <strong>Total Invoice Value:</strong> @string.Format("{0:c}", Model.Invoice.SalesTotal)<br>
+    ☐ Insurance Required (Amount: $__________)
+</div>
+
+<div class="section">
+    <strong>9. FREIGHT CHARGES & PAYMENT TERMS</strong><br>
+    ☐ Paid by Shipper ☐ Paid by Consignee ☐ Third-Party Billing: _______________
+</div>
+
+<div class="section">
+    <strong>10. SIGNATURES</strong>
+    <table>
+        <tr>
+            <th>Shipper’s Signature</th>
+            <th>Carrier’s Signature</th>
+            <th>Consignee’s Signature</th>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td class="small-text">Date: </td>
+            <td class="small-text">Date: </td>
+            <td class="small-text">Date: </td>
+        </tr>
+    </table>
+</div>

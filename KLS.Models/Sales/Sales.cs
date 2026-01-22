@@ -40,8 +40,8 @@ namespace KLS.Models
         public decimal? SalesTotal { get; set; }
         public decimal? AmountDue { get; set; }
 
-        public DateTime? DueDate { get; set; }
-        public DateTime? DiscountDate { get; set; }
+        public DateOnly? DueDate { get; set; }
+        public DateOnly? DiscountDate { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? DiscountPercent { get; set; }
@@ -79,5 +79,9 @@ namespace KLS.Models
 
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+
+        [NotMapped]
+        public bool IsPastDue => DateOnly.FromDateTime(DateTime.Now) > DueDate;
     }
 }

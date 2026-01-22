@@ -17,7 +17,7 @@ namespace KLS.Services
 
         public IEnumerable<ItemStorage>? GetList()
         {
-            return Uow.ItemStorages.GetAll().OrderBy(s => s.Zone).ToList();
+            return Uow.ItemStorages.GetAll().OrderBy(s => s.SortOrder).ToList();
         }
 
         public ItemStorage GetById(int id)

@@ -29,5 +29,8 @@ namespace KLS.Common
         public const string TWILIO_FROM = "TWILIO_FROM";
 
         public const string IRONPDF_KEY = "IRONPDF_KEY";
+
+        public const string SYSTEM_HAS_DISCOUNT = "SYSTEM_HAS_DISCOUNT";
+        public const string DOCUMENT_FORMAT = "DOCUMENT_FORMAT";
     }
 }

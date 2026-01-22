@@ -1,0 +1,239 @@
+﻿@model KLS.Models.Reports.RptPackingList
+
+<style>
+    .pack {
+        font-size: 35px;
+        font-style: italic;
+        font-weight: bold;
+        font-family: segoe ui;
+    }
+
+    .div-item {
+        border: 1px solid grey;
+        padding: 0 2px;
+        page-break-inside: avoid;
+    }
+
+    .item-name {
+        font-size: 16px;
+    }
+
+    .itemqty {
+        width: 55%;
+        float: left;
+        text-align: right;
+        font-size: 22px;
+        font-style: italic;
+    }
+
+    .itemunit {
+        width: 45%;
+        float: right;
+        font-size: 20px;
+    }
+
+    .route, .trucknum, .loadorder {
+        font-size: 30px;
+        font-weight: bold;
+        font-style: italic;
+        font-family: segoe ui;
+        background-color: black;
+        color: white;
+        padding: 0 20px;
+        border-radius: 5px;
+    }
+
+    #mc4a {
+        -webkit-column-count: 3; /* Chrome, Safari, Opera */
+        -moz-column-count: 3;
+        column-count: 3;
+        -moz-column-gap: 10px;
+        column-fill: auto;
+        column-gap: 10px;
+        font-family: "Segoe UI";
+        font-size: 12px;
+    }
+
+    .comment {
+        background-color: black;
+        color: white;
+        padding: 0px 4px;
+        border-radius: 5px;
+    }
+
+    strong {
+        font-weight: bold;
+    }
+
+    .pack-header {
+        margin-bottom: 1rem !important;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .pack-grp-header {
+        background: black;
+        color: white;
+        border-width: 1px;
+        border-color: black;
+        border-style: solid;
+        padding: 2px;
+        margin-bottom: 0px;
+        margin-top: 0px;
+        font-family: "Franklin Gothic";
+        font-weight: bold;
+        text-align: center;
+        font-size: 18px;
+        font-style: italic;
+    }
+
+    .pack-grp-subheader {
+        background: black;
+        color: white;
+        border-width: 0px 0px 2px 0px;
+        border-color: black;
+        border-style: solid;
+        padding: 0px;
+        margin-bottom: 0px;
+        margin-top: 0px;
+        font-family: "Arial";
+        font-weight: bold;
+        text-align: left;
+        font-size: 16px;
+        font-style: italic;
+    }
+
+    .dateroute, .payee {
+        font-size: 20px;
+        font-weight: 700;
+        font-style: italic;
+        font-family: 'segoe ui';
+        color: black;
+    }
+
+    .name-date-route {
+        display: flex !important;
+        justify-content: space-between !important;
+        border-bottom: 1px solid black;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+    }
+
+    .single-row {
+        font-family: "Calibri";
+        font-size: 11px;
+    }
+
+        .single-row::after {
+            content: "";
+            clear: both;
+            display: block;
+        }
+
+    @@media print {
+        @@page {
+            size: letter;
+            margin-top: 1in;
+        }
+    }
+
+</style>
+
+<div class="div-main">
+    <div>
+        @if (Model.SalesId.HasValue)
+        {
+            <div class="name-date-route">
+                <div class="payee">@Model.PayeeName</div>
+                <div class="dateroute">@string.Format("{0:d}", Model.ShipDate) - @Model.ShipRoute</div>
+            </div>
+        }
+        else
+        {
+            <div class="rpt-name pack-header">
+                <div class="pack">
+                    @if (Model.ShipDate.HasValue)
+                    {
+                        @string.Format("{0:d}", Model.ShipDate)
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(Model.ShipRoute))
+                {
+                    <div class="route">
+                        @Model.ShipRoute
+                    </div>
+                }
+                @if (Model.DropCount > 0)
+                {
+                    <div class="loadorder">
+                        [@Model.DropCount]
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.TruckNumber))
+                {
+                    <div class="trucknum">
+                        T#@Model.TruckNumber
+                    </div>
+                }
+                @if (Model.TotalWeight != 0)
+                {
+                    <div class="weight">
+                        <span>Weight - @string.Format("{0:0.00}", Model.TotalWeight) lbs</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div id="mc4a">
+        @if (Model.Storages.Count > 0)
+        {
+            foreach (var storage in Model.Storages)
+            {
+                if (!string.IsNullOrEmpty(storage.StorageName))
+                {
+                    <h6 class="pack-grp-header">
+                        <span>@storage.StorageName</span>
+                    </h6>
+                }
+                else
+                {
+                    <h6 class="pack-grp-subheader"></h6>
+                }
+
+                foreach (var product in storage.Products)
+                {
+                    <div class="div-item">
+                        @if (!string.IsNullOrEmpty(product.ItemName))
+                        {
+                            <strong class="item-name">
+                                @product.ItemName
+                                @if (!string.IsNullOrEmpty(product.Comment))
+                                {
+                                    <span class="comment">(@product.Comment)</span>
+                                }
+                            </strong>
+                        }
+
+                        @foreach (var itm in product.Items)
+                        {
+                            <div class="single-row" style="padding:2px 0 4px 0">
+                                <div class="itemqty">
+                                    <strong>@string.Format("{0:0.##}", itm.ShipQty)</strong>
+                                </div>
+                                <div class="itemunit d-flex justify-content-between">
+                                    <span>&nbsp;@itm.Unit&nbsp;</span>
+                                    <strong>@itm.Aisle@itm.Bay</strong>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        }
+        else
+        {
+            <p class="alert alert-danger">Packing item not found.</p>
+        }
+    </div>
+</div>

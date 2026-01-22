@@ -28,5 +28,9 @@ namespace KLS.Contract.Interfaces
         IQueryable<ShipRouteDetail>? ShipRouteDetail(DateOnly shipDate);
 
         IQueryable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq);
+
+        void BatchAllocation(DateOnly shipDate);
+
+        void SingleAllocation(int salesId);
     }
 }

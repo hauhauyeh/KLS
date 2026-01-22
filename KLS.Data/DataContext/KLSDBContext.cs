@@ -1,5 +1,6 @@
 ﻿using KLS.Common;
 using KLS.Models;
+using KLS.Models.Reports;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System;
@@ -92,6 +93,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<UserLog>().ToTable("UserLog");
             modelBuilder.Entity<TempBombSales>().ToTable("TempBombSales");
             modelBuilder.Entity<SalesRoute>().ToTable("SalesRoute");
+            modelBuilder.Entity<PrintLog>().ToTable("PrintLog");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -232,6 +234,8 @@ namespace KLS.Data.DataContext
 
         public DbSet<SalesRoute> SalesRoutes { get; set; }
 
+        public DbSet<PrintLog> PrintLogs { get; set; }
+
         #endregion
 
         #region ---Virtual DBSET---
@@ -318,10 +322,19 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ShipRouteDetail> ShipRouteDetail { get; set; }
 
+        #endregion
+
+        #region ---Report DBSET---
+
+        public virtual DbSet<Invoice> Invoice { get; set; }
+
+        public virtual DbSet<InvoiceDetail> InvoiceDetail { get; set; }
 
         public virtual DbSet<RptPO> RptPO { get; set; }
 
         public virtual DbSet<RptPODetail> RptPODetail { get; set; }
+
+        public virtual DbSet<RptPackingItem> RptPackingItem { get; set; }
 
         #endregion
     }

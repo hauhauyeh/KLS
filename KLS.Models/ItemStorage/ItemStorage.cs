@@ -21,6 +21,8 @@ namespace KLS.Models
 
         public string? DisplayName { get; set; }
 
+        public int? SortOrder { get; set; }
+
         public string? Zone { get; set; }
 
         public string? Section { get; set; }

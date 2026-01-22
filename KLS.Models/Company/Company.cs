@@ -28,6 +28,8 @@ namespace KLS.Models
 
         public string? DisplayName { get; set; }
 
+        public string? CompanyName2 { get; set; }
+
         public string? RegistrationNo { get; set; }
 
         public string? TaxId { get; set; }
@@ -61,6 +63,8 @@ namespace KLS.Models
         public bool HasLogo { get; set; }
 
         public string? MapsLatLong { get; set; }
+
+        public string? InvoiceFinePrint { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

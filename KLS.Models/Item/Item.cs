@@ -26,6 +26,7 @@ namespace KLS.Models
         [Required(ErrorMessage = "Enter Code")]
         public string ItemCode { get; set; } = string.Empty;
         public string? ItemName { get; set; }
+        public string? ItemName2 { get; set; }
         public string? ItemSearchTag { get; set; }
         public string? ItemLongDesc { get; set; }
         public string? ItemBoxDesc { get; set; }

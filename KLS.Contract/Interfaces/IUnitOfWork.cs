@@ -145,6 +145,8 @@ namespace KLS.Contract.Interfaces
 
         ISalesRouteRepository SalesRoutes { get; }
 
+        IPrintLogRepository PrintLogs { get; }
+
         IReportRepository Reports { get; }
 
         void Commit();

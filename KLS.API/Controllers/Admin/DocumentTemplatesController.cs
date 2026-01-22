@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "DocumentTemplate Management", GroupName = "Admin")]
+    [Display(Name = "Document Template Management", GroupName = "Admin")]
     public class DocumentTemplatesController : BaseController
     {
         #region --- Member(s) ---
@@ -50,7 +50,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Create DocumentTemplate ")]
+        [DisplayName("Create Document Template")]
         public IActionResult Create([FromBody] DocumentTemplate documentTemplate)
         {
             if (_documentTemplateService.Exists(documentTemplate))
@@ -61,7 +61,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut]
-        [DisplayName("Update DocumentTemplate ")]
+        [DisplayName("Update Document Template ")]
         public IActionResult Update([FromBody] DocumentTemplate documentTemplate)
         {
             if (_documentTemplateService.Exists(documentTemplate))
@@ -72,7 +72,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpDelete("{id}")]
-        [DisplayName("Delete DocumentTemplate")]
+        [DisplayName("Delete Document Template")]
         public IActionResult Delete(int id)
         {
             _documentTemplateService.Delete(id);

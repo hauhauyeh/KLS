@@ -92,8 +92,11 @@ namespace KLS.Services
 
             if (existing != null)
             {
-                var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId ?? 0, existing.Unit);
-                var itemPrice = _itemUnitService.GetItemPriceByCustomer(existing.PayeeId, existing.ItemId ?? 0, itemUnit.ItemUnitId);
+                if (!existing.ItemId.HasValue)
+                    throw new InvalidOperationException("ItemId is required to update unit.");
+
+                var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId.Value, existing.Unit);
+                var itemPrice = _itemUnitService.GetItemPriceByCustomer(existing.PayeeId, existing.ItemId.Value, itemUnit.ItemUnitId);
 
                 existing.ApplyUnit(itemUnit.Unit, itemUnit.ItemUnitId, itemUnit.FactorToBase);
 

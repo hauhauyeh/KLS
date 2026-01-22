@@ -23,6 +23,8 @@ namespace KLS.Contract.Services
 
         SalesList UpdateCarrier(int salesId, int? shippingCarrierId);
 
+        SalesStage UpdateStage(int salesId, int stageId);
+
         void Delete(int salesId);
 
         ICollection<string?> GetShipRoutes(DateOnly shipDate);
@@ -40,6 +42,10 @@ namespace KLS.Contract.Services
         bool IsInvoicePdfExist(int salesNumber);
 
         IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq);
+
+        void BatchAllocation(DateOnly shipDate);
+
+        void SingleAllocation(int salesId);
 
 
         //--Routing

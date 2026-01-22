@@ -75,6 +75,10 @@ namespace KLS.API.Helpers
             services.AddScoped<IItemNameDetailService, ItemNameDetailService>();
             services.AddScoped<IUserLogService, UserLogService>();
             services.AddScoped<ISalesRouteService, SalesRouteService>();
+            services.AddScoped<IPrintLogService, PrintLogService>();
+
+            services.AddScoped<IReportService, ReportService>();
+            services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<IPDFService, PDFService>();
 
             return services;

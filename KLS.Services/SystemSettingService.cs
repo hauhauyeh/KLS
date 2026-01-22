@@ -1,5 +1,6 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace KLS.Services
         {
             var setting = Uow.SystemSettings
                 .Find(c => c.SettingKey == settingKey)
+                .AsNoTracking()
                 .FirstOrDefault();
 
             if (setting == null || string.IsNullOrEmpty(setting.SettingValue))

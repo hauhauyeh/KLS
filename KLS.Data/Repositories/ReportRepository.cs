@@ -1,6 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
+using KLS.Models.Reports;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -18,6 +19,20 @@ namespace KLS.Data.Repositories
 
         }
 
+        public Invoice Invoice(int salesId)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+
+            return DbContext.Invoice.FromSqlRaw("[dbo].[Report_Invoice] @SalesId", SalesIdParam).ToList().FirstOrDefault();
+        }
+
+        public IQueryable<InvoiceDetail>? InvoiceDetail(int salesId)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+
+            return DbContext.InvoiceDetail.FromSqlRaw("[dbo].[Report_InvoiceDetail] @SalesId", SalesIdParam).AsNoTracking();
+        }
+
         public RptPO ReportPO(int purchaseId)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
@@ -31,5 +46,20 @@ namespace KLS.Data.Repositories
 
             return DbContext.RptPODetail.FromSqlRaw("[dbo].[Report_PODetail] @purchaseId", PurchaseIdParam);
         }
+
+        #region --- Packing ---
+
+        public IQueryable<RptPackingItem> PackingList(DocumentReq req)
+        {
+            var ShipDateParam = req.ShipDate.HasValue && !req.SalesId.HasValue ? new SqlParameter("@ShipDate", req.ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
+
+            var ShipRouteParam = string.IsNullOrEmpty(req.ShipRoute) ? new SqlParameter("@ShipRoute", DBNull.Value) : new SqlParameter("@ShipRoute", req.ShipRoute);
+
+            var SalesIdParam = req.SalesId.HasValue ? new SqlParameter("@SalesId", req.SalesId) : new SqlParameter("@SalesId", DBNull.Value);
+
+            return DbContext.RptPackingItem.FromSqlRaw("[dbo].[Report_PackingList] @ShipDate,@ShipRoute,@SalesId", ShipDateParam, ShipRouteParam, SalesIdParam);
+        }
+
+        #endregion
     }
 }

@@ -114,6 +114,25 @@ namespace KLS.Services
             return GetListById(salesId)!;
         }
 
+        public SalesStage UpdateStage(int salesId, int stageId)
+        {
+            var sales = GetById(salesId);
+
+            if (sales != null)
+            {
+                var oldStageId = sales.StageId;
+
+                sales.StageId = stageId;
+                Uow.Sales.Update(sales);
+                Uow.Commit();
+
+                if (oldStageId == 0 && stageId == 2)
+                    SingleAllocation(salesId);
+            }
+
+            return Uow.SalesStages.GetById(stageId);
+        }
+
         public void Delete(int salesId)
         {
             var sales = Uow.Sales.GetById(salesId);
@@ -175,6 +194,16 @@ namespace KLS.Services
         public IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq)
         {
             return Uow.Sales.GetByDateRoute(dateRouteReq);
+        }
+
+        public void BatchAllocation(DateOnly shipDate)
+        {
+            Uow.Sales.BatchAllocation(shipDate);
+        }
+
+        public void SingleAllocation(int salesId)
+        {
+            Uow.Sales.SingleAllocation(salesId);
         }
 
 

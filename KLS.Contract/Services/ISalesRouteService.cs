@@ -9,6 +9,8 @@ namespace KLS.Contract.Services
 {
     public interface ISalesRouteService
     {
+        SalesRoute? GetByDateRoute(DateOnly? shipDate, string? shipRoute);
+
         IEnumerable<AssignTruck>? GetAssignTrucks(DateOnly shipDate);
 
         void SaveAssignTrucks(List<AssignTruck> assignTrucks);

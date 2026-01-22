@@ -175,5 +175,19 @@ namespace KLS.Data.Repositories
 
             return DbContext.ShipRouteDetail.FromSqlRaw("[Sales_GetByDateRoute] @ShipDate,@ShipRoute", ShipDateParam, ShipRouteParam);
         }
+
+        public void BatchAllocation(DateOnly shipDate)
+        {
+            var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
+
+            DbContext.Database.ExecuteSqlRaw("[FIFO_Batch_Allocation] @ShipDate", ShipDateParam);
+        }
+
+        public void SingleAllocation(int salesId)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+
+            DbContext.Database.ExecuteSqlRaw("[FIFO_Single_Allocation] @SalesId", SalesIdParam);
+        }
     }
 }
