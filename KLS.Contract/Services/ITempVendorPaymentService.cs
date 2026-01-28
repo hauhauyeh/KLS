@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface ITempVendorPaymentService
     {
-        IEnumerable<TempVendorPayment> Inject(TempVendorPaymentListReq tempReq);
+        IEnumerable<TempVendorPayment>? Inject(TempPaymentReq tempPaymentReq);
 
         void Update(TempVendorPayment tempVendorPayment);
     }

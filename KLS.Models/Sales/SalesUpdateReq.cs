@@ -21,6 +21,8 @@ namespace KLS.Models
 
         public decimal? ShippingCharge { get; set; }
 
+        public int? StageId { get; set; }
+
 
         //for name and date change
         public bool IsNameChange { get; set; }

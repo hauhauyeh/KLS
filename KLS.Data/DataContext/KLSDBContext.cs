@@ -94,6 +94,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempBombSales>().ToTable("TempBombSales");
             modelBuilder.Entity<SalesRoute>().ToTable("SalesRoute");
             modelBuilder.Entity<PrintLog>().ToTable("PrintLog");
+            modelBuilder.Entity<TempCustomerPayment>().ToTable("TempCustomerPayment");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -220,6 +221,8 @@ namespace KLS.Data.DataContext
 
         public DbSet<TempTransferFund> TempTransferFunds { get; set; }
 
+        public DbSet<TempCustomerPayment> TempCustomerPayments { get; set; }
+
         public DbSet<UserAccount> UserAccounts { get; set; }
 
         public DbSet<UserRole> UserRoles { get; set; }
@@ -321,6 +324,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<ShipRouteSummary> ShipRouteSummary { get; set; }
 
         public virtual DbSet<ShipRouteDetail> ShipRouteDetail { get; set; }
+
+        public virtual DbSet<TempCustomerPaymentList> TempCustomerPaymentList { get; set; }
 
         #endregion
 

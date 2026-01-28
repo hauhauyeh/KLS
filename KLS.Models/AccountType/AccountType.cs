@@ -14,6 +14,8 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AccountTypeId { get; set; }
 
+        public string AccountClass { get; set; }
+
         public string TypeName { get; set; }
 
         public string? TypeNumber { get; set; }
@@ -22,17 +24,7 @@ namespace KLS.Models
 
         public string? DetailNumber { get; set; }
 
-        public string? CatName { get; set; }
-
-        public string? CatNumber { get; set; }
-
-        public string? GroupLevel0 { get; set; }
-
-        public string? GroupLevel1 { get; set; }
-
-        public string? GroupLevel2 { get; set; }
-
-        public string? GroupLevel3 { get; set; }
+        public int? SortOrder { get; set; }
 
         public bool Inactive { get; set; }
 

@@ -15,16 +15,14 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IAccountService _accountService;
-        private readonly IAccountTypeService _accountTypeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public AccountsController(IAccountService accountService, IAccountTypeService accountTypeService)
+        public AccountsController(IAccountService accountService)
         {
             _accountService = accountService;
-            _accountTypeService = accountTypeService;
         }
 
         #endregion
@@ -33,9 +31,9 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Accounts")]
-        public IActionResult GetAccountsTree()
+        public IActionResult GetList(string? search)
         {
-            return Ok(_accountService.GetAccountsTree());
+            return Ok(_accountService.GetList(search));
         }
 
 
@@ -48,41 +46,37 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Account")]
-        public IActionResult Create([FromBody] Account chartOfAccount)
+        public IActionResult Create([FromBody] Account account)
         {
             //add @ sign if not exist
-            if (chartOfAccount?.AccountCode?[0] != '@')
-                chartOfAccount.AccountCode = "@" + chartOfAccount.AccountCode;
+            if (account?.AccountCode?[0] != '@')
+                account.AccountCode = "@" + account.AccountCode;
 
-            if (_accountService.AcctNameExists(chartOfAccount))
+            if (_accountService.NameExists(account))
                 return Conflict("Name already exists.");
 
-            if (_accountService.AcctCodeExists(chartOfAccount))
+            if (_accountService.CodeExists(account))
                 return Conflict("Code already exists");
 
-            var created = _accountService.CreateAccount(chartOfAccount);
-
-            return Ok(created);
+            return Ok(_accountService.Create(account));
         }
 
 
         [HttpPut]
         [DisplayName("Update Account")]
-        public IActionResult Update([FromBody] Account chartOfAccount)
+        public IActionResult Update([FromBody] Account account)
         {
             //add @ sign if not exist
-            if (chartOfAccount?.AccountCode?[0] != '@')
-                chartOfAccount.AccountCode = "@" + chartOfAccount.AccountCode;
+            if (account?.AccountCode?[0] != '@')
+                account.AccountCode = "@" + account.AccountCode;
 
-            if (_accountService.AcctNameExists(chartOfAccount))
+            if (_accountService.NameExists(account))
                 return Conflict("Name already exists.");
 
-            if (_accountService.AcctCodeExists(chartOfAccount))
+            if (_accountService.CodeExists(account))
                 return Conflict("Code already exists");
 
-            var created = _accountService.UpdateAccount(chartOfAccount);
-
-            return Ok(created);
+            return Ok(_accountService.Update(account));
         }
 
 
@@ -90,23 +84,16 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Delete Account")]
         public IActionResult Delete(int id)
         {
-            _accountService.DeleteAccount(id);
+            _accountService.Delete(id);
 
             return Ok();
         }
 
 
-        [HttpGet("AccountTypes")]
-        public IActionResult GetAllAccountTypes()
-        {
-            return Ok(_accountTypeService.GetAllAccountTypes());
-        }
-
-
         [HttpGet("Search/{term}")]
-        public IActionResult SearchAccount(string term)
+        public IActionResult Search(string term)
         {
-            return Ok(_accountService.SearchAccount(term));
+            return Ok(_accountService.Search(term));
         }
 
 

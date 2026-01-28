@@ -19,7 +19,6 @@ namespace KLS.Services
         private readonly IPDFService _pdfService;
         private readonly IPrintLogService _printLogService;
         private readonly IReportService _reportService;
-        private readonly ISalesService _salesService;
         private readonly ISystemSettingService _systemSettingService;
         private readonly IWebHostEnvironment _env;
 
@@ -27,14 +26,12 @@ namespace KLS.Services
             IPDFService pdfService,
             IPrintLogService printLogService,
             IReportService reportService,
-            ISalesService salesService,
             ISystemSettingService systemSettingService,
             IWebHostEnvironment env) : base(uow)
         {
             _pdfService = pdfService;
             _printLogService = printLogService;
             _reportService = reportService;
-            _salesService = salesService;
             _systemSettingService = systemSettingService;
             _env = env;
         }
@@ -67,8 +64,7 @@ namespace KLS.Services
 
             if (req.IsPrint)
             {
-                _salesService.UpdateStage(req.SalesId.Value, 2);
-                _salesService.SingleAllocation(req.SalesId.Value);
+                Uow.Sales.UpdateStage(req.SalesId.Value, 2);
             }
 
             var invoice = _reportService.Invoice(req.SalesId.Value);
@@ -127,7 +123,7 @@ namespace KLS.Services
                     var salesDateRouteReq = new SalesDateRouteReq();
                     salesDateRouteReq.InjectFrom(req);
 
-                    var shipRoutes = _salesService.GetByDateRoute(salesDateRouteReq);
+                    var shipRoutes = Uow.Sales.GetByDateRoute(salesDateRouteReq);
 
                     foreach (var sales in shipRoutes)
                     {
@@ -214,8 +210,7 @@ namespace KLS.Services
             {
                 if (isPrint)
                 {
-                    _salesService.UpdateStage(salesId, 3);
-                    _salesService.SingleAllocation(salesId);
+                    Uow.Sales.UpdateStage(salesId, 3);
                 }
 
                 var invoice = _reportService.Invoice(salesId);

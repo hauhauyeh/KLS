@@ -17,12 +17,18 @@ namespace KLS.Services
         private readonly IJWTService _jWTService;
         private readonly IUserRoleService _userRoleService;
         private readonly IEmailSettingService _emailSettingService;
+        private readonly IEmailService _emailService;
 
-        public UserAccountService(IUnitOfWork uow, IJWTService jWTService, IUserRoleService userRoleService, IEmailSettingService emailSettingService) : base(uow)
+        public UserAccountService(IUnitOfWork uow,
+            IJWTService jWTService,
+            IUserRoleService userRoleService,
+            IEmailSettingService emailSettingService,
+            IEmailService emailService) : base(uow)
         {
             _jWTService = jWTService;
             _userRoleService = userRoleService;
             _emailSettingService = emailSettingService;
+            _emailService = emailService;
         }
 
         public UserAccount? CheckUserUsername(LoginReq loginReq)
@@ -151,10 +157,11 @@ namespace KLS.Services
                 ResetUrl = resetUrl
             };
 
-            string mailBody = EmailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
+            string mailBody = _emailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
 
             EmailSetting setting = _emailSettingService.GetSetting();
-            Task.Factory.StartNew(() => EmailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
                 .ContinueWith((t) => { });
 
             return resetUrl;

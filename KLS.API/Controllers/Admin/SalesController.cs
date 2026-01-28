@@ -59,6 +59,14 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateStage")]
+        [DisplayName("Update Stage")]
+        public IActionResult UpdateStage([FromBody] SalesUpdateReq updateReq)
+        {
+            return Ok(_salesService.UpdateStage(updateReq.SalesId, updateReq.StageId.Value));
+        }
+
+
         [HttpPut("UpdateInstruction")]
         [DisplayName("Update Instruction")]
         public IActionResult UpdateInstruction([FromBody] SalesUpdateReq updateReq)
@@ -117,8 +125,8 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("SeePDF/{salesNumber}")]
-        [DisplayName("See PDF Image")]
+        [HttpGet("SeePdf/{salesNumber}")]
+        [DisplayName("See Pdf Image")]
         public IActionResult SeePdf(int salesNumber)
         {
             var filePath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
@@ -128,6 +136,15 @@ namespace KLS.API.Controllers.Admin
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             return File(fileStream, "application/pdf");
+        }
+
+
+        [HttpPost("EmailPdf/{salesId}")]
+        [DisplayName("Email Pdf Image")]
+        public IActionResult EmailPdf(int salesId)
+        {
+            _salesService.EmailPdf(salesId);
+            return Ok();
         }
 
 

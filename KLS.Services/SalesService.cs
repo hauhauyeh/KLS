@@ -1,21 +1,34 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace KLS.Services
 {
     public class SalesService : BaseService, ISalesService
     {
-        public SalesService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IWebHostEnvironment _env;
+        private readonly IDocumentService _documentService;
+        private readonly IEmailSettingService _emailSettingService;
+        private readonly IEmailService _emailService;
 
+        public SalesService(IUnitOfWork uow,
+            IWebHostEnvironment env,
+            IDocumentService documentService,
+            IEmailSettingService emailSettingService,
+            IEmailService emailService) : base(uow)
+        {
+            _env = env;
+            _documentService = documentService;
+            _emailSettingService = emailSettingService;
+            _emailService = emailService;
         }
 
         public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
@@ -116,21 +129,7 @@ namespace KLS.Services
 
         public SalesStage UpdateStage(int salesId, int stageId)
         {
-            var sales = GetById(salesId);
-
-            if (sales != null)
-            {
-                var oldStageId = sales.StageId;
-
-                sales.StageId = stageId;
-                Uow.Sales.Update(sales);
-                Uow.Commit();
-
-                if (oldStageId == 0 && stageId == 2)
-                    SingleAllocation(salesId);
-            }
-
-            return Uow.SalesStages.GetById(stageId);
+            return Uow.Sales.UpdateStage(salesId, stageId);
         }
 
         public void Delete(int salesId)
@@ -184,11 +183,9 @@ namespace KLS.Services
         public bool IsInvoicePdfExist(int salesNumber)
         {
             // Get absolute path to wwwroot/InvoicePdf
-            var invoicePDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "InvoicePdf");
+            var pdfFile = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
 
-            var filePath = Path.Combine(invoicePDfPath, salesNumber + ".pdf");
-
-            return File.Exists(filePath);
+            return File.Exists(pdfFile);
         }
 
         public IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq)
@@ -204,6 +201,49 @@ namespace KLS.Services
         public void SingleAllocation(int salesId)
         {
             Uow.Sales.SingleAllocation(salesId);
+        }
+
+        public void EmailPdf(int salesId)
+        {
+            var sales = GetById(salesId);
+
+            if (sales == null)
+                return;
+
+            var pdfFile = Path.Combine(_env.WebRootPath, "InvoicePdf", sales.SalesNumber + ".pdf");
+
+            if (!IsInvoicePdfExist(sales.SalesNumber))
+            {
+                pdfFile = _documentService.Invoice(new DocumentReq { SalesId = salesId, SalesNumber = sales.SalesNumber });
+            }
+
+            var payee = Uow.Payees.GetById(sales.ShipId.Value);
+
+            if (payee != null && !string.IsNullOrEmpty(payee.EmailInvoice))
+            {
+                string toEmails = payee.EmailInvoice;
+                string subject = "Invoice File";
+                string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Here is a your invoice file for the order#" + sales.SalesNumber + "<br/><br/>";
+                string[] attcfiles = [pdfFile];
+
+                var setting = _emailSettingService.GetSetting();
+
+                Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailbody, attcfiles), TaskCreationOptions.LongRunning).ContinueWith((t) =>
+                {
+                    var log = new EmailLog
+                    {
+                        PayeeId = sales.BillId,
+                        Email = toEmails,
+                        SentDate = DateTime.Now,
+                        EventType = EnumHelper.EmailLogEvent.Invoice.ToString(),
+                        ErrorMessage = t.Result,
+                        Status = string.IsNullOrEmpty(t.Result)
+                    };
+
+                    Uow.EmailLogs.Add(log);
+                    Uow.Commit();
+                });
+            }
         }
 
 

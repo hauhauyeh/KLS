@@ -1,4 +1,6 @@
-﻿using MailKit.Security;
+﻿using KLS.Contract.Services;
+using KLS.Models;
+using MailKit.Security;
 using MimeKit;
 using Razor.Templating.Core;
 using MailKit.Net.Smtp;
@@ -8,37 +10,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KLS.Common
+namespace KLS.Services
 {
-    public interface IEmailService
+    public class EmailService : IEmailService
     {
-        string SendEmail(dynamic emailsetting, string to, string subject, string htmlbody, string[]? attachfiles = null);
-
-        string RenderEmailTemplate(string template, object model);
-    }
-
-    public class EmailService
-    {
-        public static string SendEmail(dynamic emailsetting, string to, string subject, string htmlbody, string[]? attachfiles = null)
+        public string SendEmail(EmailSetting setting, string to, string subject, string htmlbody, string[]? attachfiles = null)
         {
             try
             {
                 if (string.IsNullOrEmpty(to))
                     return "";
 
-                string displayName = emailsetting.DisplayName;
-                string from = emailsetting.FromEmail;
-                string host = emailsetting.Host;
-                string username = emailsetting.Username;
-                string password = emailsetting.Password;
-                int port = emailsetting.Port;
-
                 // create message
-                var email = new MimeMessage();
-                email.Subject = subject;
-                email.From.Add(new MailboxAddress(displayName, from));
+                var email = new MimeMessage
+                {
+                    Subject = subject
+                };
+                email.From.Add(new MailboxAddress(setting.DisplayName, setting.FromEmail));
 
-                List<string> toemails = new();
+                List<string> toemails = [];
 
                 if (!string.IsNullOrEmpty(to))
                     toemails = to.Split(';').ToList();
@@ -65,8 +55,8 @@ namespace KLS.Common
 
                 // send email
                 using var smtp = new SmtpClient();
-                smtp.Connect(host, port, SecureSocketOptions.StartTls);
-                smtp.Authenticate(username, password);
+                smtp.Connect(setting.Host, setting.Port, SecureSocketOptions.StartTls);
+                smtp.Authenticate(setting.Username, setting.Password);
                 var result = smtp.Send(email);
                 smtp.Disconnect(true);
 
@@ -78,7 +68,7 @@ namespace KLS.Common
             }
         }
 
-        public static string RenderEmailTemplate(string templatePath, object model)
+        public string RenderEmailTemplate(string templatePath, object model)
         {
             return RazorTemplateEngine.RenderAsync(templatePath, model).Result;
         }

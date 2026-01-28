@@ -2,14 +2,14 @@
 using KLS.Contract.Interfaces;
 using KLS.Models;
 using KLS.Contract.Services;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using IronPdf;
+using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IronPdf;
 
 namespace KLS.Services
 {
@@ -32,15 +32,9 @@ namespace KLS.Services
 
             var totalRecords = Uow.Purchases.Count(purchaseListReq);
 
-            // Get absolute path to wwwroot/BillPdf
-            //var billPDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
-
             foreach (PurchaseList bill in bills)
             {
                 bill.IsPdfExist = IsBillPdfExist(bill.PurchaseNumber);
-
-                //var filePath = Path.Combine(billPDfPath, bill.PurchaseNumber + ".pdf");
-                //bill.IsPdfExist = File.Exists(filePath);
             }
 
             return new PagingResponse<PurchaseList>(totalRecords, purchaseListReq.Pageno, purchaseListReq.Pagesize)
@@ -167,13 +161,15 @@ namespace KLS.Services
 
         public void UploadBillPDF(PDFUploadReq pdfUploadReq)
         {
-            var pdfbillfile = Path.Combine(_env.WebRootPath, Constants.PurchaseImagePath, pdfUploadReq.PurchaseNumber + ".pdf");
+            var pdfBillPath = Path.Combine(_env.WebRootPath, Constants.PurchaseImagePath);
 
-            if (System.IO.File.Exists(pdfbillfile))
+            var pdfbillfile = Path.Combine(pdfBillPath, pdfUploadReq.PurchaseNumber + ".pdf");
+
+            if (IsBillPdfExist(pdfUploadReq.PurchaseNumber))
             {
                 PdfDocument oldpdf = new(pdfbillfile);
 
-                string newfile = Path.Combine(_env.WebRootPath, Constants.PurchaseImagePath, "Temp-" + pdfUploadReq.PurchaseNumber + ".pdf");
+                string newfile = Path.Combine(pdfBillPath, "Temp-" + pdfUploadReq.PurchaseNumber + ".pdf");
 
                 using (var fileStream = new FileStream(newfile, FileMode.Create, FileAccess.ReadWrite))
                 {
@@ -202,11 +198,9 @@ namespace KLS.Services
         public bool IsBillPdfExist(int purchaseNumber)
         {
             // Get absolute path to wwwroot/BillPdf
-            var billPDfPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "BillPdf");
+            var pdfFile = Path.Combine(_env.WebRootPath, "BillPdf", purchaseNumber + ".pdf");
 
-            var filePath = Path.Combine(billPDfPath, purchaseNumber + ".pdf");
-
-            return File.Exists(filePath);
+            return File.Exists(pdfFile);
         }
     }
 }

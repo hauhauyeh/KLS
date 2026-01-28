@@ -8,19 +8,16 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class TempVendorPayment
+    public class TempCustomerPaymentList
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TempVPId { get; set; }
+        public int TempCPId { get; set; }
 
-        public int EmpId { get; set; }
+        public int? PayeeId { get; set; }
 
-        public int PayeeId { get; set; }
+        public int CustomerPaymentId { get; set; }
 
-        public int VendorPaymentId{ get; set; }
-
-        public int PurchaseId { get; set; }
+        public int SalesId { get; set; }
 
         public decimal? AmountDue { get; set; }
 
@@ -28,15 +25,19 @@ namespace KLS.Models
 
         public decimal? DiscountApplied { get; set; }
 
-        public string? Notes { get; set; }
-
         public bool IsApplied { get; set; }
 
+        public int SalesNumber { get; set; }
 
-        [ForeignKey("PurchaseId")]
-        public virtual Purchase? Purchase { get; set; }
+        public DateOnly ShipDate { get; set; }
 
-        [NotMapped]
+        public decimal? SalesTotal { get; set; }
+
+        public string? ShipName { get; set; }
+
+        public string? BillName { get; set; }
+
+
         public decimal? LeaveShort
         {
             get
@@ -44,5 +45,8 @@ namespace KLS.Models
                 return IsApplied ? (AmountDue - PaymentApplied - DiscountApplied) : 0;
             }
         }
+
+        [NotMapped]
+        public bool IsPdfExist { get; set; }
     }
 }

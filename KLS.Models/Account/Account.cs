@@ -23,13 +23,15 @@ namespace KLS.Models
 
         public int? ParentAccountId { get; set; }
 
-        public string? AccountNumber { get; set; }
+        public bool IsPosting { get; set; }
 
         public bool IsAccountDebit { get; set; }
 
         public string? AccountCode { get; set; }
 
         public string? AccountName { get; set; }
+
+        public string? AccountNumber { get; set; }
 
         public string? Description { get; set; }
 

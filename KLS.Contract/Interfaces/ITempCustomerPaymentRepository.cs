@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface ITempVendorPaymentRepository : IRepository<TempVendorPayment>
+    public interface ITempCustomerPaymentRepository : IRepository<TempCustomerPayment>
     {
-        void Inject(TempPaymentReq tempPaymentReq);
+        IQueryable<TempCustomerPaymentList>? Inject(TempPaymentReq tempPaymentReq);
     }
 }

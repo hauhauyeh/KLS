@@ -36,11 +36,11 @@ namespace KLS.Common
             HANDWRITE_CHECK = 6
         }
 
-        public enum AccountCategory
+        public enum AccountClass
         {
             Asset = 1,
             Liability = 2,
-            Capital = 3,
+            Equity = 3,
             Income = 4,
             Expense = 5
         }
@@ -119,6 +119,16 @@ namespace KLS.Common
         {
             PO = 1,
             Bill = 2
+        }
+
+        public enum EmailLogEvent
+        {
+            Invoice = 1,
+            RevInvoice = 2,
+            Statement = 3,
+            PriceSheet = 4,
+            ACHReceipt = 5,
+            Report = 6
         }
     }
 }

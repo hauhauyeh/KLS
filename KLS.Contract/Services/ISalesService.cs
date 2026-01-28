@@ -47,6 +47,7 @@ namespace KLS.Contract.Services
 
         void SingleAllocation(int salesId);
 
+        void EmailPdf(int salesId);
 
         //--Routing
 

@@ -129,6 +129,8 @@ namespace KLS.Contract.Interfaces
 
         ITempTransferFundRepository TempTransferFunds { get; }
 
+        ITempCustomerPaymentRepository TempCustomerPayments { get; }
+
         IInventoryAdjDetailRepository InventoryAdjDetails { get; }
 
         IUserAccountRepository UserAccounts { get; }

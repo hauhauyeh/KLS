@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -20,6 +21,41 @@ namespace KLS.Services
 
         }
 
+        public IEnumerable<AccountList> GetList(string? search)
+        {
+            var types = Uow.AccountTypes.GetAll();
+            var accounts = Uow.Accounts.GetAll();
+
+            if (!string.IsNullOrEmpty(search))
+                accounts = accounts.Where(c => c.AccountName.Contains(search) || c.AccountCode.Contains(search));
+
+            // STEP 1: Flat DTO list
+            var dtoList =
+                (from a in accounts
+                 join t in types on a.AccountTypeId equals t.AccountTypeId
+                 select new AccountDTO
+                 {
+                     AccountId = a.AccountId,
+                     AccountClass = t.AccountClass,
+                     TypeName = t.TypeName,
+                     AccountCode = a.AccountCode,
+                     AccountName = a.AccountName,
+                     Inactive = a.Inactive
+                 }).ToList();
+
+            // STEP 2: Group by AccountClass
+            var result = dtoList
+                .GroupBy(x => x.AccountClass)
+                .OrderBy(g => g.Key)
+                .Select(g => new AccountList
+                {
+                    AccountClass = g.Key,
+                    Accounts = g.ToList()
+                }).ToList();
+
+            return result;
+        }
+
         public IEnumerable<AccountTree> GetAccountsTree()
         {
             var category = Uow.AccountTypes.GetAll();
@@ -27,10 +63,10 @@ namespace KLS.Services
 
             var lst = (from act in accounts
                        join cat in category on act.AccountTypeId equals cat.AccountTypeId
-                       orderby cat.CatNumber, cat.CatName
+                       orderby cat.SortOrder, cat.AccountClass
                        select new AccountTree
                        {
-                           CatName = cat.CatName,
+                           //CatName = cat.CatName,
                            TypeName = cat.TypeName,
                            AccountId = act.AccountId,
                            AccountCode = act.AccountCode,
@@ -64,12 +100,12 @@ namespace KLS.Services
             return Uow.Accounts.GetById(accountId);
         }
 
-        public Account? GetByAcctName(string acctname)
+        public Account? GetByName(string acctName)
         {
-            return Uow.Accounts.Find(c => c.AccountName == acctname && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountName == acctName && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
         }
 
-        public Account? GetByAccountCode(string accountCode)
+        public Account? GetByCode(string accountCode)
         {
             return Uow.Accounts.Find(c => c.AccountCode == accountCode && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
         }
@@ -79,40 +115,40 @@ namespace KLS.Services
             return Uow.Accounts.Find(c => c.AccountId == acctId && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
         }
 
-        public bool AcctNameExists(Account account)
+        public bool NameExists(Account account)
         {
             return Uow.Accounts.Exists(c => c.AccountName.ToLower() == account.AccountName.ToLower() && c.AccountId != account.AccountId);
         }
 
-        public bool AcctCodeExists(Account account)
+        public bool CodeExists(Account account)
         {
             return Uow.Accounts.Exists(c => c.AccountCode.ToLower() == account.AccountCode.ToLower() && c.AccountId != account.AccountId);
         }
 
-        public Account CreateAccount(Account chartOfAccount)
+        public Account Create(Account account)
         {
-            Uow.Accounts.Add(chartOfAccount);
+            Uow.Accounts.Add(account);
             Uow.Commit();
 
-            return chartOfAccount;
+            return account;
         }
 
-        public Account? UpdateAccount(Account chartOfAccount)
+        public Account? Update(Account account)
         {
-            var existing = GetById(chartOfAccount.AccountId);
+            var existing = GetById(account.AccountId);
 
             if (existing == null)
                 return null;
 
-            existing.AccountTypeId = chartOfAccount.AccountTypeId;
-            existing.AccountName = chartOfAccount.AccountName;
-            existing.Description = chartOfAccount.Description;
-            existing.IsAccountDebit = chartOfAccount.IsAccountDebit;
-            existing.Inactive = chartOfAccount.Inactive;
+            existing.AccountTypeId = account.AccountTypeId;
+            existing.AccountName = account.AccountName;
+            existing.Description = account.Description;
+            existing.IsAccountDebit = account.IsAccountDebit;
+            existing.Inactive = account.Inactive;
             existing.UpdatedAt = DateTime.UtcNow;
 
             if (!existing.IsDefaultAccount)
-                existing.AccountCode = chartOfAccount.AccountCode;
+                existing.AccountCode = account.AccountCode;
 
             Uow.Accounts.Update(existing);
             Uow.Commit();
@@ -120,7 +156,7 @@ namespace KLS.Services
             return existing;
         }
 
-        public void DeleteAccount(int accountId)
+        public void Delete(int accountId)
         {
             var account = GetByAcctId(accountId);
 
@@ -139,15 +175,15 @@ namespace KLS.Services
                 account = GetByAcctId(acctId);
 
             if (account == null)
-                account = GetByAccountCode(search);
+                account = GetByCode(search);
 
             if (account == null)
-                account = GetByAcctName(search);
+                account = GetByName(search);
 
             return account;
         }
 
-        public ICollection<AccountDTO>? SearchAccount(string term)
+        public ICollection<AccountDTO>? Search(string term)
         {
             return Uow.Accounts.SearchAccount(term).ToList();
         }
@@ -164,7 +200,7 @@ namespace KLS.Services
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
-                             CatName = at.CatName,
+                             //CatName = at.CatName,
                              Inactive = a.Inactive
                          };
 
@@ -183,7 +219,7 @@ namespace KLS.Services
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
-                             CatName = at.CatName,
+                             // CatName = at.CatName,
                              Inactive = a.Inactive
                          };
 
@@ -202,7 +238,7 @@ namespace KLS.Services
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
-                             CatName = at.CatName,
+                             //CatName = at.CatName,
                              Inactive = a.Inactive
                          };
 
@@ -221,7 +257,7 @@ namespace KLS.Services
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
-                             CatName = at.CatName,
+                             //CatName = at.CatName,
                              Inactive = a.Inactive
                          };
 
@@ -240,7 +276,7 @@ namespace KLS.Services
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
-                             CatName = at.CatName,
+                             //CatName = at.CatName,
                              Inactive = a.Inactive
                          };
 
@@ -264,14 +300,14 @@ namespace KLS.Services
             var result = from a in Uow.Accounts.GetAll()
                          join at in Uow.AccountTypes.GetAll()
                              on a.AccountTypeId equals at.AccountTypeId
-                         where at.CatName != EnumHelper.AccountCategory.Income.ToString() && at.CatName != EnumHelper.AccountCategory.Liability.ToString()
+                         where at.AccountClass != EnumHelper.AccountClass.Income.ToString() && at.AccountClass != EnumHelper.AccountClass.Liability.ToString()
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
-                             CatName = at.CatName,
+                             //CatName = at.CatName,
                              Inactive = a.Inactive
                          };
 
@@ -283,14 +319,14 @@ namespace KLS.Services
             var result = from a in Uow.Accounts.GetAll()
                          join at in Uow.AccountTypes.GetAll()
                              on a.AccountTypeId equals at.AccountTypeId
-                         where at.CatName == EnumHelper.AccountCategory.Expense.ToString()
+                         where at.AccountClass == EnumHelper.AccountClass.Expense.ToString()
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
                              TypeName = at.TypeName,
-                             CatName = at.CatName,
+                             //CatName = at.CatName,
                              Inactive = a.Inactive
                          };
 

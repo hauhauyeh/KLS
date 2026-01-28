@@ -16,7 +16,7 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<AccountTypeGroup>? GetAllAccountTypes()
+        public IEnumerable<AccountTypeGroup>? GetList()
         {
             return Uow.AccountTypes.GetAll().GroupBy(c => c.TypeName).Select(c => new AccountTypeGroup
             {

@@ -18,7 +18,7 @@ namespace KLS.Models
 
         public string? Password { get; set; }
 
-        public int? Port { get; set; }
+        public int Port { get; set; }
 
         public bool IsDefaultCredential { get; set; }
 

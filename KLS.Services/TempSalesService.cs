@@ -196,7 +196,7 @@ namespace KLS.Services
             if (account == null)
                 throw new KeyNotFoundException("Account not found");
 
-            if (account.AccountType.CatName == EnumHelper.AccountCategory.Asset.ToString() || account.AccountType.CatName == EnumHelper.AccountCategory.Expense.ToString())
+            if (account.AccountType.AccountClass == EnumHelper.AccountClass.Asset.ToString() || account.AccountType.AccountClass == EnumHelper.AccountClass.Expense.ToString())
                 throw new KeyNotFoundException("You can't add Expense/Asset account");
 
             var tempSales = new TempSales

@@ -177,7 +177,7 @@ namespace KLS.Services
             if (account == null)
                 throw new KeyNotFoundException("Account not found");
 
-            if (account.AccountType.CatName == EnumHelper.AccountCategory.Income.ToString() || account.AccountType.CatName == EnumHelper.AccountCategory.Liability.ToString())
+            if (account.AccountType.AccountClass == EnumHelper.AccountClass.Income.ToString() || account.AccountType.AccountClass == EnumHelper.AccountClass.Liability.ToString())
                 throw new KeyNotFoundException("You can't add Income/Liability account");
 
             var tempPurchase = new TempPurchase

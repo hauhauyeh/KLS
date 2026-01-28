@@ -20,6 +20,7 @@ namespace KLS.Services
         private readonly ISystemSettingService _settingService;
         private readonly ISystemRoleService _roleService;
         private readonly IEmailSettingService _emailSettingService;
+        private readonly IEmailService _emailService;
         private readonly IUserLogService _userLogService;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -30,6 +31,7 @@ namespace KLS.Services
             ISystemSettingService settingService,
             ISystemRoleService roleService,
             IEmailSettingService emailSettingService,
+            IEmailService emailService,
             IUserLogService userLogService,
             IHttpContextAccessor httpContextAccessor
             ) : base(uow)
@@ -39,6 +41,7 @@ namespace KLS.Services
             _settingService = settingService;
             _roleService = roleService;
             _emailSettingService = emailSettingService;
+            _emailService = emailService;
             _userLogService = userLogService;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -217,10 +220,11 @@ namespace KLS.Services
                 ResetUrl = resetUrl
             };
 
-            string mailBody = EmailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
+            string mailBody = _emailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
 
             EmailSetting setting = _emailSettingService.GetSetting();
-            Task.Factory.StartNew(() => EmailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
                 .ContinueWith((t) => { });
 
             return resetUrl;

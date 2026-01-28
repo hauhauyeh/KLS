@@ -1,6 +1,8 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,14 +18,24 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<TempVendorPayment> Inject(TempVendorPaymentListReq tempReq)
+        public TempVendorPayment GetById(int tempId)
         {
-            return Uow.TempVendorPayments.Inject(tempReq);
+            return Uow.TempVendorPayments.GetById(tempId);
+        }
+
+        public IEnumerable<TempVendorPayment>? Inject(TempPaymentReq tempPaymentReq)
+        {
+            Uow.TempVendorPayments.Inject(tempPaymentReq);
+
+            return Uow.TempVendorPayments
+                .Find(c => c.VendorPaymentId == tempPaymentReq.PaymentId && c.PayeeId == tempPaymentReq.PayeeId && c.EmpId == UserContext.EmpId)
+                .Include(c => c.Purchase)
+                .OrderBy(c => c.Purchase.ArrivalDate).ThenBy(c => c.TempVPId);
         }
 
         public void Update(TempVendorPayment tempVendorPayment)
         {
-            var tempVendorPmt = Uow.TempVendorPayments.GetById(tempVendorPayment.TempVPId);
+            var tempVendorPmt = GetById(tempVendorPayment.TempVPId);
 
             if (tempVendorPmt != null)
             {

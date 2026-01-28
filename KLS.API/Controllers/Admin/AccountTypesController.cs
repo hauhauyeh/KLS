@@ -27,6 +27,13 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
+        [HttpGet]
+        public IActionResult List()
+        {
+            return Ok(_accountTypeService.GetList());
+        }
+
+
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {

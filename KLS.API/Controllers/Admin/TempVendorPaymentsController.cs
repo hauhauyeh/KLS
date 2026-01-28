@@ -29,9 +29,9 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpPost("Inject")]
-        public IActionResult Inject(TempVendorPaymentListReq tempReq)
+        public IActionResult Inject(TempPaymentReq tempPaymentReq)
         {
-            return Ok(_tempVendorPaymentService.Inject(tempReq));
+            return Ok(_tempVendorPaymentService.Inject(tempPaymentReq));
         }
 
 

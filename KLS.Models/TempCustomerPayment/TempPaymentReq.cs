@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class TempVendorPaymentListReq
+    public class TempPaymentReq
     {
         public int PayeeId { get; set; }
 
-        public int VendorPaymentId { get; set; }
+        public int PaymentId { get; set; }
 
         public string? PaymentType { get; set; }
     }

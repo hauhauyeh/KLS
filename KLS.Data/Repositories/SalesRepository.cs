@@ -176,6 +176,15 @@ namespace KLS.Data.Repositories
             return DbContext.ShipRouteDetail.FromSqlRaw("[Sales_GetByDateRoute] @ShipDate,@ShipRoute", ShipDateParam, ShipRouteParam);
         }
 
+        public SalesStage UpdateStage(int salesId, int stageId)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+
+            var StageIdParam = new SqlParameter("@StageId", stageId);
+
+            return DbContext.SalesStages.FromSqlRaw("[Sales_UpdateStage] @SalesId,@StageId", SalesIdParam, StageIdParam).AsEnumerable().FirstOrDefault();
+        }
+
         public void BatchAllocation(DateOnly shipDate)
         {
             var ShipDateParam = new SqlParameter("@ShipDate", shipDate);

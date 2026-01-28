@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface IAccountTypeService
     {
-        IEnumerable<AccountTypeGroup>? GetAllAccountTypes();
+        IEnumerable<AccountTypeGroup>? GetList();
 
         AccountType GetById(int typeId);
     }

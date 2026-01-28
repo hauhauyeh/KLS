@@ -1,9 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
-using KLS.Data.Repositories;
 using KLS.Models;
-using MailKit.Net.Smtp;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;

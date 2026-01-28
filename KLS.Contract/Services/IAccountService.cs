@@ -9,23 +9,25 @@ namespace KLS.Contract.Services
 {
     public interface IAccountService
     {
+        IEnumerable<AccountList> GetList(string? search);
+
         IEnumerable<AccountTree> GetAccountsTree();
 
         Account? GetById(int accountId);
 
-        bool AcctNameExists(Account account);
+        bool NameExists(Account account);
 
-        bool AcctCodeExists(Account account);
+        bool CodeExists(Account account);
 
-        Account CreateAccount(Account account);
+        Account Create(Account account);
 
-        Account? UpdateAccount(Account account);
+        Account? Update(Account account);
 
-        void DeleteAccount(int accountId);
+        void Delete(int accountId);
 
         Account? CheckAccount(string search);
 
-        ICollection<AccountDTO>? SearchAccount(string term);
+        ICollection<AccountDTO>? Search(string term);
 
         ICollection<AccountDTO>? GetBankAccounts();
 
