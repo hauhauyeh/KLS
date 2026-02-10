@@ -29,6 +29,13 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
+        [HttpGet]
+        public IActionResult List([FromQuery] TempPaymentReq tempPaymentReq)
+        {
+            return Ok(_tempCustomerPaymentService.GetList(tempPaymentReq));
+        }
+
+
         [HttpPost("Inject")]
         public IActionResult Inject(TempPaymentReq tempPaymentReq)
         {
@@ -36,20 +43,35 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost]
+        public IActionResult Create([FromBody] TempPaymentReq tempPaymentReq)
+        {
+            return Ok(_tempCustomerPaymentService.Create(tempPaymentReq));
+        }
+
+
         [HttpPut]
         public IActionResult Update([FromBody] TempCustomerPayment tempCustomerPayment)
         {
-            _tempCustomerPaymentService.Update(tempCustomerPayment);
-            return Ok();
+            return Ok(_tempCustomerPaymentService.Update(tempCustomerPayment));
         }
 
 
         [HttpPost("Clear")]
-        public IActionResult Clear([FromBody] TempPaymentReq tempPaymentReq)
+        public IActionResult Clear(int payeeId)
         {
-            _tempCustomerPaymentService.Clear(tempPaymentReq);
+            _tempCustomerPaymentService.Clear(payeeId);
             return Ok();
         }
+
+
+        [HttpDelete("{tempId}")]
+        public IActionResult Delete(int tempId)
+        {
+            _tempCustomerPaymentService.Delete(tempId);
+            return Ok();
+        }
+
 
         #endregion
     }

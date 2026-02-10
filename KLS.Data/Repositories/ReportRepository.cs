@@ -60,6 +60,54 @@ namespace KLS.Data.Repositories
             return DbContext.RptPackingItem.FromSqlRaw("[dbo].[Report_PackingList] @ShipDate,@ShipRoute,@SalesId", ShipDateParam, ShipRouteParam, SalesIdParam);
         }
 
+        public IQueryable<RptHarvillsItem> Harvills(DateOnly shipDate)
+        {
+            var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
+
+            return DbContext.RptHarvillsItem.FromSqlRaw("[dbo].[Report_Harvills] @ShipDate", ShipDateParam);
+        }
+
+        public IQueryable<RptStoreTotalItem> StoreTotal(DateOnly shipDate)
+        {
+            var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
+
+            return DbContext.RptStoreTotalItem.FromSqlRaw("[dbo].[Report_StoreTotal] @ShipDate", ShipDateParam);
+        }
+
+        public IQueryable<RptSensitiveItem> Sensitive(DateOnly shipDate)
+        {
+            var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
+
+            return DbContext.RptSensitiveItem.FromSqlRaw("[dbo].[Report_Sensitive] @ShipDate", ShipDateParam);
+        }
+
+        public IQueryable<RptAssignTruck> AssignTruck(DateOnly shipDate)
+        {
+            var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
+
+            return DbContext.RptAssignTruck.FromSqlRaw("[dbo].[Report_AssignTruck] @ShipDate", ShipDateParam);
+        }
+
+        public IQueryable<RptLoadingItem> LoadingList(DocumentReq req)
+        {
+            var ShipDateParam = req.ShipDate.HasValue ? new SqlParameter("@ShipDate", req.ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
+
+            var ShipRouteParam = string.IsNullOrEmpty(req.ShipRoute) ? new SqlParameter("@ShipRoute", DBNull.Value) : new SqlParameter("@ShipRoute", req.ShipRoute);
+
+            var IsLoadParam = new SqlParameter("@IsLoad", true);
+
+            return DbContext.RptLoadingItem.FromSqlRaw("[dbo].[Report_LoadingList] @ShipDate,@ShipRoute,@IsLoad", ShipDateParam, ShipRouteParam, IsLoadParam);
+        }
+
+        public IQueryable<RptPackingLabel> PackingLabel(DocumentReq req)
+        {
+            var ShipDateParam = req.ShipDate.HasValue ? new SqlParameter("@ShipDate", req.ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
+
+            var ShipRouteParam = string.IsNullOrEmpty(req.ShipRoute) ? new SqlParameter("@ShipRoute", DBNull.Value) : new SqlParameter("@ShipRoute", req.ShipRoute);
+
+            return DbContext.RptPackingLabel.FromSqlRaw("[dbo].[Report_PackingLabel] @ShipDate,@ShipRoute", ShipDateParam, ShipRouteParam);
+        }
+
         #endregion
     }
 }

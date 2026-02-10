@@ -22,7 +22,7 @@ namespace KLS.Services
             return Uow.Employees.GetPagedList(empReq);
         }
 
-        public IEnumerable<EmployeeList> GetActive()
+        public IEnumerable<EmployeeList>? GetActive()
         {
             var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString()).OrderBy(c => c.PayeeName).ToList();
 
@@ -30,6 +30,23 @@ namespace KLS.Services
                 .ToList();
 
             return employees;
+        }
+
+        public IEnumerable<EmployeeList>? GetDrivers()
+        {
+            var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString());
+            var employees = Uow.Employees.Find(c => c.Department == "Warehouse" || c.Department == "Driver");
+
+            var result = from p in payees
+                         join e in employees on p.PayeeId equals e.PayeeId
+                         select new EmployeeList
+                         {
+                             PayeeId = p.PayeeId,
+                             PayeeName = p.PayeeName,
+                             Department = e.Department
+                         };
+
+            return result.ToList();
         }
 
         public EmployeeDTO? GetById(int payeeId)
@@ -201,8 +218,7 @@ namespace KLS.Services
 
         public void Delete(int payeeId)
         {
-            Uow.Payees.RemoveById(payeeId);
-            Uow.Commit();
+            Uow.Payees.Delete(payeeId);
         }
 
         public IEnumerable<PayeeSearch>? Search(PayeeSearchReq searchReq)

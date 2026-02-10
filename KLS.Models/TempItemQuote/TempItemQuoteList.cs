@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -28,6 +29,8 @@ namespace KLS.Models
 
         public decimal? OldPrice { get; set; }
 
+        public bool IsFixed { get; set; }
+
 
         public string? ItemName { get; set; }
 
@@ -44,18 +47,34 @@ namespace KLS.Models
 
         public bool IsBaseToRecentCost { get; set; }
 
+        public decimal? DefaultPrice
+        {
+            get
+            {
+                return Utilities.Rounding(P1 * (1 + BaseMarkup), 2);
+            }
+        }
 
         public decimal? FinalPrice
         {
             get
             {
-                var markup = MarkupPercent ?? BaseMarkup ?? 0m;
                 var basePrice = (IsBaseToRecentCost ? RecentCost : P1) ?? 0m;
+                decimal? price = null;
 
-                return Math.Round(basePrice * (1 + markup), 2);
+                if (IsFixed)
+                    price = TargetPrice;
+                else if (MarkupPercent.HasValue)
+                    price = Utilities.Rounding(basePrice * (1 + MarkupPercent.Value), 2);
+
+                // If you want to treat 0 as "no price"
+                return (price.HasValue && price.Value != 0m) ? price : null;
 
                 //var basePrice = string.IsNullOrEmpty(CustDefBasePriceId) ? P1 : RecentCost;
             }
         }
+
+        [NotMapped]
+        public decimal? FinalPriceUpdate { get; set; }
     }
 }

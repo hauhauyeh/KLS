@@ -13,5 +13,7 @@ namespace KLS.Models
         public int PaymentId { get; set; }
 
         public string? PaymentType { get; set; }
+
+        public int? TempId { get; set; }
     }
 }

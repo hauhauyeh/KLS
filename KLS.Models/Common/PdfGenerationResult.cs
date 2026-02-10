@@ -13,6 +13,8 @@ namespace KLS.Models
 
         public string RelativePath { get; init; } = string.Empty;
 
+        public string FullPath { get; set; } = string.Empty;
+
         public bool IsBOL { get; init; }
     }
 }

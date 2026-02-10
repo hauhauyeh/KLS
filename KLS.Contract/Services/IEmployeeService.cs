@@ -11,7 +11,9 @@ namespace KLS.Contract.Services
     {
         IEnumerable<EmployeeList> GetPagedList(EmpReq empReq);
 
-        IEnumerable<EmployeeList> GetActive();
+        IEnumerable<EmployeeList>? GetActive();
+
+        IEnumerable<EmployeeList>? GetDrivers();
 
         EmployeeDTO? GetById(int payeeId);
 

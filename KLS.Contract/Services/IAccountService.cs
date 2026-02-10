@@ -9,11 +9,11 @@ namespace KLS.Contract.Services
 {
     public interface IAccountService
     {
-        IEnumerable<AccountList> GetList(string? search);
-
-        IEnumerable<AccountTree> GetAccountsTree();
+        //IEnumerable<AccountList> GetList(string? search);
 
         Account? GetById(int accountId);
+
+        ICollection<AccountDTO>? GetActive();
 
         bool NameExists(Account account);
 

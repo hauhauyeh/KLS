@@ -29,18 +29,17 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
-        [HttpGet]
-        [DisplayName("List Accounts")]
-        public IActionResult GetList(string? search)
-        {
-            return Ok(_accountService.GetList(search));
-        }
-
-
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
             return Ok(_accountService.GetById(id));
+        }
+
+
+        [HttpGet("Active")]
+        public IActionResult GetActive()
+        {
+            return Ok(_accountService.GetActive());
         }
 
 

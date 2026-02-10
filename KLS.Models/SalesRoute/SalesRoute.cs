@@ -10,6 +10,11 @@ namespace KLS.Models
 {
     public class SalesRoute
     {
+        public SalesRoute()
+        {
+            this.CreatedAt = DateTime.UtcNow;
+        }
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SalesRouteId { get; set; }
@@ -69,5 +74,9 @@ namespace KLS.Models
         public string? TruckIssue { get; set; }
 
         public string? Notes { get; set; }
+
+        public DateTime? CreatedAt { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
     }
 }

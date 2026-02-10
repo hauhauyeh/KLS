@@ -22,6 +22,6 @@ namespace KLS.Contract.Services
 
         DepositList? SaveDeposit(TransferFund transferFund);
 
-        IEnumerable<TempDepositList>? InjectDeposit(int tfId);
+        IEnumerable<TempDepositList>? InjectDeposit(DepositInjectReq injectReq);
     }
 }

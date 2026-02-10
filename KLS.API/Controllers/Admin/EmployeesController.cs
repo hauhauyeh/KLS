@@ -46,6 +46,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("Drivers")]
+        public IActionResult GetDrivers()
+        {
+            return Ok(_employeeService.GetDrivers());
+        }
+
+
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {

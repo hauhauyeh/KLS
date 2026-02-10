@@ -102,9 +102,9 @@ namespace KLS.Services
             return GetDepositListById(newTFId);
         }
 
-        public IEnumerable<TempDepositList>? InjectDeposit(int tfId)
+        public IEnumerable<TempDepositList>? InjectDeposit(DepositInjectReq injectReq)
         {
-            return Uow.TransferFunds.InjectDeposit(tfId);
+            return Uow.TransferFunds.InjectDeposit(injectReq);
         }
     }
 }

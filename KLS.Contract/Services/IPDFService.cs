@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         PdfDocument HtmlToPDF(string html);
 
+        PdfDocument AddPageFooter(PdfDocument pdf);
+
         string RenderTemplate(string templatePath, object model);
     }
 }

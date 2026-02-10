@@ -14,5 +14,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<ARCustomerList> GetARCustomers(ARCustomerListReq aRCustomerListReq);
 
         int CountAllARCustomer(ARCustomerListReq aRCustomerListReq);
+
+        void Delete(int payeeId);
     }
 }

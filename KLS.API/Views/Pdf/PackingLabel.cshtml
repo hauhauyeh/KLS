@@ -1,0 +1,158 @@
+﻿@using KLS.Models.Reports
+@model RptPackingLabel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<style>
+    .tblpacklabel-1, .tblpacklabel-2 {
+        border-collapse: collapse;
+        text-align: left;
+        width: 350px;
+    }
+
+        .tblpacklabel-1 tr td {
+            font-size: 16px;
+            font-family: Calibri;
+            font-weight: 700;
+            border-bottom: 1px solid black;
+            padding-left: 6px;
+            padding-top: 0px;
+            vertical-align: top;
+        }
+
+        .tblpacklabel-2 tr td {
+            font-size: 16px;
+            font-family: Calibri;
+            font-weight: 700;
+            border-bottom: 1px solid black;
+            padding-left: 6px;
+            padding-top: 0px;
+            vertical-align: bottom;
+        }
+
+    .tag {
+        font-family: 'Arial Black';
+        font-size: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .qtyunit {
+        font-family: Calibri;
+        font-weight: 700;
+        font-size: 36px;
+        display: flex;
+        height: 55px;
+    }
+
+    .qty {
+        width: 30%;
+        font-family: 'Arial Black';
+    }
+
+    .unit {
+        font-family: 'Arial Black';
+        text-transform: uppercase;
+        padding: 0 15px;
+    }
+
+    .cs {
+        background-color: black;
+        color: white;
+    }
+
+    .desc {
+        text-transform: uppercase;
+        font-size: 24px;
+        font-family: Calibri;
+        font-weight: bold;
+        height: 75px;
+        display: flex;
+        align-items: baseline;
+        line-height: 1;
+    }
+
+    .route-sec {
+        display: flex;
+    }
+
+    .route {
+        font-family: 'Arial Black';
+        font-size: 32px;
+        width: 40%;
+        background-color: black;
+        color: white;
+        text-align: center;
+        height: 45px;
+    }
+
+    .blank-space {
+        border-top: 5px solid black;
+        width: 20%;
+    }
+
+    .truck-num {
+        width: 40%;
+        font-family: 'Arial Black';
+        font-size: 32px;
+        background-color: black;
+        color: white;
+        text-align: center;
+        height: 45px;
+    }
+
+    .custname {
+        font-size: 24px;
+        font-family: Calibri;
+        font-weight: bold;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        line-height: 1;
+        /* border-bottom: 1px solid black; */
+    }
+
+    @@media only print {
+        @@page {
+            margin: 0px 0px 0px 0px;
+        }
+
+        body {
+            -webkit-print-color-adjust: exact;
+        }
+    }
+</style>
+
+<div class="div-main">
+    @if (Model != null)
+    {
+        <section class="mainlabel">
+            <div class="qtyunit">
+                <div class="qty">@string.Format("{0:0.##}", Model.ShipQty)</div>
+                <div class="unit @Model.Unit">@Model.Unit</div>
+            </div>
+            <div class="desc">
+                @Model.ItemName
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <span style="font-size:1rem;"> - @Model.Notes</span>
+                }
+            </div>
+            <div class="route-sec">
+                <div class="route">@Model.LoadRoute</div>
+                <div class="blank-space">&nbsp;</div>
+                <div class="truck-num">#@Model.TruckNumber</div>
+            </div>
+            <div class="custname">
+                @Model.PayeeName
+            </div>
+            <div class="tag">
+                <span>Tag# @Model.Tag</span>
+                <span>@string.Format("{0:d}", DateTime.Now)</span>
+            </div>
+        </section>
+    }
+    else
+    {
+        <p class="alert alert-danger">Sales item not found.</p>
+    }
+</div>

@@ -18,7 +18,7 @@ namespace KLS.Models
 
         public string? TFType { get; set; }
 
-        public DateTime? TFDate { get; set; }
+        public DateOnly? TFDate { get; set; }
 
         public int? FromAccountId { get; set; }
 

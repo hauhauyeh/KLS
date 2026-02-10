@@ -21,21 +21,27 @@ namespace KLS.Services
 
         public PdfDocument HtmlToPDF(string html)
         {
-            var pdf = _renderer.RenderHtmlAsPdf(html);
+            return _renderer.RenderHtmlAsPdf(html);
+        }
 
-            string footerHtml = @"
-            <div style='font-size:12px;margin-bottom:5px'>
+        public PdfDocument AddPageFooter(PdfDocument pdf)
+        {
+            if (pdf == null || pdf.PageCount == 0)
+                return pdf;
+
+            const string footerHtml = @"
+            <div style='font-size:14px;margin-bottom:5px'>
                 <center>{page} of {total-pages}</center>
             </div>";
 
-            var footer = new HtmlHeaderFooter()
+            var footer = new HtmlHeaderFooter
             {
                 HtmlFragment = footerHtml,
-                LoadStylesAndCSSFromMainHtmlDocument = true,
+                LoadStylesAndCSSFromMainHtmlDocument = true
             };
 
-            var allPageIndexes = Enumerable.Range(0, pdf.PageCount);
-            pdf.AddHtmlFooters(footer, 1, allPageIndexes);
+            var pageIndexes = Enumerable.Range(0, pdf.PageCount);
+            pdf.AddHtmlFooters(footer, 1, pageIndexes);
 
             return pdf;
         }

@@ -44,6 +44,13 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
+        public void Delete(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payee_Delete] @PayeeId", PayeeIdParam);
+        }
+
         private static object[] BuildARCustomerParam(ARCustomerListReq aRCustomerListReq)
         {
             object[] param = {

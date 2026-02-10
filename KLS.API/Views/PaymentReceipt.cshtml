@@ -1,0 +1,156 @@
+﻿@model KLS.Models.EmailReceipt
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Payment Receipt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #E6F7E7;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #f7fce8;
+            border: 1px solid #DDDDDD;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .logo {
+            max-width: 200px;
+        }
+
+        .invoice-details {
+            margin-top: 30px;
+            padding-top: 30px;
+        }
+
+        .logo-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        .payment-details {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-top: 1px solid #DDDDDD;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        th {
+            background-color: #80B500;
+            color: #FFFFFF;
+        }
+
+        .total {
+            font-weight: bold;
+            color: darkred;
+            font-size: 16px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mt-1 {
+            margin-top: 2px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .pmt-detail-lable {
+            min-width: 125px;
+            display: inline-block;
+        }
+
+        .customer {
+            font-style: italic;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <partial name="_Header.cshtml" model="@Model.Company" />
+        </div>
+        <h1 class="text-center">Payment Receipt</h1>
+        <p class="customer">Dear @Model.Payee.PayeeName,</p>
+        <p>Thank you for your recent payment of @string.Format("{0:c}", Model.Payment.PaymentAmount)</p>
+        <p>Please find the details of your payment below:</p>
+
+        <div class="payment-details">
+            <p class="bold"><span class="pmt-detail-lable">Payment Type</span>: @Model.Payment.PaymentMethod</p>
+            <p class="bold"><span class="pmt-detail-lable">Payment #</span>: @Model.Payment.PaymentNumber</p>
+            <p class="bold"><span class="pmt-detail-lable">Payment Date</span>: @Model.Payment.PaymentDate.Value.ToString("D")</p>
+            <p class="bold"><span class="pmt-detail-lable">Payment Ref#</span>: @Model.Payment.ReferenceId</p>
+            <p class="bold"><span class="pmt-detail-lable">Payment Amount</span>: @string.Format("{0:c}", Model.Payment.PaymentAmount)</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice#</th>
+                    <th>Invoice Date</th>
+                    <th>Discount</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Payment.PaymentDetails != null)
+                {
+                    foreach (var item in Model.Payment.PaymentDetails)
+                    {
+                        <tr>
+                            <td>@item.Sales?.SalesNumber</td>
+                            <td>
+                                @if (item.Sales != null)
+                                {
+                                    <span>@string.Format("{0:d}", item.Sales.ShipDate)</span>
+                                }
+                            </td>
+                            <td>@string.Format("{0:c}", item.DiscountApplied)</td>
+                            <td>@string.Format("{0:c}", item.PaymentApplied)</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="total" style="text-align:end">Total</td>
+                    <td class="total">@string.Format("{0:c}", Model.Payment.PaymentAmount)</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="invoice-details">
+            <p>If you have any questions about this payment, please do not hesitate to contact us. We are happy to help!</p>
+            <p>Thank you again for choosing our company. We hope to have the pleasure of serving you again in the future.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,7 +14,7 @@ namespace KLS.Models
 
         public int EmpId { get; set; }
 
-        public int? PayeeId { get; set; }
+        public int PayeeId { get; set; }
 
         public int CustomerPaymentId { get; set; }
 
@@ -25,7 +24,13 @@ namespace KLS.Models
 
         public decimal? PaymentApplied { get; set; }
 
-        public decimal? DiscountApplied { get; set; }
+        public decimal? DiscountApplied { get; }
+
+        public decimal? PaymentDiscount { get; set; }
+
+        public decimal? ShortDiscount { get; set; }
+
+        public decimal? OtherDiscount { get; set; }
 
         public bool IsApplied { get; set; }
     }

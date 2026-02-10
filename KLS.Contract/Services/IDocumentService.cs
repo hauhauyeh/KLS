@@ -16,5 +16,9 @@ namespace KLS.Contract.Services
         string Invoice(DocumentReq documentReq);
 
         string? PackingList(DocumentReq documentReq);
+
+        string? LoadingList(DocumentReq documentReq);
+
+        string? PackingLabel(DocumentReq req);
     }
 }

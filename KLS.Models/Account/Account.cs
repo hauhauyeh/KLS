@@ -19,11 +19,13 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AccountId { get; set; }
 
-        public int AccountTypeId { get; set; }
+        //public int AccountTypeId { get; set; }
 
-        public int? ParentAccountId { get; set; }
+        public int AccountCategoryId { get; set; }
 
-        public bool IsPosting { get; set; }
+        public string? TypeName { get; set; }
+
+        public int SortOrder { get; set; }
 
         public bool IsAccountDebit { get; set; }
 
@@ -56,5 +58,8 @@ namespace KLS.Models
 
         [ForeignKey("AccountTypeId")]
         public virtual AccountType? AccountType { get; set; }
+
+        [ForeignKey("AccountCategoryId")]
+        public virtual AccountCategory? AccountCategory { get; set; }
     }
 }

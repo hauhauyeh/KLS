@@ -167,11 +167,11 @@ namespace KLS.Data.Repositories
             return DbContext.ShipRouteDetail.FromSqlRaw("[Sales_ShipRouteDetail] @ShipDate", ShipDateParam);
         }
 
-        public IQueryable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq)
+        public IQueryable<ShipRouteDetail>? GetByDateRoute(DateOnly shipDate, string? shipRoute)
         {
-            var ShipDateParam = new SqlParameter("@ShipDate", dateRouteReq.ShipDate);
+            var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
 
-            var ShipRouteParam = (!string.IsNullOrEmpty(dateRouteReq.ShipRoute)) ? new SqlParameter("@ShipRoute", dateRouteReq.ShipRoute) : new SqlParameter("@ShipRoute", DBNull.Value);
+            var ShipRouteParam = (!string.IsNullOrEmpty(shipRoute)) ? new SqlParameter("@ShipRoute", shipRoute) : new SqlParameter("@ShipRoute", DBNull.Value);
 
             return DbContext.ShipRouteDetail.FromSqlRaw("[Sales_GetByDateRoute] @ShipDate,@ShipRoute", ShipDateParam, ShipRouteParam);
         }
@@ -197,6 +197,17 @@ namespace KLS.Data.Repositories
             var SalesIdParam = new SqlParameter("@SalesId", salesId);
 
             DbContext.Database.ExecuteSqlRaw("[FIFO_Single_Allocation] @SalesId", SalesIdParam);
+        }
+
+        public int MergeOrder(SalesMergeReq mergeReq)
+        {
+            var SalesIdsParam = new SqlParameter("@SalesIds", mergeReq.SalesIds);
+
+            var DestinationParam = new SqlParameter("@Destination", mergeReq.Destination);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            return DbContext.Database.ExecuteSqlRaw("[Sales_MergeOrder] @SalesIds,@Destination,@EmpId", SalesIdsParam, DestinationParam, EmpIdParam);
         }
     }
 }

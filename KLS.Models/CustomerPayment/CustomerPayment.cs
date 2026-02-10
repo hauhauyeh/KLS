@@ -57,7 +57,7 @@ namespace KLS.Models
 
         public DateOnly? ReturnDate { get; set; }
 
-        public string? FeeAccount { get; set; }
+        public int? FeeAccountId { get; set; }
 
         public decimal? FeeAmount { get; set; }
 
@@ -88,5 +88,9 @@ namespace KLS.Models
 
         [ForeignKey("PayeeId")]
         public virtual Payee? Payee { get; set; }
+
+
+        [ForeignKey("CustomerPaymentId")]
+        public virtual List<CustomerPaymentDetail>? PaymentDetails { get; set; }
     }
 }

@@ -18,7 +18,7 @@ namespace KLS.Models.Reports
 
         public string? TruckNumber { get; set; }
 
-        public string? LoadOrder { get; set; }
+        //public string? LoadOrder { get; set; }
 
         public int DropCount { get; set; }
 

@@ -68,7 +68,7 @@ namespace KLS.Services
         {
             var packingItems = Uow.Reports.PackingList(req).ToList();
 
-            var packingstorage = packingItems.GroupBy(c => c.StorageName).Select(g => new PackingListStorage
+            var packingStorage = packingItems.GroupBy(c => c.StorageName).Select(g => new PackingListStorage
             {
                 StorageName = g.Key,
                 WeightTotal = g.Sum(c => c.ItemWeight),
@@ -97,7 +97,7 @@ namespace KLS.Services
                 SalesId = req.SalesId,
                 PayeeName = payeeName,
                 TruckNumber = _salesRouteService.GetByDateRoute(req.ShipDate, req.ShipRoute)?.TruckNumber,
-                Storages = packingstorage
+                Storages = packingStorage
             };
         }
     }

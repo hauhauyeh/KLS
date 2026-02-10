@@ -12,5 +12,13 @@ namespace KLS.Contract.Interfaces
         IQueryable<CustomerPaymentList> GetPagedList(CustomerPaymentReq customerPaymentReq);
 
         int Count(CustomerPaymentReq customerPaymentReq);
+
+        int Save(CustomerPaymentSaveReq paymentSaveReq);
+
+        void SaveReturn(CustomerPaymentReturnReq returnReq);
+
+        void DeleteReturn(int customerPaymentId);
+
+        IQueryable<CustomerPaymentStatement>? Statement(int payeeId);
     }
 }

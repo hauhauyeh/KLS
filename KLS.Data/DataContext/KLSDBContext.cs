@@ -41,6 +41,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Term>().ToTable("Term");
             modelBuilder.Entity<Truck>().ToTable("Truck");
             modelBuilder.Entity<AccountType>().ToTable("AccountType");
+            modelBuilder.Entity<AccountCategory>().ToTable("AccountCategory");
             modelBuilder.Entity<Account>().ToTable("Account");
             modelBuilder.Entity<EmailLog>().ToTable("EmailLog");
             modelBuilder.Entity<RecalculationLog>().ToTable("RecalculationLog");
@@ -69,7 +70,6 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempPayrollService>().ToTable("TempPayrollService");
             modelBuilder.Entity<PayrollDetail>().ToTable("PayrollDetail");
             modelBuilder.Entity<TempPayrollDetail>().ToTable("TempPayrollDetail");
-            modelBuilder.Entity<CustomerPayment>().ToTable("CustomerPayment");
             modelBuilder.Entity<Item>().ToTable("Item");
             modelBuilder.Entity<PurchaseOrder>().ToTable("PurchaseOrder");
             modelBuilder.Entity<Purchase>().ToTable("Purchase");
@@ -94,7 +94,12 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempBombSales>().ToTable("TempBombSales");
             modelBuilder.Entity<SalesRoute>().ToTable("SalesRoute");
             modelBuilder.Entity<PrintLog>().ToTable("PrintLog");
+            modelBuilder.Entity<CustomerPayment>().ToTable("CustomerPayment");
+            modelBuilder.Entity<CustomerPaymentDetail>().ToTable("CustomerPaymentDetail");
             modelBuilder.Entity<TempCustomerPayment>().ToTable("TempCustomerPayment");
+            modelBuilder.Entity<TempExtraPayment>().ToTable("TempExtraPayment");
+            modelBuilder.Entity<Liability>().ToTable("Liability");
+            modelBuilder.Entity<CheckTracker>().ToTable("CheckTracker");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -128,6 +133,8 @@ namespace KLS.Data.DataContext
         public DbSet<Truck> Trucks { get; set; }
 
         public DbSet<AccountType> AccountTypes { get; set; }
+
+        public DbSet<AccountCategory> AccountCategories { get; set; }
 
         public DbSet<Account> Accounts { get; set; }
 
@@ -187,8 +194,6 @@ namespace KLS.Data.DataContext
 
         public DbSet<TempPayrollDetail> TempPayrollDetails { get; set; }
 
-        public DbSet<CustomerPayment> CustomerPayments { get; set; }
-
         public DbSet<Item> Items { get; set; }
 
         public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
@@ -221,7 +226,13 @@ namespace KLS.Data.DataContext
 
         public DbSet<TempTransferFund> TempTransferFunds { get; set; }
 
+        public DbSet<CustomerPayment> CustomerPayments { get; set; }
+
+        public DbSet<CustomerPaymentDetail> CustomerPaymentDetails { get; set; }
+
         public DbSet<TempCustomerPayment> TempCustomerPayments { get; set; }
+
+        public DbSet<TempExtraPayment> TempExtraPayments { get; set; }
 
         public DbSet<UserAccount> UserAccounts { get; set; }
 
@@ -238,6 +249,10 @@ namespace KLS.Data.DataContext
         public DbSet<SalesRoute> SalesRoutes { get; set; }
 
         public DbSet<PrintLog> PrintLogs { get; set; }
+
+        public DbSet<Liability> Liabilities { get; set; }
+
+        public DbSet<CheckTracker> CheckTrackers { get; set; }
 
         #endregion
 
@@ -327,6 +342,12 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<TempCustomerPaymentList> TempCustomerPaymentList { get; set; }
 
+        public virtual DbSet<CustomerPaymentStatement> CustomerPaymentStatement { get; set; }
+
+        public virtual DbSet<LiabilityList> LiabilityList { get; set; }
+
+        public virtual DbSet<LiabilityTxList> LiabilityTxList { get; set; }
+
         #endregion
 
         #region ---Report DBSET---
@@ -339,7 +360,21 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptPODetail> RptPODetail { get; set; }
 
+
+
         public virtual DbSet<RptPackingItem> RptPackingItem { get; set; }
+
+        public virtual DbSet<RptHarvillsItem> RptHarvillsItem { get; set; }
+
+        public virtual DbSet<RptStoreTotalItem> RptStoreTotalItem { get; set; }
+
+        public virtual DbSet<RptSensitiveItem> RptSensitiveItem { get; set; }
+
+        public virtual DbSet<RptAssignTruck> RptAssignTruck { get; set; }
+
+        public virtual DbSet<RptLoadingItem> RptLoadingItem { get; set; }
+
+        public virtual DbSet<RptPackingLabel> RptPackingLabel { get; set; }
 
         #endregion
     }

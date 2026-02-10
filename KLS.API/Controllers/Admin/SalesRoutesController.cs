@@ -28,6 +28,29 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Method(s) ---
 
+        [HttpPost]
+        public IActionResult Create([FromBody] SalesRoute salesRoute)
+        {
+            return Ok(_salesRouteService.Create(salesRoute));
+        }
+
+
+        [HttpPost("UpdateInvoice")]
+        public IActionResult UpdateInvoice([FromBody] SalesRoute salesRoute)
+        {
+            _salesRouteService.UpdateInvoice(salesRoute);
+            return Ok();
+        }
+
+
+        [HttpPost("UpdateDriverSheet")]
+        public IActionResult UpdateDriverSheet([FromBody] SalesRoute salesRoute)
+        {
+            _salesRouteService.UpdateDriverSheet(salesRoute);
+            return Ok();
+        }
+
+
         [HttpGet("GetAssignTrucks/{shipDate}")]
         public IActionResult GetAssignTrucks(DateOnly shipDate)
         {

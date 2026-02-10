@@ -18,6 +18,77 @@ namespace KLS.Services
             _truckService = truckService;
         }
 
+        public SalesRoute GetById(int salesRouteId)
+        {
+            return Uow.SalesRoutes.GetById(salesRouteId);
+        }
+
+        public SalesRoute Create(SalesRoute salesRoute)
+        {
+            var route = Uow.SalesRoutes.Find(c => c.ShipDate == salesRoute.ShipDate && c.ShipRoute == salesRoute.ShipRoute).ToList();
+
+            if (route.Count > 0)
+            {
+                return route.FirstOrDefault();
+            }
+            else
+            {
+                salesRoute.PrintCount = 0;
+                Uow.SalesRoutes.Add(salesRoute);
+                Uow.Commit();
+
+                return salesRoute;
+            }
+        }
+
+        public void UpdateInvoice(SalesRoute salesRoute)
+        {
+            var existingRoute = GetById(salesRoute.SalesRouteId);
+
+            if (existingRoute != null)
+            {
+                existingRoute.TruckNumber = salesRoute.TruckNumber;
+                existingRoute.Driver = salesRoute.Driver;
+                existingRoute.Loader = salesRoute.Loader;
+                existingRoute.Checker = salesRoute.Checker;
+                existingRoute.FuelCash = salesRoute.FuelCash;
+                existingRoute.FuelCard = salesRoute.FuelCard;
+                existingRoute.BeginMileage = salesRoute.BeginMileage;
+                existingRoute.TruckIssue = salesRoute.TruckIssue;
+                existingRoute.PrintCount = (existingRoute.PrintCount ?? 0) + 1;
+                existingRoute.UpdatedAt = DateTime.UtcNow;
+
+                Uow.SalesRoutes.Update(existingRoute);
+                Uow.Commit();
+            }
+        }
+
+        public void UpdateDriverSheet(SalesRoute salesRoute)
+        {
+            var existingRoute = GetById(salesRoute.SalesRouteId);
+
+            if (existingRoute != null)
+            {
+                existingRoute.Officer = salesRoute.Officer;
+                existingRoute.FuelReceipt = salesRoute.FuelReceipt;
+                existingRoute.CashChangeBack = salesRoute.CashChangeBack;
+                existingRoute.HandTruckBack = salesRoute.HandTruckBack;
+                existingRoute.FullTank = salesRoute.FullTank;
+                existingRoute.SweepTruck = salesRoute.SweepTruck;
+                existingRoute.SweepCab = salesRoute.SweepCab;
+                existingRoute.EndMileage = salesRoute.EndMileage;
+                existingRoute.InvoiceCount = salesRoute.InvoiceCount;
+                existingRoute.CheckCount = salesRoute.CheckCount;
+                existingRoute.CashCount = salesRoute.CashCount;
+                existingRoute.Notes = salesRoute.Notes;
+                existingRoute.KeyReturned = salesRoute.KeyReturned;
+                existingRoute.UpdatedAt = DateTime.UtcNow;
+
+                Uow.SalesRoutes.Update(existingRoute);
+                Uow.Commit();
+            }
+        }
+
         public SalesRoute? GetByDateRoute(DateOnly? shipDate, string? shipRoute)
         {
             return Uow.SalesRoutes.Find(c => c.ShipDate == shipDate && c.ShipRoute == shipRoute).FirstOrDefault();

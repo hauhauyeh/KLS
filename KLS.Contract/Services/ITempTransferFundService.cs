@@ -11,6 +11,6 @@ namespace KLS.Contract.Services
     {
         void Update(TempTransferFund tempTransfer);
 
-        void AppliedAll(int tfId);
+        void AppliedAll(TFApplyReq applyReq);
     }
 }

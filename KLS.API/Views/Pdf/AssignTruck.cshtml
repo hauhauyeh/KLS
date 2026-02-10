@@ -1,0 +1,84 @@
+﻿@using KLS.Models.Reports
+@model List<RptAssignTruck>
+
+<style>
+    .header {
+        font-size: 12px;
+        border-radius: 6px;
+        margin-top: 10px;
+        padding: 8px;
+        background: black;
+        color: white;
+        border-width: 1px;
+        border-color: black;
+        border-style: solid;
+        margin-bottom: 0px;
+        font-family: "Franklin Gothic";
+        font-weight: bold;
+        text-align: center;
+        font-style: italic;
+    }
+
+    #mc2a {
+        -webkit-column-count: 2; /* Chrome, Safari, Opera */
+        -moz-column-count: 2;
+        -moz-column-gap: 10px;
+        column-count: 2;
+        column-fill: auto;
+        column-gap: 10px;
+        font-family: "Segoe UI";
+        font-size: 12px;
+    }
+
+    strong {
+        font-weight: bold;
+    }
+
+    .rpt-name {
+        font-family: "Franklin Gothic";
+        font-weight: bold;
+        text-align: center;
+        margin-top: 0px;
+        font-size: 24px;
+        margin-bottom: 1rem;
+    }
+
+    .route-wrap {
+        border: 1px solid grey;
+        padding-left: 5px;
+        page-break-inside: avoid;
+    }
+
+    .route {
+        font-size: 22px;
+    }
+</style>
+
+<div class="div-main">
+    @if (Model.Count > 0)
+    {
+        var grpTruck = Model.GroupBy(c => c.TruckNumber).ToList();
+
+        <div class=rpt-name>
+            <span class="shipdate">Assign Truck - @string.Format("{0:d}", Model.FirstOrDefault().ShipDate)</span>
+        </div>
+
+        <div id="mc2a">
+            @foreach (var itm in grpTruck)
+            {
+                <h6 class="header">Truck#@itm.FirstOrDefault().TruckNumber - @itm.FirstOrDefault().TruckName</h6>
+
+                foreach (var item in itm)
+                {
+                    <div class="route-wrap">
+                        <strong class="route">@item.ShipRoute</strong>
+                    </div>
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <p class="alert alert-danger">Route not found.</p>
+    }
+</div>

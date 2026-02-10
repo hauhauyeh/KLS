@@ -13,7 +13,7 @@ namespace KLS.Models
         [Key]
         public int TempCPId { get; set; }
 
-        public int? PayeeId { get; set; }
+        public int PayeeId { get; set; }
 
         public int CustomerPaymentId { get; set; }
 
@@ -24,6 +24,12 @@ namespace KLS.Models
         public decimal? PaymentApplied { get; set; }
 
         public decimal? DiscountApplied { get; set; }
+
+        public decimal? PaymentDiscount { get; set; }
+
+        public decimal? ShortDiscount { get; set; }
+
+        public decimal? OtherDiscount { get; set; }
 
         public bool IsApplied { get; set; }
 
@@ -37,6 +43,7 @@ namespace KLS.Models
 
         public string? BillName { get; set; }
 
+        public bool IsCCFee { get; set; }
 
         public decimal? LeaveShort
         {

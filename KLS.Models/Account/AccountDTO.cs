@@ -12,8 +12,6 @@ namespace KLS.Models
         [Key]
         public int AccountId { get; set; }
 
-        public string? AccountClass { get; set; }
-
         public string? TypeName { get; set; }
 
         public string? AccountCode { get; set; }
@@ -21,5 +19,7 @@ namespace KLS.Models
         public string? AccountName { get; set; }
 
         public bool Inactive { get; set; }
+
+        public string? ClassName { get; set; }
     }
 }

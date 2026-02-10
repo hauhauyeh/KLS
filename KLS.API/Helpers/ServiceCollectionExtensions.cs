@@ -22,6 +22,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ITruckService, TruckService>();
             services.AddScoped<IVendorService, VendorService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IAccountCategoryService, AccountCategoryService>();
             services.AddScoped<IAccountTypeService, AccountTypeService>();
             services.AddScoped<IEmailLogService, EmailLogService>();
             services.AddScoped<IEmailSettingService, EmailSettingService>();
@@ -77,6 +78,9 @@ namespace KLS.API.Helpers
             services.AddScoped<ISalesRouteService, SalesRouteService>();
             services.AddScoped<IPrintLogService, PrintLogService>();
             services.AddScoped<ITempCustomerPaymentService, TempCustomerPaymentService>();
+            services.AddScoped<ITempExtraPaymentService, TempExtraPaymentService>();
+            services.AddScoped<ILiabilityService, LiabilityService>();
+            services.AddScoped<ICheckTrackerService, CheckTrackerService>();
 
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IEmailService, EmailService>();

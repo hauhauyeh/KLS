@@ -49,6 +49,10 @@ namespace KLS.Contract.Services
 
         void EmailPdf(int salesId);
 
+        int MergeOrder(SalesMergeReq mergeReq);
+
+        string MergePdf(string salesNumbers);
+
         //--Routing
 
         IEnumerable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate);

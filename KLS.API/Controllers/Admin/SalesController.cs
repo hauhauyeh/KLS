@@ -185,6 +185,32 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("MergeOrder")]
+        [DisplayName("Merge Order")]
+        public IActionResult MergeOrder([FromBody] SalesMergeReq mergeReq)
+        {
+            return Ok(_salesService.MergeOrder(mergeReq));
+        }
+
+
+        [HttpPost("MergePdf")]
+        [DisplayName("Merge Pdf")]
+        public IActionResult MergePdf([FromQuery] string salesNumbers)
+        {
+            try
+            {
+                var filePath = _salesService.MergePdf(salesNumbers);
+
+                var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                return File(fileStream, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
         #endregion
     }
 }

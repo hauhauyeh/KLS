@@ -62,10 +62,10 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("Inject/{tfId}")]
-        public IActionResult Inject(int tfId)
+        [HttpPost("Inject")]
+        public IActionResult Inject([FromBody] DepositInjectReq injectReq)
         {
-            return Ok(_transferFundService.InjectDeposit(tfId));
+            return Ok(_transferFundService.InjectDeposit(injectReq));
         }
 
         #endregion

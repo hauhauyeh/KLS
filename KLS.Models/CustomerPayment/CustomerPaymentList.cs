@@ -10,9 +10,13 @@ namespace KLS.Models
     public class CustomerPaymentList
     {
         [Key]
-        public int? PaymentNumber { get; set; }
+        public int CustomerPaymentId { get; set; }
+
+        public int PaymentNumber { get; set; }
 
         public string? PaymentType { get; set; }
+
+        public int PayeeId { get; set; }
 
         public string? PayeeName { get; set; }
 
@@ -25,6 +29,8 @@ namespace KLS.Models
         public decimal? PaymentAmount { get; set; }
 
         public decimal? PaymentApplied { get; set; }
+
+        public decimal? UnappliedAmount { get; set; }
 
         public string? Notes { get; set; }
 

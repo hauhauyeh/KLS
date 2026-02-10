@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Data.Repositories;
 using KLS.Models;
@@ -69,6 +70,75 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public int Save(CustomerPaymentSaveReq paymentSaveReq)
+        {
+            var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", paymentSaveReq.CustomerPaymentId);
+
+            var PaymentTypeParam = (!string.IsNullOrEmpty(paymentSaveReq.PaymentType)) ? new SqlParameter("@PaymentType", paymentSaveReq.PaymentType) : new SqlParameter("@PaymentType", DBNull.Value);
+
+            var PayeeIdParam = new SqlParameter("@PayeeId", paymentSaveReq.PayeeId);
+
+            var PaymentDateParam = paymentSaveReq.PaymentDate.HasValue ? new SqlParameter("@PaymentDate", paymentSaveReq.PaymentDate) : new SqlParameter("@PaymentDate", DBNull.Value);
+
+            var PaymentMethodParam = (!string.IsNullOrEmpty(paymentSaveReq.PaymentMethod)) ? new SqlParameter("@PaymentMethod", paymentSaveReq.PaymentMethod) : new SqlParameter("@PaymentMethod", DBNull.Value);
+
+            var FromAccountIdParam = paymentSaveReq.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", paymentSaveReq.FromAccountId) : new SqlParameter("@FromAccountId", DBNull.Value);
+
+            var ReferenceIdParam = (!string.IsNullOrEmpty(paymentSaveReq.ReferenceId)) ? new SqlParameter("@ReferenceId", paymentSaveReq.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
+
+            var PaymentAmountParam = paymentSaveReq.PaymentAmount.HasValue ? new SqlParameter("@PaymentAmount", paymentSaveReq.PaymentAmount) : new SqlParameter("@PaymentAmount", DBNull.Value);
+
+            var NotesParam = (!string.IsNullOrEmpty(paymentSaveReq.Notes)) ? new SqlParameter("@Notes", paymentSaveReq.Notes) : new SqlParameter("@Notes", DBNull.Value);
+
+            var CCFeeParam = paymentSaveReq.CCFee.HasValue ? new SqlParameter("@CCFee", paymentSaveReq.CCFee) : new SqlParameter("@CCFee", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewPaymentId = new SqlParameter()
+            {
+                ParameterName = "@NewPaymentId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_Insert] @CustomerPaymentId,@PaymentType,@PayeeId,@PaymentDate,@PaymentMethod,@FromAccountId,@ReferenceId,@PaymentAmount,@Notes,@CCFee,@EmpId,@NewPaymentId OUTPUT", CustomerPaymentIdParam, PaymentTypeParam, PayeeIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, ReferenceIdParam, PaymentAmountParam, NotesParam, CCFeeParam, EmpIdParam, NewPaymentId);
+
+            return Convert.ToInt32(NewPaymentId.Value);
+        }
+
+        public void SaveReturn(CustomerPaymentReturnReq returnReq)
+        {
+            var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", returnReq.CustomerPaymentId);
+
+            var ReturnTypeParam = string.IsNullOrEmpty(returnReq.ReturnType) ? new SqlParameter("@ReturnType", DBNull.Value) : new SqlParameter("@ReturnType", returnReq.ReturnType);
+
+            var ReturnDateParam = returnReq.ReturnDate.HasValue ? new SqlParameter("@ReturnDate", returnReq.ReturnDate) : new SqlParameter("@ReturnDate", DBNull.Value);
+
+            var FeeAccountIdParam = returnReq.FeeAccountId.HasValue ? new SqlParameter("@FeeAccountId", returnReq.FeeAccountId) : new SqlParameter("@FeeAccountId", DBNull.Value);
+
+            var FeeAmountParam = returnReq.FeeAmount.HasValue ? new SqlParameter("@FeeAmount", returnReq.FeeAmount) : new SqlParameter("@FeeAmount", DBNull.Value);
+
+            var NSFFeeParam = returnReq.NSFFee.HasValue ? new SqlParameter("@NSFFee", returnReq.NSFFee) : new SqlParameter("@NSFFee", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_InsertReturn] @CustomerPaymentId,@ReturnType,@ReturnDate,@FeeAccountId,@FeeAmount,@NSFFee,@EmpId", CustomerPaymentIdParam, ReturnTypeParam, ReturnDateParam, FeeAccountIdParam, FeeAmountParam, NSFFeeParam, EmpIdParam);
+        }
+
+        public void DeleteReturn(int customerPaymentId)
+        {
+            var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", customerPaymentId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_DeleteReturn] @CustomerPaymentId", CustomerPaymentIdParam);
+        }
+
+        public IQueryable<CustomerPaymentStatement>? Statement(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.CustomerPaymentStatement.FromSqlRaw("[dbo].[CustomerPayment_GetStmt] @PayeeId", PayeeIdParam);
         }
     }
 }

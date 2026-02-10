@@ -78,9 +78,24 @@ namespace KLS.Services
 
             if (existing != null)
             {
-                existing.MarkupPercent = tempQuote.MarkupPercent;
                 existing.TargetPrice = tempQuote.TargetPrice;
                 existing.NewPrice = tempQuote.NewPrice;
+                existing.IsFixed = tempQuote.IsFixed;
+
+                var basePrice = (tempQuote.IsBaseToRecentCost ? tempQuote.RecentCost : tempQuote.P1) ?? 0m;
+
+                decimal? markup = null;
+                decimal? finalPrice = tempQuote.FinalPriceUpdate;
+
+                if (finalPrice.HasValue && finalPrice != 0 && basePrice != 0)
+                    markup = Utilities.Rounding((finalPrice - basePrice) / basePrice, 4);
+
+                existing.MarkupPercent = markup;
+
+                if (tempQuote.IsFixed)
+                    existing.TargetPrice = finalPrice;
+                else
+                    existing.TargetPrice = null;
 
                 Uow.TempItemQuotes.Update(existing);
                 Uow.Commit();

@@ -34,6 +34,8 @@ namespace KLS.Models
 
         public decimal? OldPrice { get; set; }
 
+        public bool IsFixed { get; set; }
+
         public bool Inactive { get; set; }
 
         public DateTime? CreatedAt { get; set; }

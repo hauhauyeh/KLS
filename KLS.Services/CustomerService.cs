@@ -74,7 +74,7 @@ namespace KLS.Services
 
         public bool NameExists(CustomerDto dto)
         {
-            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == dto.PayeeName.ToLower() && p.PayeeId != dto.PayeeId && p.PayeeType == EnumHelper.PayeeType.E.ToString());
+            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == dto.PayeeName.ToLower() && p.PayeeId != dto.PayeeId && p.PayeeType == EnumHelper.PayeeType.C.ToString());
         }
 
         public CustomerDto Create(CustomerDto dto)
@@ -135,6 +135,8 @@ namespace KLS.Services
             existingPayee.Email = dto.Email;
             existingPayee.EmailInvoice = dto.EmailInvoice;
             existingPayee.EmailStmt = dto.EmailStmt;
+            existingPayee.EmailPricesheet = dto.EmailPricesheet;
+            existingPayee.EmailACH = dto.EmailACH;
             existingPayee.TermId = dto.TermId;
             existingPayee.IsClosed = dto.IsClosed;
             existingPayee.IsDelinquent = dto.IsDelinquent;
@@ -213,8 +215,7 @@ namespace KLS.Services
 
         public void Delete(int payeeId)
         {
-            Uow.Payees.RemoveById(payeeId);
-            Uow.Commit();
+            Uow.Payees.Delete(payeeId);
         }
 
         public int GetMaxCustomerId()

@@ -58,6 +58,8 @@ namespace KLS.Data.Repositories
 
         public IAccountTypeRepository AccountTypes { get { return new AccountTypeRepository(DbContext); } }
 
+        public IAccountCategoryRepository AccountCategories { get { return new AccountCategoryRepository(DbContext); } }
+
         public IAccountRepository Accounts { get { return new AccountRepository(DbContext); } }
 
         public IEmailLogRepository EmailLogs { get { return new EmailLogRepository(DbContext); } }
@@ -118,8 +120,6 @@ namespace KLS.Data.Repositories
 
         public ITempPayrollDetailRepository TempPayrollDetails { get { return new TempPayrollDetailRepository(DbContext); } }
 
-        public ICustomerPaymentRepository CustomerPayments { get { return new CustomerPaymentRepository(DbContext); } }
-
         public IItemRepository Items { get { return new ItemRepository(DbContext); } }
 
         public IIncomingPaymentRepository IncomingPayments { get { return new IncomingPaymentRepository(DbContext); } }
@@ -156,7 +156,13 @@ namespace KLS.Data.Repositories
 
         public ITempTransferFundRepository TempTransferFunds { get { return new TempTransferFundRepository(DbContext); } }
 
+        public ICustomerPaymentRepository CustomerPayments { get { return new CustomerPaymentRepository(DbContext); } }
+
+        public ICustomerPaymentDetailRepository CustomerPaymentDetails { get { return new CustomerPaymentDetailRepository(DbContext); } }
+
         public ITempCustomerPaymentRepository TempCustomerPayments { get { return new TempCustomerPaymentRepository(DbContext); } }
+
+        public ITempExtraPaymentRepository TempExtraPayments { get { return new TempExtraPaymentRepository(DbContext); } }
 
         public IInventoryAdjDetailRepository InventoryAdjDetails { get { return new InventoryAdjDetailRepository(DbContext); } }
 
@@ -175,6 +181,10 @@ namespace KLS.Data.Repositories
         public ISalesRouteRepository SalesRoutes { get { return new SalesRouteRepository(DbContext); } }
 
         public IPrintLogRepository PrintLogs { get { return new PrintLogRepository(DbContext); } }
+
+        public ILiabilityRepository Liabilities { get { return new LiabilityRepository(DbContext); } }
+
+        public ICheckTrackerRepository CheckTrackers { get { return new CheckTrackerRepository(DbContext); } }
 
         public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
     }

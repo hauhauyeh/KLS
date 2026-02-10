@@ -1,0 +1,258 @@
+﻿@using KLS.Models.Reports
+@model RptLoadingList
+
+<style>
+    #loadlist .tbl {
+        page-break-after: always;
+        width: 100%;
+        /* table-layout: fixed !important; */
+    }
+
+    #loadlist thead:after {
+        content: "-";
+        display: block;
+        line-height: 0.5;
+        color: transparent;
+    }
+
+    #loadlist .column-2 {
+        /* page-break-inside: avoid; */
+        column-count: 2;
+        column-fill: auto;
+        font-family: "Segoe UI";
+        font-size: 12px;
+        /* height: 830px; */
+    }
+
+    #loadlist .depart-name {
+        font-size: 50px;
+        font-family: 'segoe ui';
+        border-bottom: 3px solid;
+        font-weight: bold;
+        height: 50px;
+        padding-left: 10px;
+        padding-top: 10px;
+    }
+
+    #loadlist .storage-grp {
+        background-color: black;
+        color: white;
+        font-style: italic;
+        font-weight: 600;
+        padding-left: 3px;
+    }
+
+    #loadlist .item-name {
+        font-weight: bold;
+        width: 75%;
+        float: left;
+        font-size: 15px;
+        line-height: 1.2;
+        padding-top: 3px;
+    }
+
+    .comment {
+        background-color: black;
+        color: white;
+        padding: 0px 4px;
+        border-radius: 5px;
+    }
+
+    #loadlist .shipqty {
+        font-size: 20px;
+        font-style: italic;
+        font-weight: bold;
+    }
+
+    #loadlist .unit {
+        font-size: 16px;
+        font-family: 'Calibri';
+    }
+
+    #loadlist .qtyunit {
+        width: 25%;
+        float: right;
+        margin-top: 10px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    #loadlist .item-div {
+        border-top: 0.5px solid;
+        border-bottom: 0.5px solid;
+        border-right: 1px solid;
+        border-left: 1px solid;
+        height: 50px;
+        padding: 0 10px;
+        page-break-inside: avoid;
+        margin-top: -1px;
+    }
+
+    #loadlist .shipdate {
+        font-size: 35px;
+        font-weight: bold;
+        font-style: italic;
+        font-family: 'segoe ui';
+    }
+
+    #loadlist .printdate {
+        font-weight: bold;
+        font-size: 12px;
+        font-family: 'segoe ui';
+    }
+
+    #loadlist .div-date {
+        width: 30%;
+    }
+
+    #loadlist .div-route {
+        width: 30%;
+        font-family: 'segoe ui';
+        font-weight: bold;
+        font-style: italic;
+        font-size: 80px;
+        text-align: center;
+    }
+
+    #loadlist .div-truck {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+    #loadlist .truck {
+        font-family: 'segoe ui';
+        font-weight: bold;
+        font-size: 40px;
+        background-color: black;
+        color: white;
+        border-radius: 5px;
+        padding: 4px 10px;
+    }
+
+    #loadlist .div-drops {
+        font-weight: bold;
+        text-align: center;
+        font-family: 'segoe ui';
+    }
+
+    #loadlist .salescount {
+        font-size: 60px;
+        font-weight: bold;
+        font-family: 'segoe ui';
+    }
+
+    #loadlist .footer-blank-space {
+        height: 100px;
+    }
+
+    @@media print {
+        @@page {
+            margin-top: 0px;
+            margin-bottom: 10px;
+        }
+
+        .div-main {
+            position: absolute;
+            left: 0px;
+            width: 100%;
+            padding-top: 0px;
+            padding-bottom: 0px;
+            padding-left: 0px;
+            padding-right: 0px;
+        }
+
+        #loadlist #footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: table;
+        }
+    }
+</style>
+
+<div class="div-main" id="loadlist">
+    @if (Model.LoadingItems?.Count > 0)
+    {
+        var grpdepart = Model.LoadingItems.GroupBy(c => c.Department).ToList();
+
+        foreach (var itmdepart in grpdepart)
+        {
+            var grpstorage = itmdepart.GroupBy(c => c.StorageName).ToList();
+
+            <table class="tbl" style="page-break-after:always">
+                <thead>
+                    <tr>
+                        <td colspan="3" class="depart-name"><div>@itmdepart.FirstOrDefault()?.Department</div></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3">
+                            <div class="column-2">
+                                @foreach (var itmstorage in grpstorage)
+                                {
+                                    <div class="storage-grp">@itmstorage.FirstOrDefault()?.StorageName</div>
+
+                                    foreach (var itm in itmstorage)
+                                    {
+                                        <div class="item-div">
+                                            <div class="item-name">
+                                                @itm.ItemName
+                                                @if (!string.IsNullOrEmpty(itm.Comment))
+                                                {
+                                                    <span class="comment"> (@itm.Comment)</span>
+                                                }
+                                                @itm.ItemBoxDesc
+                                            </div>
+                                            <div class="qtyunit">
+                                                <span class="shipqty">@string.Format("{0:0.##}", itm.ShipQty)</span>
+                                                <span class="unit">@itm.Unit</span>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">
+                            <div class="footer-blank-space">&nbsp;</div>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        }
+        <table id="footer">
+            <tr>
+                <td class="div-date">
+                    <div class="shipdate">@string.Format("{0:d}", Model.ShipDate)</div>
+                </td>
+                <td class="div-route">
+                    <div>@Model.ShipRoute</div>
+                </td>
+                <td>
+                    <div class="div-truck">
+                        <div class="salescount">[@Model.DropCount]</div>
+                        <div class="truck">T#@Model.TruckNumber</div>
+                        @* @if (!string.IsNullOrEmpty(Model.LoadOrder))
+                            {
+                            <div class="truck">@Model.LoadOrder</div>
+                            } *@
+                        @* <div class="div-drops">
+                            <div>Drops</div>
+                            <span class="salescount">@Model.DropCount</span>
+                            </div> *@
+                    </div>
+                </td>
+            </tr>
+        </table>
+    }
+    else
+    {
+        <p class="alert alert-danger">Packing item not found.</p>
+    }
+</div>

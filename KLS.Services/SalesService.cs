@@ -1,4 +1,5 @@
-﻿using KLS.Common;
+﻿using IronPdf;
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
@@ -190,7 +191,7 @@ namespace KLS.Services
 
         public IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq)
         {
-            return Uow.Sales.GetByDateRoute(dateRouteReq);
+            return Uow.Sales.GetByDateRoute(dateRouteReq.ShipDate, dateRouteReq.ShipRoute);
         }
 
         public void BatchAllocation(DateOnly shipDate)
@@ -243,6 +244,57 @@ namespace KLS.Services
                     Uow.EmailLogs.Add(log);
                     Uow.Commit();
                 });
+            }
+        }
+
+        public int MergeOrder(SalesMergeReq mergeReq)
+        {
+            return Uow.Sales.MergeOrder(mergeReq);
+        }
+
+        public string MergePdf(string salesNumbers)
+        {
+            if (string.IsNullOrWhiteSpace(salesNumbers))
+                throw new ArgumentException("SalesNumbers is required.", nameof(salesNumbers));
+
+            var mergeFolder = Path.Combine(_env.WebRootPath, "MergeInvoice");
+            Directory.CreateDirectory(mergeFolder);
+
+            var tempFileName = $"{DateTime.UtcNow:yyyyMMddHHmmssfff}";
+            var mergedPdfPath = Path.Combine(mergeFolder, tempFileName + ".pdf");
+
+            var ids = salesNumbers
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var docs = new List<PdfDocument>(ids.Count);
+
+            try
+            {
+                foreach (var salesNum in ids)
+                {
+                    var pdfPath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNum + ".pdf");
+                    if (!File.Exists(pdfPath))
+                        continue;
+
+                    docs.Add(PdfDocument.FromFile(pdfPath));
+                }
+
+                if (docs.Count == 0)
+                    throw new FileNotFoundException("No PDF files found to merge.");
+
+                using var merged = PdfDocument.Merge(docs);
+                merged.SaveAs(mergedPdfPath);
+
+                return mergedPdfPath;
+            }
+            finally
+            {
+                foreach (var d in docs)
+                    d?.Dispose();
             }
         }
 

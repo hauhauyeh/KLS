@@ -45,6 +45,8 @@ namespace KLS.Models
 
         public DateOnly? PrintDate { get; set; }
 
+        public bool IsPrinted { get { return PrintDate.HasValue; } }
+
         public bool IsVoid { get; set; }
 
         public int? VoidBy { get; set; }
@@ -72,6 +74,22 @@ namespace KLS.Models
         public int? FeeAccountId2 { get; set; }
 
         public decimal? FeeAmount2 { get; set; }
+
+        public int? AccountId1 { get; set; }
+
+        public int? AccountId2 { get; set; }
+
+        public int? AccountId3 { get; set; }
+
+        public int? AccountId4 { get; set; }
+
+        public decimal? Amount1 { get; set; }
+
+        public decimal? Amount2 { get; set; }
+
+        public decimal? Amount3 { get; set; }
+
+        public decimal? Amount4 { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 

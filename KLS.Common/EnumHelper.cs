@@ -38,11 +38,18 @@ namespace KLS.Common
 
         public enum AccountClass
         {
-            Asset = 1,
-            Liability = 2,
-            Equity = 3,
-            Income = 4,
-            Expense = 5
+            A, // Asset
+            C, // Capital
+            I, // Income
+            L, // Liability
+            Q, // Equity
+            X  // Expense
+
+            //Asset = 1,
+            //Liability = 2,
+            //Equity = 3,
+            //Income = 4,
+            //Expense = 5
         }
 
         public enum ChangeStatus

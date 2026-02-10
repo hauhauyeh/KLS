@@ -23,10 +23,9 @@ namespace KLS.Services
 
             var acct = from b in qry.Select(c => new { c.AccountId }).Distinct()
                        join a in Uow.Accounts.GetAll() on b.AccountId equals a.AccountId
-                       join at in Uow.AccountTypes.GetAll() on a.AccountTypeId equals at.AccountTypeId
                        select new ReconAccount
                        {
-                           AccountType = at.TypeName,
+                           AccountType = a.TypeName,
                            AccountName = a.AccountName,
                            MaxStatementDate = qry.Where(c => c.AccountId == b.AccountId).Max(c => c.StatementDate),
                            BankRecons = qry.Where(c => c.AccountId == b.AccountId).OrderByDescending(c => c.StatementDate).ToList()

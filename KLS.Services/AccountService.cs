@@ -21,98 +21,115 @@ namespace KLS.Services
 
         }
 
-        public IEnumerable<AccountList> GetList(string? search)
-        {
-            var types = Uow.AccountTypes.GetAll();
-            var accounts = Uow.Accounts.GetAll();
+        //public IEnumerable<AccountList> GetList(string? search)
+        //{
+        //    var types = Uow.AccountTypes.GetAll();
+        //    var accounts = Uow.Accounts.GetAll();
 
-            if (!string.IsNullOrEmpty(search))
-                accounts = accounts.Where(c => c.AccountName.Contains(search) || c.AccountCode.Contains(search));
+        //    if (!string.IsNullOrEmpty(search))
+        //        accounts = accounts.Where(c => c.AccountName.Contains(search) || c.AccountCode.Contains(search));
 
-            // STEP 1: Flat DTO list
-            var dtoList =
-                (from a in accounts
-                 join t in types on a.AccountTypeId equals t.AccountTypeId
-                 select new AccountDTO
-                 {
-                     AccountId = a.AccountId,
-                     AccountClass = t.AccountClass,
-                     TypeName = t.TypeName,
-                     AccountCode = a.AccountCode,
-                     AccountName = a.AccountName,
-                     Inactive = a.Inactive
-                 }).ToList();
+        //    // STEP 1: Flat DTO list
+        //    var dtoList =
+        //        (from a in accounts
+        //         join t in types on a.AccountTypeId equals t.AccountTypeId
+        //         select new AccountDTO
+        //         {
+        //             AccountId = a.AccountId,
+        //             AccountClass = t.AccountClass,
+        //             TypeName = t.TypeName,
+        //             AccountCode = a.AccountCode,
+        //             AccountName = a.AccountName,
+        //             Inactive = a.Inactive
+        //         }).ToList();
 
-            // STEP 2: Group by AccountClass
-            var result = dtoList
-                .GroupBy(x => x.AccountClass)
-                .OrderBy(g => g.Key)
-                .Select(g => new AccountList
-                {
-                    AccountClass = g.Key,
-                    Accounts = g.ToList()
-                }).ToList();
+        //    // STEP 2: Group by AccountClass
+        //    var result = dtoList
+        //        .GroupBy(x => x.AccountClass)
+        //        .OrderBy(g => g.Key)
+        //        .Select(g => new AccountList
+        //        {
+        //            AccountClass = g.Key,
+        //            Accounts = g.ToList()
+        //        }).ToList();
 
-            return result;
-        }
+        //    return result;
+        //}
 
-        public IEnumerable<AccountTree> GetAccountsTree()
-        {
-            var category = Uow.AccountTypes.GetAll();
-            var accounts = Uow.Accounts.GetAll();
+        //public IEnumerable<AccountTree> GetAccountsTree()
+        //{
+        //    var category = Uow.AccountTypes.GetAll();
+        //    var accounts = Uow.Accounts.GetAll();
 
-            var lst = (from act in accounts
-                       join cat in category on act.AccountTypeId equals cat.AccountTypeId
-                       orderby cat.SortOrder, cat.AccountClass
-                       select new AccountTree
-                       {
-                           //CatName = cat.CatName,
-                           TypeName = cat.TypeName,
-                           AccountId = act.AccountId,
-                           AccountCode = act.AccountCode,
-                           AccountName = act.AccountName,
-                           Inactive = act.Inactive,
-                           IsDefaultAccount = act.IsDefaultAccount,
-                           ParentAccountId = act.ParentAccountId
-                       }).ToList();
+        //    var lst = (from act in accounts
+        //               join cat in category on act.AccountTypeId equals cat.AccountTypeId
+        //               orderby cat.SortOrder, cat.AccountClass
+        //               select new AccountTree
+        //               {
+        //                   //CatName = cat.CatName,
+        //                   TypeName = cat.TypeName,
+        //                   AccountId = act.AccountId,
+        //                   AccountCode = act.AccountCode,
+        //                   AccountName = act.AccountName,
+        //                   Inactive = act.Inactive,
+        //                   IsDefaultAccount = act.IsDefaultAccount
+        //               }).ToList();
 
-            return BuildTree(lst, null);
-        }
+        //    return BuildTree(lst, null);
+        //}
 
-        private IEnumerable<AccountTree> BuildTree(IEnumerable<AccountTree> accounts, int? parentId)
-        {
-            return accounts.Where(x => x.ParentAccountId == parentId).Select(x => new AccountTree
-            {
-                AccountId = x.AccountId,
-                TypeName = x.TypeName,
-                CatName = x.CatName,
-                AccountCode = x.AccountCode,
-                AccountName = x.AccountName,
-                ParentAccountId = x.ParentAccountId,
-                Inactive = x.Inactive,
-                IsDefaultAccount = x.IsDefaultAccount,
-                ChildAccounts = BuildTree(accounts, x.AccountId)
-            });
-        }
+        //private IEnumerable<AccountTree> BuildTree(IEnumerable<AccountTree> accounts, int? parentId)
+        //{
+        //    return accounts.Where(x => x.ParentAccountId == parentId).Select(x => new AccountTree
+        //    {
+        //        AccountId = x.AccountId,
+        //        TypeName = x.TypeName,
+        //        CatName = x.CatName,
+        //        AccountCode = x.AccountCode,
+        //        AccountName = x.AccountName,
+        //        ParentAccountId = x.ParentAccountId,
+        //        Inactive = x.Inactive,
+        //        IsDefaultAccount = x.IsDefaultAccount,
+        //        ChildAccounts = BuildTree(accounts, x.AccountId)
+        //    });
+        //}
 
         public Account? GetById(int accountId)
         {
             return Uow.Accounts.GetById(accountId);
         }
 
+        public ICollection<AccountDTO>? GetActive()
+        {
+            var result = from a in Uow.Accounts.GetAll()
+                         join at in Uow.AccountCategories.GetAll()
+                             on a.AccountCategoryId equals at.AccountCategoryId
+                         select new AccountDTO
+                         {
+                             AccountId = a.AccountId,
+                             AccountCode = a.AccountCode,
+                             AccountName = a.AccountName,
+                             TypeName = a.TypeName,
+                             Inactive = a.Inactive,
+                             ClassName = at.ClassName
+                         };
+
+            return result.OrderBy(c => c.ClassName).ThenBy(c => c.AccountName).ToList();
+        }
+
         public Account? GetByName(string acctName)
         {
-            return Uow.Accounts.Find(c => c.AccountName == acctName && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountName == acctName && c.Inactive == false).Include(c => c.AccountCategory).FirstOrDefault();
         }
 
         public Account? GetByCode(string accountCode)
         {
-            return Uow.Accounts.Find(c => c.AccountCode == accountCode && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountCode == accountCode && c.Inactive == false).Include(c => c.AccountCategory).FirstOrDefault();
         }
 
         public Account? GetByAcctId(int acctId)
         {
-            return Uow.Accounts.Find(c => c.AccountId == acctId && c.Inactive == false).Include(c => c.AccountType).FirstOrDefault();
+            return Uow.Accounts.Find(c => c.AccountId == acctId && c.Inactive == false).Include(c => c.AccountCategory).FirstOrDefault();
         }
 
         public bool NameExists(Account account)
@@ -140,8 +157,8 @@ namespace KLS.Services
             if (existing == null)
                 return null;
 
-            existing.AccountTypeId = account.AccountTypeId;
             existing.AccountName = account.AccountName;
+            existing.SortOrder = account.SortOrder;
             existing.Description = account.Description;
             existing.IsAccountDebit = account.IsAccountDebit;
             existing.Inactive = account.Inactive;
@@ -191,16 +208,16 @@ namespace KLS.Services
         public ICollection<AccountDTO>? GetBankAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.TypeName == "Bank"
+                         where a.TypeName == "Bank"
+                         //join at in Uow.AccountTypes.GetAll()
+                         //    on a.AccountTypeId equals at.AccountTypeId
+                         //where at.TypeName == "Bank"
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             //CatName = at.CatName,
+                             TypeName = a.TypeName,
                              Inactive = a.Inactive
                          };
 
@@ -210,16 +227,16 @@ namespace KLS.Services
         public ICollection<AccountDTO>? GetCashAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.TypeName == "Cash"
+                         where a.TypeName == "Cash"
+                         //join at in Uow.AccountTypes.GetAll()
+                         //    on a.AccountTypeId equals at.AccountTypeId
+                         //where at.TypeName == "Cash"
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             // CatName = at.CatName,
+                             TypeName = a.TypeName,
                              Inactive = a.Inactive
                          };
 
@@ -229,16 +246,16 @@ namespace KLS.Services
         public ICollection<AccountDTO>? GetCCAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.TypeName == "Credit Card"
+                         where a.TypeName == "Credit Card"
+                         //join at in Uow.AccountTypes.GetAll()
+                         //    on a.AccountTypeId equals at.AccountTypeId
+                         //where at.TypeName == "Credit Card"
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             //CatName = at.CatName,
+                             TypeName = a.TypeName,
                              Inactive = a.Inactive
                          };
 
@@ -248,16 +265,16 @@ namespace KLS.Services
         public ICollection<AccountDTO>? GetBankCashAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.TypeName == "Bank" || at.TypeName == "Cash"
+                         where a.TypeName == "Bank" || a.TypeName == "Cash"
+                         //join at in Uow.AccountTypes.GetAll()
+                         //    on a.AccountTypeId equals at.AccountTypeId
+                         //where at.TypeName == "Bank" || at.TypeName == "Cash"
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             //CatName = at.CatName,
+                             TypeName = a.TypeName,
                              Inactive = a.Inactive
                          };
 
@@ -267,16 +284,16 @@ namespace KLS.Services
         public ICollection<AccountDTO>? GetBankCashCCAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.TypeName == "Bank" || at.TypeName == "Cash" || at.TypeName == "Credit Card"
+                         where a.TypeName == "Bank" || a.TypeName == "Cash" || a.TypeName == "Credit Card"
+                         //join at in Uow.AccountTypes.GetAll()
+                         //    on a.AccountTypeId equals at.AccountTypeId
+                         //where at.TypeName == "Bank" || at.TypeName == "Cash" || at.TypeName == "Credit Card"
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             //CatName = at.CatName,
+                             TypeName = a.TypeName,
                              Inactive = a.Inactive
                          };
 
@@ -298,16 +315,15 @@ namespace KLS.Services
         public ICollection<AccountDTO>? GetACEAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.AccountClass != EnumHelper.AccountClass.Income.ToString() && at.AccountClass != EnumHelper.AccountClass.Liability.ToString()
+                         join at in Uow.AccountCategories.GetAll()
+                             on a.AccountCategoryId equals at.AccountCategoryId
+                         where at.ClassCode != EnumHelper.AccountClass.I.ToString() && at.ClassCode != EnumHelper.AccountClass.L.ToString()
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             //CatName = at.CatName,
+                             TypeName = a.TypeName,
                              Inactive = a.Inactive
                          };
 
@@ -317,16 +333,15 @@ namespace KLS.Services
         public ICollection<AccountDTO>? GetExpenseAccounts()
         {
             var result = from a in Uow.Accounts.GetAll()
-                         join at in Uow.AccountTypes.GetAll()
-                             on a.AccountTypeId equals at.AccountTypeId
-                         where at.AccountClass == EnumHelper.AccountClass.Expense.ToString()
+                         join at in Uow.AccountCategories.GetAll()
+                             on a.AccountCategoryId equals at.AccountCategoryId
+                         where at.ClassCode == EnumHelper.AccountClass.X.ToString()
                          select new AccountDTO
                          {
                              AccountId = a.AccountId,
                              AccountCode = a.AccountCode,
                              AccountName = a.AccountName,
-                             TypeName = at.TypeName,
-                             //CatName = at.CatName,
+                             TypeName = a.TypeName,
                              Inactive = a.Inactive
                          };
 

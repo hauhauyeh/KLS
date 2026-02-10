@@ -9,6 +9,12 @@ namespace KLS.Contract.Services
 {
     public interface ISalesRouteService
     {
+        SalesRoute Create(SalesRoute salesRoute);
+
+        void UpdateInvoice(SalesRoute salesRoute);
+
+        void UpdateDriverSheet(SalesRoute salesRoute);
+
         SalesRoute? GetByDateRoute(DateOnly? shipDate, string? shipRoute);
 
         IEnumerable<AssignTruck>? GetAssignTrucks(DateOnly shipDate);

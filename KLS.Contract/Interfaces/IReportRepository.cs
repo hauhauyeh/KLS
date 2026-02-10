@@ -19,5 +19,17 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptPODetail> ReportPODetail(int purchaseId);
 
         IQueryable<RptPackingItem> PackingList(DocumentReq req);
+
+        IQueryable<RptHarvillsItem> Harvills(DateOnly shipDate);
+
+        IQueryable<RptStoreTotalItem> StoreTotal(DateOnly shipDate);
+
+        IQueryable<RptSensitiveItem> Sensitive(DateOnly shipDate);
+
+        IQueryable<RptAssignTruck> AssignTruck(DateOnly shipDate);
+
+        IQueryable<RptLoadingItem> LoadingList(DocumentReq req);
+
+        IQueryable<RptPackingLabel> PackingLabel(DocumentReq req);
     }
 }

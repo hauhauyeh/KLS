@@ -184,19 +184,19 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(NewTFId.Value);
         }
 
-        public IQueryable<TempDepositList>? InjectDeposit(int tfId)
+        public IQueryable<TempDepositList>? InjectDeposit(DepositInjectReq injectReq)
         {
-            var TFIdParam = new SqlParameter("@TFId", tfId);
+            var TFIdParam = new SqlParameter("@TFId", injectReq.TFId);
 
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            //var PmtMethodParam = string.IsNullOrEmpty(injectReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", cart.PmtMethod);
+            var PaymentMethodParam = string.IsNullOrEmpty(injectReq.PaymentMethod) ? new SqlParameter("@PaymentMethod", DBNull.Value) : new SqlParameter("@PaymentMethod", injectReq.PaymentMethod);
 
-            //var StartDateParam = cart.StartDate.HasValue ? new SqlParameter("@StartDate", cart.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var StartDateParam = injectReq.StartDate.HasValue ? new SqlParameter("@StartDate", injectReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
 
-            //var EndDateParam = cart.EndDate.HasValue ? new SqlParameter("@EndDate", cart.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var EndDateParam = injectReq.EndDate.HasValue ? new SqlParameter("@EndDate", injectReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
 
-            return DbContext.TempDepositList.FromSqlRaw("[dbo].[Deposit_Inject] @TFId,@EmpId", TFIdParam, EmpIdParam);
+            return DbContext.TempDepositList.FromSqlRaw("[dbo].[Deposit_Inject] @TFId,@PaymentMethod,@StartDate,@EndDate,@EmpId", TFIdParam, PaymentMethodParam, StartDateParam, EndDateParam, EmpIdParam);
         }
     }
 }

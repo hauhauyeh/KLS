@@ -37,10 +37,10 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("AppliedAll/{tfId}")]
-        public IActionResult AppliedAll(int tfId)
+        [HttpPost("AppliedAll")]
+        public IActionResult AppliedAll([FromBody] TFApplyReq applyReq)
         {
-            _tempTransferFundService.AppliedAll(tfId);
+            _tempTransferFundService.AppliedAll(applyReq);
 
             return Ok();
         }

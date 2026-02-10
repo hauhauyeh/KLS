@@ -30,5 +30,7 @@ namespace KLS.Models
         public decimal? NewPrice { get; set; }
 
         public decimal? OldPrice { get; set; }
+
+        public bool IsFixed { get; set; }
     }
 }

@@ -1,0 +1,130 @@
+﻿@using KLS.Models.Reports
+@model List<RptHarvillsItem>
+
+<style>
+    .header {
+        font-size: 12px;
+        border-radius: 6px;
+        margin-top: 10px;
+        padding: 6px;
+        background: black;
+        color: white;
+        border-width: 1px;
+        border-color: black;
+        border-style: solid;
+        margin-bottom: 0px;
+        font-family: "Franklin Gothic";
+        font-weight: bold;
+        text-align: center;
+        font-style: italic;
+    }
+
+    .small-item-div {
+        height: 12px;
+        font-size: 10px;
+        padding: 0 10px;
+        page-break-inside: avoid;
+        font-weight: 400;
+        text-align: right;
+        padding-right: 15%;
+    }
+
+    .div-item {
+        border: 1px solid grey;
+        padding-left: 2px;
+        page-break-inside: avoid;
+    }
+
+    .itemqty {
+        width: 55%;
+        float: left;
+        text-align: right;
+        font-size: 16px;
+        font-style: italic;
+    }
+
+    .itemunit {
+        width: 45%;
+        float: right;
+        font-size: 13px;
+    }
+
+    #mc4a {
+        -webkit-column-count: 4; /* Chrome, Safari, Opera */
+        -moz-column-count: 4;
+        -moz-column-gap: 10px;
+        column-count: 4;
+        column-fill: auto;
+        column-gap: 10px;
+        font-family: "Segoe UI";
+        font-size: 12px;
+    }
+
+    .single-row {
+        font-family: "Calibri";
+        font-size: 11px;
+    }
+
+        .single-row::after {
+            content: "";
+            clear: both;
+            display: block;
+        }
+
+    strong {
+        font-weight: bold;
+    }
+
+    .rpt-name {
+        font-family: "Franklin Gothic";
+        font-weight: bold;
+        text-align: center;
+        margin-top: 0px;
+        font-size: 24px;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="div-main">
+    @if (Model.Count > 0)
+    {
+        var grpstorage = Model.GroupBy(c => c.Section).ToList();
+
+        <div class="rpt-name">
+            Harvills - @string.Format("{0:d}", Model.FirstOrDefault()?.ShipDate)
+        </div>
+
+        <div id="mc4a">
+            @foreach (var itmstorage in grpstorage)
+            {
+                <h6 class="header">@itmstorage.FirstOrDefault()?.Section</h6>
+
+                var grpitem = itmstorage.GroupBy(c => c.ItemName);
+
+                foreach (var itmdesc in grpitem)
+                {
+                    var grpunit = itmdesc.GroupBy(c => c.Unit);
+
+                    foreach (var itmunit in grpunit)
+                    {
+                        <div style="border:1px solid grey;padding-left: 2px; page-break-inside: avoid">
+                            <strong>@itmunit.FirstOrDefault()?.ItemName</strong>
+                            <div class="single-row">
+                                <div style="width:55%; float:left;text-align:right;font-size:16px;font-style:italic">
+                                    <strong>@string.Format("{0:0.##}", itmunit.Sum(c => c.ShipQty))</strong>
+                                </div>
+                                <div style="width:45%; float:right;font-size:13px;">
+                                    <span>&nbsp;@itmunit.FirstOrDefault()?.Unit&nbsp;</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <p class="alert alert-danger">Item not found.</p>
+    }
+</div>

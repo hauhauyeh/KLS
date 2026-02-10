@@ -130,6 +130,10 @@
             display: block;
         }
 
+    .weight {
+        font-family: "Calibri";
+    }
+
     @@media print {
         @@page {
             size: letter;
@@ -178,7 +182,8 @@
                 @if (Model.TotalWeight != 0)
                 {
                     <div class="weight">
-                        <span>Weight - @string.Format("{0:0.00}", Model.TotalWeight) lbs</span>
+                        <div><strong>Weight</strong></div>
+                        <div><strong>@string.Format("{0:0.00}", Model.TotalWeight) lbs</strong></div>
                     </div>
                 }
             </div>

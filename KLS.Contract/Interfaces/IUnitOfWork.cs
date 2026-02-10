@@ -35,6 +35,8 @@ namespace KLS.Contract.Interfaces
 
         IAccountTypeRepository AccountTypes { get; }
 
+        IAccountCategoryRepository AccountCategories { get; }
+
         IAccountRepository Accounts { get; }
 
         IEmailLogRepository EmailLogs { get; }
@@ -93,6 +95,8 @@ namespace KLS.Contract.Interfaces
 
         ICustomerPaymentRepository CustomerPayments { get; }
 
+        ICustomerPaymentDetailRepository CustomerPaymentDetails { get; }
+
         IItemRepository Items { get; }
 
         IIncomingPaymentRepository IncomingPayments { get; }
@@ -131,6 +135,8 @@ namespace KLS.Contract.Interfaces
 
         ITempCustomerPaymentRepository TempCustomerPayments { get; }
 
+        ITempExtraPaymentRepository TempExtraPayments { get; }
+
         IInventoryAdjDetailRepository InventoryAdjDetails { get; }
 
         IUserAccountRepository UserAccounts { get; }
@@ -150,6 +156,10 @@ namespace KLS.Contract.Interfaces
         IPrintLogRepository PrintLogs { get; }
 
         IReportRepository Reports { get; }
+
+        ILiabilityRepository Liabilities { get; }
+
+        ICheckTrackerRepository CheckTrackers { get; }
 
         void Commit();
     }

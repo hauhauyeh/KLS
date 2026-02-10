@@ -22,6 +22,6 @@ namespace KLS.Contract.Interfaces
 
         int SaveDeposit(TransferFund transferFund);
 
-        IQueryable<TempDepositList>? InjectDeposit(int tfId);
+        IQueryable<TempDepositList>? InjectDeposit(DepositInjectReq injectReq);
     }
 }

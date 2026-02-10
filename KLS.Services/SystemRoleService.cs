@@ -88,7 +88,7 @@ namespace KLS.Services
         {
             var role = GetById(roleId);
 
-            if (!string.IsNullOrEmpty(role.RoleAccess))
+            if (!string.IsNullOrEmpty(role?.RoleAccess))
             {
                 var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(role.RoleAccess);
 

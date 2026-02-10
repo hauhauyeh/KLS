@@ -55,7 +55,7 @@ namespace KLS.Services
 
         public bool VendorExists(VendorDTO vendorDTO)
         {
-            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == vendorDTO.PayeeName.ToLower() && p.PayeeId != vendorDTO.PayeeId && p.PayeeType == EnumHelper.PayeeType.E.ToString());
+            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == vendorDTO.PayeeName.ToLower() && p.PayeeId != vendorDTO.PayeeId && p.PayeeType == EnumHelper.PayeeType.V.ToString());
         }
 
         public VendorDTO Create(VendorDTO vendorDTO)
@@ -149,8 +149,7 @@ namespace KLS.Services
 
         public void Delete(int payeeId)
         {
-            Uow.Payees.RemoveById(payeeId);
-            Uow.Commit();
+            Uow.Payees.Delete(payeeId);
         }
 
         public IEnumerable<VendorSearchDTO>? Search(PayeeSearchReq searchReq)

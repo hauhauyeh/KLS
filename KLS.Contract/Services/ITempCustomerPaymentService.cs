@@ -9,10 +9,16 @@ namespace KLS.Contract.Services
 {
     public interface ITempCustomerPaymentService
     {
+        IEnumerable<TempCustomerPaymentList>? GetList(TempPaymentReq tempPaymentReq);
+
         IEnumerable<TempCustomerPaymentList>? Inject(TempPaymentReq tempPaymentReq);
 
-        void Update(TempCustomerPayment tempCustomerPayment);
+        TempCustomerPaymentList Create(TempPaymentReq tempPaymentReq);
 
-        void Clear(TempPaymentReq tempPaymentReq);
+        TempCustomerPaymentList Update(TempCustomerPayment tempCustomerPayment);
+
+        void Clear(int payeeId);
+
+        void Delete(int tempId);
     }
 }
