@@ -11,13 +11,8 @@ namespace KLS.Models
     {
         public int ItemId { get; set; }
 
-        public decimal? DefaultCost { get; set; }
+        public int ItemUnitId { get; set; }
 
-        public decimal? P1 { get; set; }
-
-        public decimal? RetailPrice { get; set; }
-
-        [Column(TypeName = "decimal(18, 4)")]
-        public decimal? RetailProfitPercent { get; set; }
+        public decimal? BaseP1 { get; set; }
     }
 }

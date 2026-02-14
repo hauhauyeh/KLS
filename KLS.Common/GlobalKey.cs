@@ -31,9 +31,12 @@ namespace KLS.Common
         public const string IRONPDF_KEY = "IRONPDF_KEY";
 
         public const string SYSTEM_HAS_DISCOUNT = "SYSTEM_HAS_DISCOUNT";
+        public const string SYSTEM_DEFAULT_TAXRATE = "SYSTEM_DEFAULT_TAXRATE";
         public const string DOCUMENT_FORMAT = "DOCUMENT_FORMAT";
         public const string INVOICE_PRINT_USE_POPUP = "INVOICE_PRINT_USE_POPUP";
 
         public const string LABEL_PRINTER_NAME = "LABEL_PRINTER_NAME";
+        public const string DEFAULT_CCFEE_PERCENTAGE = "DEFAULT_CCFEE_PERCENTAGE";
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -17,7 +18,7 @@ namespace KLS.Models
 
         public string? ItemName { get; set; }
 
-        //public string? ItemForeignName { get; set; }
+        public string? ItemName2 { get; set; }
 
         public string? SetPacking { get; set; }
 
@@ -46,11 +47,13 @@ namespace KLS.Models
 
         //public decimal? RetailFactor { get; set; }
 
+        public int ItemUnitId { get; set; }
+
         public string? BaseUnit { get; set; }
 
         public decimal? BaseRecentCost { get; set; }
 
-        public decimal? BasePrice { get; set; }
+        public decimal? BaseP1 { get; set; }
 
         public decimal? SaftyInventory { get; set; }
 
@@ -95,5 +98,23 @@ namespace KLS.Models
         public decimal? OnHandQty { get; set; }
 
         public DateOnly? LastAdjDate { get; set; }
+
+        public decimal? BaseP1Percent
+        {
+            get
+            {
+                if (!BaseP1.HasValue || !BaseRecentCost.HasValue)
+                    return null;
+
+                if (BaseP1.Value == 0)
+                    return null;
+
+                return Utilities.Rounding(
+                    (BaseP1.Value - BaseRecentCost.Value) / BaseP1.Value,
+                    4
+                );
+            }
+        }
+
     }
 }

@@ -2,6 +2,7 @@
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
@@ -62,6 +63,21 @@ namespace KLS.API.Controllers.Admin
         public IActionResult OwnCount(int payeeId)
         {
             return Ok(_itemQuoteService.OwnCount(payeeId));
+        }
+
+
+        [HttpPut]
+        public IActionResult Update([FromBody] TargetQuotePrice quotePrice)
+        {
+            return Ok(_itemQuoteService.Update(quotePrice));
+        }
+
+
+        [HttpDelete("{itemQuoteId}")]
+        public IActionResult Delete(int itemQuoteId)
+        {
+            _itemQuoteService.Delete(itemQuoteId);
+            return Ok();
         }
 
         #endregion

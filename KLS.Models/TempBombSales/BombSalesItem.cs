@@ -38,7 +38,7 @@ namespace KLS.Models
 
         public decimal? OrgPrice { get; set; }
         public decimal? DiscountPercent { get; set; }
-        public decimal? FactorToBase { get; set; } 
+        public decimal? FactorToBase { get; set; }
         public int? SalesDetailId { get; set; }
 
         public bool IsChanged { get; set; }
@@ -50,6 +50,12 @@ namespace KLS.Models
         public DateOnly? ShipDate { get; set; }
         public string? ShipRoute { get; set; }
         public string? LoadRoute { get; set; }
+
+        public int StageId { get; set; }
+        public bool IsLocked { get; set; }
+
+        public bool Locked => (IsLocked || StageId > 0);
+
 
         public decimal? OrdCases => Utilities.Rounding(OrdQty / FactorToBase, 6);
 

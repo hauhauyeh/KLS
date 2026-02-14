@@ -25,5 +25,7 @@ namespace KLS.Models
         public decimal? PayeeOver90 { get; set; }
 
         public decimal? PayeeTotalDue { get; set; }
+
+        public bool IsClosed { get; set; }
     }
 }

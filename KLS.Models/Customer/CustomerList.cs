@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,8 +35,6 @@ namespace KLS.Models
 
         public string? CallSchedule { get; set; }
 
-        public decimal? Balance { get; set; }
-
         public int? BillId { get; set; }
 
         public string? BillName { get; set; }
@@ -44,24 +43,27 @@ namespace KLS.Models
 
         public string? TermName { get; set; }
 
-        //public int? AvgPayDay { get; set; }
-
-        //public int? OwnListItemCount { get; set; }
-
         public bool IsClosed { get; set; }
+
+        public decimal? Payee30Volume { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? BaseMarkup { get; set; }
+
+        public string? Address { get; set; }
 
         public int? GracePeriod { get; set; }
 
         public bool IsCreditHold { get; set; }
 
-        public int? DueInvoiceCount { get; set; }
+        public decimal? PayeePastDue { get; set; }
 
-        public int? DueInvoiceDays { get; set; }
+        public decimal? Balance { get; set; }
 
-        public decimal? Payee30Volume { get; set; }
+        public int? MaxInvoiceAgingDays { get; set; }
 
-        public decimal? BaseMarkup { get; set; }
+        public int? OwnListCount { get; set; }
 
-        public string? Address { get; set; }
+        //public int? DueInvoiceCount { get; set; }
     }
 }

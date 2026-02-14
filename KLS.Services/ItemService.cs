@@ -56,10 +56,6 @@ namespace KLS.Services
                 item = new Item
                 {
                     PaletteFactor = 50,
-                    //DefaultUnit = EnumHelper.ItemDefaultUnit.Whole.ToString(),
-                    //RetailFactor = 1,
-                    //RetailPrice = 0,
-                    //DefaultCost = 0,
                     IsTaxable = _systemSettingService.GetByKey<bool>(GlobalKey.ITEM_DEFAULT_TAXABLE),
                     ItemType = _systemSettingService.GetByKey<string>(GlobalKey.ITEM_DEFAULT_TYPE)
                 };
@@ -68,6 +64,12 @@ namespace KLS.Services
             item.DefaultRetailPercent = _systemSettingService.GetByKey<decimal>(GlobalKey.ITEM_DEFAULT_RETAILPROFIT);
 
             return item;
+        }
+
+        public IEnumerable<Item> GetByIds(IEnumerable<int> itemIds)
+        {
+            var idList = itemIds.Distinct().ToList();
+            return Uow.Items.Find(x => idList.Contains(x.ItemId)).ToList();
         }
 
         public Item? GetByItemCode(string? itemCode)
@@ -251,6 +253,43 @@ namespace KLS.Services
         public ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail)
         {
             return Uow.Items.CalcRetailPriceProfit(calcRetail);
+        }
+
+        public void UpdateBaseP1(ItemUpdateReq updateReq)
+        {
+            Uow.Items.UpdateBaseP1(updateReq);
+        }
+
+        public ItemDefaultFreight GetDefaultFreight(int itemId)
+        {
+            return Uow.Items.GetDefaultFreight(itemId);
+        }
+
+        public void SaveFreight(ItemDefaultFreight defaultFreight)
+        {
+            var item = GetById(defaultFreight.ItemId);
+
+            if (item != null)
+            {
+                item.PaletteFactor = defaultFreight.PaletteFactor;
+                item.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Items.Update(item);
+                Uow.Commit();
+            }
+
+            if (defaultFreight.PayeeId.HasValue)
+            {
+                var payee = Uow.Vendors.GetById(defaultFreight.PayeeId.Value);
+
+                if (payee != null)
+                {
+                    payee.FreightRate = defaultFreight.FreightRate;
+
+                    Uow.Vendors.Update(payee);
+                    Uow.Commit();
+                }
+            }
         }
 
         //public void UpdateDefautCost(int itemId, decimal? defaultCost)

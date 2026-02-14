@@ -19,8 +19,14 @@ namespace KLS.Contract.Services
 
         void Delete(int adjId);
 
+        void DeleteDetail(int adjDetailId);
+
         void UpdateNotes(InventoryAdj inventoryAdj);
 
         void UpdateDetailNotes(InventoryAdjList inventoryAdjList);
+
+        void QtyAdj(QtyAdjReq adjReq);
+
+        InventoryClosingDetail GetClosingQty(int itemId);
     }
 }

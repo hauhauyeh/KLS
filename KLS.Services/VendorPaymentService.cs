@@ -44,7 +44,7 @@ namespace KLS.Services
                 return new VendorPayment
                 {
                     PaymentDate = DateOnly.FromDateTime(DateTime.Now),
-                    PaymentMethod = EnumHelper.PaymentMethod.ACH.ToString(),
+                    PaymentMethod = EnumHelper.EnumPaymentMethod.ACH.ToString(),
                     FromAccountId = _systemSettingService.GetByKey<int>(GlobalKey.PAYMENT_DEFAULT_BANK),
                     PaymentType = "Bill Payment"
                 };

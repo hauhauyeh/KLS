@@ -16,5 +16,11 @@ namespace KLS.Contract.Interfaces
         int Save(InventoryAdj inventoryAdj);
 
         void Inject(int adjId);
+
+        void DeleteDetail(int adjDetailId);
+
+        void QtyAdj(QtyAdjReq adjReq);
+
+        InventoryClosingDetail GetClosingQty(int itemId);
     }
 }

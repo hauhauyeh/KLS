@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParam(itemListReq);
 
-            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@Content,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int Count(ItemListReq itemListReq)
@@ -31,9 +31,9 @@ namespace KLS.Data.Repositories
             itemListReq.IsCount = true;
             var param = BuildParam(itemListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@Content,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[11] as SqlParameter;
+            var output = param[12] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -50,9 +50,11 @@ namespace KLS.Data.Repositories
 
                 itemListReq.EndDate.HasValue ? new SqlParameter("@EndDate", itemListReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
 
-                string.IsNullOrEmpty(itemListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", itemListReq.Filterby),
+                itemListReq.VendorId.HasValue ? new SqlParameter("@VendorId", itemListReq.VendorId) : new SqlParameter("@VendorId", DBNull.Value),
 
-                string.IsNullOrEmpty(itemListReq.Content) ? new SqlParameter("@Content", DBNull.Value) : new SqlParameter("@Content", itemListReq.Content),
+                string.IsNullOrEmpty(itemListReq.Container) ? new SqlParameter("@Container", DBNull.Value) : new SqlParameter("@Container", itemListReq.Container),
+
+                string.IsNullOrEmpty(itemListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", itemListReq.Filterby),
 
                 itemListReq.Id.HasValue ? new SqlParameter("@Id", itemListReq.Id) : new SqlParameter("@Id", DBNull.Value),
 
@@ -129,6 +131,22 @@ namespace KLS.Data.Repositories
                 calcRetail.RetailProfitPercent = Convert.ToDecimal(RetailProfitPercentParam.Value);
 
             return calcRetail;
+        }
+
+        public void UpdateBaseP1(ItemUpdateReq updateReq)
+        {
+            var ItemUnitIdParam = new SqlParameter("@ItemUnitId", updateReq.ItemUnitId);
+
+            var BaseP1Param = updateReq.BaseP1.HasValue ? new SqlParameter("@BaseP1", updateReq.BaseP1) : new SqlParameter("@BaseP1", DBNull.Value);
+
+            DbContext.Database.ExecuteSqlRaw("[Item_UpdateBaseP1] @ItemUnitId,@BaseP1", ItemUnitIdParam, BaseP1Param);
+        }
+
+        public ItemDefaultFreight GetDefaultFreight(int itemId)
+        {
+            var ItemIdParam = new SqlParameter("@ItemId", itemId);
+
+            return DbContext.ItemDefaultFreight.FromSqlRaw("[Item_GetDefaultFreight] @ItemId", ItemIdParam).ToList().FirstOrDefault();
         }
     }
 }

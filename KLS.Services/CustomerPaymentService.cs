@@ -139,7 +139,7 @@ namespace KLS.Services
             {
                 string normalized = payment.PaymentMethod?.Trim().Replace(" ", "_").Replace("-", "_").ToUpper();
 
-                if (normalized == PaymentMethod.E_CHECK.ToString() || normalized == PaymentMethod.CREDIT_CARD.ToString())
+                if (normalized == EnumPaymentMethod.E_CHECK.ToString() || normalized == EnumPaymentMethod.CREDIT_CARD.ToString())
                 {
                     var payee = Uow.Payees.GetById(payment.PayeeId);
                     var toEmails = payee.EmailACH;

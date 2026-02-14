@@ -15,14 +15,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IItemHistoryService _itemHistoryService;
+        private readonly IInventoryAdjService _adjustmentService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ItemHistoriesController(IItemHistoryService itemHistoryService)
+        public ItemHistoriesController(IItemHistoryService itemHistoryService, IInventoryAdjService adjustmentService)
         {
             _itemHistoryService = itemHistoryService;
+            _adjustmentService = adjustmentService;
         }
 
         #endregion
@@ -62,6 +64,19 @@ namespace KLS.API.Controllers.Admin
                 Sales = _itemHistoryService.GetSalesHistory(itemHistoryReq),
                 Purchase = _itemHistoryService.GetPurchaseHistory(itemHistoryReq).ToList().Take(5)
             });
+        }
+
+
+        [HttpGet("Adjustment/{itemId}")]
+        [DisplayName("Adjustment History")]
+        public IActionResult Adjustment(string itemId)
+        {
+            var adjustments = _adjustmentService.GetPagedList(new InventoryAdjListReq
+            {
+                Pagesize = 300,
+                Search = itemId
+            });
+            return Ok(adjustments.RowData);
         }
 
         #endregion

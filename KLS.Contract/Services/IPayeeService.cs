@@ -13,6 +13,8 @@ namespace KLS.Contract.Services
 
         ICollection<PayeeSearch>? SearchPayee(PayeeSearchReq searchReq);
 
+        void OpenClose(int payeeId);
+
         #endregion
 
         #region --- ARCustomer ---

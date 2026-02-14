@@ -122,7 +122,7 @@ namespace KLS.Data.Repositories
         {
             var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_DeleteVoidCheck] @VendorPaymentId", VendorPaymentIdParam);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_UnVoidCheck] @VendorPaymentId", VendorPaymentIdParam);
         }
 
         public void Return(VendorPaymentReturnReq checkReq)
@@ -144,7 +144,9 @@ namespace KLS.Data.Repositories
 
         public void DeleteReturn(int vendorPaymentId)
         {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
 
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_ReturnDelete] @VendorPaymentId", VendorPaymentIdParam);
         }
 
         public int SavePayNow(PayNowReq payNowReq)

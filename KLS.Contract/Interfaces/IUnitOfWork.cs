@@ -153,6 +153,8 @@ namespace KLS.Contract.Interfaces
 
         ISalesRouteRepository SalesRoutes { get; }
 
+        ISalesRouteDetailRepository SalesRouteDetails { get; }
+
         IPrintLogRepository PrintLogs { get; }
 
         IReportRepository Reports { get; }
@@ -160,6 +162,10 @@ namespace KLS.Contract.Interfaces
         ILiabilityRepository Liabilities { get; }
 
         ICheckTrackerRepository CheckTrackers { get; }
+
+        IPaymentMethodRepository PaymentMethods { get; }
+
+        IPaymentGatewayRepository PaymentGateways { get; }
 
         void Commit();
     }

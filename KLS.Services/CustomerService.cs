@@ -2,11 +2,8 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Omu.ValueInjecter;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -48,10 +45,26 @@ namespace KLS.Services
             var payee = Uow.Payees.GetById(payeeId);
             var customer = Uow.Customers.GetById(payeeId);
 
-            if (payee == null && customer == null)
-                return null;
-
             var dto = new CustomerDto();
+
+            if (payee == null && customer == null)
+            {
+                dto.TaxRate = _systemSettingService.GetByKey<decimal>(GlobalKey.SYSTEM_DEFAULT_TAXRATE);
+                //dto.OGSort = EnumHelper.OrderGuideSort.Category.ToString();
+                dto.StartDate = DateOnly.FromDateTime(DateTime.Now);
+                dto.TermId = _termService.GetByName("COD")?.TermId;
+                dto.CallSchedule = "123456";
+                dto.GracePeriod = 0;
+                dto.MinOrder = 500;
+                dto.CreditLimit = 0;
+                dto.BaseMarkup = 0;
+                dto.PriceShow = "Hide";
+                dto.IsPromotionEnabled = true;
+                dto.IsStatementPrint = true;
+                dto.SalesRepId = UserContext.EmpId;
+
+                return dto;
+            }
 
             if (payee != null)
                 dto.InjectFrom(payee);
@@ -66,6 +79,14 @@ namespace KLS.Services
             //term name
             if (dto.TermId.HasValue)
                 dto.TermName = _termService.GetById(dto.TermId.Value)?.TermName;
+
+            //share quote name
+            if (dto.ShareQuoteId.HasValue)
+                dto.ShareQuoteName = Uow.Payees.GetById(dto.ShareQuoteId.Value)?.PayeeName;
+
+            //bill name
+            if (dto.BillId.HasValue)
+                dto.BillName = Uow.Payees.GetById(dto.BillId.Value)?.PayeeName;
 
             dto.OwnListCount = _itemQuoteService.OwnCount(payeeId);
 
@@ -105,6 +126,9 @@ namespace KLS.Services
             var customer = new Customer();
             customer.InjectFrom(dto);
             customer.PayeeId = newPayeeId;
+
+            customer.SalesRepId = dto.SalesRepId ?? UserContext.EmpId;
+            customer.BillId = dto.BillId ?? newPayeeId;
 
             Uow.Customers.Add(customer);
             Uow.Commit();
@@ -172,6 +196,9 @@ namespace KLS.Services
 
             if (customer != null)
             {
+                customer.SalesRepId = dto.SalesRepId ?? UserContext.EmpId;
+                customer.BillId = dto.BillId ?? customer.PayeeId;
+
                 customer.Region = dto.Region;
                 customer.DefaultRoute = dto.DefaultRoute;
                 customer.TextOrderConfirm = dto.TextOrderConfirm;
@@ -181,10 +208,8 @@ namespace KLS.Services
                 customer.TextACH = dto.TextACH;
                 customer.OGSort = dto.OGSort;
                 customer.IsAutoPayment = dto.IsAutoPayment;
-                customer.SalesRepId = dto.SalesRepId;
                 customer.ShareQuoteId = dto.ShareQuoteId;
                 customer.IsShareBasePrice = dto.IsShareBasePrice;
-                customer.BillId = dto.BillId;
                 customer.CallSchedule = dto.CallSchedule;
                 customer.IsApproved = dto.IsApproved;
                 customer.IsStatementPrint = dto.IsStatementPrint;
@@ -204,6 +229,7 @@ namespace KLS.Services
                 customer.IsHRTaxable = dto.IsHRTaxable;
                 customer.CreditLimit = dto.CreditLimit;
                 customer.MinOrder = dto.MinOrder;
+                customer.ShippingCarrierId = dto.ShippingCarrierId;
 
                 Uow.Customers.Update(customer);
             }

@@ -93,6 +93,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<UserLog>().ToTable("UserLog");
             modelBuilder.Entity<TempBombSales>().ToTable("TempBombSales");
             modelBuilder.Entity<SalesRoute>().ToTable("SalesRoute");
+            modelBuilder.Entity<SalesRouteDetail>().ToTable("SalesRouteDetail");
             modelBuilder.Entity<PrintLog>().ToTable("PrintLog");
             modelBuilder.Entity<CustomerPayment>().ToTable("CustomerPayment");
             modelBuilder.Entity<CustomerPaymentDetail>().ToTable("CustomerPaymentDetail");
@@ -100,6 +101,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempExtraPayment>().ToTable("TempExtraPayment");
             modelBuilder.Entity<Liability>().ToTable("Liability");
             modelBuilder.Entity<CheckTracker>().ToTable("CheckTracker");
+            modelBuilder.Entity<PaymentMethod>().ToTable("PaymentMethod");
+            modelBuilder.Entity<PaymentGateway>().ToTable("PaymentGateway");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -248,11 +251,17 @@ namespace KLS.Data.DataContext
 
         public DbSet<SalesRoute> SalesRoutes { get; set; }
 
+        public DbSet<SalesRouteDetail> SalesRouteDetails { get; set; }
+
         public DbSet<PrintLog> PrintLogs { get; set; }
 
         public DbSet<Liability> Liabilities { get; set; }
 
         public DbSet<CheckTracker> CheckTrackers { get; set; }
+
+        public DbSet<PaymentMethod> PaymentMethods { get; set; }
+
+        public DbSet<PaymentGateway> PaymentGateways { get; set; }
 
         #endregion
 
@@ -322,9 +331,13 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ItemPrice> ItemPrice { get; set; }
 
+        public virtual DbSet<ItemDefaultFreight> ItemDefaultFreight { get; set; }
+
         public virtual DbSet<PODetail> PODetail { get; set; }
 
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
+
+        public virtual DbSet<InventoryClosingDetail> InventoryClosingDetail { get; set; }
 
         public virtual DbSet<TempInventoryItem> TempInventoryItem { get; set; }
 
@@ -347,6 +360,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<LiabilityList> LiabilityList { get; set; }
 
         public virtual DbSet<LiabilityTxList> LiabilityTxList { get; set; }
+
+        public virtual DbSet<TargetQuotePrice> TargetQuotePrice { get; set; }
 
         #endregion
 

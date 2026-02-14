@@ -15,14 +15,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IVendorService _vendorService;
+        private readonly IPayeeService _payeeService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public VendorsController(IVendorService vendorService)
+        public VendorsController(IVendorService vendorService, IPayeeService payeeService)
         {
             _vendorService = vendorService;
+            _payeeService = payeeService;
         }
 
         #endregion
@@ -75,6 +77,16 @@ namespace KLS.API.Controllers.Admin
         public IActionResult Delete(int id)
         {
             _vendorService.Delete(id);
+
+            return Ok();
+        }
+
+
+        [HttpPut("OpenClose/{id}")]
+        [DisplayName("Open/Close Vendor")]
+        public IActionResult OpenClose(int id)
+        {
+            _payeeService.OpenClose(id);
 
             return Ok();
         }

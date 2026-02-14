@@ -76,6 +76,16 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpDelete("DeleteDetail/{adjDetailId}")]
+        [DisplayName("Delete Detail")]
+        public IActionResult DeleteDetail(int adjDetailId)
+        {
+            _inventoryAdjService.DeleteDetail(adjDetailId);
+
+            return Ok();
+        }
+
+
         [HttpPost("UpdateNotes")]
         public IActionResult UpdateNotes([FromBody] InventoryAdj inventoryAdj)
         {
@@ -91,6 +101,22 @@ namespace KLS.API.Controllers.Admin
             _inventoryAdjService.UpdateDetailNotes(inventoryAdjList);
 
             return Ok();
+        }
+
+
+        [HttpPost("QtyAdj")]
+        [DisplayName("Qty Adjustment")]
+        public IActionResult QtyAdj([FromBody] QtyAdjReq adjReq)
+        {
+            _inventoryAdjService.QtyAdj(adjReq);
+            return Ok();
+        }
+
+
+        [HttpGet("GetClosingQty/{itemId}")]
+        public IActionResult GetClosingQty(int itemId)
+        {
+            return Ok(_inventoryAdjService.GetClosingQty(itemId));
         }
 
         #endregion

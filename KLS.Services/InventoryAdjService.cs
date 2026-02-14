@@ -75,6 +75,11 @@ namespace KLS.Services
             }
         }
 
+        public void DeleteDetail(int adjDetailId)
+        {
+            Uow.InventoryAdjs.DeleteDetail(adjDetailId);
+        }
+
         public void UpdateNotes(InventoryAdj inventoryAdj)
         {
             var existing = GetById(inventoryAdj.AdjId);
@@ -100,6 +105,16 @@ namespace KLS.Services
                 Uow.InventoryAdjDetails.Update(existing);
                 Uow.Commit();
             }
+        }
+
+        public void QtyAdj(QtyAdjReq adjReq)
+        {
+            Uow.InventoryAdjs.QtyAdj(adjReq);
+        }
+
+        public InventoryClosingDetail GetClosingQty(int itemId)
+        {
+            return Uow.InventoryAdjs.GetClosingQty(itemId);
         }
     }
 }

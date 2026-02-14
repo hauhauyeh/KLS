@@ -304,9 +304,9 @@ namespace KLS.Services
         {
             string normalized = pmtMethod.Trim().Replace(" ", "_").ToUpper();
 
-            if (normalized == EnumHelper.PaymentMethod.CASH.ToString())
+            if (normalized == EnumHelper.EnumPaymentMethod.CASH.ToString())
                 return GetCashAccounts();
-            else if (normalized == EnumHelper.PaymentMethod.CREDIT_CARD.ToString())
+            else if (normalized == EnumHelper.EnumPaymentMethod.CREDIT_CARD.ToString())
                 return GetCCAccounts();
             else
                 return GetBankAccounts();

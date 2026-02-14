@@ -189,5 +189,9 @@ namespace KLS.Models
         public string? TermName { get; set; }
 
         public string? SalesRepName { get; set; }
+
+        public string? ShareQuoteName { get; set; }
+
+        public string? BillName { get; set; }
     }
 }

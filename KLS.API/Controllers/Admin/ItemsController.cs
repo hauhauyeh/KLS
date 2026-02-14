@@ -15,14 +15,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IItemService _itemService;
+        private readonly IItemQuoteService _itemQuoteService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ItemsController(IItemService itemService)
+        public ItemsController(IItemService itemService, IItemQuoteService itemQuoteService)
         {
             _itemService = itemService;
+            _itemQuoteService = itemQuoteService;
         }
 
         #endregion
@@ -101,46 +103,33 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        //[HttpGet("DefaultUnits")]
-        //public IActionResult DefaultUnits()
-        //{
-        //    return Ok(Enum.GetNames(typeof(EnumHelper.ItemDefaultUnit)).ToList());
-        //}
-
-
-        //[HttpPut("UpdateDefautCost")]
-        //public IActionResult UpdateDefautCost([FromBody] ItemUpdateReq updateReq)
-        //{
-        //    _itemService.UpdateDefautCost(updateReq.ItemId, updateReq.DefaultCost);
-        //    return Ok();
-        //}
-
-
-        //[HttpPut("UpdateP1")]
-        //public IActionResult UpdateP1([FromBody] ItemUpdateReq updateReq)
-        //{
-        //    return Ok(_itemService.UpdateP1(updateReq.ItemId, updateReq.P1));
-        //}
-
-
-        //[HttpPut("UpdateRetailPrice")]
-        //public IActionResult UpdateRetailPrice([FromBody] ItemUpdateReq updateReq)
-        //{
-        //    return Ok(_itemService.UpdateRetailPrice(updateReq.ItemId, updateReq.RetailPrice));
-        //}
-
-
-        //[HttpPut("UpdateRetailProfit")]
-        //public IActionResult UpdateRetailProfit([FromBody] ItemUpdateReq updateReq)
-        //{
-        //    return Ok(_itemService.UpdateRetailProfit(updateReq.ItemId, updateReq.RetailProfitPercent));
-        //}
-
-
-        [HttpGet("EditP1")]
+        [HttpPut("UpdateBaseP1")]
         [DisplayName("Edit P1")]
-        public IActionResult EditP1()
+        public IActionResult UpdateBaseP1([FromBody] ItemUpdateReq updateReq)
         {
+            _itemService.UpdateBaseP1(updateReq);
+            return Ok();
+        }
+
+
+        [HttpGet("GetTargetPrice/{itemId}")]
+        public IActionResult GetTargetPrice(int itemId, [FromQuery] string? filterby)
+        {
+            return Ok(_itemQuoteService.GetTargetrPrice(itemId, filterby));
+        }
+
+
+        [HttpGet("GetDefaultFreight/{itemId}")]
+        public IActionResult GetDefaultFreight(int itemId)
+        {
+            return Ok(_itemService.GetDefaultFreight(itemId));
+        }
+
+
+        [HttpPut("SaveFreight")]
+        public IActionResult SaveFreight([FromBody] ItemDefaultFreight defaultFreight)
+        {
+            _itemService.SaveFreight(defaultFreight);
             return Ok();
         }
 

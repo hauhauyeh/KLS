@@ -50,6 +50,8 @@ namespace KLS.Models
 
         public bool Inactive { get; set; }
 
+        public bool IsSystem { get; set; }
+
         public string? Notes { get; set; }
 
         [JsonIgnore]

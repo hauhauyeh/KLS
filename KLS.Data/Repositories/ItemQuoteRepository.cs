@@ -64,5 +64,14 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("[ItemQuote_Insert] @PayeeId,@EmpId", PayeeIdParam, EmpIdParam);
         }
+
+        public IQueryable<TargetQuotePrice> GetTargetrPrice(int itemId, string? filterby)
+        {
+            var ItemIdParam = new SqlParameter("@ItemId", itemId);
+
+            var FilterbyParam = string.IsNullOrEmpty(filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", filterby);
+
+            return DbContext.TargetQuotePrice.FromSqlRaw("[ItemQuote_GetTargetPrice] @ItemId,@Filterby", ItemIdParam, FilterbyParam);
+        }
     }
 }

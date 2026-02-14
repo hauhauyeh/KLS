@@ -32,6 +32,11 @@ namespace KLS.Services
             return Uow.Terms.GetById(termId);
         }
 
+        public Term? GetByName(string termName)
+        {
+            return Uow.Terms.Find(c => c.TermName.ToLower() == termName.ToLower()).FirstOrDefault();
+        }
+
         public bool NameExists(Term term)
         {
             return Uow.Terms.Exists(c => c.TermName.ToLower() == term.TermName.ToLower() && c.TermId != term.TermId);
@@ -39,8 +44,12 @@ namespace KLS.Services
 
         public bool TermUsed(int termId)
         {
-            var term = GetById(termId);
-            return Uow.Payees.Exists(c => c.TermId == term.TermId);
+            return Uow.Payees.Exists(c => c.TermId == termId);
+        }
+
+        public bool IsSystemTerm(int termId)
+        {
+            return Uow.Terms.Exists(c => c.TermId == termId && c.IsSystem);
         }
 
         public Term Create(Term term)
@@ -75,6 +84,9 @@ namespace KLS.Services
         {
             if (TermUsed(termId))
                 throw new DuplicateNameException("You can't delete this term because it is assigned to a payee.");
+
+            if (IsSystemTerm(termId))
+                throw new DuplicateNameException("You can't delete this term because it is system term.");
 
             Uow.Terms.RemoveById(termId);
             Uow.Commit();

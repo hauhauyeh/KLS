@@ -13,6 +13,8 @@ namespace KLS.Contract.Services
 
         Item? GetById(int itemId);
 
+        IEnumerable<Item> GetByIds(IEnumerable<int> itemIds);
+
         Item? GetBySearch(string itemCode);
 
         IEnumerable<ItemSearch>? Search(ItemSearchReq searchReq);
@@ -31,14 +33,10 @@ namespace KLS.Contract.Services
 
         ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
 
-        //void UpdateDefautCost(int itemId, decimal? defaultCost);
+        void UpdateBaseP1(ItemUpdateReq updateReq);
 
-        //Item UpdateP1(int itemId, decimal? p1);
+        ItemDefaultFreight GetDefaultFreight(int itemId);
 
-        //Item UpdateRetailPrice(int itemId, decimal? retailPrice);
-
-        //Item UpdateRetailProfit(int itemId, decimal? retailProfit);
-
-        //void SendCostChangeNotification(Item item);
+        void SaveFreight(ItemDefaultFreight defaultFreight);
     }
 }

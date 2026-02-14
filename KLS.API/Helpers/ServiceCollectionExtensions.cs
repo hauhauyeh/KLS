@@ -76,16 +76,20 @@ namespace KLS.API.Helpers
             services.AddScoped<IItemNameDetailService, ItemNameDetailService>();
             services.AddScoped<IUserLogService, UserLogService>();
             services.AddScoped<ISalesRouteService, SalesRouteService>();
+            services.AddScoped<ISalesRouteDetailService, SalesRouteDetailService>();
             services.AddScoped<IPrintLogService, PrintLogService>();
             services.AddScoped<ITempCustomerPaymentService, TempCustomerPaymentService>();
             services.AddScoped<ITempExtraPaymentService, TempExtraPaymentService>();
             services.AddScoped<ILiabilityService, LiabilityService>();
             services.AddScoped<ICheckTrackerService, CheckTrackerService>();
+            services.AddScoped<IPaymentMethodService, PaymentMethodService>();
+            services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
 
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<IPDFService, PDFService>();
+            services.AddScoped<ISquareService, SquareService>();
 
             return services;
         }

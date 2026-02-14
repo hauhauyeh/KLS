@@ -18,5 +18,11 @@ namespace KLS.Contract.Services
         int Save(int payeeId);
 
         int OwnCount(int payeeId);
+
+        IEnumerable<TargetQuotePrice> GetTargetrPrice(int itemId, string? filterby);
+
+        ItemQuote Update(TargetQuotePrice quotePrice);
+
+        void Delete(int itemQuoteId);
     }
 }

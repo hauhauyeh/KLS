@@ -20,5 +20,9 @@ namespace KLS.Contract.Interfaces
         IQueryable<ItemCalcUnit> GetCalcUnit(ItemPackingReq packingReq);
 
         ItemCalcRetail CalcRetailPriceProfit(ItemCalcRetail calcRetail);
+
+        void UpdateBaseP1(ItemUpdateReq updateReq);
+
+        ItemDefaultFreight GetDefaultFreight(int itemId);
     }
 }

@@ -110,5 +110,34 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_Inject] @EmpId,@AdjId", EmpIdParam, AdjIdParam);
         }
+
+        public void DeleteDetail(int adjDetailId)
+        {
+            var AdjDetailIdParam = new SqlParameter("@AdjDetailId", adjDetailId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_DeleteDetail] @AdjDetailId", AdjDetailIdParam);
+        }
+
+        public void QtyAdj(QtyAdjReq adjReq)
+        {
+            var AdjDateParam = new SqlParameter("@AdjDate", adjReq.AdjDate);
+
+            var ItemIdParam = new SqlParameter("@ItemId", adjReq.ItemId);
+
+            var NewQtyParam = new SqlParameter("@NewQty", adjReq.NewQty);
+
+            var NewPriceParam = adjReq.NewPrice.HasValue ? new SqlParameter("@NewPrice", adjReq.NewPrice) : new SqlParameter("@NewPrice", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_FromProduct] @AdjDate,@ItemId,@NewQty,@NewPrice,@EmpId", AdjDateParam, ItemIdParam, NewQtyParam, NewPriceParam, EmpIdParam);
+        }
+
+        public InventoryClosingDetail GetClosingQty(int itemId)
+        {
+            var ItemIdParam = new SqlParameter("@ItemId", itemId);
+
+            return DbContext.InventoryClosingDetail.FromSqlRaw("[dbo].[InventoryAdj_GetTodayCloQty] @ItemId", ItemIdParam).ToList().FirstOrDefault();
+        }
     }
 }

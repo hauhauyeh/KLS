@@ -88,6 +88,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpDelete("DeleteReturn/{paymentId}")]
+        [DisplayName("Delete Return Payment")]
+        public IActionResult DeleteReturn(int paymentId)
+        {
+            _vendorPaymentService.DeleteReturn(paymentId);
+            return Ok();
+        }
+
+
         [HttpGet("ReturnTypes")]
         public IActionResult ReturnTypes()
         {

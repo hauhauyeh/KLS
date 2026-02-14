@@ -34,7 +34,7 @@ namespace KLS.Services
 
         public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
         {
-            var sales = Uow.Sales.GetPagedList(salesListReq);
+            var sales = Uow.Sales.GetPagedList(salesListReq).ToList();
 
             var totalRecords = Uow.Sales.Count(salesListReq);
 

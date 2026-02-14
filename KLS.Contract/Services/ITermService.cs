@@ -1,5 +1,4 @@
-﻿using KLS.Contract.Dtos;
-using KLS.Models;
+﻿using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +14,8 @@ namespace KLS.Contract.Services
         IEnumerable<Term> GetActive();
 
         Term? GetById(int termId);
+
+        Term? GetByName(string termName);
 
         bool NameExists(Term term);
 

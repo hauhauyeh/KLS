@@ -14,5 +14,7 @@ namespace KLS.Contract.Interfaces
         void Inject(int payeeId);
 
         void Save(int payeeId);
+
+        IQueryable<TargetQuotePrice> GetTargetrPrice(int itemId, string? filterby);
     }
 }

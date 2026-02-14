@@ -17,9 +17,28 @@ namespace KLS.Services
 
         #region --- Payee ---
 
+        public Payee GetById(int payeeId)
+        {
+            return Uow.Payees.GetById(payeeId);
+        }
+
         public ICollection<PayeeSearch>? SearchPayee(PayeeSearchReq searchReq)
         {
             return Uow.Payees.SearchPayee(searchReq)?.ToList();
+        }
+
+        public void OpenClose(int payeeId)
+        {
+            var payee = GetById(payeeId);
+
+            if (payee != null)
+            {
+                payee.IsClosed = !payee.IsClosed;
+                payee.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Payees.Update(payee);
+                Uow.Commit();
+            }
         }
 
         #endregion

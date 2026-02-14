@@ -26,7 +26,7 @@ namespace KLS.Common
             GARNISHMENT = 4
         }
 
-        public enum PaymentMethod
+        public enum EnumPaymentMethod
         {
             ACH = 1,
             CASH = 2,

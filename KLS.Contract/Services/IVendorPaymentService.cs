@@ -23,6 +23,8 @@ namespace KLS.Contract.Services
 
         void Return(VendorPaymentReturnReq checkReq);
 
+        void DeleteReturn(int paymentId);
+
         List<string> GetReturnTypes();
 
         VendorPaymentList? SavePayNow(PayNowReq payNowReq);

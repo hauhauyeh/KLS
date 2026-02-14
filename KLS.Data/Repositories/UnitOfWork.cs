@@ -180,11 +180,17 @@ namespace KLS.Data.Repositories
 
         public ISalesRouteRepository SalesRoutes { get { return new SalesRouteRepository(DbContext); } }
 
+        public ISalesRouteDetailRepository SalesRouteDetails { get { return new SalesRouteDetailRepository(DbContext); } }
+
         public IPrintLogRepository PrintLogs { get { return new PrintLogRepository(DbContext); } }
 
         public ILiabilityRepository Liabilities { get { return new LiabilityRepository(DbContext); } }
 
         public ICheckTrackerRepository CheckTrackers { get { return new CheckTrackerRepository(DbContext); } }
+
+        public IPaymentMethodRepository PaymentMethods { get { return new PaymentMethodRepository(DbContext); } }
+
+        public IPaymentGatewayRepository PaymentGateways { get { return new PaymentGatewayRepository(DbContext); } }
 
         public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
     }
