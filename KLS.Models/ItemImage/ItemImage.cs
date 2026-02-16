@@ -25,6 +25,8 @@ namespace KLS.Models
 
         public string? RelativePath { get; set; }
 
+        public string? ThumbnailPath { get; set; }
+
         public int SortOrder { get; set; }
 
         public bool IsPrimary { get; set; }

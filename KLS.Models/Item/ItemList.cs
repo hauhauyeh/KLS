@@ -116,5 +116,6 @@ namespace KLS.Models
             }
         }
 
+        public string? PrimaryImageUrl { get; set; }
     }
 }

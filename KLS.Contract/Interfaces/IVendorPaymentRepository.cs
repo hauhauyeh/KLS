@@ -30,5 +30,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq);
 
         int CountCheckRegister(CheckRegisterReq checkRegisterReq);
+
+        IQueryable<VendorPaymentList> GetByPurchaseId(int purchaseId);
     }
 }

@@ -26,5 +26,7 @@ namespace KLS.Contract.Services
         void DeleteReturn(int customerPaymentId);
 
         IEnumerable<CustomerPaymentStatement>? Statement(int payeeId);
+
+        CustomerPayment ChargePayment(PaymentChargeReq chargeReq);
     }
 }

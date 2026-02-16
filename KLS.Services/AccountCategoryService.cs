@@ -143,6 +143,20 @@ namespace KLS.Services
             // Map ClassName from ClassCode
             category.ClassName = GetClassName(category.ClassCode);
 
+            // If it's a sub-category, inherit values from parent
+            if (category.ParentId.HasValue)
+            {
+                var parent = Uow.AccountCategories.Find(x => x.AccountCategoryId == category.ParentId.Value).FirstOrDefault();
+
+                if (parent == null)
+                    throw new InvalidOperationException("Parent category not found.");
+
+                // Inherit from parent (do NOT allow child to change these)
+                category.ClassCode = parent.ClassCode;
+                category.ClassName = parent.ClassName;
+                category.NormalSide = parent.NormalSide;
+            }
+
             Uow.AccountCategories.Add(category);
             Uow.Commit();
 
@@ -316,6 +330,8 @@ namespace KLS.Services
 
             // Logic: Update IsAccountDebit based on new Category NormalSide
             account.IsAccountDebit = newCategory.NormalSide == "D";
+
+            account.TypeName = newCategory.CategoryName;
 
             // Logic: Update SortOrder (Append to end)
             // Get max sort order of items in new category

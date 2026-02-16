@@ -298,6 +298,44 @@ namespace KLS.Services
             }
         }
 
+        public SalesSeePayment SeePayment(int salesId)
+        {
+            var payments = (from c in Uow.CustomerPayments.GetAll()
+                            join cd in Uow.CustomerPaymentDetails.GetAll() on c.CustomerPaymentId equals cd.CustomerPaymentId
+                            where cd.SalesId == salesId
+                            select c).ToList();
+
+            return new SalesSeePayment
+            {
+                Sales = GetById(salesId),
+                CustomerPayments = payments
+            };
+        }
+
+        public IEnumerable<SalesList>? OpenInvoices(int payeeId)
+        {
+            return Uow.Sales.GetPagedList(new SalesListReq
+            {
+                Pagesize = 500,
+                PayeeId = payeeId,
+                Filterby = "unpaid",
+                SortField = "ShipDate",
+                SortOrder = "Asc"
+            });
+        }
+
+        public IEnumerable<SalesList>? PastDueInvoices(int payeeId)
+        {
+            return Uow.Sales.GetPagedList(new SalesListReq
+            {
+                Pagesize = 500,
+                PayeeId = payeeId,
+                Filterby = "pastdue",
+                SortField = "ShipDate",
+                SortOrder = "Asc"
+            });
+        }
+
 
         public IEnumerable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate)
         {

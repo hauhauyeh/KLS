@@ -1,9 +1,12 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Org.BouncyCastle.Asn1.Cmp;
 using Square;
 using Square.Cards;
 using Square.Customers;
+using Square.Payments;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -76,6 +79,65 @@ namespace KLS.Services
             {
                 var errorMessages = string.Join(", ", ex.Errors.Select(e => e.Detail));
                 throw new Exception($"Square API Error: {errorMessages}");
+            }
+        }
+
+        public async Task<CreatePaymentResponse> ChargePayment(int payeeId, string squareCustomerId, string squareCardId, long amount)
+        {
+            try
+            {
+                var client = InitClient();
+
+                CreatePaymentRequest request;
+                var amountMoney = new Money
+                {
+                    Amount = amount,
+                    Currency = Currency.Usd
+                };
+
+                //saved card payment
+                if (!string.IsNullOrEmpty(squareCustomerId))
+                {
+                    var cardId = Utilities.Decrypt(squareCardId);
+
+                    var cardResponse = await client.Cards.GetAsync(new GetCardsRequest
+                    {
+                        CardId = cardId
+                    });
+
+                    request = new CreatePaymentRequest
+                    {
+                        IdempotencyKey = Guid.NewGuid().ToString(),
+                        AmountMoney = amountMoney,
+                        SourceId = cardResponse.Card.Id,
+                        Autocomplete = true,
+                        CustomerId = Utilities.Decrypt(squareCustomerId),
+                        ReferenceId = payeeId.ToString()
+                    };
+                }
+                else
+                {
+                    request = new CreatePaymentRequest
+                    {
+                        IdempotencyKey = Guid.NewGuid().ToString(),
+                        AmountMoney = amountMoney,
+                        SourceId = squareCardId, //this is square nonce generated from sqaure form
+                        Autocomplete = true,
+                        ReferenceId = payeeId.ToString()
+                    };
+                }
+
+                return await client.Payments.CreateAsync(request);
+            }
+            catch (SquareApiException ex)
+            {
+                // Give yourself better logs and a clean exception message upstream
+                var errors = ex.Errors?.Select(e => $"{e.Detail}").ToArray();
+                var msg = errors?.Length > 0
+                    ? string.Join(" | ", errors)
+                    : ex.Message;
+
+                throw new InvalidOperationException($"Square payment failed: {msg}", ex);
             }
         }
 

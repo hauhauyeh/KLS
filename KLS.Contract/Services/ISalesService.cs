@@ -53,6 +53,12 @@ namespace KLS.Contract.Services
 
         string MergePdf(string salesNumbers);
 
+        SalesSeePayment SeePayment(int salesId);
+
+        IEnumerable<SalesList>? OpenInvoices(int payeeId);
+
+        IEnumerable<SalesList>? PastDueInvoices(int payeeId);
+
         //--Routing
 
         IEnumerable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate);

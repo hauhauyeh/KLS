@@ -15,14 +15,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IPayeeService _payeeService;
+        private readonly ICustomerPaymentService _customerPaymentService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ARController(IPayeeService payeeService)
+        public ARController(IPayeeService payeeService, ICustomerPaymentService customerPaymentService)
         {
             _payeeService = payeeService;
+            _customerPaymentService = customerPaymentService;
         }
 
         #endregion
@@ -34,6 +36,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult List([FromQuery] ARCustomerListReq arListReq)
         {
             return Ok(_payeeService.GetARCustomers(arListReq));
+        }
+
+
+        [HttpPost("ChargePayment")]
+        [DisplayName("Charge Payment")]
+        public IActionResult ChargePayment([FromBody] PaymentChargeReq chargeReq)
+        {
+            return Ok(_customerPaymentService.ChargePayment(chargeReq));
         }
 
         #endregion

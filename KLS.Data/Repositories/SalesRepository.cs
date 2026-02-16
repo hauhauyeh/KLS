@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildSalesParam(salesListReq);
 
-            return DbContext.SalesList.FromSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@ShipRoute,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.SalesList.FromSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@ShipRoute,@Id,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int Count(SalesListReq salesListReq)
@@ -31,9 +31,9 @@ namespace KLS.Data.Repositories
             salesListReq.IsCount = true;
             var param = BuildSalesParam(salesListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@ShipRoute,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@ShipRoute,@Id,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[11] as SqlParameter;
+            var output = param[12] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -55,6 +55,8 @@ namespace KLS.Data.Repositories
                 string.IsNullOrEmpty(salesListReq.ShipRoute) ? new SqlParameter("@ShipRoute", DBNull.Value) : new SqlParameter("@ShipRoute", salesListReq.ShipRoute),
 
                 salesListReq.Id.HasValue ? new SqlParameter("@Id", salesListReq.Id) : new SqlParameter("@Id", DBNull.Value),
+
+                string.IsNullOrEmpty(salesListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", salesListReq.Filterby),
 
                 string.IsNullOrEmpty(salesListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", salesListReq.SortField),
 

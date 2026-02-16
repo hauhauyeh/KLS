@@ -140,5 +140,62 @@ namespace KLS.Data.Repositories
 
             return DbContext.CustomerPaymentStatement.FromSqlRaw("[dbo].[CustomerPayment_GetStmt] @PayeeId", PayeeIdParam);
         }
+
+        public int SaveGatewayPayment(CreateGatewayPaymentReq paymentReq)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", paymentReq.PayeeId);
+
+            var PaymentMethodParam = string.IsNullOrEmpty(paymentReq.PaymentMethod)
+                ? new SqlParameter("@PaymentMethod", DBNull.Value)
+                : new SqlParameter("@PaymentMethod", paymentReq.PaymentMethod);
+
+            var ReferenceIdParam = string.IsNullOrEmpty(paymentReq.ReferenceId)
+                ? new SqlParameter("@ReferenceId", DBNull.Value)
+                : new SqlParameter("@ReferenceId", paymentReq.ReferenceId);
+
+            var PaymentAmountParam = new SqlParameter("@PaymentAmount", paymentReq.PaymentAmount);
+
+            var SalesIdsParam = string.IsNullOrEmpty(paymentReq.SalesIds)
+                ? new SqlParameter("@SalesIds", DBNull.Value)
+                : new SqlParameter("@SalesIds", paymentReq.SalesIds);
+
+            var GatewayParam = string.IsNullOrEmpty(paymentReq.Gateway)
+                ? new SqlParameter("@Gateway", DBNull.Value)
+                : new SqlParameter("@Gateway", paymentReq.Gateway);
+
+            var CCFeeParam = new SqlParameter("@CCFee", paymentReq.CCFee);
+
+            var CardTypeParam = string.IsNullOrEmpty(paymentReq.CardType)
+                ? new SqlParameter("@CardType", DBNull.Value)
+                : new SqlParameter("@CardType", paymentReq.CardType);
+
+            var Last4Param = string.IsNullOrEmpty(paymentReq.Last4)
+                ? new SqlParameter("@Last4", DBNull.Value)
+                : new SqlParameter("@Last4", paymentReq.Last4);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewPaymentIdParam = new SqlParameter("@NewPaymentId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[CustomerPayment_InsertFromGateway] @PayeeId,@PaymentMethod,@ReferenceId,@PaymentAmount,@SalesIds,@Gateway,@CCFee,@CardType,@Last4,@EmpId,@NewPaymentId OUTPUT",
+                PayeeIdParam,
+                PaymentMethodParam,
+                ReferenceIdParam,
+                PaymentAmountParam,
+                SalesIdsParam,
+                GatewayParam,
+                CCFeeParam,
+                CardTypeParam,
+                Last4Param,
+                EmpIdParam,
+                NewPaymentIdParam
+            );
+
+            return (NewPaymentIdParam.Value == DBNull.Value) ? 0 : (int)NewPaymentIdParam.Value;
+        }
     }
 }

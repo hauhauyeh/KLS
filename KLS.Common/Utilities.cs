@@ -66,45 +66,72 @@ namespace KLS.Common
         public static string? Decrypt(string? cipherText)
         {
             if (string.IsNullOrEmpty(cipherText))
-            {
                 return null;
-            }
 
-            // Get the complete stream of bytes that represent:
-            // [32 bytes of Salt] + [16 bytes of IV] + [n bytes of CipherText]
-            var cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
-            // Get the saltbytes by extracting the first 16 bytes from the supplied cipherText bytes.
-            var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(Keysize / 8).ToArray();
-            // Get the IV bytes by extracting the next 16 bytes from the supplied cipherText bytes.
-            var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
-            // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
-            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
+            var allBytes = Convert.FromBase64String(cipherText);
 
-            using (var password = new Rfc2898DeriveBytes(DEFAULT_KEY, saltStringBytes, DerivationIterations))
-            {
-                var keyBytes = password.GetBytes(Keysize / 8);
-                using (var symmetricKey = Aes.Create())
-                {
-                    symmetricKey.BlockSize = 128;
-                    symmetricKey.Mode = CipherMode.CBC;
-                    symmetricKey.Padding = PaddingMode.PKCS7;
-                    using (var decryptor = symmetricKey.CreateDecryptor(keyBytes, ivStringBytes))
-                    {
-                        using (var memoryStream = new MemoryStream(cipherTextBytes))
-                        {
-                            using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
-                            {
-                                var plainTextBytes = new byte[cipherTextBytes.Length];
-                                var decryptedByteCount = cryptoStream.Read(plainTextBytes, 0, plainTextBytes.Length);
-                                memoryStream.Close();
-                                cryptoStream.Close();
-                                return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
-                            }
-                        }
-                    }
-                }
-            }
+            var salt = allBytes.Take(Keysize / 8).ToArray();          // 16
+            var iv = allBytes.Skip(Keysize / 8).Take(16).ToArray(); // IV is always 16 for AES
+            var ct = allBytes.Skip((Keysize / 8) + 16).ToArray();
+
+            using var password = new Rfc2898DeriveBytes(DEFAULT_KEY, salt, DerivationIterations);
+            var keyBytes = password.GetBytes(Keysize / 8);
+
+            using var aes = Aes.Create();
+            aes.BlockSize = 128;
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
+
+            using var decryptor = aes.CreateDecryptor(keyBytes, iv);
+            using var ms = new MemoryStream(ct);
+            using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
+            using var sr = new StreamReader(cs, Encoding.UTF8);
+            return sr.ReadToEnd();
         }
+
+
+        //public static string? Decrypt(string? cipherText)
+        //{
+        //    if (string.IsNullOrEmpty(cipherText))
+        //    {
+        //        return null;
+        //    }
+
+        //    // Get the complete stream of bytes that represent:
+        //    // [32 bytes of Salt] + [16 bytes of IV] + [n bytes of CipherText]
+        //    var cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
+        //    // Get the saltbytes by extracting the first 16 bytes from the supplied cipherText bytes.
+        //    var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(Keysize / 8).ToArray();
+        //    // Get the IV bytes by extracting the next 16 bytes from the supplied cipherText bytes.
+        //    var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
+        //    // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
+        //    var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
+
+        //    using (var password = new Rfc2898DeriveBytes(DEFAULT_KEY, saltStringBytes, DerivationIterations))
+        //    {
+        //        var keyBytes = password.GetBytes(Keysize / 8);
+        //        using (var symmetricKey = Aes.Create())
+        //        {
+        //            symmetricKey.BlockSize = 128;
+        //            symmetricKey.Mode = CipherMode.CBC;
+        //            symmetricKey.Padding = PaddingMode.PKCS7;
+        //            using (var decryptor = symmetricKey.CreateDecryptor(keyBytes, ivStringBytes))
+        //            {
+        //                using (var memoryStream = new MemoryStream(cipherTextBytes))
+        //                {
+        //                    using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+        //                    {
+        //                        var plainTextBytes = new byte[cipherTextBytes.Length];
+        //                        var decryptedByteCount = cryptoStream.Read(plainTextBytes, 0, plainTextBytes.Length);
+        //                        memoryStream.Close();
+        //                        cryptoStream.Close();
+        //                        return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         private static byte[] Generate128BitsOfRandomEntropy()
         {
@@ -705,6 +732,18 @@ namespace KLS.Common
             var local = TimeZoneInfo.ConvertTimeFromUtc(utc, tz);
 
             return DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
+        }
+
+        public static string? GetLast4(string? accountNumber)
+        {
+            if (string.IsNullOrWhiteSpace(accountNumber))
+                return null;
+
+            accountNumber = accountNumber.Trim();
+
+            return accountNumber.Length <= 4
+                ? accountNumber
+                : accountNumber.Substring(accountNumber.Length - 4);
         }
     }
 }

@@ -20,5 +20,7 @@ namespace KLS.Contract.Interfaces
         void DeleteReturn(int customerPaymentId);
 
         IQueryable<CustomerPaymentStatement>? Statement(int payeeId);
+
+        int SaveGatewayPayment(CreateGatewayPaymentReq paymentReq);
     }
 }

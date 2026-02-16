@@ -90,6 +90,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<IPDFService, PDFService>();
             services.AddScoped<ISquareService, SquareService>();
+            services.AddScoped<IMxMerchantService, MxMerchantService>();
 
             return services;
         }

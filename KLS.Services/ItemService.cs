@@ -2,7 +2,9 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Polly.Caching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,18 +17,35 @@ namespace KLS.Services
     {
         private readonly ISystemSettingService _systemSettingService;
         private readonly ITwilioService _twilioService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ItemService(IUnitOfWork uow, ISystemSettingService systemSettingService, ITwilioService twilioService) : base(uow)
+        public ItemService(IUnitOfWork uow,
+            ISystemSettingService systemSettingService,
+            ITwilioService twilioService,
+            IHttpContextAccessor httpContextAccessor) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _twilioService = twilioService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq)
         {
-            var itemlist = Uow.Items.GetPagedList(itemListReq);
+            var itemlist = Uow.Items.GetPagedList(itemListReq).ToList();
 
             var totalRecords = Uow.Items.Count(itemListReq);
+
+            var request = _httpContextAccessor.HttpContext?.Request;
+
+            string baseUrl = "";
+            if (request != null)
+                baseUrl = $"{request.Scheme}://{request.Host}";
+
+            foreach (var item in itemlist)
+            {
+                item.PrimaryImageUrl = string.IsNullOrEmpty(item.PrimaryImageUrl) ? null
+                        : baseUrl + item.PrimaryImageUrl;
+            }
 
             return new PagingResponse<ItemList>(totalRecords, itemListReq.Pageno, itemListReq.Pagesize)
             {

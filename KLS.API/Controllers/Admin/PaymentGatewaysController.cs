@@ -1,6 +1,5 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
-using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KLS.API.Controllers.Admin

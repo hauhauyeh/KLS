@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Services;
+﻿using KLS.Common;
+using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,6 +1,7 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -163,6 +164,14 @@ namespace KLS.API.Controllers.Admin
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             return File(fileStream, "application/pdf");
+        }
+
+
+        [HttpGet("SeePayment/{purchaseId}")]
+        [DisplayName("See Payment")]
+        public IActionResult SeePayment(int purchaseId)
+        {
+            return Ok(_purchaseService.SeePayment(purchaseId));
         }
 
         #endregion

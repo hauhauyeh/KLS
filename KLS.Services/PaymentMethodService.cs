@@ -3,7 +3,6 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.EntityFrameworkCore;
-using OneOf.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,7 +94,7 @@ namespace KLS.Services
             {
                 var defaultFee = _systemSettingService.GetByKey<decimal>(GlobalKey.DEFAULT_CCFEE_PERCENTAGE);
 
-                feePerc = Utilities.Rounding(method.FeePercent / 100, 4) ?? defaultFee;
+                feePerc = Utilities.Rounding(method.FeePercent, 4) ?? defaultFee;
             }
 
             var newMethod = new PaymentMethod
@@ -113,7 +112,7 @@ namespace KLS.Services
                 IsPrimary = method.IsPrimary,
                 FeePercent = feePerc,
                 Notes = method.Notes,
-                SQNonce = method.SQNonce
+                SQNonce = Utilities.Encrypt(method.SQNonce)
             };
 
             var methods = Uow.PaymentMethods.Find(c => c.PayeeId == method.PayeeId && c.IsPrimary).ToList();
@@ -141,11 +140,12 @@ namespace KLS.Services
 
                 if (cardResp.Card != null)
                 {
-                    method.SQCardId = cardResp.Card.Id;
-                    method.ExpMonth = Utilities.Encrypt(cardResp.Card.ExpMonth.ToString());
-                    method.ExpYear = Utilities.Encrypt(cardResp.Card.ExpYear.ToString());
-                    method.AccountType = cardResp.Card.CardBrand.ToString();
-                    method.AccountName = Utilities.Encrypt(cardResp.Card.CardholderName);
+                    newMethod.SQCardId = Utilities.Encrypt(cardResp.Card.Id);
+                    newMethod.SQCustId = Utilities.Encrypt(cardResp.Card.CustomerId);
+                    newMethod.ExpMonth = Utilities.Encrypt(cardResp.Card.ExpMonth.ToString());
+                    newMethod.ExpYear = Utilities.Encrypt(cardResp.Card.ExpYear.ToString());
+                    newMethod.AccountType = cardResp.Card.CardBrand.ToString();
+                    newMethod.AccountName = Utilities.Encrypt(cardResp.Card.CardholderName);
                 }
             }
 

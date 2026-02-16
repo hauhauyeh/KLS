@@ -211,6 +211,27 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("SeePayment/{salesId}")]
+        [DisplayName("See Payment")]
+        public IActionResult SeePayment(int salesId)
+        {
+            return Ok(_salesService.SeePayment(salesId));
+        }
+
+
+        [HttpGet("OpenInvoices/{payeeId}")]
+        public IActionResult OpenInvoices(int payeeId)
+        {
+            return Ok(_salesService.OpenInvoices(payeeId));
+        }
+
+
+        [HttpGet("PastDueInvoices/{payeeId}")]
+        public IActionResult PastDueInvoices(int payeeId)
+        {
+            return Ok(_salesService.PastDueInvoices(payeeId));
+        }
+
         #endregion
     }
 }

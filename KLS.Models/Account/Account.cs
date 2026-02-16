@@ -56,9 +56,6 @@ namespace KLS.Models
         public DateTime? UpdatedAt { get; set; }
 
 
-        [ForeignKey("AccountTypeId")]
-        public virtual AccountType? AccountType { get; set; }
-
         [ForeignKey("AccountCategoryId")]
         public virtual AccountCategory? AccountCategory { get; set; }
     }

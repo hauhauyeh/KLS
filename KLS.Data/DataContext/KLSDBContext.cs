@@ -103,6 +103,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<CheckTracker>().ToTable("CheckTracker");
             modelBuilder.Entity<PaymentMethod>().ToTable("PaymentMethod");
             modelBuilder.Entity<PaymentGateway>().ToTable("PaymentGateway");
+            modelBuilder.Entity<ItemImage>().ToTable("ItemImage");
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -262,6 +263,8 @@ namespace KLS.Data.DataContext
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
 
         public DbSet<PaymentGateway> PaymentGateways { get; set; }
+
+        public DbSet<ItemImage> ItemImages { get; set; }
 
         #endregion
 

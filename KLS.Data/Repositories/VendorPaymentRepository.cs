@@ -203,6 +203,13 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(txCount.Value);
         }
 
+        public IQueryable<VendorPaymentList> GetByPurchaseId(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            return DbContext.VendorPaymentList.FromSqlRaw("[dbo].[VendorPayment_GetByPurchaseId] @PurchaseId", PurchaseIdParam);
+        }
+
 
         public IQueryable<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq)
         {

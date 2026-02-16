@@ -202,5 +202,16 @@ namespace KLS.Services
 
             return File.Exists(pdfFile);
         }
+
+        public PurchaseSeePayment SeePayment(int purchaseId)
+        {
+            var payments = Uow.VendorPayments.GetByPurchaseId(purchaseId).ToList();
+
+            return new PurchaseSeePayment
+            {
+                Purchase = GetById(purchaseId),
+                VendorPayments = payments
+            };
+        }
     }
 }
