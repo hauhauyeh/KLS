@@ -1,7 +1,6 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -10,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Purchase Management", GroupName = "Vendor")]
+    [Display(Name = "Bill Management", GroupName = "Vendor")]
     public class PurchasesController : BaseController
     {
         #region --- Member(s) ---
@@ -33,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("Bill Manager")]
+        [DisplayName("List Bills")]
         public IActionResult List([FromQuery] PurchaseListReq purchaseListReq)
         {
             return Ok(_purchaseService.GetPagedList(purchaseListReq));
@@ -62,6 +61,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("UpdateDocNumber")]
+        [DisplayName("Update Doc Number")]
         public IActionResult UpdateDocNumber([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdateDocNumber(updateReq.PurchaseId, updateReq.VendorDocNumber);
@@ -71,6 +71,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("UpdateInvoiceDate")]
+        [DisplayName("Update Invoice Date")]
         public IActionResult UpdateInvoiceDate([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdateInvoiceDate(updateReq.PurchaseId, updateReq.InvoiceDate);
@@ -80,6 +81,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("UpdateCommission")]
+        [DisplayName("Update Commission")]
         public IActionResult UpdateCommission([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdateCommission(updateReq.PurchaseId, updateReq.ImportCommission);
@@ -89,6 +91,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("UpdatePallet")]
+        [DisplayName("Update Pallet")]
         public IActionResult UpdatePallet([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdatePallet(updateReq.PurchaseId, updateReq.PalletCount);
@@ -105,6 +108,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("UpdateContainer")]
+        [DisplayName("Update Container")]
         public IActionResult UpdateContainer([FromBody] PurchaseUpdateReq updateReq)
         {
             return Ok(_purchaseService.UpdateContainerNumber(updateReq.PurchaseId, updateReq.ContainerNumber));
@@ -112,7 +116,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Checkout")]
-        [DisplayName("Checkout Bill")]
+        [DisplayName("Create Bill")]
         public IActionResult Checkout([FromBody] PurchaseCheckoutReq checkoutReq)
         {
             return Ok(_purchaseService.Checkout(checkoutReq));
@@ -120,6 +124,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("UpdatePartially/{purchaseId}")]
+        [DisplayName("Update Bill")]
         public IActionResult UpdatePartially(int purchaseId)
         {
             return Ok(_purchaseService.UpdatePartially(purchaseId));
@@ -145,6 +150,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("UploadBillPDF")]
+        [DisplayName("Upload Bill Pdf")]
         public IActionResult UploadBillPDF([FromForm] PDFUploadReq pdfUploadReq)
         {
             _purchaseService.UploadBillPDF(pdfUploadReq);
@@ -172,6 +178,13 @@ namespace KLS.API.Controllers.Admin
         public IActionResult SeePayment(int purchaseId)
         {
             return Ok(_purchaseService.SeePayment(purchaseId));
+        }
+
+
+        [HttpGet("AssignedShipments/{purchaseId}")]
+        public IActionResult AssignedShipments(int purchaseId)
+        {
+            return Ok(_purchaseService.AssignedShipments(purchaseId, false));
         }
 
         #endregion

@@ -84,11 +84,11 @@ namespace KLS.API.Helpers
             if (displayAttribute == null)
                 return false;
 
-            var authorizeAttribute = controllerTypeInfo.GetCustomAttribute<AuthorizeAttribute>();
+            var authorizeAttribute = controllerTypeInfo.GetCustomAttribute<AuthorizeAdminAttribute>();
             if (authorizeAttribute != null)
                 return true;
 
-            authorizeAttribute = actionMethodInfo.GetCustomAttribute<AuthorizeAttribute>();
+            authorizeAttribute = actionMethodInfo.GetCustomAttribute<AuthorizeAdminAttribute>();
             if (authorizeAttribute != null)
                 return true;
 

@@ -1,15 +1,15 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Account Category Management", GroupName = "Admin")]
+    [Display(Name = "Account Management", GroupName = "Accounting")]
     public class AccountCategoriesController : BaseController
     {
         #region --- Member(s) ---
@@ -33,13 +33,6 @@ namespace KLS.API.Controllers.Admin
         public IActionResult GetFlatTree()
         {
             return Ok(_accountCategoryService.GetFlatTree());
-        }
-
-
-        [HttpGet("RecursiveTree")]
-        public IActionResult GetRecursiveTree()
-        {
-            return Ok(_accountCategoryService.GetRecursiveTree());
         }
 
 

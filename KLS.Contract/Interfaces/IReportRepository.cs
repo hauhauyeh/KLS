@@ -31,5 +31,11 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptLoadingItem> LoadingList(DocumentReq req);
 
         IQueryable<RptPackingLabel> PackingLabel(DocumentReq req);
+
+        IQueryable<RptBalanceSheetRow> BalanceSheet(DateOnly? endDate);
+
+        IQueryable<RptProfitLossRow> ProfitLoss(ReportRequest reportReq);
+
+        IQueryable<RptSalesTax>? SalesTax(ReportRequest reportReq);
     }
 }

@@ -30,11 +30,13 @@ namespace KLS.API.Helpers
                     context.Items["RefreshToken"] = jwtClaim.RefreshToken;
                     UserContext.EmpId = jwtClaim.PayeeId;
                     UserContext.SystemUserId = jwtClaim.UserId;
+                    UserContext.IsAdmin = jwtClaim.IsAdmin;
 
                     // 🔑 Resolve scoped service correctly
 
                     string? accessPermission = null;
                     bool? isAdmin = null;
+                    int roleId = 0;
 
                     if (jwtClaim.Portal == EnumHelper.Portal.Admin.ToString())
                     {
@@ -45,6 +47,7 @@ namespace KLS.API.Helpers
                         {
                             accessPermission = role.RoleAccess;
                             isAdmin = role.IsAdmin;
+                            roleId = role.SystemRoleId;
                         }
                     }
                     else
@@ -56,13 +59,16 @@ namespace KLS.API.Helpers
                         {
                             accessPermission = role.RoleAccess;
                             isAdmin = role.IsAdmin;
+                            roleId = role.RoleId;
                         }
                     }
 
-                    if (accessPermission != null && isAdmin.HasValue)
+                    context.Items["IsAdmin"] = isAdmin;
+                    context.Items["RoleId"] = roleId.ToString();
+
+                    if (accessPermission != null)
                     {
                         context.Items["AccessPermission"] = accessPermission;
-                        context.Items["IsAdmin"] = isAdmin.Value;
                     }
                 }
             }

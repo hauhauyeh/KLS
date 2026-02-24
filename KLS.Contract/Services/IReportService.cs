@@ -15,5 +15,11 @@ namespace KLS.Contract.Services
         RptCustStmt CustStmt(int payeeId);
 
         RptPackingList PackingList(DocumentReq req);
+
+        IEnumerable<RptBalanceSheet>? BalanceSheet(DateOnly? endDate);
+
+        IEnumerable<RptProfitLoss>? ProfitLoss(ReportRequest reportReq);
+
+        IEnumerable<RptSalesTax>? SalesTax(ReportRequest reportReq);
     }
 }

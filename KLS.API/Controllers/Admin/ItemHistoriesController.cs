@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "ItemHistory Management", GroupName = "Product")]
+    [Display(Name = "Product History Management", GroupName = "Product")]
     public class ItemHistoriesController : BaseController
     {
         #region --- Member(s) ---
@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet("Sales")]
-        [DisplayName("Sales History")]
+        [DisplayName("View Order History")]
         public IActionResult Sales([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetSalesHistory(itemHistoryReq));
@@ -40,7 +40,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("Purchase")]
-        [DisplayName("Cost History")]
+        [DisplayName("View Cost History")]
         public IActionResult Purchase([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetPurchaseHistory(itemHistoryReq));
@@ -48,7 +48,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("Inventory")]
-        [DisplayName("Inventory History")]
+        [DisplayName("View Inventory History")]
         public IActionResult Inventory([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetInventoryHistory(itemHistoryReq));
@@ -56,7 +56,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("SalesCost")]
-        [DisplayName("Cost + Sales History")]
+        [DisplayName("View Cost + Order History")]
         public IActionResult SalesCost([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(new
@@ -68,7 +68,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("Adjustment/{itemId}")]
-        [DisplayName("Adjustment History")]
+        [DisplayName("View Adjustment History")]
         public IActionResult Adjustment(string itemId)
         {
             var adjustments = _adjustmentService.GetPagedList(new InventoryAdjListReq

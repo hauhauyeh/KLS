@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Advance Payment")]
+        [DisplayName("List Advance Payments")]
         public IActionResult List([FromQuery] EmpAdvanceReq empAdvanceReq)
         {
             return Ok(_empAdvanceService.GetPagedList(empAdvanceReq));
@@ -45,7 +45,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Save")]
-        [DisplayName("Save Advance Payment")]
+        [DisplayName("Create/Update Advance Payment")]
         public IActionResult Save([FromBody] EmpAdvance empAdvance)
         {
             return Ok(_empAdvanceService.Save(empAdvance));

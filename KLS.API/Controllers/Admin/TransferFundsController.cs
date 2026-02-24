@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Transfer Fund")]
+        [DisplayName("List Transfer Funds")]
         public IActionResult List([FromQuery] TFReq tFReq)
         {
             return Ok(_transferFundService.GetPagedTransferFunds(tFReq));
@@ -50,7 +50,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Save")]
-        [DisplayName("Add/Edit Transfer Fund")]
+        [DisplayName("Create/Update Transfer Fund")]
         public IActionResult Save([FromBody] TransferFund transferFund)
         {
             return Ok(_transferFundService.SaveTransferFund(transferFund));

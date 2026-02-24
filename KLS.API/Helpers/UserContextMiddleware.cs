@@ -16,12 +16,12 @@ namespace KLS.API.Helpers
         {
             try
             {
-                var empIdClaim = context.User?.Claims?.FirstOrDefault(c => c.Type == "EmpId");
+                //var empIdClaim = context.User?.Claims?.FirstOrDefault(c => c.Type == "EmpId");
 
-                if (empIdClaim != null && int.TryParse(empIdClaim.Value, out var empId))
-                {
-                    UserContext.EmpId = empId;
-                }
+                //if (empIdClaim != null && int.TryParse(empIdClaim.Value, out var empId))
+                //{
+                //    UserContext.EmpId = empId;
+                //}
 
                 // Determine timezone from context or fallback
                 string? timezone = null;

@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List InventoryAdj")]
+        [DisplayName("List Adjustments")]
         public IActionResult List([FromQuery] InventoryAdjListReq inventoryAdjListReq)
         {
             return Ok(_inventoryAdjService.GetPagedList(inventoryAdjListReq));
@@ -50,7 +50,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Save Adjustment")]
+        [DisplayName("Create/Update Adjustment")]
         public IActionResult Save([FromBody] InventoryAdj inventoryAdj)
         {
             return Ok(_inventoryAdjService.Save(inventoryAdj));

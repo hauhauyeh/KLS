@@ -54,6 +54,8 @@ namespace KLS.Models
 
         public decimal? FinalPrice { get; set; }
 
+        public decimal? ImportCommission { get; set; }
+
         [Column(TypeName = "decimal(18,6)")]
         public decimal? FactorToBase { get; set; }
 
@@ -71,14 +73,14 @@ namespace KLS.Models
         [Column(TypeName = "decimal(9,4)")]
         public decimal? TariffPercent { get; set; }
 
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? DutySharePercent { get; set; }
+        //[Column(TypeName = "decimal(18,6)")]
+        //public decimal? DutySharePercent { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? ItemVolume { get; set; }
 
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? VolumeSharePercent { get; set; }
+        //[Column(TypeName = "decimal(18,6)")]
+        //public decimal? VolumeSharePercent { get; set; }
 
 
         public decimal? BillExtTotal => Utilities.Rounding((BillQty ?? 0m) * (BillPrice ?? 0m), 2);
@@ -92,10 +94,6 @@ namespace KLS.Models
         public string? ItemCode { get; set; }
 
         public decimal? CaseWeight { get; set; }
-
-        public decimal? DutyPerCase { get; set; }
-
-        public decimal? FreightPerCase { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
         public decimal? BaseFinalQty { get; set; }
@@ -132,7 +130,7 @@ namespace KLS.Models
         {
             get
             {
-                return (LineType == EnumHelper.LineType.A.ToString() && ItemCode == "@COGSF") ? FinalExtTotal : 0;
+                return (LineType == EnumHelper.LineType.A.ToString() && ItemCode == "@INVC") ? FinalExtTotal : 0;
             }
         }
 
@@ -140,7 +138,7 @@ namespace KLS.Models
         {
             get
             {
-                return (LineType == EnumHelper.LineType.A.ToString() && ItemCode == "@CD") ? FinalExtTotal : 0;
+                return (LineType == EnumHelper.LineType.A.ToString() && ItemCode == "@INVC") ? FinalExtTotal : 0;
             }
         }
 

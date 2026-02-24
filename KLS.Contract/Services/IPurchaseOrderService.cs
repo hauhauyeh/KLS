@@ -15,10 +15,6 @@ namespace KLS.Contract.Services
 
         void Delete(int purchaseId);
 
-        //void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq);
-
-        //void DeleteAdvancePayment(int poId);
-
         IEnumerable<PODetail> GetPODetail(int purchaseId);
 
         PurchaseOrderList? CopyToBill(POCopyToBillReq copyToBillReq);

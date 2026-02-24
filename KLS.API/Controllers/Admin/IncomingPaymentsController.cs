@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Incoming Payment")]
+        [DisplayName("List Incoming Payments")]
         public IActionResult List([FromQuery] IncomingPaymentListReq incomingPaymentReq)
         {
             return Ok(_incomingPaymentService.GetPagedList(incomingPaymentReq));
@@ -52,7 +52,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Save")]
-        [DisplayName("Add/Edit Incoming Payment")]
+        [DisplayName("Create/Update Incoming Payment")]
         public IActionResult Save([FromBody] IncomingPaymentReq incomingPaymentReq)
         {
             return Ok(_incomingPaymentService.Save(incomingPaymentReq));

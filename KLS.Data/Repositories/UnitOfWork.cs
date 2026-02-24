@@ -192,6 +192,16 @@ namespace KLS.Data.Repositories
 
         public IPaymentGatewayRepository PaymentGateways { get { return new PaymentGatewayRepository(DbContext); } }
 
+        public IShipmentRepository Shipments { get { return new ShipmentRepository(DbContext); } }
+
+        public IShipmentChargeRepository ShipmentCharges { get { return new ShipmentChargeRepository(DbContext); } }
+
+        public IShipmentPurchaseRepository ShipmentPurchases { get { return new ShipmentPurchaseRepository(DbContext); } }
+
+        public IItemTariffRepository ItemTariffs { get { return new ItemTariffRepository(DbContext); } }
+
+        public ICountryRepository Countries { get { return new CountryRepository(DbContext); } }
+
         public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
     }
 }

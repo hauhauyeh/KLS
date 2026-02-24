@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Deposit")]
+        [DisplayName("List Deposits")]
         public IActionResult List([FromQuery] DepositReq depositReq)
         {
             return Ok(_transferFundService.GetPagedDeposits(depositReq));
@@ -45,7 +45,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Save Deposit")]
+        [DisplayName("Create/Update Deposit")]
         public IActionResult Save([FromBody] TransferFund transferFund)
         {
             return Ok(_transferFundService.SaveDeposit(transferFund));

@@ -137,5 +137,13 @@ namespace KLS.Common
             ACHReceipt = 5,
             Report = 6
         }
+
+        public enum ShipmentStatus
+        {
+            Draft = 1,
+            Assigned = 2,
+            Allocated = 3,
+            Closed = 4
+        }
     }
 }

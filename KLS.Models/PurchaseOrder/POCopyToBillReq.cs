@@ -11,5 +11,7 @@ namespace KLS.Models
         public int PurchaseId { get; set; }
 
         public string? ItemsJson { get; set; }
+
+        public string? ShipmentIds { get; set; }
     }
 }

@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List EmailLogs")]
+        [DisplayName("List Email Logs")]
         public IActionResult List([FromQuery] EmailLogReq emailLogReq)
         {
             return Ok(_emailLogService.GetPagedList(emailLogReq));

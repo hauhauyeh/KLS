@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("Timesheet List")]
+        [DisplayName("List Timesheets")]
         public IActionResult List([FromQuery] TimesheetReq timesheetReq)
         {
             return Ok(_timesheetService.GetPagedList(timesheetReq));
@@ -52,7 +52,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Save Timesheet")]
+        [DisplayName("Create/Update Timesheet")]
         public IActionResult Save([FromBody] KLS.Models.Timesheet timeSheet)
         {
             if (_timesheetService.ValidateTime(timeSheet))

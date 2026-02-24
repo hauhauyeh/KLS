@@ -76,16 +76,6 @@ namespace KLS.Services
             }
         }
 
-        //public void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq)
-        //{
-        //    Uow.PurchaseOrders.SaveAdvancePayment(advancePaymentReq);
-        //}
-
-        //public void DeleteAdvancePayment(int poId)
-        //{
-        //    Uow.PurchaseOrders.DeleteAdvancePayment(poId);
-        //}
-
         public IEnumerable<PODetail> GetPODetail(int purchaseId)
         {
             return Uow.PurchaseOrders.GetPODetail(purchaseId);
@@ -131,6 +121,8 @@ namespace KLS.Services
             Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.StageId, x => 6)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+
+            Uow.Shipments.Allocation(purchaseId);
 
             return GetListById(purchaseId);
         }

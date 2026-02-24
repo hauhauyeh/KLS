@@ -33,7 +33,7 @@ namespace KLS.Services
                 {
                     var address = new Address
                     {
-                        Country = Country.Us
+                        Country = Square.Country.Us
                     };
 
                     var create = new CreateCustomerRequest
@@ -65,7 +65,7 @@ namespace KLS.Services
                             AddressLine1 = payee.Address,
                             Locality = payee.City,
                             PostalCode = payee.ZipCode,
-                            Country = Country.Us
+                            Country = Square.Country.Us
                         },
                         CardholderName = paymentMethod.AccountName,
                         CustomerId = customer.SquareId,

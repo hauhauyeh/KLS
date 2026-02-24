@@ -37,7 +37,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Add Method")]
+        [DisplayName("Create Method")]
         public IActionResult Create([FromBody] PaymentMethod method)
         {
             if (_paymentMethodService.Exists(method))

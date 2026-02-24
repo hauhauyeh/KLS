@@ -24,7 +24,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildCustomersParam(customerListReq);
 
-            return DbContext.CustomerList.FromSqlRaw("[dbo].[Customer_GetAllList] @Pageno,@Pagesize,@Search,@Filterby,@Content,@Sortby,@Category,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.CustomerList.FromSqlRaw("[dbo].[Customer_GetAllList] @Pageno,@Pagesize,@Search,@Filterby,@Content,@Sortby,@Category,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int Count(CustomerListReq customerListReq)
@@ -32,7 +32,7 @@ namespace KLS.Data.Repositories
             customerListReq.IsCount = true;
             var param = BuildCustomersParam(customerListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Customer_GetAllList] @Pageno,@Pagesize,@Search,@Filterby,@Content,@Sortby,@Category,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Customer_GetAllList] @Pageno,@Pagesize,@Search,@Filterby,@Content,@Sortby,@Category,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
             var output = param[11] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -44,7 +44,7 @@ namespace KLS.Data.Repositories
 
             var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
 
-            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.IsAdmin ? 0 : UserContext.EmpId);
 
             var IsSearchSalesParam = new SqlParameter("@IsSearchSales", searchReq.IsSearchSales);
 
@@ -60,10 +60,6 @@ namespace KLS.Data.Repositories
 
                 string.IsNullOrEmpty(customerListReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", customerListReq.Search),
 
-                //customerListReq.StartDate.HasValue ? new SqlParameter("@StartDate", customerListReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
-
-                //customerListReq.EndDate.HasValue ? new SqlParameter("@EndDate", customerListReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
-
                 string.IsNullOrEmpty(customerListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", customerListReq.Filterby),
 
                 string.IsNullOrEmpty(customerListReq.Content) ? new SqlParameter("@Content", DBNull.Value) : new SqlParameter("@Content", customerListReq.Content),
@@ -72,7 +68,7 @@ namespace KLS.Data.Repositories
 
                 string.IsNullOrEmpty(customerListReq.Category) ? new SqlParameter("@Category", DBNull.Value) : new SqlParameter("@Category", customerListReq.Category),
 
-                new SqlParameter("@PayeeId", customerListReq.PayeeId),
+                new SqlParameter("@EmpId", UserContext.EmpId),
 
                 string.IsNullOrEmpty(customerListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", customerListReq.SortField),
 

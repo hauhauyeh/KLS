@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Payroll")]
+        [DisplayName("List Payrolls")]
         public IActionResult List([FromQuery] PayrollReq payrollReq)
         {
             return Ok(_payrollDetailService.GetPagedList(payrollReq));
@@ -64,13 +64,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        //[HttpPost]
-        //[DisplayName("Save Payroll")]
-        //public IActionResult Save([FromBody] PayrollReq payrollReq)
-        //{
-        //    _payrollDetailService.SavePayroll(payrollReq);
-        //    return Ok();
-        //}
+        [HttpPost]
+        [DisplayName("Create/Update Payroll")]
+        public IActionResult Save([FromBody] PayrollReq payrollReq)
+        {
+            //_payrollDetailService.SavePayroll(payrollReq);
+            return Ok();
+        }
 
 
         [HttpDelete("{vendorPaymentId}")]

@@ -104,6 +104,13 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PaymentMethod>().ToTable("PaymentMethod");
             modelBuilder.Entity<PaymentGateway>().ToTable("PaymentGateway");
             modelBuilder.Entity<ItemImage>().ToTable("ItemImage");
+            modelBuilder.Entity<Shipment>().ToTable("Shipment");
+            modelBuilder.Entity<ShipmentCharge>().ToTable("ShipmentCharge");
+            modelBuilder.Entity<ShipmentPurchase>().ToTable("ShipmentPurchase");
+            modelBuilder.Entity<ItemTariff>().ToTable("ItemTariff");
+
+            modelBuilder.Entity<Country>().ToTable("Country");
+            modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();
@@ -266,6 +273,16 @@ namespace KLS.Data.DataContext
 
         public DbSet<ItemImage> ItemImages { get; set; }
 
+        public DbSet<Shipment> Shipments { get; set; }
+
+        public DbSet<ShipmentCharge> ShipmentCharges { get; set; }
+
+        public DbSet<ShipmentPurchase> ShipmentPurchases { get; set; }
+
+        public DbSet<ItemTariff> ItemTariffs { get; set; }
+
+        public DbSet<Country> Countries { get; set; }
+
         #endregion
 
         #region ---Virtual DBSET---
@@ -366,6 +383,12 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<TargetQuotePrice> TargetQuotePrice { get; set; }
 
+        public virtual DbSet<ShipmentList> ShipmentList { get; set; }
+
+        public virtual DbSet<AssignedShipmentRow> AssignedShipmentRow { get; set; }
+
+        public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
+
         #endregion
 
         #region ---Report DBSET---
@@ -377,6 +400,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptPO> RptPO { get; set; }
 
         public virtual DbSet<RptPODetail> RptPODetail { get; set; }
+
+        public virtual DbSet<RptSalesTax> RptSalesTax { get; set; }
 
 
 
@@ -393,6 +418,11 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptLoadingItem> RptLoadingItem { get; set; }
 
         public virtual DbSet<RptPackingLabel> RptPackingLabel { get; set; }
+
+
+        public virtual DbSet<RptBalanceSheetRow> RptBalanceSheetRow { get; set; }
+
+        public virtual DbSet<RptProfitLossRow> RptProfitLossRow { get; set; }
 
         #endregion
     }

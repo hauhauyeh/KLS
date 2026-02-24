@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Holiday")]
+        [DisplayName("List Holidays")]
         public IActionResult List()
         {
             return Ok(_holidayService.GetList());

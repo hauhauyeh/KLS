@@ -114,10 +114,10 @@ namespace KLS.Services
             //send cost change notification
             var itemCostChange = Uow.Items.Find(c => c.IsCostChange == true).ToList();
 
-            foreach (var item in itemCostChange)
-            {
-                //_itemService.SendCostChangeNotification(item);
-            }
+            //foreach (var item in itemCostChange)
+            //{
+            //    //_itemService.SendCostChangeNotification(item);
+            //}
 
             return GetListById(purchaseId);
         }
@@ -212,6 +212,41 @@ namespace KLS.Services
                 Purchase = GetById(purchaseId),
                 VendorPayments = payments
             };
+        }
+
+        public IEnumerable<AssignedShipment>? AssignedShipments(int purchaseId, bool isShipment)
+        {
+            var shipments = Uow.Purchases.AssignedShipments(purchaseId, isShipment).ToList();
+
+            var result = shipments.GroupBy(r => new
+            {
+                r.ShipmentId,
+                r.ShipmentType,
+                r.ContainerType,
+                r.ContainerNo,
+                r.PayeeName
+            })
+            .Select(g => new AssignedShipment
+            {
+                ShipmentPurchaseId = g.First().ShipmentPurchaseId,
+                ShipmentId = g.Key.ShipmentId,
+                ShipmentType = g.Key.ShipmentType,
+                ContainerType = g.Key.ContainerType,
+                ContainerNo = g.Key.ContainerNo,
+                PayeeName = g.Key.PayeeName,
+
+                Charges = g.Select(x => new ShipmentCharge
+                {
+                    ChargeId = x.ChargeId!.Value,
+                    ShipmentId = g.Key.ShipmentId,
+                    AllocationMethod = x.AllocationMethod,
+                    ChargeType = x.ChargeType,
+                    ChargeAmount = x.ChargeAmount ?? 0m,
+                    Notes = x.Notes
+                }).ToList()
+            }).ToList();
+
+            return result;
         }
     }
 }

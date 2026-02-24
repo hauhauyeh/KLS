@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Role")]
+        [DisplayName("List Roles")]
         public IActionResult List()
         {
             return Ok(_roleService.GetList());

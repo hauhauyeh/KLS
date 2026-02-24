@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Purchase Order Management", GroupName = "Vendor")]
+    [Display(Name = "PO Management", GroupName = "Vendor")]
     public class PurchaseOrdersController : BaseController
     {
         #region --- Member(s) ---
@@ -38,7 +38,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Checkout")]
-        [DisplayName("Checkout PO")]
+        [DisplayName("Create/Update PO")]
         public IActionResult Checkout([FromBody] PurchaseOrderCheckoutReq checkoutReq)
         {
             return Ok(_purchaseOrderService.Checkout(checkoutReq));
@@ -53,24 +53,6 @@ namespace KLS.API.Controllers.Admin
 
             return Ok();
         }
-
-
-        //[HttpPost("SaveAdvancePayment")]
-        //[DisplayName("Save Advance Payment")]
-        //public IActionResult SaveAdvancePayment([FromBody] POAdvancePaymentReq advancePaymentReq)
-        //{
-        //    _purchaseOrderService.SaveAdvancePayment(advancePaymentReq);
-        //    return Ok();
-        //}
-
-
-        //[HttpDelete("DeleteAdvancePayment/{poId}")]
-        //[DisplayName("Delete Advance Payment")]
-        //public IActionResult DeleteAdvancePayment(int poId)
-        //{
-        //    _purchaseOrderService.DeleteAdvancePayment(poId);
-        //    return Ok();
-        //}
 
 
         [HttpGet("GetPODetail/{purchaseId}")]

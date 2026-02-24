@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List General Journal")]
+        [DisplayName("List General Journals")]
         public IActionResult List([FromQuery] GJReq gJReq)
         {
             return Ok(_gjService.GetPagedList(gJReq));
@@ -50,7 +50,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Save")]
-        [DisplayName("Add/Edit General Journal")]
+        [DisplayName("Create/Update General Journal")]
         public IActionResult Save([FromBody] GeneralJournal generalJournal)
         {
             return Ok(_gjService.Save(generalJournal));

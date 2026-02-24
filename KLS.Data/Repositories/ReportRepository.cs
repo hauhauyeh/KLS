@@ -109,5 +109,31 @@ namespace KLS.Data.Repositories
         }
 
         #endregion
+
+        public IQueryable<RptBalanceSheetRow> BalanceSheet(DateOnly? endDate)
+        {
+            var EndDateParam = endDate.HasValue ? new SqlParameter("@EndDate", endDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptBalanceSheetRow.FromSqlRaw("[dbo].[Report_BalanceSheet] @EndDate", EndDateParam);
+        }
+
+        public IQueryable<RptProfitLossRow> ProfitLoss(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptProfitLossRow.FromSqlRaw("[dbo].[Report_ProfitLoss] @StartDate,@EndDate", StartDateParam, EndDateParam);
+        }
+
+        public IQueryable<RptSalesTax>? SalesTax(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptSalesTax.FromSqlRaw("[dbo].[Report_SalesTax] @StartDate,@EndDate", StartDateParam, EndDateParam);
+
+        }
     }
 }

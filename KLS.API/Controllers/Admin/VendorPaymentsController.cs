@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Vendor Payment")]
+        [DisplayName("List Vendor Payments")]
         public IActionResult List([FromQuery] VendorPaymentReq vendorPaymentReq)
         {
             return Ok(_vendorPaymentService.GetPagedVendorPayments(vendorPaymentReq));
@@ -45,7 +45,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Save")]
-        [DisplayName("Add/Edit VendorPayment")]
+        [DisplayName("Create/Update Vendor Payment")]
         public IActionResult Save([FromBody] VendorPayment vendorPayment)
         {
             return Ok(_vendorPaymentService.Save(vendorPayment));
@@ -53,7 +53,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpDelete("{paymentId}")]
-        [DisplayName("Delete Payment")]
+        [DisplayName("Delete Vendor Payment")]
         public IActionResult Delete(int paymentId)
         {
             _vendorPaymentService.Delete(paymentId);
@@ -80,7 +80,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Return")]
-        [DisplayName("Return Payment")]
+        [DisplayName("Create Return Vendor Payment")]
         public IActionResult Return([FromBody] VendorPaymentReturnReq checkReq)
         {
             _vendorPaymentService.Return(checkReq);
@@ -89,7 +89,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpDelete("DeleteReturn/{paymentId}")]
-        [DisplayName("Delete Return Payment")]
+        [DisplayName("Delete Return Vendor Payment")]
         public IActionResult DeleteReturn(int paymentId)
         {
             _vendorPaymentService.DeleteReturn(paymentId);
@@ -105,7 +105,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("SavePayNow")]
-        [DisplayName("Add/Edit Pay Now Payment")]
+        [DisplayName("Create/Update Pay NOW")]
         public IActionResult SavePayNow([FromBody] PayNowReq payNowReq)
         {
             return Ok(_vendorPaymentService.SavePayNow(payNowReq));
@@ -113,7 +113,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("ImportPayNow")]
-        [DisplayName("Import PayNow")]
+        [DisplayName("Import Pay NOW")]
         public IActionResult ImportPayNow([FromForm] ImportPayNow importPayNow)
         {
             var result = _vendorPaymentService.ImportPayNow(importPayNow);

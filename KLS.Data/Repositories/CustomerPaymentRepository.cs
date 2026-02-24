@@ -1,7 +1,6 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
-using KLS.Data.Repositories;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildPagedList(customerPaymentReq);
 
-            return DbContext.CustomerPaymentList.FromSqlRaw("[dbo].[CustomerPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.CustomerPaymentList.FromSqlRaw("[dbo].[CustomerPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@PayeeId,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int Count(CustomerPaymentReq customerPaymentReq)
@@ -32,9 +31,9 @@ namespace KLS.Data.Repositories
             customerPaymentReq.IsCount = true;
             var param = BuildPagedList(customerPaymentReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@PayeeId,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[10] as SqlParameter;
+            var output = param[11] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -54,6 +53,8 @@ namespace KLS.Data.Repositories
                 string.IsNullOrEmpty(customerPaymentReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", customerPaymentReq.Filterby),
 
                 customerPaymentReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", customerPaymentReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
+
+                new SqlParameter("@EmpId", UserContext.EmpId),
 
                 string.IsNullOrEmpty(customerPaymentReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", customerPaymentReq.SortField),
 

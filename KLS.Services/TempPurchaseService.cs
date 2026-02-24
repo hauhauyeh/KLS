@@ -73,6 +73,7 @@ namespace KLS.Services
 
                 existing.CustomDutyRate = dto.CustomDutyRate;
                 existing.TariffPercent = dto.TariffPercent;
+                existing.ImportCommission = dto.ImportCommission;
 
                 Uow.TempPurchases.Update(existing);
                 Uow.Commit();
@@ -150,8 +151,13 @@ namespace KLS.Services
 
             var unit = _itemUnitService.GetBaseUnit(item.ItemId);
 
-            var itemCategory = Uow.ItemCategories.GetById(item.CategoryId ?? 0);
-            tempPurchase.CustomDutyRate = itemCategory?.CustomDutyRate ?? 0;
+            var itemTariff = Uow.ItemTariffs.GetById(item.ItemId);
+
+            if (itemTariff != null)
+            {
+                tempPurchase.CustomDutyRate = itemTariff.DutyRate ?? 0;
+                tempPurchase.TariffPercent = itemTariff.TariffRate ?? 0;
+            }
 
             var billPrice = (dto.BillPrice.HasValue && dto.BillPrice.Value != 0) ? dto.BillPrice : (unit.RecentCost ?? 0m);
 

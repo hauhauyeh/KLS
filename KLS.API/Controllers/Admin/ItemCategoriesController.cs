@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "ItemCategory Management", GroupName = "Product")]
+    [Display(Name = "Product Category Management", GroupName = "Product")]
     public class ItemCategoriesController : BaseController
     {
         #region --- Member(s) ---
@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Category")]
+        [DisplayName("List Categories")]
         public IActionResult List()
         {
             return Ok(_itemCategoryService.GetTree());

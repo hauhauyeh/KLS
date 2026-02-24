@@ -148,6 +148,15 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Purchase_FreightBillLink] @PurchaseId", PurchaseIdParam);
         }
 
+        public IQueryable<AssignedShipmentRow> AssignedShipments(int purchaseId, bool isShipment)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            var IsShipmentParam = new SqlParameter("@IsShipment", isShipment);
+
+            return DbContext.AssignedShipmentRow.FromSqlRaw("[Purchase_AssignedShipment] @PurchaseId,@IsShipment", PurchaseIdParam, IsShipmentParam);
+        }
+
         private static object[] BuildParam(PurchaseListReq purchaseListReq)
         {
             object[] param = {

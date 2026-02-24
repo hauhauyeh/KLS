@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Item Management", GroupName = "Product")]
+    [Display(Name = "Product Management", GroupName = "Product")]
     public class ItemsController : BaseController
     {
         #region --- Member(s) ---
@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Item")]
+        [DisplayName("List Products")]
         public IActionResult List([FromQuery] ItemListReq itemListReq)
         {
             return Ok(_itemService.GetPagedList(itemListReq));
@@ -45,7 +45,7 @@ namespace KLS.API.Controllers.Admin
             var item = _itemService.GetById(itemId);
 
             if (item == null)
-                return NotFound($"Item not found.");
+                return NotFound($"Product not found.");
 
             return Ok(item);
         }
@@ -59,7 +59,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpDelete("{itemId}")]
-        [DisplayName("Delete Item")]
+        [DisplayName("Delete Product")]
         public IActionResult Delete(int itemId)
         {
             _itemService.Delete(itemId);
@@ -76,14 +76,14 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Save Item")]
+        [DisplayName("Create/Update Product")]
         public IActionResult Save([FromBody] Item item)
         {
             if (_itemService.ItemCodeExists(item))
-                return Conflict("ItemCode already exists");
+                return Conflict("Code already exists");
 
             if (_itemService.ItemNameExists(item))
-                return Conflict("ItemName already exists");
+                return Conflict("Name already exists");
 
             return Ok(_itemService.Save(item));
         }

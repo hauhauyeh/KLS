@@ -100,5 +100,100 @@ namespace KLS.Services
                 Storages = packingStorage
             };
         }
+
+        public IEnumerable<RptBalanceSheet>? BalanceSheet(DateOnly? endDate)
+        {
+            var balance = Uow.Reports.BalanceSheet(endDate).ToList();
+
+            var result = balance
+                .GroupBy(a => a.CategoryLevel0)
+                .Select(g0 => new RptBalanceSheet
+                {
+                    GroupName = g0.Key,
+                    GroupTotal = g0.Sum(x => x.ClosingBalance),
+                    Children = g0
+                        .GroupBy(a => a.CategoryLevel1)
+                        .Select(g1 => new RptBalanceSheet
+                        {
+                            GroupName = g1.Key,
+                            Children = g1
+                                .GroupBy(a => a.CategoryLevel2)
+                                .Select(g2 => new RptBalanceSheet
+                                {
+                                    GroupName = g2.Key,
+                                    GroupTotal = g2.Sum(x => x.ClosingBalance),
+                                    // Leaf nodes = accounts (still using same RptBalanceSheet type)
+                                    Children = g2.Select(a => new RptBalanceSheet
+                                    {
+                                        GroupName = a.AccountName,
+                                        AccountCode = a.AccountCode,
+                                        GroupTotal = a.ClosingBalance,
+                                        Children = null
+                                    }).ToList()
+                                }).ToList(),
+                            GroupTotal = g1.Sum(x => x.ClosingBalance)
+                        }).ToList()
+                })
+                .ToList();
+
+            return result;
+        }
+
+        public IEnumerable<RptProfitLoss>? ProfitLoss(ReportRequest reportReq)
+        {
+            var pl = Uow.Reports.ProfitLoss(reportReq).ToList();
+
+            var result = pl
+                .GroupBy(a => a.CategoryLevel0 ?? "Uncategorized")
+                .Select(g0 =>
+                {
+                    var sales = g0.FirstOrDefault(x => x.AccountCode == "@ISALE")?.AcctBalance ?? 0m;
+                    var total0 = g0.Sum(x => x.AcctBalance);
+                    var grossMargin = total0 / (sales != 0m ? sales : 1m);
+
+                    return new RptProfitLoss
+                    {
+                        GroupName = g0.Key,
+                        GroupTotal = total0,
+                        GrossMargin = grossMargin,
+
+                        Children = g0
+                            .GroupBy(a => a.CategoryLevel1 ?? "Uncategorized")
+                            .Select(g1 => new RptProfitLoss
+                            {
+                                GroupName = g1.Key,
+                                GroupTotal = g1.Sum(x => x.AcctBalance),
+
+                                Children = g1
+                                    .GroupBy(a => a.CategoryLevel2 ?? "Uncategorized")
+                                    .Select(g2 => new RptProfitLoss
+                                    {
+                                        GroupName = g2.Key,
+
+                                        // Level3 (accounts) mapped into same class as leaf nodes
+                                        Children = g2.Select(a => new RptProfitLoss
+                                        {
+                                            GroupName = a.AccountName,
+                                            AccountCode = a.AccountCode,
+                                            GroupTotal = a.AcctBalance,
+                                            Children = null
+                                        }).ToList(),
+
+                                        GroupTotal = g2.Sum(x => x.AcctBalance)
+                                    })
+                                    .ToList()
+                            })
+                            .ToList()
+                    };
+                })
+                .ToList();
+
+            return result;
+        }
+
+        public IEnumerable<RptSalesTax>? SalesTax(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesTax(reportReq);
+        }
     }
 }

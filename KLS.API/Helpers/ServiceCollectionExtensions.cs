@@ -84,6 +84,9 @@ namespace KLS.API.Helpers
             services.AddScoped<ICheckTrackerService, CheckTrackerService>();
             services.AddScoped<IPaymentMethodService, PaymentMethodService>();
             services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
+            services.AddScoped<IShipmentService, ShipmentService>();
+            services.AddScoped<IShipmentPurchaseService, ShipmentPurchaseService>();
+            services.AddScoped<IItemTariffService, ItemTariffService>();
 
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IEmailService, EmailService>();

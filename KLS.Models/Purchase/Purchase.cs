@@ -63,6 +63,8 @@ namespace KLS.Models
 
         public bool IsFreightOnly { get; set; }
 
+        public bool IsShipment { get; set; }
+
         public decimal? FreightInside { get; set; }
 
         public decimal? FreightOutside { get; set; }

@@ -2,13 +2,14 @@
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "ItemImage Management", GroupName = "Admin")]
+    [Display(Name = "Product Image Management", GroupName = "Product")]
     public class ItemImagesController : BaseController
     {
         #region --- Member(s) ---
@@ -29,6 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet("{itemId}")]
+        [DisplayName("List Images")]
         public IActionResult List(int itemId)
         {
             return Ok(_itemImageService.GetList(itemId));
@@ -36,6 +38,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
+        [DisplayName("Upload Image")]
         public IActionResult Upload([FromForm] ImageUploadReq uploadReq)
         {
             _itemImageService.Upload(uploadReq);
@@ -44,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpDelete("{imageId}")]
+        [DisplayName("Delete Image")]
         public IActionResult Delete(int imageId)
         {
             _itemImageService.Delete(imageId);

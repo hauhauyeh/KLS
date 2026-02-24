@@ -9,7 +9,7 @@ namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Sales Management", GroupName = "Customer")]
+    [Display(Name = "Order Management", GroupName = "Customer")]
     public class SalesController : BaseController
     {
         #region --- Member(s) ---
@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("Order Manager")]
+        [DisplayName("List Orders")]
         public IActionResult List([FromQuery] SalesListReq salesListReq)
         {
             return Ok(_salesService.GetPagedList(salesListReq));
@@ -103,7 +103,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpDelete("{salesId}")]
-        [DisplayName("Delete Sales")]
+        [DisplayName("Delete Order")]
         public IActionResult Delete(int salesId)
         {
             _salesService.Delete(salesId);
@@ -157,7 +157,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Checkout")]
-        [DisplayName("Checkout")]
+        [DisplayName("Create Order")]
         public IActionResult Checkout([FromBody] SalesCheckoutReq checkoutReq)
         {
             return Ok(_salesService.Checkout(checkoutReq));
@@ -165,6 +165,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("UpdatePartially/{salesId}")]
+        [DisplayName("Update Order")]
         public IActionResult UpdatePartially(int salesId)
         {
             return Ok(_salesService.UpdatePartially(salesId));
@@ -179,6 +180,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut("ShippingCharge")]
+        [DisplayName("Add Shipping Charge")]
         public IActionResult ShippingCharge([FromBody] SalesUpdateReq updateReq)
         {
             return Ok(_salesService.InsertShippingCharge(updateReq));

@@ -40,5 +40,7 @@ namespace KLS.Contract.Services
         bool IsBillPdfExist(int purchaseNumber);
 
         PurchaseSeePayment SeePayment(int purchaseId);
+
+        IEnumerable<AssignedShipment>? AssignedShipments(int purchaseId, bool isShipment);
     }
 }

@@ -55,7 +55,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Save Payroll Service")]
+        [DisplayName("Create/Update Payroll Service")]
         public IActionResult Save([FromBody] PayrollService payrollService)
         {
             return Ok(_payrollService.Save(payrollService));

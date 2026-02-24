@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List CheckRegister")]
+        [DisplayName("List Check Register")]
         public IActionResult List([FromQuery] CheckRegisterReq checkRegisterReq)
         {
             return Ok(_vendorPmtService.GetPagedCheckRegister(checkRegisterReq));

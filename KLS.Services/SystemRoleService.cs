@@ -202,7 +202,7 @@ namespace KLS.Services
                         Name = itemaction.Name,
                         DisplayName = itemaction.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName,
                         Attributes = string.Join(",", itemaction.GetCustomAttributes()
-                                                               .Select(a => a.GetType().Name.Replace("Attribute", "")))
+                        .Select(a => a.GetType().Name.Replace("Attribute", "")))
                     };
 
                     if (action.Attributes.Contains("DisplayName"))
@@ -217,6 +217,7 @@ namespace KLS.Services
 
             var contGroups = controllers
                 .Where(c => c.GroupName != null)
+                .OrderBy(c => c.GroupName)
                 .GroupBy(c => c.GroupName)
                 .ToList();
 

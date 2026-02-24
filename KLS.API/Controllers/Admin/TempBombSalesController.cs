@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List")]
+        [DisplayName("List Bomb")]
         public IActionResult List(bool checkAgain)
         {
             return Ok(_tempBombSalesService.GetList(checkAgain));
@@ -68,7 +68,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Save")]
+        [DisplayName("Save Bomb")]
         public IActionResult SaveBomb()
         {
             _tempBombSalesService.SaveBomb();

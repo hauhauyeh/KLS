@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Customer Payment")]
+        [DisplayName("List Customer Payments")]
         public IActionResult List([FromQuery] CustomerPaymentReq customerPaymentReq)
         {
             return Ok(_customerPaymentService.GetPagedList(customerPaymentReq));
@@ -64,7 +64,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Save Customer Payment")]
+        [DisplayName("Create/Update Customer Payment")]
         public IActionResult Save([FromBody] CustomerPaymentSaveReq paymentSaveReq)
         {
             return Ok(_customerPaymentService.Save(paymentSaveReq));

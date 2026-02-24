@@ -39,9 +39,6 @@ namespace KLS.Models
 
         public int SortOrder { get; set; }
 
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? CustomDutyRate { get; set; }
-
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }

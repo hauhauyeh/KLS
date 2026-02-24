@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List BankRecon")]
+        [DisplayName("List Reconciliations")]
         public IActionResult List()
         {
             return Ok(_bankReconService.GetList());
@@ -45,7 +45,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost]
-        [DisplayName("Create BankRecon")]
+        [DisplayName("Create Reconciliation")]
         public IActionResult Create([FromBody] BankRecon bankRecon)
         {
             if (_bankReconService.Exists(bankRecon))
@@ -56,7 +56,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPut]
-        [DisplayName("Update BankRecon")]
+        [DisplayName("Update Reconciliation")]
         public IActionResult Update([FromBody] BankRecon bankRecon)
         {
             if (_bankReconService.Exists(bankRecon))
@@ -76,7 +76,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpDelete("{id}")]
-        [DisplayName("Delete BankRecon")]
+        [DisplayName("Delete Reconciliation")]
         public IActionResult Delete(int id)
         {
             _bankReconService.Delete(id);

@@ -167,6 +167,16 @@ namespace KLS.Contract.Interfaces
 
         IPaymentGatewayRepository PaymentGateways { get; }
 
+        IShipmentRepository Shipments { get; }
+
+        IShipmentChargeRepository ShipmentCharges { get; }
+
+        IShipmentPurchaseRepository ShipmentPurchases { get; }
+
+        IItemTariffRepository ItemTariffs { get; }
+
+        ICountryRepository Countries { get; }
+
         void Commit();
     }
 }

@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List DocumentTemplate")]
+        [DisplayName("List Document Templates")]
         public IActionResult List()
         {
             return Ok(_documentTemplateService.GetList());

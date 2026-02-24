@@ -15,19 +15,30 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IAccountService _accountService;
+        private readonly IAccountCategoryService _accountCategoryService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public AccountsController(IAccountService accountService)
+        public AccountsController(IAccountService accountService, IAccountCategoryService accountCategoryService)
         {
             _accountService = accountService;
+            _accountCategoryService = accountCategoryService;
         }
 
         #endregion
 
         #region --- Method(s) ---
+
+        //[HttpGet("RecursiveTree")]
+        [HttpGet]
+        [DisplayName("List Accounts")]
+        public IActionResult List()
+        {
+            return Ok(_accountCategoryService.GetRecursiveTree());
+        }
+
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)

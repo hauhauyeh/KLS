@@ -22,5 +22,7 @@ namespace KLS.Contract.Interfaces
         void UpdatePartially(int purchaseId);
 
         void FreightBillLink(int purchaseId);
+
+        IQueryable<AssignedShipmentRow> AssignedShipments(int purchaseId, bool isShipment);
     }
 }

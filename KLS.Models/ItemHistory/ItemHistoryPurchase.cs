@@ -31,13 +31,9 @@ namespace KLS.Models
 
         public decimal? FinalPrice { get; set; }
 
-        public decimal? FreightPerCase { get; set; }
-
-        public decimal? DutyPerCase { get; set; }
+        public decimal? LandedCostPerCase { get; set; }
 
         public decimal? TotalCost { get; set; }
-
-        public decimal? FreightTotal { get; set; }
 
         public string? Type { get; set; }
 

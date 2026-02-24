@@ -49,6 +49,8 @@ namespace KLS.Models
         public decimal? BillPrice { get; private set; }
         public decimal? FinalPrice { get; private set; }
 
+        public decimal? ImportCommission { get; set; }
+
         [Column(TypeName = "decimal(18,6)")]
         public decimal? FactorToBase { get; set; }
 
@@ -66,14 +68,14 @@ namespace KLS.Models
         [Column(TypeName = "decimal(9,4)")]
         public decimal? TariffPercent { get; set; }
 
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? DutySharePercent { get; set; }
+        //[Column(TypeName = "decimal(18,6)")]
+        //public decimal? DutySharePercent { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? ItemVolume { get; set; }
 
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal? VolumeSharePercent { get; set; }
+        //[Column(TypeName = "decimal(18,6)")]
+        //public decimal? VolumeSharePercent { get; set; }
 
 
         public string? ChangeStatus { get; set; }
@@ -83,48 +85,6 @@ namespace KLS.Models
 
         public decimal? FinalExtTotal => Utilities.Rounding((FinalQty ?? 0m) * (FinalPrice ?? 0m), 2);
 
-
-        // Use it for Bill manager and Pay now
-        public void SetQtyBasedOnFlag()
-        {
-            if (IsFree)
-            {
-                ShipQty = OrdQty0;
-                BillQty = 0;
-                ReceiveQty = OrdQty1;
-                FinalQty = 0;
-            }
-            else if (IsOut)
-            {
-                ShipQty = 0;
-                BillQty = 0;
-                ReceiveQty = 0;
-                FinalQty = 0;
-            }
-            else if (IsCRCG)
-            {
-                ShipQty = 0;
-                BillQty = OrdQty0;
-                ReceiveQty = 0;
-                FinalQty = OrdQty1;
-            }
-            else
-            {
-                ShipQty = OrdQty0;
-                BillQty = OrdQty0;
-                ReceiveQty = OrdQty1;
-                FinalQty = OrdQty1;
-            }
-
-            //BaseReceiveQty = Utilities.Rounding(ReceiveQty / FactorToBase, 6);
-            //BaseFinalQty = Utilities.Rounding(FinalQty / FactorToBase, 6);
-        }
-
-        //Use only for PO
-        public void SetPOQtyBasedOnFlag()
-        {
-
-        }
 
         public void ApplyCommonEdits(bool isFree, bool isOut, bool isCrcg, decimal? billPrice, decimal? finalPrice, string? notes, DateOnly? expiryDate)
         {

@@ -32,7 +32,7 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List Transaction")]
+        [DisplayName("List Transactions")]
         public IActionResult List([FromQuery] TxReq txReq)
         {
             return Ok(_transactionService.GetPagedList(txReq));
