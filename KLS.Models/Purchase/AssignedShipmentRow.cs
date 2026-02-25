@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KLS.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace KLS.Models
         public string? ShipmentType { get; set; }
         public string? ContainerType { get; set; }
         public string? ContainerNo { get; set; }
+        public string? Status { get; set; }
         public string? PayeeName { get; set; }
 
         public int? ChargeId { get; set; }
@@ -35,7 +37,11 @@ namespace KLS.Models
         public string? ContainerNo { get; set; }
         public string? PayeeName { get; set; }
 
+        public string? Status { get; set; }
+
         public decimal TotalCharges => Charges?.Sum(c => c.ChargeAmount ?? 0m) ?? 0m;
+
+        public bool IsClosed => Status == EnumHelper.ShipmentStatus.Closed.ToString();
 
         public ICollection<ShipmentCharge> Charges { get; set; } = [];
     }

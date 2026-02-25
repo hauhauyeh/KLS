@@ -61,6 +61,8 @@ namespace KLS.Models
 
         public bool IsStartFromPO { get; set; }
 
+        public bool IsShipment { get; set; }
+
         public bool IsNormalPurchase { get; set; }
 
         public bool IsPayNow { get; set; }

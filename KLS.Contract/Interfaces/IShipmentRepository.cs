@@ -16,5 +16,13 @@ namespace KLS.Contract.Interfaces
         void Allocation(int purchaseId);
 
         void UnAllocation(int shipmentPurchaseId);
+
+        void Delete(int shipmentId);
+
+        void GenerateBill(int shipmentId);
+
+        void UpdateCharges(int shipmentId);
+
+        void AssignShipment(POCopyToBillReq copyToBillReq);
     }
 }

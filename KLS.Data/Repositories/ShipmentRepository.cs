@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
@@ -39,7 +40,7 @@ namespace KLS.Data.Repositories
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
 
-            DbContext.Database.ExecuteSqlRaw("[Shipment_Allocation] @PurchaseId", PurchaseIdParam);
+            DbContext.Database.ExecuteSqlRaw("[Purchase_Allocation] @PurchaseId", PurchaseIdParam);
         }
 
         public void UnAllocation(int shipmentPurchaseId)
@@ -47,6 +48,38 @@ namespace KLS.Data.Repositories
             var ShipmentPurchaseIdParam = new SqlParameter("@ShipmentPurchaseId", shipmentPurchaseId);
 
             DbContext.Database.ExecuteSqlRaw("[Shipment_UnAllocation] @ShipmentPurchaseId", ShipmentPurchaseIdParam);
+        }
+
+        public void Delete(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            DbContext.Database.ExecuteSqlRaw("[Shipment_Delete] @ShipmentId", ShipmentIdParam);
+        }
+
+        public void GenerateBill(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            DbContext.Database.ExecuteSqlRaw("[Shipment_GenerateBill] @ShipmentId", ShipmentIdParam);
+        }
+
+        public void UpdateCharges(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            DbContext.Database.ExecuteSqlRaw("[Shipment_Update] @ShipmentId", ShipmentIdParam);
+        }
+
+        public void AssignShipment(POCopyToBillReq copyToBillReq)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", copyToBillReq.PurchaseId);
+
+            var ShipmentIdsParam = (!string.IsNullOrEmpty(copyToBillReq.ShipmentIds))
+                ? new SqlParameter("@ShipmentIds", copyToBillReq.ShipmentIds)
+                : new SqlParameter("@ShipmentIds", DBNull.Value);
+
+            DbContext.Database.ExecuteSqlRaw("[Shipment_Assign] @PurchaseId,@ShipmentIds", PurchaseIdParam, ShipmentIdsParam);
         }
 
         private static object[] BuildPagedList(ShipmentListReq shipmentListReq)

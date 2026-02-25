@@ -42,5 +42,7 @@ namespace KLS.Contract.Services
         PurchaseSeePayment SeePayment(int purchaseId);
 
         IEnumerable<AssignedShipment>? AssignedShipments(int purchaseId, bool isShipment);
+
+        void AssignShipment(POCopyToBillReq copyToBillReq);
     }
 }

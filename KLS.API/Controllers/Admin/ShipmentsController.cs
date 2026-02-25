@@ -93,6 +93,22 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("Reopen/{shipmentId}")]
+        [DisplayName("Reopen Shipment")]
+        public IActionResult Reopen(int shipmentId)
+        {
+            return Ok(_shipmentService.Reopen(shipmentId));
+        }
+
+
+        [HttpPost("GenerateBill/{shipmentId}")]
+        [DisplayName("Generate Bill")]
+        public IActionResult GenerateBill(int shipmentId)
+        {
+            return Ok(_shipmentService.GenerateBill(shipmentId));
+        }
+
+
         [HttpPost("UnAllocation/{shipmentPurchaseId}")]
         [DisplayName("UnAllocation Shipment")]
         public IActionResult UnAllocation(int shipmentPurchaseId)
@@ -101,6 +117,7 @@ namespace KLS.API.Controllers.Admin
 
             return Ok();
         }
+
 
         #endregion
     }

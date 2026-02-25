@@ -151,7 +151,7 @@ namespace KLS.Services
 
             var unit = _itemUnitService.GetBaseUnit(item.ItemId);
 
-            var itemTariff = Uow.ItemTariffs.GetById(item.ItemId);
+            var itemTariff = Uow.ItemTariffs.Find(c => c.ItemId == item.ItemId)?.FirstOrDefault();
 
             if (itemTariff != null)
             {

@@ -25,6 +25,10 @@ namespace KLS.Contract.Services
 
         void Delete(int shipmentId);
 
+        Shipment? Reopen(int shipmentId);
+
+        Shipment? GenerateBill(int shipmentId);
+
         void UnAllocation(int shipmentPurchaseId);
     }
 }

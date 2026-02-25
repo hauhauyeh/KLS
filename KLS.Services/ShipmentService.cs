@@ -187,6 +187,8 @@ namespace KLS.Services
 
             Uow.Commit();
 
+            Uow.Shipments.UpdateCharges(shipment.ShipmentId);
+
             return existing;
         }
 
@@ -199,12 +201,30 @@ namespace KLS.Services
 
         public void Delete(int shipmentId)
         {
+            Uow.Shipments.Delete(shipmentId);
+        }
+
+        public Shipment? Reopen(int shipmentId)
+        {
             var shipment = GetById(shipmentId);
 
-            if (shipment != null && shipment.Status != EnumHelper.ShipmentStatus.Closed.ToString())
+            if (shipment != null && shipment.Status == EnumHelper.ShipmentStatus.Closed.ToString())
             {
-                Uow.Shipments.Find(c => c.ShipmentId == shipmentId).ExecuteDelete();
+                shipment.Status = EnumHelper.ShipmentStatus.Allocated.ToString();
+                shipment.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Shipments.Update(shipment);
+                Uow.Commit();
             }
+
+            return shipment;
+        }
+
+        public Shipment? GenerateBill(int shipmentId)
+        {
+            Uow.Shipments.GenerateBill(shipmentId);
+
+            return GetById(shipmentId);
         }
 
         public void UnAllocation(int shipmentPurchaseId)

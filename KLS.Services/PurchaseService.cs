@@ -224,6 +224,7 @@ namespace KLS.Services
                 r.ShipmentType,
                 r.ContainerType,
                 r.ContainerNo,
+                r.Status,
                 r.PayeeName
             })
             .Select(g => new AssignedShipment
@@ -233,6 +234,7 @@ namespace KLS.Services
                 ShipmentType = g.Key.ShipmentType,
                 ContainerType = g.Key.ContainerType,
                 ContainerNo = g.Key.ContainerNo,
+                Status = g.Key.Status,
                 PayeeName = g.Key.PayeeName,
 
                 Charges = g.Select(x => new ShipmentCharge
@@ -247,6 +249,11 @@ namespace KLS.Services
             }).ToList();
 
             return result;
+        }
+
+        public void AssignShipment(POCopyToBillReq copyToBillReq)
+        {
+            Uow.Shipments.AssignShipment(copyToBillReq);
         }
     }
 }

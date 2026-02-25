@@ -1,6 +1,7 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -185,6 +186,16 @@ namespace KLS.API.Controllers.Admin
         public IActionResult AssignedShipments(int purchaseId)
         {
             return Ok(_purchaseService.AssignedShipments(purchaseId, false));
+        }
+
+
+        [HttpPost("AssignShipment")]
+        [DisplayName("Assign Shipment")]
+        public IActionResult AssignShipment([FromBody] POCopyToBillReq copyToBillReq)
+        {
+            _purchaseService.AssignShipment(copyToBillReq);
+
+            return Ok();
         }
 
         #endregion
