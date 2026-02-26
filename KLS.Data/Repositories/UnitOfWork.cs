@@ -206,8 +206,10 @@ namespace KLS.Data.Repositories
 
         public IPromotionRepository Promotions { get { return new PromotionRepository(DbContext); } }
 
-        public IPromotionItemRepository PromotionItem { get { return new PromotionItemRepository(DbContext); } }
+        public IPromotionItemRepository PromotionItems { get { return new PromotionItemRepository(DbContext); } }
 
         public IPromotionCategoryRepository PromotionCategories { get { return new PromotionCategoryRepository(DbContext); } }
+
+        public IPromotionBogoRepository PromotionBogos { get { return new PromotionBogoRepository(DbContext); } }
     }
 }

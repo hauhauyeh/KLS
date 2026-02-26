@@ -111,6 +111,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Promotion>().ToTable("Promotion");
             modelBuilder.Entity<PromotionItem>().ToTable("PromotionItem");
             modelBuilder.Entity<PromotionCategory>().ToTable("PromotionCategory");
+            modelBuilder.Entity<PromotionBogo>().ToTable("PromotionBogo");
 
             modelBuilder.Entity<Country>().ToTable("Country");
             modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
@@ -290,7 +291,9 @@ namespace KLS.Data.DataContext
 
         public DbSet<PromotionItem> PromotionItems { get; set; }
 
-        public DbSet<PromotionCategory> promotionCategories { get; set; }
+        public DbSet<PromotionCategory> PromotionCategories { get; set; }
+
+        public DbSet<PromotionBogo> PromotionBogo { get; set; }
 
         #endregion
 
@@ -397,6 +400,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<AssignedShipmentRow> AssignedShipmentRow { get; set; }
 
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
+
+        public virtual DbSet<PromotionList> PromotionList { get; set; }
 
         #endregion
 

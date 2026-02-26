@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -48,5 +49,14 @@ namespace KLS.Models
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        public virtual ICollection<PromotionItem>? PromotionItems { get; set; }
+
+        public virtual ICollection<PromotionCategory>? PromotionCategories { get; set; }
+
+        public virtual ICollection<PromotionBogo>? PromotionBogos { get; set; }
+
+        [NotMapped]
+        public ICollection<int>? DeletedBogoIds { get; set; }
     }
 }

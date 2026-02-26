@@ -9,6 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface IPromotionRepository : IRepository<Promotion>
     {
+        IQueryable<PromotionList> GetPromotionList(PromotionListReq promotionListReq);
 
+        int Count(PromotionListReq promotionListReq);
     }
 }

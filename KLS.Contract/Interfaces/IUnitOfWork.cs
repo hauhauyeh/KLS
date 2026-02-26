@@ -184,6 +184,8 @@ namespace KLS.Contract.Interfaces
 
         IPromotionCategoryRepository PromotionCategories { get; }
 
+        IPromotionBogoRepository PromotionBogos { get; }
+
         void Commit();
     }
 }
