@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    [AuthorizeAdmin]
+    //[AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Report Management", GroupName = "Report")]
     public class ReportsController : BaseController
@@ -53,6 +53,24 @@ namespace KLS.API.Controllers.Admin
         public IActionResult SalesTax([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesTax(reportReq));
+        }
+
+
+        [HttpGet("Responsible")]
+        [DisplayName("Sales -> Responsible")]
+        public IActionResult Responsible([FromQuery] DateOnly? ShipDate)
+        {
+            var result = _reportService.Responsible(ShipDate);
+            return Ok(result);
+        }
+
+
+        [HttpGet("DailySummary")]
+        [DisplayName("Sales -> DailySummary")]
+        public IActionResult DailySummary([FromQuery] DateOnly? ShipDate)
+        {
+            var result = _reportService.DailySummary(ShipDate);
+            return Ok(result);
         }
 
         #endregion

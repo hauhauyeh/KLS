@@ -108,6 +108,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ShipmentCharge>().ToTable("ShipmentCharge");
             modelBuilder.Entity<ShipmentPurchase>().ToTable("ShipmentPurchase");
             modelBuilder.Entity<ItemTariff>().ToTable("ItemTariff");
+            modelBuilder.Entity<Promotion>().ToTable("Promotion");
+            modelBuilder.Entity<PromotionItem>().ToTable("PromotionItem");
+            modelBuilder.Entity<PromotionCategory>().ToTable("PromotionCategory");
 
             modelBuilder.Entity<Country>().ToTable("Country");
             modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
@@ -283,6 +286,12 @@ namespace KLS.Data.DataContext
 
         public DbSet<Country> Countries { get; set; }
 
+        public DbSet<Promotion> Promotions { get; set; }
+
+        public DbSet<PromotionItem> PromotionItems { get; set; }
+
+        public DbSet<PromotionCategory> promotionCategories { get; set; }
+
         #endregion
 
         #region ---Virtual DBSET---
@@ -402,6 +411,10 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptPODetail> RptPODetail { get; set; }
 
         public virtual DbSet<RptSalesTax> RptSalesTax { get; set; }
+
+        public virtual DbSet<RptResponsibleRow> RptResponsibleRow { get; set; }
+
+        public virtual DbSet<RptDailySummaryRow> RptDailySummaryRow { get; set; }
 
 
 

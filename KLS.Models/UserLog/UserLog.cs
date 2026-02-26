@@ -23,6 +23,6 @@ namespace KLS.Models
 
         public string? IPAddress { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

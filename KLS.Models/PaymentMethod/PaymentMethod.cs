@@ -51,6 +51,6 @@ namespace KLS.Models
 
         public string? SQNonce { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

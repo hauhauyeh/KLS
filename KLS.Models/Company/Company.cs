@@ -66,7 +66,7 @@ namespace KLS.Models
 
         public string? InvoiceFinePrint { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 

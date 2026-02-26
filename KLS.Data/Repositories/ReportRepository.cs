@@ -135,5 +135,19 @@ namespace KLS.Data.Repositories
             return DbContext.RptSalesTax.FromSqlRaw("[dbo].[Report_SalesTax] @StartDate,@EndDate", StartDateParam, EndDateParam);
 
         }
+
+        public IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate)
+        {
+            var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
+
+            return DbContext.RptResponsibleRow.FromSqlRaw("[dbo].[Report_Responsible] @ShipDate", ShipDateParam);
+        }
+
+        public IQueryable<RptDailySummaryRow>? DailySummary(DateOnly? ShipDate)
+        {
+            var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
+
+            return DbContext.RptDailySummaryRow.FromSqlRaw("[dbo].[Report_DailySummary] @ShipDate", ShipDateParam);
+        }
     }
 }

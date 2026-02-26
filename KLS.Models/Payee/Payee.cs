@@ -93,7 +93,7 @@ namespace KLS.Models
         public DateOnly? FirstDueDate { get; set; }
         public int? MaxInvoiceAgingDays { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
         public virtual string FullAddress

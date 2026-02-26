@@ -83,7 +83,7 @@ namespace KLS.Models
 
         public int? PalletCount { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 

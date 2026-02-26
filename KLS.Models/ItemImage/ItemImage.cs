@@ -31,6 +31,6 @@ namespace KLS.Models
 
         public bool IsPrimary { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

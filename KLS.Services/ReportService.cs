@@ -17,15 +17,18 @@ namespace KLS.Services
         private readonly ICompanyService _companyService;
         private readonly ISystemSettingService _systemSettingService;
         private readonly ISalesRouteService _salesRouteService;
+        private readonly ISalesRouteDetailService _salesRouteDetailService;
 
         public ReportService(IUnitOfWork uow,
             ICompanyService companyService,
             ISystemSettingService systemSettingService,
-            ISalesRouteService salesRouteService) : base(uow)
+            ISalesRouteService salesRouteService,
+            ISalesRouteDetailService salesRouteDetailService) : base(uow)
         {
             _companyService = companyService;
             _systemSettingService = systemSettingService;
             _salesRouteService = salesRouteService;
+            _salesRouteDetailService = salesRouteDetailService;
         }
 
         public RptInvoice Invoice(int salesId)
@@ -194,6 +197,49 @@ namespace KLS.Services
         public IEnumerable<RptSalesTax>? SalesTax(ReportRequest reportReq)
         {
             return Uow.Reports.SalesTax(reportReq);
+        }
+
+        public IEnumerable<RptResponsible> Responsible(DateOnly? shipDate)
+        {
+            var data = Uow.Reports.Responsible(shipDate).ToList();
+
+            var result = data
+                .GroupBy(c => c.ResType)
+                .Select(g => new RptResponsible
+                {
+                    ResType = g.Key,
+                    Items = g.ToList()
+                });
+
+            return result;
+        }
+
+        public List<RptDailySummary> DailySummary(DateOnly? shipDate)
+        {
+            var data = Uow.Reports.DailySummary(shipDate).ToList();
+
+            var result = data
+                .GroupBy(x => x.ShipRoute)
+                .Select(group =>
+                {
+                    var first = group.First();
+
+                    return new RptDailySummary
+                    {
+                        ShipRoute = group.Key,
+                        TruckNumber = first.TruckNumber,
+                        Driver = first.Driver,
+                        Loader = first.Loader,
+                        Checker = first.Checker,
+                        Officer = first.Officer,
+                        Invoices = group.ToList(),
+                        ReturnItems = _salesRouteDetailService
+                                        .GetList(first.ShipDate, group.Key)?.ToList()
+                    };
+                })
+                .ToList();
+
+            return result;
         }
     }
 }

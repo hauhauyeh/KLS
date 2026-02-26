@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.Contract.Services;
+using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -176,6 +177,12 @@ namespace KLS.Contract.Interfaces
         IItemTariffRepository ItemTariffs { get; }
 
         ICountryRepository Countries { get; }
+
+        IPromotionRepository Promotions { get; }
+
+        IPromotionItemRepository PromotionItems { get; }
+
+        IPromotionCategoryRepository PromotionCategories { get; }
 
         void Commit();
     }

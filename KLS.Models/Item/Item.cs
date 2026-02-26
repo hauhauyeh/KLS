@@ -111,7 +111,7 @@ namespace KLS.Models
         public decimal? NCost1 { get; set; }
         public decimal? NCost2 { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
         public virtual ICollection<ItemUnit>? ItemUnits { get; set; }

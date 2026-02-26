@@ -31,7 +31,7 @@ namespace KLS.Models
         [Column(TypeName = "decimal(9,4)")]
         public decimal? TariffRate { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
     }

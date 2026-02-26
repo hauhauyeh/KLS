@@ -37,5 +37,9 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptProfitLossRow> ProfitLoss(ReportRequest reportReq);
 
         IQueryable<RptSalesTax>? SalesTax(ReportRequest reportReq);
+
+        IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate);
+
+        IQueryable<RptDailySummaryRow>? DailySummary(DateOnly? ShipDate);
     }
 }

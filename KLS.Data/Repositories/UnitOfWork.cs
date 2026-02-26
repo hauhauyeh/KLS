@@ -203,5 +203,11 @@ namespace KLS.Data.Repositories
         public ICountryRepository Countries { get { return new CountryRepository(DbContext); } }
 
         public IReportRepository Reports { get { return new ReportRepository(DbContext); } }
+
+        public IPromotionRepository Promotions { get { return new PromotionRepository(DbContext); } }
+
+        public IPromotionItemRepository PromotionItem { get { return new PromotionItemRepository(DbContext); } }
+
+        public IPromotionCategoryRepository PromotionCategories { get { return new PromotionCategoryRepository(DbContext); } }
     }
 }

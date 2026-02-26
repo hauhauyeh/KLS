@@ -55,7 +55,7 @@ namespace KLS.Models
         public string? Notes { get; set; }
 
         [JsonIgnore]
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         [JsonIgnore]
         public DateTime? UpdatedAt { get; set; }

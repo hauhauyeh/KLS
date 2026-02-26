@@ -77,7 +77,7 @@ namespace KLS.Models
         public int? Loadby { get; set; }
         public int? Updateby { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
 

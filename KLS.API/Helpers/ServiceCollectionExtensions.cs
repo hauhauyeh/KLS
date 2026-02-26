@@ -95,6 +95,10 @@ namespace KLS.API.Helpers
             services.AddScoped<ISquareService, SquareService>();
             services.AddScoped<IMxMerchantService, MxMerchantService>();
 
+            services.AddScoped<IPromotionService, PromotionService>();
+            services.AddScoped<IPromotionItemService, PromotionItemService>();
+            services.AddScoped<IPromotionCategoryService, PromotionCategoryService>();
+
             return services;
         }
     }
