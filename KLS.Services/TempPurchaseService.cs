@@ -133,7 +133,7 @@ namespace KLS.Services
             var item = _itemService.GetBySearch(dto.ItemCode);
 
             if (item == null)
-                throw new KeyNotFoundException("Item code not found");
+                throw new KeyNotFoundException("Product code not found");
 
             if (item.Inactive)
                 throw new KeyNotFoundException("This product already discontinue");

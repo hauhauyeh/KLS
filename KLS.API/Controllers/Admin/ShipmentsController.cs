@@ -119,6 +119,12 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("AssignedPurchases/{shipmentId}")]
+        public IActionResult AssignedPurchases(int shipmentId)
+        {
+            return Ok(_shipmentService.AssignedPurchases(shipmentId));
+        }
+
         #endregion
     }
 }

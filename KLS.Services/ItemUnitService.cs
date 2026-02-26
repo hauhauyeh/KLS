@@ -44,5 +44,41 @@ namespace KLS.Services
         {
             return Uow.ItemUnits.GetItemPriceByCustomer(payeeId, itemId, itemUnitId);
         }
+
+        public ItemUnit? ResolveKeyboxUnit(int itemId, string? keyboxUnit)
+        {
+            if (string.IsNullOrWhiteSpace(keyboxUnit))
+                return null;
+
+            var units = GetByItemId(itemId); // already excludes inactive
+            if (units == null || units.Count == 0)
+                return null;
+
+            var baseUnit = units.FirstOrDefault(u => u.IsBaseUnit);
+
+            if (string.IsNullOrWhiteSpace(keyboxUnit))
+                return baseUnit ?? units.First();
+
+            keyboxUnit = keyboxUnit.Trim().ToLower();
+
+            // w = base unit
+            if (keyboxUnit == "w")
+                return baseUnit ?? units.First();
+
+            // r = first non-base unit
+            if (keyboxUnit == "r")
+            {
+                var retailUnit = units.FirstOrDefault(u => !u.IsBaseUnit);
+                return retailUnit ?? baseUnit ?? units.First();
+            }
+
+            // future-proof: allow actual unit match (kg, box, etc.)
+            var matched = units.FirstOrDefault(u => u.Unit.ToLower() == keyboxUnit);
+            if (matched != null)
+                return matched;
+
+            // fallback safe
+            return baseUnit ?? units.First();
+        }
     }
 }

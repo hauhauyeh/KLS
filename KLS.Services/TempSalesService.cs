@@ -62,7 +62,31 @@ namespace KLS.Services
 
             if (existing != null)
             {
-                //set default price when click o button
+                // --- NEW: change unit logic (only when keyboxUnit has value) ---
+                if (tempItem.IsUnitChange && tempItem.LineType == EnumHelper.LineType.I.ToString())
+                {
+                    var resolvedUnit = _itemUnitService.ResolveKeyboxUnit(existing.ItemId ?? 0, tempItem.Unit);
+
+                    if (resolvedUnit != null)
+                    {
+                        // update unit on existing
+                        existing.ApplyUnit(resolvedUnit.Unit, resolvedUnit.ItemUnitId, resolvedUnit.FactorToBase);
+
+                        // If user didn't type a manual price, refresh from pricing for the NEW unit
+                        if (!tempItem.UnitPrice.HasValue || tempItem.UnitPrice.Value == 0)
+                        {
+                            var itemPriceForUnit = _itemUnitService.GetItemPriceByCustomer(
+                                tempItem.PayeeId,
+                                existing.ItemId ?? 0,
+                                resolvedUnit.ItemUnitId
+                            );
+
+                            tempItem.UnitPrice = itemPriceForUnit.DefaultPrice;
+                        }
+                    }
+                }
+
+                //set default price when click O button
                 if (tempItem.IsDefaultPrice && tempItem.LineType == EnumHelper.LineType.I.ToString())
                 {
                     var itemPrice = _itemUnitService.GetItemPriceByCustomer(tempItem.PayeeId, existing.ItemId ?? 0, existing.ItemUnitId);
@@ -159,7 +183,7 @@ namespace KLS.Services
             var item = _itemService.GetBySearch(tempItem.ItemCode);
 
             if (item == null)
-                throw new KeyNotFoundException("Item code not found");
+                throw new KeyNotFoundException("Product code not found");
 
             if (item.Inactive)
                 throw new KeyNotFoundException("This product already discontinue");
@@ -174,7 +198,9 @@ namespace KLS.Services
                 LineId = tempItem.LineId
             };
 
-            var itemPrice = _itemUnitService.GetItemPriceByCustomer(tempItem.PayeeId, item.ItemId, null);
+            var resolvedUnit = _itemUnitService.ResolveKeyboxUnit(item.ItemId, tempItem.Unit);
+
+            var itemPrice = _itemUnitService.GetItemPriceByCustomer(tempItem.PayeeId, item.ItemId, resolvedUnit?.ItemUnitId);
 
             decimal? custPrice = itemPrice.DefaultPrice;
             var unitPrice = (tempItem.UnitPrice.HasValue && tempItem.UnitPrice.Value != 0) ? tempItem.UnitPrice : (custPrice ?? 0m);

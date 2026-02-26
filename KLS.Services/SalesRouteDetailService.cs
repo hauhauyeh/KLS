@@ -1,8 +1,6 @@
-﻿using KLS.Common;
-using KLS.Contract.Interfaces;
+﻿using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
-using Omu.ValueInjecter;
 using System;
 using System.Collections.Generic;
 using System.Linq;

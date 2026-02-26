@@ -30,5 +30,7 @@ namespace KLS.Contract.Services
         Shipment? GenerateBill(int shipmentId);
 
         void UnAllocation(int shipmentPurchaseId);
+
+        IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
     }
 }

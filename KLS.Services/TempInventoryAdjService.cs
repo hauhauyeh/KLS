@@ -31,7 +31,7 @@ namespace KLS.Services
             var item = _itemService.GetBySearch(tempItem.ItemCode);
 
             if (item == null)
-                throw new InvalidOperationException("Item code not found");
+                throw new InvalidOperationException("Product code not found");
 
             if (item.Inactive)
                 throw new InvalidOperationException("This product already discontinue");

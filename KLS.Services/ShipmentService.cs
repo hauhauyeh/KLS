@@ -232,6 +232,11 @@ namespace KLS.Services
             Uow.Shipments.UnAllocation(shipmentPurchaseId);
         }
 
+        public IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId)
+        {
+            return Uow.Shipments.AssignedPurchases(shipmentId);
+        }
+
         private static class AllocationMethods
         {
             public const string ByValue = "BY_VALUE";

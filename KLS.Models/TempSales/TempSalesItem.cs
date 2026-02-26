@@ -70,5 +70,8 @@ namespace KLS.Models
 
         [NotMapped]
         public bool IsDefaultPrice { get; set; }
+
+        [NotMapped]
+        public bool IsUnitChange { get; set; }
     }
 }

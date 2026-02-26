@@ -2,7 +2,6 @@
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin

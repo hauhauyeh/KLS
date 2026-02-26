@@ -399,6 +399,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<AssignedShipmentRow> AssignedShipmentRow { get; set; }
 
+        public virtual DbSet<AssignedPurchase> AssignedPurchase { get; set; }
+
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
 
         public virtual DbSet<PromotionList> PromotionList { get; set; }

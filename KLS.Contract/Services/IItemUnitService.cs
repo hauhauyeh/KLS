@@ -18,5 +18,7 @@ namespace KLS.Contract.Services
         ItemUnit GetNextUnit(int itemId, string unit);
 
         ItemPrice GetItemPriceByCustomer(int payeeId, int itemId, int? itemUnitId);
+
+        ItemUnit? ResolveKeyboxUnit(int itemId, string? keyboxUnit);
     }
 }

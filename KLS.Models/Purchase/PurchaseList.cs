@@ -63,6 +63,12 @@ namespace KLS.Models
 
         public bool IsShipment { get; set; }
 
+        public int? SourceShipmentId { get; set; }
+
+        public int? ShipmentLinkCount { get; set; }
+
+        public int? PurchaseLinkCount { get; set; }
+
         public bool IsNormalPurchase { get; set; }
 
         public bool IsPayNow { get; set; }

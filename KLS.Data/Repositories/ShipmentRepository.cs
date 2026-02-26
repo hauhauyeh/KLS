@@ -82,6 +82,13 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Shipment_Assign] @PurchaseId,@ShipmentIds", PurchaseIdParam, ShipmentIdsParam);
         }
 
+        public IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            return DbContext.AssignedPurchase.FromSqlRaw("[Shipment_AssignedPurchase] @ShipmentId", ShipmentIdParam);
+        }
+
         private static object[] BuildPagedList(ShipmentListReq shipmentListReq)
         {
             object[] param = {

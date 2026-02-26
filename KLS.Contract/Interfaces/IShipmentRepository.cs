@@ -24,5 +24,7 @@ namespace KLS.Contract.Interfaces
         void UpdateCharges(int shipmentId);
 
         void AssignShipment(POCopyToBillReq copyToBillReq);
+
+        IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
     }
 }
