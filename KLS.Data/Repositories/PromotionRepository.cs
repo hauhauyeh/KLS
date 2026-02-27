@@ -18,9 +18,9 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PromotionList> GetPromotionList(PromotionListReq promotionListReq)
+        public IQueryable<PromotionList> GetPagedList(PromotionListReq promotionListReq)
         {
-            var param = BuildPromotionParam(promotionListReq);
+            var param = BuildParam(promotionListReq);
 
             return DbContext.PromotionList.FromSqlRaw("[dbo].[Promotion_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
@@ -28,7 +28,7 @@ namespace KLS.Data.Repositories
         public int Count(PromotionListReq promotionListReq)
         {
             promotionListReq.IsCount = true;
-            var param = BuildPromotionParam(promotionListReq);
+            var param = BuildParam(promotionListReq);
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[Promotion_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
@@ -36,7 +36,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildPromotionParam(PromotionListReq promotionListReq)
+        private static object[] BuildParam(PromotionListReq promotionListReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", promotionListReq.Pageno),

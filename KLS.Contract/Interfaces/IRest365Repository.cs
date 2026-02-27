@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace KLS.Contract.Interfaces
 {
-    public interface IAccountCategoryRepository : IRepository<AccountCategory>
-    {   
+    public interface IRest365Repository : IRepository<Rest365>
+    {
 
     }
 }

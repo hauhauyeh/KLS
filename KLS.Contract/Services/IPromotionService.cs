@@ -9,15 +9,15 @@ namespace KLS.Contract.Services
 {
     public interface IPromotionService
     {
-        PagingResponse<PromotionList> GetPromotionList(PromotionListReq promotionListReq);
+        PagingResponse<PromotionList> GetPagedList(PromotionListReq promotionListReq);
 
         Promotion GetById(int promotionId);
 
         bool ExistsName(Promotion promotion);
 
-        Promotion CreatePromotion(Promotion promotion);
+        Promotion Create(Promotion promotion);
 
-        Promotion? UpdatePromotion(Promotion promotion);
+        Promotion? Update(Promotion promotion);
 
         void Delete(int promotionId);
     }

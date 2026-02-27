@@ -34,11 +34,11 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("List Promotion")]
         public IActionResult List([FromQuery] PromotionListReq promotionListReq)
         {
-            return Ok(_promotionService.GetPromotionList(promotionListReq));
+            return Ok(_promotionService.GetPagedList(promotionListReq));
         }
 
 
-        [HttpGet("{id}")]
+        [HttpGet("{promotionId}")]
         public IActionResult GetById(int id)
         {
             return Ok(_promotionService.GetById(id));
@@ -47,29 +47,29 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Promotion")]
-        public IActionResult CreatePromotion([FromBody] Promotion promotion)
+        public IActionResult Create([FromBody] Promotion promotion)
         {
             if (_promotionService.ExistsName(promotion))
                 return Conflict("Promotion name already exists");
 
-            return Ok(_promotionService.CreatePromotion(promotion));
+            return Ok(_promotionService.Create(promotion));
         }
 
 
         [HttpPut]
         [DisplayName("Update Promotion")]
-        public IActionResult UpdatePromotion([FromBody] Promotion promotion)
+        public IActionResult Update([FromBody] Promotion promotion)
         {
             if (_promotionService.ExistsName(promotion))
                 return Conflict("Promotion name already exists");
 
-            return Ok(_promotionService.UpdatePromotion(promotion));
+            return Ok(_promotionService.Update(promotion));
         }
 
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{promotionId}")]
         [DisplayName("Delete Promotion")]
-        public IActionResult DeletePromotion(int id)
+        public IActionResult Delete(int id)
         {
             _promotionService.Delete(id);
             return Ok();

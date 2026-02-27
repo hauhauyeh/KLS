@@ -186,6 +186,10 @@ namespace KLS.Contract.Interfaces
 
         IPromotionBogoRepository PromotionBogos { get; }
 
+        IRest365Repository Rest365 { get; }
+
+        IRest365DetailRepository Rest365Details { get; }
+
         void Commit();
     }
 }

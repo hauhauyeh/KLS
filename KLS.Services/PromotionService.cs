@@ -17,9 +17,9 @@ namespace KLS.Services
 
         }
 
-        public PagingResponse<PromotionList> GetPromotionList(PromotionListReq promotionListReq)
+        public PagingResponse<PromotionList> GetPagedList(PromotionListReq promotionListReq)
         {
-            var loglist = Uow.Promotions.GetPromotionList(promotionListReq);
+            var loglist = Uow.Promotions.GetPagedList(promotionListReq);
 
             var totalRecords = Uow.Promotions.Count(promotionListReq);
 
@@ -43,7 +43,7 @@ namespace KLS.Services
             && c.PromotionType == type && c.PromotionId != promotion.PromotionId);
         }
 
-        public Promotion CreatePromotion(Promotion promotion)
+        public Promotion Create(Promotion promotion)
         {
             var incomingCats = promotion.PromotionCategories?.ToList() ?? new List<PromotionCategory>();
             var incomingItems = promotion.PromotionItems?.ToList() ?? new List<PromotionItem>();
@@ -91,7 +91,7 @@ namespace KLS.Services
             return promotion;
         }
 
-        public Promotion? UpdatePromotion(Promotion promotion)
+        public Promotion? Update(Promotion promotion)
         {
             var oldpromo = GetById(promotion.PromotionId);
 
