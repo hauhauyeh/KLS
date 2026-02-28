@@ -2,6 +2,7 @@
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,10 @@ namespace KLS.Services
         public Promotion GetById(int promotionId)
         {
             return Uow.Promotions.Find(c => c.PromotionId == promotionId)
+                .Include(c => c.PromotionSchedules)
+                .Include(c => c.PromotionCategories)
+                .Include(c => c.PromotionItems)
+                .Include(c => c.PromotionBogos)
                 .FirstOrDefault();
         }
 
@@ -45,48 +50,52 @@ namespace KLS.Services
 
         public Promotion Create(Promotion promotion)
         {
-            var incomingCats = promotion.PromotionCategories?.ToList() ?? new List<PromotionCategory>();
-            var incomingItems = promotion.PromotionItems?.ToList() ?? new List<PromotionItem>();
-            var incomingBogos = promotion.PromotionBogos?.ToList() ?? new List<PromotionBogo>();
+            //var incomingCats = promotion.PromotionCategories?.ToList() ?? [];
+            //var incomingItems = promotion.PromotionItems?.ToList() ?? [];
+            //var incomingBogos = promotion.PromotionBogos?.ToList() ?? [];
 
             // remove them to avoid EF trying to insert before Promotion has PK (optional)
-            promotion.PromotionCategories = new List<PromotionCategory>();
-            promotion.PromotionItems = new List<PromotionItem>();
-            promotion.PromotionBogos = new List<PromotionBogo>();
+            //promotion.PromotionCategories = [];
+            //promotion.PromotionItems = [];
+            //promotion.PromotionBogos = [];
 
             Uow.Promotions.Add(promotion);
             Uow.Commit();
 
-            // remove them to avoid EF trying to insert before Promotion has PK (optional)
-            promotion.PromotionCategories = new List<PromotionCategory>();
-            promotion.PromotionItems = new List<PromotionItem>();
-            promotion.PromotionBogos = new List<PromotionBogo>();
+            //// --- Insert Categories ---
+            //foreach (var c in incomingCats)
+            //{
+            //    var pc = new PromotionCategory { PromotionId = promotion.PromotionId, CategoryId = c.CategoryId };
+            //    Uow.PromotionCategories.Add(pc);
+            //}
 
-            Uow.Promotions.Add(promotion);
-            Uow.Commit();
+            //// --- Insert Items ---
+            //foreach (var i in incomingItems)
+            //{
+            //    var pi = new PromotionItem { PromotionId = promotion.PromotionId, ItemId = i.ItemId };
+            //    Uow.PromotionItems.Add(pi);
+            //}
 
-            // --- Insert Categories ---
-            foreach (var c in incomingCats)
-            {
-                var pc = new PromotionCategory { PromotionId = promotion.PromotionId, CategoryId = c.CategoryId };
-                Uow.PromotionCategories.Add(pc);
-            }
+            //// --- Insert BOGO rules ---
+            //foreach (var b in incomingBogos)
+            //{
+            //    b.PromotionId = promotion.PromotionId;
+            //    Uow.PromotionBogos.Add(b);
+            //}
 
-            // --- Insert Items ---
-            foreach (var i in incomingItems)
-            {
-                var pi = new PromotionItem { PromotionId = promotion.PromotionId, ItemId = i.ItemId };
-                Uow.PromotionItems.Add(pi);
-            }
+            //Uow.Commit();
 
-            // --- Insert BOGO rules ---
-            foreach (var b in incomingBogos)
-            {
-                b.PromotionId = promotion.PromotionId;
-                Uow.PromotionBogos.Add(b);
-            }
+            //var times = Uow.PromotionSchedules.Find(c => c.PromotionId == promotion.PromotionId);
 
-            Uow.Commit();
+            //foreach (var time in times)
+            //{
+            //    time.StartTime = time.StartTime;
+            //    time.EndTime = time.EndTime;
+
+            //    Uow.PromotionSchedules.Update(time);
+            //}
+
+            //Uow.Commit();
 
             return promotion;
         }
@@ -113,7 +122,22 @@ namespace KLS.Services
                 Uow.Promotions.Update(oldpromo);
                 Uow.Commit();
 
-                // 1) Update PromotionCategories
+                // 1) Update schedules
+                var promotionSchedules = Uow.PromotionSchedules.Find(c => c.PromotionId == promotion.PromotionId);
+
+                foreach (var time in promotionSchedules)
+                {
+                    var newTime = promotion.PromotionSchedules.Where(c => c.PromotionScheduleId == time.PromotionScheduleId).FirstOrDefault();
+
+                    time.IsClosed = newTime.IsClosed;
+                    time.StartTime = newTime.StartTime;
+                    time.EndTime = newTime.EndTime;
+
+                    Uow.PromotionSchedules.Update(time);
+                }
+                Uow.Commit();
+
+                // 2) Update PromotionCategories
                 var existingCats = Uow.PromotionCategories.Find(c => c.PromotionId == promotion.PromotionId).ToList();
 
                 foreach (var ex in existingCats) Uow.PromotionCategories.Remove(ex);
@@ -128,7 +152,7 @@ namespace KLS.Services
                     Uow.Commit();
                 }
 
-                // 2) Update PromotionItems
+                // 3) Update PromotionItems
                 var existingItems = Uow.PromotionItems.Find(c => c.PromotionId == promotion.PromotionId).ToList();
 
                 foreach (var ex in existingItems) Uow.PromotionItems.Remove(ex);
@@ -143,7 +167,7 @@ namespace KLS.Services
                     Uow.Commit();
                 }
 
-                // 3) Update BOGO rules
+                // 4) Update BOGO rules
                 var existingBogos = Uow.PromotionBogos.Find(c => c.PromotionId == promotion.PromotionId).ToList();
 
                 var incomingBogos = promotion.PromotionBogos?.ToList() ?? new List<PromotionBogo>();
@@ -203,6 +227,37 @@ namespace KLS.Services
         {
             Uow.Promotions.RemoveById(promotionId);
             Uow.Commit();
+        }
+
+        public ICollection<PromotionSchedule>? GetDefaultTimes()
+        {
+            var weekdays = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
+            var promotionSchedules = new List<PromotionSchedule>();
+
+            foreach (var week in weekdays)
+            {
+                promotionSchedules.Add(new PromotionSchedule
+                {
+                    PromotionId = 0,
+                    DayOfWeek = (int)week
+                });
+            }
+
+            return promotionSchedules;
+        }
+
+        public void UpdateStatus(int promotionId)
+        {
+            var oldpromo = GetById(promotionId);
+
+            if (oldpromo != null)
+            {
+                oldpromo.IsActive = !oldpromo.IsActive;
+                oldpromo.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Promotions.Update(oldpromo);
+                Uow.Commit();
+            }
         }
     }
 }

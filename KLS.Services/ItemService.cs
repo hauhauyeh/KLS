@@ -53,6 +53,18 @@ namespace KLS.Services
             };
         }
 
+        public IEnumerable<ItemSearch> ActiveItems()
+        {
+            return Uow.Items.Find(i => i.Inactive == false).OrderBy(i => i.ItemName)
+                .Select(i => new ItemSearch
+                {
+                    ItemId = i.ItemId,
+                    ItemName = i.ItemName,
+                    ItemCode = i.ItemCode,
+                    Inactive = i.Inactive,
+                }).ToList();
+        }
+
         public Item? GetById(int itemId)
         {
             var item = new Item();

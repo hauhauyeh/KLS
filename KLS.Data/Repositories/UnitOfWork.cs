@@ -212,6 +212,8 @@ namespace KLS.Data.Repositories
 
         public IPromotionBogoRepository PromotionBogos { get { return new PromotionBogoRepository(DbContext); } }
 
+        public IPromotionScheduleRepository PromotionSchedules { get { return new PromotionScheduleRepository(DbContext); } }
+
         public IRest365Repository Rest365 { get { return new Rest365Repository(DbContext); } }
 
         public IRest365DetailRepository Rest365Details { get { return new Rest365DetailRepository(DbContext); } }

@@ -16,6 +16,7 @@ namespace KLS.Models
         }
 
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PromotionId { get; set; }
 
         public string? Name { get; set; }
@@ -36,25 +37,31 @@ namespace KLS.Models
 
         public bool IsActive { get; set; }
 
-        public int MaxUsageGlobal { get; set; }
+        public int? MaxUsageGlobal { get; set; }
 
-        public int MaxUsagePerUser { get; set; }
+        public int? MaxUsagePerUser { get; set; }
 
         public decimal? MaxDiscountPerUser { get; set; }
 
         public bool IsFirstOrderOnly { get; set; }
 
-        public int? BogoMaxRewardRepeats { get; set; }
+        public int BogoMaxRewardRepeats { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 
+        [ForeignKey("PromotionId")]
         public virtual ICollection<PromotionItem>? PromotionItems { get; set; }
 
+        [ForeignKey("PromotionId")]
         public virtual ICollection<PromotionCategory>? PromotionCategories { get; set; }
 
+        [ForeignKey("PromotionId")]
         public virtual ICollection<PromotionBogo>? PromotionBogos { get; set; }
+
+        [ForeignKey("PromotionId")]
+        public virtual ICollection<PromotionSchedule>? PromotionSchedules { get; set; }
 
         [NotMapped]
         public ICollection<int>? DeletedBogoIds { get; set; }

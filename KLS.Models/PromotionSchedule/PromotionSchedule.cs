@@ -8,14 +8,20 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class PromotionCategory
+    public class PromotionSchedule
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int PromotionCategoryId { get; set; }
+        public int PromotionScheduleId { get; set; }
 
-        public int? PromotionId { get; set; }
+        public int PromotionId { get; set; }
 
-        public int? CategoryId { get; set; }
+        public int? DayOfWeek { get; set; }
+
+        public TimeSpan? StartTime { get; set; }
+
+        public TimeSpan? EndTime { get; set; }
+
+        public bool IsClosed { get; set; }
     }
 }

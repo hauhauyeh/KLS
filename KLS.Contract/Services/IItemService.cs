@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq);
 
+        IEnumerable<ItemSearch> ActiveItems();
+
         Item? GetById(int itemId);
 
         IEnumerable<Item> GetByIds(IEnumerable<int> itemIds);

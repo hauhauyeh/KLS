@@ -114,6 +114,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PromotionBogo>().ToTable("PromotionBogo");
             modelBuilder.Entity<Rest365>().ToTable("Rest365");
             modelBuilder.Entity<Rest365Detail>().ToTable("Rest365Detail");
+            modelBuilder.Entity<PromotionSchedule>().ToTable("PromotionSchedule");
 
             modelBuilder.Entity<Country>().ToTable("Country");
             modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
@@ -295,7 +296,9 @@ namespace KLS.Data.DataContext
 
         public DbSet<PromotionCategory> PromotionCategories { get; set; }
 
-        public DbSet<PromotionBogo> PromotionBogo { get; set; }
+        public DbSet<PromotionBogo> PromotionBogos { get; set; }
+
+        public DbSet<PromotionSchedule> PromotionSchedules { get; set; }
 
         public DbSet<Rest365> Rest365 { get; set; }
 

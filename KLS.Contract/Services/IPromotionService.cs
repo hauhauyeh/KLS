@@ -20,5 +20,9 @@ namespace KLS.Contract.Services
         Promotion? Update(Promotion promotion);
 
         void Delete(int promotionId);
+
+        ICollection<PromotionSchedule>? GetDefaultTimes();
+
+        void UpdateStatus(int promotionId);
     }
 }

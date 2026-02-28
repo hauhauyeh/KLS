@@ -8,9 +8,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
-    [Display(Name = "Promotion Management", GroupName = "")]
+    [Display(Name = "Promotion Management", GroupName = "Admin")]
     public class PromotionsController : BaseController
     {
         #region --- Member(s) ---
@@ -39,9 +39,9 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("{promotionId}")]
-        public IActionResult GetById(int id)
+        public IActionResult GetById(int promotionId)
         {
-            return Ok(_promotionService.GetById(id));
+            return Ok(_promotionService.GetById(promotionId));
         }
 
 
@@ -69,9 +69,24 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{promotionId}")]
         [DisplayName("Delete Promotion")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(int promotionId)
         {
-            _promotionService.Delete(id);
+            _promotionService.Delete(promotionId);
+            return Ok();
+        }
+
+
+        [HttpGet("GetDefaultTimes")]
+        public IActionResult GetDefaultTimes()
+        {
+            return Ok(_promotionService.GetDefaultTimes());
+        }
+
+
+        [HttpPut("UpdateStatus/{promotionId}")]
+        public IActionResult UpdateStatus(int promotionId)
+        {
+            _promotionService.UpdateStatus(promotionId);
             return Ok();
         }
 
