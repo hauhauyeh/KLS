@@ -61,6 +61,18 @@ namespace KLS.Services
 
             if (existing != null)
             {
+                // --- NEW: change unit logic (only when keyboxUnit has value) ---
+                if (dto.IsUnitChange && dto.LineType == EnumHelper.LineType.I.ToString())
+                {
+                    var resolvedUnit = _itemUnitService.ResolveKeyboxUnit(existing.ItemId ?? 0, dto.Unit);
+
+                    if (resolvedUnit != null)
+                    {
+                        // update unit on existing
+                        existing.ApplyUnit(resolvedUnit.Unit, resolvedUnit.ItemUnitId, resolvedUnit.FactorToBase);
+                    }
+                }
+
                 existing.ApplyCommonEdits(dto.IsFree, dto.IsOut, dto.IsCRCG, dto.BillPrice, dto.FinalPrice, dto.Notes, dto.ExpiryDate);
 
                 if (docType == EnumHelper.PurchaseDocType.Bill)
@@ -150,6 +162,9 @@ namespace KLS.Services
             };
 
             var unit = _itemUnitService.GetBaseUnit(item.ItemId);
+
+            if (!string.IsNullOrEmpty(dto.Unit))
+                unit = _itemUnitService.ResolveKeyboxUnit(item.ItemId, dto.Unit);
 
             var itemTariff = Uow.ItemTariffs.Find(c => c.ItemId == item.ItemId)?.FirstOrDefault();
 

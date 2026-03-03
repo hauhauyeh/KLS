@@ -235,7 +235,7 @@ namespace KLS.Services
                     {
                         PayeeId = sales.BillId,
                         Email = toEmails,
-                        SentDate = DateTime.Now,
+                        SentDate = DateTime.UtcNow,
                         EventType = EnumHelper.EmailLogEvent.Invoice.ToString(),
                         ErrorMessage = t.Result,
                         Status = string.IsNullOrEmpty(t.Result)

@@ -22,5 +22,9 @@ namespace KLS.Contract.Services
         void Delete(int payeeId);
 
         ICollection<PayeeSearch>? Search(PayeeSearchReq searchReq);
+
+        void EmailPricesheet(int payeeId);
+
+        void EmailStatement(int payeeId);
     }
 }

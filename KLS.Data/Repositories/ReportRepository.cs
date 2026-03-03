@@ -6,6 +6,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,27 @@ namespace KLS.Data.Repositories
             var SalesIdParam = new SqlParameter("@SalesId", salesId);
 
             return DbContext.InvoiceDetail.FromSqlRaw("[dbo].[Report_InvoiceDetail] @SalesId", SalesIdParam).AsNoTracking();
+        }
+
+        public RptCustStmt CustStmt(int payeeId)
+        {
+            var details = DbContext.Sales.Where(s => s.ShipId == payeeId && s.AmountDue != 0)
+                .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })
+                .Select(g => new RptCustStmtDetail
+                {
+                    ShipMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
+                    Sales = g.OrderBy(s => s.ShipDate).ToList()
+                }).ToList();
+
+            var customer = DbContext.Customers.Find(payeeId);
+
+            return new RptCustStmt
+            {
+                Details = details,
+                Payee = DbContext.Payees.Find(payeeId),
+                IsPromotionEnabled = customer.IsPromotionEnabled,
+                AvailableCredit = DbContext.CustomerPayments.Where(c => c.PayeeId == payeeId && c.UnappliedAmount != 0 && c.IsReturned == false).ToList()
+            };
         }
 
         public RptPO ReportPO(int purchaseId)
@@ -133,7 +155,6 @@ namespace KLS.Data.Repositories
             var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
 
             return DbContext.RptSalesTax.FromSqlRaw("[dbo].[Report_SalesTax] @StartDate,@EndDate", StartDateParam, EndDateParam);
-
         }
 
         public IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate)
@@ -148,6 +169,39 @@ namespace KLS.Data.Repositories
             var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
 
             return DbContext.RptDailySummaryRow.FromSqlRaw("[dbo].[Report_DailySummary] @ShipDate", ShipDateParam);
+        }
+
+        public IQueryable<RptPricesheet> Pricesheet(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.RptPricesheet.FromSqlRaw("[dbo].[Report_PriceSheet] @PayeeId", PayeeIdParam);
+        }
+
+        public IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            var SalesRepIdParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRepId", reportReq.SalesRepId) : new SqlParameter("@SalesRepId", DBNull.Value);
+
+            return DbContext.RptSalesDaily.FromSqlRaw("[dbo].[Report_SalesDaily] @StartDate,@EndDate,@SalesRepId", StartDateParam, EndDateParam, SalesRepIdParam);
+        }
+
+        public IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq)
+        {
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            var SortFieldParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", reportReq.SortField);
+
+            var SortOrderParam = string.IsNullOrEmpty(reportReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", reportReq.SortOrder);
+
+            return DbContext.RptDescDollar.FromSqlRaw("[dbo].[Report_DescDollar] @PayeeId,@StartDate,@EndDate,@SortField,@SortOrder", PayeeIdParam, StartDateParam, EndDateParam, SortFieldParam, SortOrderParam);
         }
     }
 }

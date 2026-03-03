@@ -14,6 +14,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<InvoiceDetail>? InvoiceDetail(int salesId);
 
+        RptCustStmt CustStmt(int payeeId);
+
         RptPO ReportPO(int purchaseId);
 
         IQueryable<RptPODetail> ReportPODetail(int purchaseId);
@@ -41,5 +43,11 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate);
 
         IQueryable<RptDailySummaryRow>? DailySummary(DateOnly? ShipDate);
+
+        IQueryable<RptPricesheet> Pricesheet(int payeeId);
+
+        IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq);
+
+        IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq);
     }
 }

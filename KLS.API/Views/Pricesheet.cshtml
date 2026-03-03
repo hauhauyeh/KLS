@@ -1,0 +1,151 @@
+﻿@model KLS.Models.EmailPricesheet
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Pricesheet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #E6F7E7;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #f7fce8;
+            border: 1px solid #DDDDDD;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .logo {
+            max-width: 200px;
+        }
+
+        .invoice-details {
+            margin-top: 30px;
+            padding-top: 30px;
+        }
+
+        .logo-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        .payment-details {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-top: 1px solid #DDDDDD;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        th {
+            background-color: #80B500;
+            color: #FFFFFF;
+        }
+
+        .total {
+            font-weight: bold;
+            color: darkred;
+            font-size: 16px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mt-1 {
+            margin-top: 2px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .pmt-detail-lable {
+            min-width: 125px;
+            display: inline-block;
+        }
+
+        .customer {
+            font-style: italic;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <partial name="_Header.cshtml" model="@Model.Company" />
+        </div>
+        <h1 class="text-center">Pricesheet</h1>
+        <p class="customer">Dear @Model.PayeeName,</p>
+        <p>Your Pricesheet contain the following items:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Unit</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Pricesheet != null)
+                {
+                    foreach (var item in Model.Pricesheet)
+                    {
+                        <tr>
+                            <td>@item.ItemCode</td>
+                            <td>@item.ItemName</td>
+                            <td>
+                                @if (item.IsShared)
+                                {
+                                    <span>@item.Unit</span>
+                                }
+                                else
+                                {
+                                    <strong>@item.Unit</strong>
+                                }
+                            </td>
+                            <td>@string.Format("{0:c}", item.Price)</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="total" style="text-align:end">Total</td>
+                    <td class="total">@Model.Pricesheet.Count</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="invoice-details">
+            <p>If you have any questions about this pricesheet, please do not hesitate to contact us. We are happy to help!</p>
+            <p>Thank you for choosing our company.</p>
+        </div>
+    </div>
+</body>
+</html>

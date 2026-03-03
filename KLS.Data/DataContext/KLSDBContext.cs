@@ -432,6 +432,10 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptDailySummaryRow> RptDailySummaryRow { get; set; }
 
+        public virtual DbSet<RptSalesDaily> RptSalesDaily { get; set; }
+
+        public virtual DbSet<RptDescDollar> RptDescDollar { get; set; }
+
 
 
         public virtual DbSet<RptPackingItem> RptPackingItem { get; set; }
@@ -452,6 +456,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptBalanceSheetRow> RptBalanceSheetRow { get; set; }
 
         public virtual DbSet<RptProfitLossRow> RptProfitLossRow { get; set; }
+
+        public virtual DbSet<RptPricesheet> RptPricesheet { get; set; }
 
         #endregion
     }

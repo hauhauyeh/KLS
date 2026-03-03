@@ -94,6 +94,24 @@ namespace KLS.API.Controllers.Admin
             return Ok(_customerService.Search(searchReq));
         }
 
+
+        [HttpPost("EmailPricesheet/{payeeId}")]
+        [DisplayName("Email Pricesheet")]
+        public IActionResult EmailPricesheet(int payeeId)
+        {
+            _customerService.EmailPricesheet(payeeId);
+            return Ok();
+        }
+
+
+        [HttpPost("EmailStatement/{payeeId}")]
+        [DisplayName("Email Statement")]
+        public IActionResult EmailStatement(int payeeId)
+        {
+            _customerService.EmailStatement(payeeId);
+            return Ok();
+        }
+
         #endregion
     }
 }

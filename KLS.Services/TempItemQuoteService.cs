@@ -64,7 +64,7 @@ namespace KLS.Services
             };
 
             if (Exists(newTempQuote))
-                throw new KeyNotFoundException("Item already exists");
+                throw new KeyNotFoundException("Product already exists");
 
             Uow.TempItemQuotes.Add(newTempQuote);
             Uow.Commit();

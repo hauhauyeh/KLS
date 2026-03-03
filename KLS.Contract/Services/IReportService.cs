@@ -25,5 +25,9 @@ namespace KLS.Contract.Services
         IEnumerable<RptResponsible> Responsible(DateOnly? shipDate);
 
         List<RptDailySummary> DailySummary(DateOnly? shipDate);
+
+        IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq);
+
+        IEnumerable<RptDescDollar>? DescDollar(ReportRequest reportReq);
     }
 }

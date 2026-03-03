@@ -1,0 +1,154 @@
+﻿@model KLS.Models.Reports.RptCustStmt
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Statement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #E6F7E7;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #f7fce8;
+            border: 1px solid #DDDDDD;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .logo {
+            max-width: 200px;
+        }
+
+        .invoice-details {
+            margin-top: 30px;
+            padding-top: 30px;
+        }
+
+        .logo-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        .payment-details {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-top: 1px solid #DDDDDD;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        th {
+            background-color: #80B500;
+            color: #FFFFFF;
+        }
+
+        .total {
+            font-weight: bold;
+            color: darkred;
+            font-size: 16px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mt-1 {
+            margin-top: 2px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .pmt-detail-lable {
+            min-width: 125px;
+            display: inline-block;
+        }
+
+        .customer {
+            font-style: italic;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+       @*  <div class="logo-section">
+            <partial name="_Header.cshtml" model="@Model.Company" />
+        </div> *@
+        <h1 class="text-center">Statement</h1>
+        <p class="customer">Dear @Model.Payee.PayeeName,</p>
+        <p>Here is the statement of your account:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ShipRoute</th>
+                    <th>ShipDate</th>
+                    <th>Sales#</th>
+                    <th>AmtDue</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Details != null)
+                {
+                    foreach (var grpMonth in Model.Details)
+                    {
+                        <tr>
+                            <td colspan="3">
+                                <strong>@grpMonth.ShipMonth</strong>
+                            </td>
+                            <td>
+                                <strong>@string.Format("{0:c}", grpMonth.Sales.Sum(c => c.AmountDue))</strong>
+                            </td>
+                        </tr>
+
+                        foreach (var item in grpMonth.Sales)
+                        {
+                            <tr>
+                                <td>@item.ShipRoute</td>
+                                <td>@string.Format("{0:d}", item.ShipDate)</td>
+                                <td>@item.SalesNumber</td>
+                                <td>@string.Format("{0:c}", item.AmountDue)</td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="total" style="text-align:end">Total Amount Due</td>
+                    <td class="total">@string.Format("{0:c}", Model.Details.Sum(s => s.Sales.Sum(c => c.AmountDue)))</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="invoice-details">
+            <p>If you have any questions about this statement, please do not hesitate to contact us. We are happy to help!</p>
+            <p>Thank you for your business.</p>
+        </div>
+    </div>
+</body>
+</html>

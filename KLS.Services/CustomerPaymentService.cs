@@ -176,7 +176,7 @@ namespace KLS.Services
                             {
                                 PayeeId = payee.PayeeId,
                                 Email = toEmails,
-                                SentDate = DateTime.Now,
+                                SentDate = DateTime.UtcNow,
                                 EventType = EnumHelper.EmailLogEvent.ACHReceipt.ToString(),
                                 ErrorMessage = t.Result,
                                 Status = string.IsNullOrEmpty(t.Result)

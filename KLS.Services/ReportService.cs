@@ -48,23 +48,25 @@ namespace KLS.Services
 
         public RptCustStmt CustStmt(int payeeId)
         {
-            var details = Uow.Sales.Find(s => s.ShipId == payeeId && s.AmountDue != 0)
-                .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })
-                .Select(g => new RptCustStmtDetail
-                {
-                    ShipMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
-                    Sales = g.OrderBy(s => s.ShipDate).ToList()
-                }).ToList();
+            return Uow.Reports.CustStmt(payeeId);
 
-            var customer = Uow.Customers.GetById(payeeId);
+            //var details = Uow.Sales.Find(s => s.ShipId == payeeId && s.AmountDue != 0)
+            //    .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })
+            //    .Select(g => new RptCustStmtDetail
+            //    {
+            //        ShipMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
+            //        Sales = g.OrderBy(s => s.ShipDate).ToList()
+            //    }).ToList();
 
-            return new RptCustStmt
-            {
-                Details = details,
-                Payee = Uow.Payees.GetById(payeeId),
-                IsPromotionEnabled = customer.IsPromotionEnabled,
-                AvailableCredit = Uow.CustomerPayments.Find(c => c.PayeeId == payeeId && c.UnappliedAmount != 0 && c.IsReturned == false).ToList()
-            };
+            //var customer = Uow.Customers.GetById(payeeId);
+
+            //return new RptCustStmt
+            //{
+            //    Details = details,
+            //    Payee = Uow.Payees.GetById(payeeId),
+            //    IsPromotionEnabled = customer.IsPromotionEnabled,
+            //    AvailableCredit = Uow.CustomerPayments.Find(c => c.PayeeId == payeeId && c.UnappliedAmount != 0 && c.IsReturned == false).ToList()
+            //};
         }
 
         public RptPackingList PackingList(DocumentReq req)
@@ -240,6 +242,21 @@ namespace KLS.Services
                 .ToList();
 
             return result;
+        }
+
+        public IQueryable<RptPricesheet> Pricesheet(int payeeId)
+        {
+            return Uow.Reports.Pricesheet(payeeId);
+        }
+
+        public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesDaily(reportReq);
+        }
+
+        public IEnumerable<RptDescDollar>? DescDollar(ReportRequest reportReq)
+        {
+            return Uow.Reports.DescDollar(reportReq);
         }
     }
 }

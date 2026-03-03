@@ -12,6 +12,14 @@ namespace KLS.Models
 
         public DateOnly? EndDate { get; set; }
 
+        public string? SortField { get; set; }
+
+        public string? SortOrder { get; set; }
+
         public string? Search { get; set; }
+
+        public int? SalesRepId { get; set; }
+
+        public int? PayeeId { get; set; }
     }
 }

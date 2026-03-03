@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
 {
-    //[AuthorizeAdmin]
+    [AuthorizeAdmin]
     [Route("api/admin/[controller]")]
     [Display(Name = "Report Management", GroupName = "Report")]
     public class ReportsController : BaseController
@@ -48,6 +48,14 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Sales ---
 
+        [HttpGet("SalesDaily")]
+        [DisplayName("Sales -> Sales Daily")]
+        public IActionResult SalesDaily([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesDaily(reportReq));
+        }
+
+
         [HttpGet("SalesTax")]
         [DisplayName("Sales -> Sales Tax")]
         public IActionResult SalesTax([FromQuery] ReportRequest reportReq)
@@ -74,5 +82,12 @@ namespace KLS.API.Controllers.Admin
         }
 
         #endregion
+
+        [HttpGet("DescDollar")]
+        [DisplayName("Customer -> Descending Dollar")]
+        public IActionResult DescDollar([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.DescDollar(reportReq));
+        }
     }
 }

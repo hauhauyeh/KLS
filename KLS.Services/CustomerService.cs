@@ -19,13 +19,26 @@ namespace KLS.Services
         private readonly ICompanyService _companyService;
         private readonly IItemQuoteService _itemQuoteService;
         private readonly ITermService _termService;
+        private readonly IPDFService _pdfService;
+        private readonly IEmailService _emailService;
+        private readonly IEmailSettingService _emailSettingService;
 
-        public CustomerService(IUnitOfWork uow, ISystemSettingService systemSettingService, ITermService termService, ICompanyService companyService, IItemQuoteService itemQuoteService) : base(uow)
+        public CustomerService(IUnitOfWork uow,
+            ISystemSettingService systemSettingService,
+            ITermService termService,
+            ICompanyService companyService,
+            IItemQuoteService itemQuoteService,
+            IPDFService pdfService,
+            IEmailService emailService,
+            IEmailSettingService emailSettingService) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _companyService = companyService;
             _termService = termService;
             _itemQuoteService = itemQuoteService;
+            _pdfService = pdfService;
+            _emailService = emailService;
+            _emailSettingService = emailSettingService;
         }
 
         public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
@@ -253,6 +266,82 @@ namespace KLS.Services
         public ICollection<PayeeSearch>? Search(PayeeSearchReq searchReq)
         {
             return Uow.Customers.Search(searchReq)?.ToList();
+        }
+
+        public void EmailPricesheet(int payeeId)
+        {
+            var customer = GetById(payeeId);
+
+            string? toEmails = customer?.EmailPricesheet;
+
+            if (string.IsNullOrEmpty(toEmails))
+                throw new Exception("Email address not found");
+
+            var pricesheets = Uow.Reports.Pricesheet(payeeId).ToList();
+
+            if (pricesheets.Count == 0)
+                throw new Exception("Pricesheet not found");
+
+            var pricesheet = new EmailPricesheet
+            {
+                Pricesheet = pricesheets,
+                PayeeName = customer?.PayeeName,
+                Company = _companyService.GetDefault()
+            };
+
+            string subject = "Pricesheet";
+            string mailBody = _pdfService.RenderTemplate("~/Views/Pricesheet.cshtml", pricesheet);
+
+            var setting = _emailSettingService.GetSetting();
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailBody, null), TaskCreationOptions.LongRunning).ContinueWith((t) =>
+            {
+                var log = new EmailLog
+                {
+                    PayeeId = customer?.PayeeId,
+                    Email = toEmails,
+                    SentDate = DateTime.UtcNow,
+                    EventType = EnumHelper.EmailLogEvent.PriceSheet.ToString(),
+                    ErrorMessage = t.Result,
+                    Status = string.IsNullOrEmpty(t.Result)
+                };
+
+                Uow.EmailLogs.Add(log);
+                Uow.Commit();
+            });
+        }
+
+        public void EmailStatement(int payeeId)
+        {
+            var customer = GetById(payeeId);
+
+            string? toEmails = customer?.EmailStmt;
+
+            if (string.IsNullOrEmpty(toEmails))
+                throw new Exception("Email address not found");
+
+            var statement = Uow.Reports.CustStmt(payeeId);
+
+            string subject = "A/R Statement";
+            string mailBody = _pdfService.RenderTemplate("~/Views/Statement.cshtml", statement);
+
+            var setting = _emailSettingService.GetSetting();
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailBody, null), TaskCreationOptions.LongRunning).ContinueWith((t) =>
+            {
+                var log = new EmailLog
+                {
+                    PayeeId = customer?.PayeeId,
+                    Email = toEmails,
+                    SentDate = DateTime.UtcNow,
+                    EventType = EnumHelper.EmailLogEvent.Statement.ToString(),
+                    ErrorMessage = t.Result,
+                    Status = string.IsNullOrEmpty(t.Result)
+                };
+
+                Uow.EmailLogs.Add(log);
+                Uow.Commit();
+            });
         }
 
         private MapLatLong? GetMapLatLong(string address, string mapsApiKey)

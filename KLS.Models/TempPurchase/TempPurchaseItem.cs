@@ -144,5 +144,8 @@ namespace KLS.Models
 
         public decimal? TotalDutyTariff => CustomDutyRate.HasValue || TariffPercent.HasValue ? (CustomDutyRate ?? 0m) + (TariffPercent ?? 0m)
         : null;
+
+        [NotMapped]
+        public bool IsUnitChange { get; set; }
     }
 }
