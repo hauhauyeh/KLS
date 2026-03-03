@@ -34,5 +34,8 @@ namespace KLS.Models
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
+        [ForeignKey("Rest365Id")]
+        public virtual ICollection<Rest365Detail>? Rest365Details { get; set; }
     }
 }
