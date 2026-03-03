@@ -89,5 +89,13 @@ namespace KLS.API.Controllers.Admin
         {
             return Ok(_reportService.DescDollar(reportReq));
         }
+
+
+        [HttpGet("PaymentHistory/{PayeeId}")]
+        [DisplayName("Customer -> Payment History")]
+        public IActionResult PaymentHistory(int PayeeId)
+        {
+            return Ok(_reportService.PaymentHistory(PayeeId));
+        }
     }
 }

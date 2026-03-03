@@ -258,5 +258,16 @@ namespace KLS.Services
         {
             return Uow.Reports.DescDollar(reportReq);
         }
+
+        public IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId)
+        {
+            return Uow.CustomerPayments.Find(s => s.CustomerPaymentId == payeeId).OrderByDescending(c => c.PaymentDate).ToList()
+                .GroupBy(s => new { s.PaymentDate.Value.Year, s.PaymentDate.Value.Month })
+                .Select(g => new RptPaymentHistory
+                {
+                    PaymentMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
+                    Payments = g.ToList()
+                }).ToList();
+        }
     }
 }

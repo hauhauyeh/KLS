@@ -29,5 +29,7 @@ namespace KLS.Contract.Services
         IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq);
 
         IEnumerable<RptDescDollar>? DescDollar(ReportRequest reportReq);
+
+        IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId);
     }
 }
