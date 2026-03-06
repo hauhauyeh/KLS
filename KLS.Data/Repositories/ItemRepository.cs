@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParam(itemListReq);
 
-            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int Count(ItemListReq itemListReq)
@@ -31,9 +31,9 @@ namespace KLS.Data.Repositories
             itemListReq.IsCount = true;
             var param = BuildParam(itemListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[12] as SqlParameter;
+            var output = param[13] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -53,6 +53,8 @@ namespace KLS.Data.Repositories
                 itemListReq.VendorId.HasValue ? new SqlParameter("@VendorId", itemListReq.VendorId) : new SqlParameter("@VendorId", DBNull.Value),
 
                 string.IsNullOrEmpty(itemListReq.Container) ? new SqlParameter("@Container", DBNull.Value) : new SqlParameter("@Container", itemListReq.Container),
+
+                itemListReq.CategoryId.HasValue ? new SqlParameter("@CategoryId", itemListReq.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value),
 
                 string.IsNullOrEmpty(itemListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", itemListReq.Filterby),
 
