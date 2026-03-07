@@ -93,6 +93,22 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("Reorder")]
+        [DisplayName("Reorder Category")]
+        public IActionResult ReorderNode(ItemCategoryReorderReq dto)
+        {
+            try
+            {
+                _itemCategoryService.ReorderNode(dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
         [HttpDelete("DeleteImg/{id}")]
         public IActionResult DeleteImg(int id)
         {

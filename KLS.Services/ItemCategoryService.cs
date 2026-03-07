@@ -25,12 +25,12 @@ namespace KLS.Services
 
         public IQueryable<ItemCategory> GetAllCategory()
         {
-            return Uow.ItemCategories.GetAll().OrderBy(c => c.CategoryName);
+            return Uow.ItemCategories.GetAll().OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName);
         }
 
         public IEnumerable<ItemCategory> GetTree()
         {
-            var category = Uow.ItemCategories.GetAll().OrderBy(c => c.CategoryName).ToList();
+            var category = Uow.ItemCategories.GetAll().OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName).ToList();
 
             return BuildTree(category, null);
         }
@@ -142,6 +142,37 @@ namespace KLS.Services
                 Uow.ItemCategories.Update(cat);
                 Uow.Commit();
             }
+        }
+
+        public void ReorderNode(ItemCategoryReorderReq dto)
+        {
+            var cat = Uow.ItemCategories.GetById(dto.Id);
+            if (cat == null) throw new Exception("Category not found");
+
+            var siblings = Uow.ItemCategories.Find(c => c.ParentId == cat.ParentId)
+                .OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName).ToList();
+
+            // Normalize SortOrders
+            for (int i = 0; i < siblings.Count; i++)
+                siblings[i].SortOrder = (i + 1) * 10;
+
+            var currentIndex = siblings.FindIndex(c => c.CategoryId == dto.Id);
+            if (currentIndex == -1) throw new Exception("Category not found in siblings");
+
+            int targetIndex = dto.Direction == "Up" ? currentIndex - 1 : currentIndex + 1;
+
+            if (targetIndex >= 0 && targetIndex < siblings.Count)
+            {
+                // Swap SortOrder values
+                int tempSort = siblings[currentIndex].SortOrder;
+                siblings[currentIndex].SortOrder = siblings[targetIndex].SortOrder;
+                siblings[targetIndex].SortOrder = tempSort;
+            }
+
+            foreach (var s in siblings)
+                Uow.ItemCategories.Update(s);
+
+            Uow.Commit();
         }
 
         private void DeleteImageFromFolder(ItemCategory itemCategory)

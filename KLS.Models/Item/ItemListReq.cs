@@ -11,5 +11,7 @@ namespace KLS.Models
         public int? VendorId { get; set; }
 
         public string? Container { get; set; }
+
+        public int? CategoryId { get; set; }
     }
 }

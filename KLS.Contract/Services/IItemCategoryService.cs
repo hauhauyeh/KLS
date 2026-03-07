@@ -27,5 +27,7 @@ namespace KLS.Contract.Services
         void SaveImage(ItemCategory category, HttpRequest request);
 
         void DeleteImage(int catId);
+
+        void ReorderNode(ItemCategoryReorderReq dto);
     }
 }
