@@ -14,56 +14,75 @@ namespace KLS.API.Helpers
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            if (context.HttpContext.Items["CurrentUser"] != null)
-            {
-                var CurrentUser = context.HttpContext.Items["CurrentUser"] as JWTClaim;
-                var refreshToken = context.HttpContext.Items["RefreshToken"]?.ToString();
-
-                if (CurrentUser == null || refreshToken != CurrentUser?.RefreshToken)
-                    context.Result = new UnsupportedMediaTypeResult();
-
-                if (!IsProtectedAction(context))
-                    return;
-
-                //only employee can access api
-                if (!CurrentUser.PayeeId.ToString().StartsWith('1'))
-                    context.Result = new UnsupportedMediaTypeResult();
-
-                var isAdmin = Convert.ToBoolean(context.HttpContext.Items["IsAdmin"]?.ToString());
-
-                if (!isAdmin)
-                {
-                    var routeValues = context.RouteData.Values;
-
-                    string? controllerName = "";
-                    string? actionName = "";
-
-                    if (routeValues.ContainsKey("controller"))
-                        controllerName = (string?)routeValues["controller"];
-
-                    if (routeValues.ContainsKey("action"))
-                        actionName = (string?)routeValues["action"];
-
-                    string actionId = $"{controllerName}-{actionName}";
-
-                    string? accessPermission = context.HttpContext.Items["AccessPermission"]?.ToString();
-
-                    var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(accessPermission);
-
-                    if (permissions == null)
-                        context.Result = new UnprocessableEntityResult();
-                    else
-                    {
-                        var isAllow = permissions.SelectMany(g => g.Controllers.SelectMany(c => c.Actions.Where(a => a.Id.ToLower() == actionId.ToLower()))).Any();
-
-                        if (!isAllow)
-                            context.Result = new UnprocessableEntityResult();
-                    }
-                }
-            }
-            else
+            if (context.HttpContext.Items["CurrentUser"] == null)
             {
                 context.Result = new UnauthorizedResult();
+                return;
+            }
+
+            var CurrentUser = context.HttpContext.Items["CurrentUser"] as JWTClaim;
+            var refreshToken = context.HttpContext.Items["RefreshToken"]?.ToString();
+
+            if (CurrentUser == null || refreshToken != CurrentUser.RefreshToken)
+            {
+                context.Result = new UnsupportedMediaTypeResult();
+                return;
+            }
+
+            if (!IsProtectedAction(context))
+                return;
+
+            // only employee can access api
+            if (!CurrentUser.PayeeId.ToString().StartsWith('1'))
+            {
+                context.Result = new UnsupportedMediaTypeResult();
+                return;
+            }
+
+            var isAdmin = Convert.ToBoolean(context.HttpContext.Items["IsAdmin"]?.ToString());
+
+            if (isAdmin)
+                return;
+
+            var routeValues = context.RouteData.Values;
+
+            string? controllerName = "";
+            string? actionName = "";
+
+            if (routeValues.ContainsKey("controller"))
+                controllerName = (string?)routeValues["controller"];
+
+            if (routeValues.ContainsKey("action"))
+                actionName = (string?)routeValues["action"];
+
+            string actionId = $"{controllerName}-{actionName}";
+
+            string? accessPermission = context.HttpContext.Items["AccessPermission"]?.ToString();
+
+            if (string.IsNullOrEmpty(accessPermission))
+            {
+                context.Result = new UnprocessableEntityResult();
+                return;
+            }
+
+            var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(accessPermission);
+
+            if (permissions == null)
+            {
+                context.Result = new UnprocessableEntityResult();
+                return;
+            }
+
+            var isAllow = permissions
+                .SelectMany(g => g.Controllers
+                    .SelectMany(c => c.Actions
+                        .Where(a => a.Id.ToLower() == actionId.ToLower())))
+                .Any();
+
+            if (!isAllow)
+            {
+                context.Result = new UnprocessableEntityResult();
+                return;
             }
         }
 

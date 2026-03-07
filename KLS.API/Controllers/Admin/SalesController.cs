@@ -1,6 +1,7 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -232,6 +233,19 @@ namespace KLS.API.Controllers.Admin
         public IActionResult PastDueInvoices(int payeeId)
         {
             return Ok(_salesService.PastDueInvoices(payeeId));
+        }
+
+
+        [HttpGet("Export")]
+        [DisplayName("Export Order")]
+        public IActionResult Export([FromQuery] SalesExportReq exportReq)
+        {
+            var bytes = _salesService.Export(exportReq);
+
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Sales_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
         }
 
         #endregion

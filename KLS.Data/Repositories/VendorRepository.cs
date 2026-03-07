@@ -71,5 +71,10 @@ namespace KLS.Data.Repositories
 
             return DbContext.VendorSearchDTO.FromSqlRaw("[dbo].[Vendor_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
         }
+
+        public IQueryable<PayeeExport> Export()
+        {
+            return DbContext.PayeeExport.FromSqlRaw("[dbo].[Vendor_Export]");
+        }
     }
 }

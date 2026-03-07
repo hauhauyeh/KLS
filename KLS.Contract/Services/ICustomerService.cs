@@ -26,5 +26,7 @@ namespace KLS.Contract.Services
         void EmailPricesheet(int payeeId);
 
         void EmailStatement(int payeeId);
+
+        byte[] Export();
     }
 }

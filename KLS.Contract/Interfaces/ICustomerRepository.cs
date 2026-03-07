@@ -15,5 +15,7 @@ namespace KLS.Contract.Interfaces
         int Count(CustomerListReq customerListReq);
 
         IQueryable<PayeeSearch>? Search(PayeeSearchReq searchReq);
+
+        IQueryable<PayeeExport> Export();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -110,6 +111,19 @@ namespace KLS.API.Controllers.Admin
         public IActionResult ShippingCarriers()
         {
             return Ok(_vendorService.ShippingCarriers());
+        }
+
+
+        [HttpGet("Export")]
+        [DisplayName("Export Vendor")]
+        public IActionResult Export()
+        {
+            var bytes = _vendorService.Export();
+
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Vendor_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
         }
 
         #endregion

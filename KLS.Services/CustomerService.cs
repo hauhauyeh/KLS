@@ -22,6 +22,7 @@ namespace KLS.Services
         private readonly IPDFService _pdfService;
         private readonly IEmailService _emailService;
         private readonly IEmailSettingService _emailSettingService;
+        private readonly IExportService _exportService;
 
         public CustomerService(IUnitOfWork uow,
             ISystemSettingService systemSettingService,
@@ -30,7 +31,8 @@ namespace KLS.Services
             IItemQuoteService itemQuoteService,
             IPDFService pdfService,
             IEmailService emailService,
-            IEmailSettingService emailSettingService) : base(uow)
+            IEmailSettingService emailSettingService,
+            IExportService exportService) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _companyService = companyService;
@@ -39,6 +41,7 @@ namespace KLS.Services
             _pdfService = pdfService;
             _emailService = emailService;
             _emailSettingService = emailSettingService;
+            _exportService = exportService;
         }
 
         public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
@@ -342,6 +345,13 @@ namespace KLS.Services
                 Uow.EmailLogs.Add(log);
                 Uow.Commit();
             });
+        }
+
+        public byte[] Export()
+        {
+            var customers = Uow.Customers.Export();
+
+            return _exportService.ToExcel(customers, "Customer");
         }
 
         private MapLatLong? GetMapLatLong(string address, string mapsApiKey)

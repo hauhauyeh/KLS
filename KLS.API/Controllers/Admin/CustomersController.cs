@@ -112,6 +112,19 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("Export")]
+        [DisplayName("Export Customer")]
+        public IActionResult Export()
+        {
+            var bytes = _customerService.Export();
+
+            return File(
+                bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"Customer_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+        }
+
         #endregion
     }
 }

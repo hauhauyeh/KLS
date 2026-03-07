@@ -13,9 +13,11 @@ namespace KLS.Services
 {
     public class VendorService : BaseService, IVendorService
     {
-        public VendorService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly IExportService _exportService;
 
+        public VendorService(IUnitOfWork uow, IExportService exportService) : base(uow)
+        {
+            _exportService = exportService;
         }
 
         public PagingResponse<VendorList> GetPagedList(VendorListReq vendorListReq)
@@ -182,6 +184,13 @@ namespace KLS.Services
                         PayeeName = p.PayeeName
                     })
                    .ToList();
+        }
+
+        public byte[] Export()
+        {
+            var vendors = Uow.Vendors.Export();
+
+            return _exportService.ToExcel(vendors, "Vendor");
         }
     }
 }

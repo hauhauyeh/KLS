@@ -213,5 +213,14 @@ namespace KLS.Data.Repositories
 
             return DbContext.Database.ExecuteSqlRaw("[Sales_MergeOrder] @SalesIds,@Destination,@EmpId", SalesIdsParam, DestinationParam, EmpIdParam);
         }
+
+        public IQueryable<SalesExport>? Export(SalesExportReq exportReq)
+        {
+            var StartDateParam = exportReq.StartDate.HasValue ? new SqlParameter("@StartDate", exportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            var EndDateParam = exportReq.EndDate.HasValue ? new SqlParameter("@EndDate", exportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.SalesExport.FromSqlRaw("[Sales_Export] @StartDate,@EndDate", StartDateParam, EndDateParam).AsNoTracking();
+        }
     }
 }

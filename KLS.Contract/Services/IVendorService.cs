@@ -26,5 +26,7 @@ namespace KLS.Contract.Services
         IEnumerable<VendorSearchDTO>? GetActive();
 
         IEnumerable<VendorSearchDTO>? ShippingCarriers();
+
+        byte[] Export();
     }
 }

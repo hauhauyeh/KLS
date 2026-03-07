@@ -51,6 +51,11 @@ namespace KLS.Data.Repositories
             return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Customer_SearchByTerm] @SearchTerm,@IsActiveOnly,@EmpId,@IsSearchSales", TermParam, IsActiveOnlyParam, EmpIdParam, IsSearchSalesParam);
         }
 
+        public IQueryable<PayeeExport> Export()
+        {
+            return DbContext.PayeeExport.FromSqlRaw("[dbo].[Customer_Export]");
+        }
+
         private static object[] BuildCustomersParam(CustomerListReq customerListReq)
         {
             object[] param = {
@@ -86,6 +91,5 @@ namespace KLS.Data.Repositories
 
             return param;
         }
-
     }
 }

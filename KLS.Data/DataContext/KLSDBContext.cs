@@ -126,6 +126,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Payee>().ToTable("Payee");
             modelBuilder.Entity<Payee>().Property(c => c.PayeeId).ValueGeneratedNever();
             modelBuilder.Entity<Payee>().Property(c => c.Id).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+
+            modelBuilder.Entity<SalesExport>().HasNoKey();
         }
 
         #region ---DBSET---
@@ -413,6 +415,10 @@ namespace KLS.Data.DataContext
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
 
         public virtual DbSet<PromotionList> PromotionList { get; set; }
+
+        public virtual DbSet<PayeeExport> PayeeExport { get; set; }
+
+        public virtual DbSet<SalesExport> SalesExport { get; set; }
 
         #endregion
 

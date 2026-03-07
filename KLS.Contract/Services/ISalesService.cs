@@ -59,6 +59,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<SalesList>? PastDueInvoices(int payeeId);
 
+        byte[] Export(SalesExportReq exportReq);
+
         //--Routing
 
         IEnumerable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate);

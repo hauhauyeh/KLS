@@ -40,6 +40,8 @@ namespace KLS.Models
 
         public decimal? PaletteFactor { get; set; }
         public decimal? SaftyInventory { get; set; }
+        public decimal? ActualSaftyInventory { get; set; }
+        public decimal? RefillInventory { get; set; }
 
         public bool IsWeightItem { get; set; }
         public bool IsMetricWeight { get; set; }

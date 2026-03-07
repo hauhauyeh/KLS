@@ -179,6 +179,8 @@ namespace KLS.Services
                     oldItem.PreferredVendorId = item.PreferredVendorId;
                     oldItem.PaletteFactor = item.PaletteFactor;
                     oldItem.SaftyInventory = item.SaftyInventory;
+                    oldItem.ActualSaftyInventory = item.ActualSaftyInventory;
+                    oldItem.RefillInventory = item.RefillInventory;
                     oldItem.CaseWeight = item.CaseWeight;
                     oldItem.CaseVolumeInCubicMeter = item.CaseVolumeInCubicMeter;
                     oldItem.CaseLength = item.CaseLength;

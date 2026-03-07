@@ -19,17 +19,20 @@ namespace KLS.Services
         private readonly IDocumentService _documentService;
         private readonly IEmailSettingService _emailSettingService;
         private readonly IEmailService _emailService;
+        private readonly IExportService _exportService;
 
         public SalesService(IUnitOfWork uow,
             IWebHostEnvironment env,
             IDocumentService documentService,
             IEmailSettingService emailSettingService,
-            IEmailService emailService) : base(uow)
+            IEmailService emailService,
+            IExportService exportService) : base(uow)
         {
             _env = env;
             _documentService = documentService;
             _emailSettingService = emailSettingService;
             _emailService = emailService;
+            _exportService = exportService;
         }
 
         public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
@@ -334,6 +337,13 @@ namespace KLS.Services
                 SortField = "ShipDate",
                 SortOrder = "Asc"
             });
+        }
+
+        public byte[] Export(SalesExportReq exportReq)
+        {
+            var sales = Uow.Sales.Export(exportReq);
+
+            return _exportService.ToExcel(sales, "Sales");
         }
 
 

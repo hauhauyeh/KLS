@@ -36,5 +36,7 @@ namespace KLS.Contract.Interfaces
         void SingleAllocation(int salesId);
 
         int MergeOrder(SalesMergeReq mergeReq);
+
+        IQueryable<SalesExport>? Export(SalesExportReq exportReq);
     }
 }

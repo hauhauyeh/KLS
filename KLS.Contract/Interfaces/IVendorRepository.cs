@@ -15,5 +15,7 @@ namespace KLS.Contract.Interfaces
         int Count(VendorListReq vendorListReq);
 
         IQueryable<VendorSearchDTO>? Search(PayeeSearchReq searchReq);
+
+        IQueryable<PayeeExport> Export();
     }
 }
