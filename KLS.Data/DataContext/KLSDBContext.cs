@@ -1,6 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Models;
 using KLS.Models.Reports;
+using KLS.Models.TempSalesPromo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System;
@@ -115,6 +116,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Rest365>().ToTable("Rest365");
             modelBuilder.Entity<Rest365Detail>().ToTable("Rest365Detail");
             modelBuilder.Entity<PromotionSchedule>().ToTable("PromotionSchedule");
+            modelBuilder.Entity<TempSalesPromo>().ToTable("TempSalesPromo");
 
             modelBuilder.Entity<Country>().ToTable("Country");
             modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
@@ -301,6 +303,8 @@ namespace KLS.Data.DataContext
         public DbSet<PromotionBogo> PromotionBogos { get; set; }
 
         public DbSet<PromotionSchedule> PromotionSchedules { get; set; }
+
+        public DbSet<TempSalesPromo> TempSalesPromos { get; set; }
 
         public DbSet<Rest365> Rest365 { get; set; }
 

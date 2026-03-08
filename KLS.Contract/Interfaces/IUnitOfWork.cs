@@ -1,5 +1,6 @@
 ﻿using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Models.TempSalesPromo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -187,6 +188,8 @@ namespace KLS.Contract.Interfaces
         IPromotionBogoRepository PromotionBogos { get; }
 
         IPromotionScheduleRepository PromotionSchedules { get; }
+
+        IRepository<TempSalesPromo> TempSalesPromos { get; }
 
         IRest365Repository Rest365 { get; }
 
