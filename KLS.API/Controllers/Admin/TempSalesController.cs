@@ -14,14 +14,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly ITempSalesService _tempSalesService;
+        private readonly IPromotionEvaluationService _promoEvalService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public TempSalesController(ITempSalesService tempSalesService)
+        public TempSalesController(ITempSalesService tempSalesService, IPromotionEvaluationService promoEvalService)
         {
             _tempSalesService = tempSalesService;
+            _promoEvalService = promoEvalService;
         }
 
         #endregion
@@ -83,6 +85,13 @@ namespace KLS.API.Controllers.Admin
         public IActionResult Search([FromQuery] TempSalesReq tempReq)
         {
             return Ok(_tempSalesService.Search(tempReq));
+        }
+
+        [HttpPost("EvaluatePromotions")]
+        public IActionResult EvaluatePromotions([FromBody] PromotionEvalRequest request)
+        {
+            request.EmpId = KLS.Common.UserContext.EmpId;
+            return Ok(_promoEvalService.EvaluateCart(request));
         }
 
         #endregion
