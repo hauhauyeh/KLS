@@ -37,5 +37,7 @@ namespace KLS.Models
         public string? DiscountType { get; set; }
 
         public decimal? DiscountValue { get; set; }
+
+        public decimal? PromoPrice { get; set; }
     }
 }
