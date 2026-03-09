@@ -168,9 +168,10 @@ namespace KLS.Services
 
             if (newRewardQty <= 0)
             {
-                // Owner qty dropped below threshold → remove reward + link + restore price
-                Uow.TempSales.Find(t => t.TempSalesId == promoLink.PromoTempSalesId).ExecuteDelete();
+                // Owner qty dropped below threshold → remove link first (FK), then reward line, restore price
                 Uow.TempSalesPromos.Remove(promoLink);
+                Uow.Commit();
+                Uow.TempSales.Find(t => t.TempSalesId == promoLink.PromoTempSalesId).ExecuteDelete();
 
                 if (existing.OrgPrice != null)
                 {
@@ -226,12 +227,16 @@ namespace KLS.Services
 
             foreach (var link in promoLinks)
             {
-                Uow.TempSales.Find(t => t.TempSalesId == link.PromoTempSalesId).ExecuteDelete();
                 Uow.TempSalesPromos.Remove(link);
             }
 
             if (promoLinks.Any())
                 Uow.Commit();
+
+            foreach (var link in promoLinks)
+            {
+                Uow.TempSales.Find(t => t.TempSalesId == link.PromoTempSalesId).ExecuteDelete();
+            }
 
             // Also clean up links where this item is the reward (defensive)
             var rewardLinks = Uow.TempSalesPromos

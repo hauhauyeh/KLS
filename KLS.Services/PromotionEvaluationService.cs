@@ -249,11 +249,12 @@ namespace KLS.Services
             // 2. If no link → already off
             if (link == null) return EvaluateCart(evalRequest);
 
-            // 3. Delete reward line
-            Uow.TempSales.Find(t => t.TempSalesId == link.PromoTempSalesId).ExecuteDelete();
-
-            // 4. Delete link
+            // 3. Delete link first (FK constraint: TempSalesPromo references TempSales)
             Uow.TempSalesPromos.Remove(link);
+            Uow.Commit();
+
+            // 4. Delete reward line
+            Uow.TempSales.Find(t => t.TempSalesId == link.PromoTempSalesId).ExecuteDelete();
 
             // 5. Load owner (defensive)
             var owner = Uow.TempSales.GetById(request.OwnerTempSalesId);
