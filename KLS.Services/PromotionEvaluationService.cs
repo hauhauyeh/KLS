@@ -219,6 +219,7 @@ namespace KLS.Services
             rewardLine.IsTaxable = owner.IsTaxable;
             rewardLine.ApplyEdits(newRewardQty, true, false, false, 0, null);
             rewardLine.ApplyUnit(rewardUnit ?? "", rewardItemUnitId, rewardFactorToBase);
+            rewardLine.DisplaySort = owner.LineId ?? 0;
 
             // 15. Add reward line — NO Commit yet
             Uow.TempSales.Add(rewardLine);

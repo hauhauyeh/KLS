@@ -49,7 +49,7 @@ BEGIN
 	IF @SortField is not null
 		SET @Qry+=' ORDER BY '+@SortField+' '+@SortOrder+''
 	ELSE
-		SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId), x.LineId'
+		SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, x.LineId DESC'
 
 	EXEC (@Qry)
 END

@@ -193,7 +193,7 @@ SET @Qry += ' ORDER BY x.LineId'
 
 **After:**
 ```sql
-SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId), x.LineId'
+SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, x.LineId DESC'
 ```
 
 ### 4. `Sales_PartialUpdate` — Edit Save (TempSales → SalesDetail update)
