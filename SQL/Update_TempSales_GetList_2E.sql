@@ -1,7 +1,7 @@
 -- Phase 2E: TempSales_GetList — Sort by DisplaySort
 -- Changes:
---   1. Default ORDER BY changed from x.LineId to ISNULL(x.DisplaySort, x.LineId), x.LineId
---      This ensures PROMO_REWARD lines appear directly after their owner
+--   1. Two-level sort: owner groups DESC by LineId, then MAIN before PROMO_REWARD within each group
+--      This ensures newest items appear first and reward lines appear directly after their owner
 
 ALTER PROCEDURE [dbo].[TempSales_GetList] --[TempSales_GetList] 100001,200002,0,null,null,null
 	@EmpId INT,
@@ -49,7 +49,7 @@ BEGIN
 	IF @SortField is not null
 		SET @Qry+=' ORDER BY '+@SortField+' '+@SortOrder+''
 	ELSE
-		SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, x.LineId DESC'
+		SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, CASE WHEN x.CartLineType = ''MAIN'' THEN 0 ELSE 1 END ASC, x.LineId ASC'
 
 	EXEC (@Qry)
 END

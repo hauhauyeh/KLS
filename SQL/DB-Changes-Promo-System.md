@@ -193,8 +193,13 @@ SET @Qry += ' ORDER BY x.LineId'
 
 **After:**
 ```sql
-SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, x.LineId DESC'
+SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, CASE WHEN x.CartLineType = ''MAIN'' THEN 0 ELSE 1 END ASC, x.LineId ASC'
 ```
+
+**Sort explanation:**
+1. `ISNULL(DisplaySort, LineId) DESC` — groups by owner LineId, newest first. MAIN rows use their own LineId; PROMO_REWARD rows use DisplaySort (set to owner.LineId)
+2. `CASE WHEN CartLineType='MAIN' THEN 0 ELSE 1 END ASC` — owner row before reward rows within the same group
+3. `LineId ASC` — stable tiebreaker for multiple reward rows
 
 ### 4. `Sales_PartialUpdate` — Edit Save (TempSales → SalesDetail update)
 
