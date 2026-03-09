@@ -72,6 +72,7 @@ app.UseCors("corsapp");
 app.UseMiddleware<JWTMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<ApiKeyMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

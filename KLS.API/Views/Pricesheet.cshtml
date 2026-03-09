@@ -2,149 +2,407 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pricesheet</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #E6F7E7;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top left, #f8fcef 0%, #edf7df 40%, #e4f0d0 100%);
+            color: #24311d;
         }
 
-        .container {
-            max-width: 800px;
+        .page-wrap {
+            max-width: 980px;
             margin: 0 auto;
-            padding: 30px;
-            background-color: #f7fce8;
-            border: 1px solid #DDDDDD;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
         }
 
-        .logo {
-            max-width: 200px;
+        .pricesheet-card {
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdf8 100%);
+            border: 1px solid #dfe9cd;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(48, 74, 18, 0.10), 0 4px 14px rgba(48, 74, 18, 0.06);
         }
 
-        .invoice-details {
-            margin-top: 30px;
-            padding-top: 30px;
+        .top-accent {
+            height: 8px;
+            background: linear-gradient(90deg, #6f9f10 0%, #8fbe22 45%, #c7e57d 100%);
+        }
+
+        .header {
+            padding: 36px 42px 28px;
+            border-bottom: 1px solid #edf3e1;
+            background: linear-gradient(135deg, rgba(143, 190, 34, 0.09), rgba(255,255,255,0) 45%);
         }
 
         .logo-section {
             margin-bottom: 20px;
-            border-bottom: 1px solid #DDDDDD;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e9f0dd;
         }
 
-        .payment-details {
-            margin-top: 20px;
-            margin-bottom: 20px;
-            border-top: 1px solid #DDDDDD;
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .title-block {
+            min-width: 60%;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 14px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: #eef7da;
+            color: #5d8210;
+            border: 1px solid #dce8c8;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.15px;
+            text-transform: uppercase;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.1;
+            font-weight: 800;
+            color: #1f2b19;
+        }
+
+        .subtitle {
+            margin: 10px 0 0;
+            color: #66735c;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .summary-box {
+            min-width: 250px;
+            padding: 18px 22px;
+            border-radius: 18px;
+            border: 1px solid #dce8c8;
+            background: linear-gradient(180deg, #f8fcef 0%, #eff6e2 100%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+        }
+
+        .summary-label {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b785f;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 900;
+            color: #6e1f1f;
+        }
+
+        .summary-note {
+            margin-top: 6px;
+            color: #66735c;
+            font-size: 13px;
+        }
+
+        .content {
+            padding: 34px 42px 40px;
+        }
+
+        .greeting-box {
+            margin-bottom: 28px;
+            padding: 22px 24px;
+            border-radius: 18px;
+            background: #fcfef8;
+            border: 1px solid #e8efdb;
+            border-left: 5px solid #8fbe22;
+        }
+
+        .customer {
+            margin: 0 0 8px 0;
+            font-size: 21px;
+            font-weight: 800;
+            color: #293521;
+        }
+
+        .greeting-text {
+            margin: 0;
+            color: #5f6c56;
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        .table-wrap {
+            overflow: hidden;
+            border-radius: 18px;
+            border: 1px solid #e5edd7;
+            background: #ffffff;
+            box-shadow: 0 6px 18px rgba(36, 49, 29, 0.04);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 30px;
-            margin-bottom: 30px;
         }
 
-        th, td {
-            padding: 10px;
+        thead th {
+            padding: 10px 10px;
             text-align: left;
-            border-bottom: 1px solid #DDDDDD;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            color: #ffffff;
+            background: linear-gradient(90deg, #6f9f10 0%, #87b91a 100%);
+            border: none;
         }
 
-        th {
-            background-color: #80B500;
-            color: #FFFFFF;
+        tbody td {
+            padding: 5px 10px;
+            border-bottom: 1px solid #eef3e5;
+            font-size: 14px;
+            color: #33412c;
+            vertical-align: middle;
         }
 
-        .total {
-            font-weight: bold;
-            color: darkred;
-            font-size: 16px;
+        tbody tr:nth-child(even) td {
+            background-color: #fbfdf8;
         }
 
-        .bold {
-            font-weight: bold;
+        tbody tr:last-child td {
+            border-bottom: none;
         }
 
-        .mb-0 {
-            margin-bottom: 0;
+        .code {
+            font-weight: 800;
+            color: #4f641f;
+            letter-spacing: 0.2px;
         }
 
-        .mt-1 {
-            margin-top: 2px;
+        .name {
+            font-weight: 600;
+            color: #2d3927;
         }
 
-        .text-center {
-            text-align: center;
-        }
-
-        .pmt-detail-lable {
-            min-width: 125px;
+        .unit-badge {
             display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #f2f7e8;
+            border: 1px solid #e0ead0;
+            color: #506344;
+            font-size: 12px;
+            font-weight: 700;
         }
 
-        .customer {
-            font-style: italic;
-            font-weight: bold;
+            .unit-badge.private {
+                background: linear-gradient(180deg, #eef7da 0%, #e4f0c8 100%);
+                border: 1px solid #cfe19f;
+                color: #4d660d;
+                font-weight: 800;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+            }
+
+        .price {
+            font-weight: 800;
+            color: #27341f;
+            white-space: nowrap;
+        }
+
+        tfoot td {
+            padding: 18px;
+            background: #fafdf5;
+            border-top: 2px solid #dce8c8;
+        }
+
+        .total-label {
+            text-align: right;
+            font-size: 16px;
+            font-weight: 900;
+            color: #34422d;
+        }
+
+        .total-value {
+            font-size: 22px;
+            font-weight: 900;
+            color: #7a1f1f;
+            white-space: nowrap;
+        }
+
+        .footer {
+            margin-top: 28px;
+            padding: 22px 24px;
+            border-radius: 18px;
+            border: 1px solid #e7efda;
+            background: linear-gradient(180deg, #fcfef8 0%, #f6faef 100%);
+        }
+
+            .footer p {
+                margin: 0 0 10px 0;
+                color: #5d6a54;
+                font-size: 14px;
+                line-height: 1.75;
+            }
+
+                .footer p:last-child {
+                    margin-bottom: 0;
+                }
+
+        .signature {
+            margin-top: 14px;
+            font-weight: 800;
+            color: #314028;
+        }
+
+        @@media print {
+            body {
+                padding: 0;
+                background: #ffffff;
+            }
+
+            .pricesheet-card {
+                box-shadow: none;
+                border: 1px solid #d9d9d9;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .header,
+            .content {
+                padding: 24px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .summary-value {
+                font-size: 24px;
+            }
+
+            thead th,
+            tbody td,
+            tfoot td {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo-section">
-            <partial name="_Header.cshtml" model="@Model.Company" />
-        </div>
-        <h1 class="text-center">Pricesheet</h1>
-        <p class="customer">Dear @Model.PayeeName,</p>
-        <p>Your Pricesheet contain the following items:</p>
+    <div class="page-wrap">
+        <div class="pricesheet-card">
+            <div class="top-accent"></div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Unit</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Pricesheet != null)
-                {
-                    foreach (var item in Model.Pricesheet)
-                    {
-                        <tr>
-                            <td>@item.ItemCode</td>
-                            <td>@item.ItemName</td>
-                            <td>
-                                @if (item.IsShared)
-                                {
-                                    <span>@item.Unit</span>
-                                }
-                                else
-                                {
-                                    <strong>@item.Unit</strong>
-                                }
-                            </td>
-                            <td>@string.Format("{0:c}", item.Price)</td>
-                        </tr>
-                    }
-                }
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="3" class="total" style="text-align:end">Total</td>
-                    <td class="total">@Model.Pricesheet.Count</td>
-                </tr>
-            </tfoot>
-        </table>
+            <div class="header">
+               @*  <div class="logo-section">
+                    <partial name="_Header.cshtml" model="@Model.Company" />
+                </div> *@
 
-        <div class="invoice-details">
-            <p>If you have any questions about this pricesheet, please do not hesitate to contact us. We are happy to help!</p>
-            <p>Thank you for choosing our company.</p>
+                <div class="header-row">
+                    <div class="title-block">
+                        <div class="eyebrow">Customer Pricesheet</div>
+                        <h2 class="title">Pricesheet</h2>
+                        <p class="subtitle">
+                            A personalized list of item pricing prepared for your account.
+                        </p>
+                    </div>
+
+                    <div class="summary-box">
+                        <div class="summary-label">Total Items</div>
+                        <p class="summary-value">@((Model.Pricesheet?.Count) ?? 0)</p>
+                       @*  <div class="summary-note">
+                            Carefully prepared pricing details for your review.
+                        </div> *@
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="greeting-box">
+                    <p class="customer">Dear @Model.PayeeName,</p>
+                    <p class="greeting-text">
+                        Please find below your latest pricesheet. The following items and pricing details have been prepared specifically for your reference.
+                    </p>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 18%;">Code</th>
+                                <th style="width: 42%;">Name</th>
+                                <th style="width: 18%;">Unit</th>
+                                <th style="width: 22%; text-align:right;">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Pricesheet != null && Model.Pricesheet.Any())
+                            {
+                                foreach (var item in Model.Pricesheet)
+                                {
+                                    <tr>
+                                        <td class="code">@item.ItemCode</td>
+                                        <td class="name">@item.ItemName</td>
+                                        <td>
+                                            @if (item.IsShared)
+                                            {
+                                                <span class="unit-badge">@item.Unit</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="unit-badge private">@item.Unit</span>
+                                            }
+                                        </td>
+                                        <td class="price" style="text-align:right;">
+                                            @string.Format("{0:c}", item.Price)
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b7861;">
+                                        No pricesheet items available.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="total-label">Total Items</td>
+                                <td class="total-value" style="text-align:right;">
+                                    @((Model.Pricesheet?.Count) ?? 0)
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="footer">
+                    <p>
+                        If you have any questions regarding this pricesheet, please feel free to contact us. We are always happy to assist you.
+                    </p>
+                    <p>
+                        Thank you for choosing our company and for your continued trust in our products and services.
+                    </p>
+                    <p class="signature">Thank you.</p>
+                </div>
+            </div>
         </div>
     </div>
 </body>

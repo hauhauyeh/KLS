@@ -115,6 +115,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Rest365>().ToTable("Rest365");
             modelBuilder.Entity<Rest365Detail>().ToTable("Rest365Detail");
             modelBuilder.Entity<PromotionSchedule>().ToTable("PromotionSchedule");
+            modelBuilder.Entity<SchedulerConfig>().ToTable("SchedulerConfig");
 
             modelBuilder.Entity<Country>().ToTable("Country");
             modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
@@ -159,6 +160,8 @@ namespace KLS.Data.DataContext
         public DbSet<Account> Accounts { get; set; }
 
         public DbSet<EmailLog> EmailLogs { get; set; }
+
+        public DbSet<SchedulerConfig> SchedulerConfigs { get; set; }
 
         public DbSet<RecalculationLog> RecalculationLogs { get; set; }
 
