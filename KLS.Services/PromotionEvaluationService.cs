@@ -62,7 +62,8 @@ namespace KLS.Services
                     && t.SalesId == request.SalesId
                     && t.PayeeId == request.PayeeId
                     && t.LineType == "I"
-                    && t.CartLineType == "MAIN")
+                    && t.CartLineType == "MAIN"
+                    && t.SalesDetailId == null)
                 .ToList();
 
             if (!cartItems.Any()) return empty;
@@ -130,6 +131,10 @@ namespace KLS.Services
             // 2. Load owner line
             var owner = Uow.TempSales.GetById(request.OwnerTempSalesId);
             if (owner == null) return EvaluateCart(evalRequest);
+
+            // 2b. Guard: only MAIN, non-system-managed, non-injected lines can toggle
+            if (owner.CartLineType != "MAIN" || owner.IsSystemManaged || owner.SalesDetailId != null)
+                return EvaluateCart(evalRequest);
 
             // 3. Load BOGO rule
             var bogo = Uow.PromotionBogos.GetById(request.PromotionBogoId);

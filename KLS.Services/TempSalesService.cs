@@ -258,6 +258,26 @@ namespace KLS.Services
             if (rewardLinks.Any())
                 Uow.Commit();
 
+            // --- Structural child cleanup (covers historical injected rows without TempSalesPromo links) ---
+            var structuralChildren = Uow.TempSales
+                .Find(t => t.ParentTempSalesId == tempId && t.CartLineType == "PROMO_REWARD")
+                .ToList();
+
+            foreach (var child in structuralChildren)
+            {
+                if (child.SalesDetailId.HasValue)
+                {
+                    // Historical injected reward — soft-delete so Sales_PartialUpdate removes the SalesDetail row
+                    Uow.TempSales.Find(c => c.TempSalesId == child.TempSalesId)
+                        .ExecuteUpdate(setters => setters.SetProperty(x => x.ChangeStatus, x => EnumHelper.ChangeStatus.D.ToString()));
+                }
+                else
+                {
+                    // Newly added reward (no SalesDetail) — hard-delete
+                    Uow.TempSales.Find(c => c.TempSalesId == child.TempSalesId).ExecuteDelete();
+                }
+            }
+
             // Original delete logic
             var temp = Uow.TempSales.GetById(tempId);
 

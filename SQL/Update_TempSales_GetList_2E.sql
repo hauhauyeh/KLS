@@ -41,7 +41,8 @@ BEGIN
     ) x
     WHERE x.EmpId = ' + CONVERT(VARCHAR,@EmpId) + '
       AND x.SalesId = ' + CONVERT(VARCHAR,@SalesId) + '
-      AND x.PayeeId = ' + CONVERT(VARCHAR,@PayeeId) + ''
+      AND x.PayeeId = ' + CONVERT(VARCHAR,@PayeeId) + '
+      AND ISNULL(x.ChangeStatus, '''') <> ''D'''
 
     IF @Id IS NOT NULL
         SET @Qry += ' AND x.TempSalesId='+CONVERT(VARCHAR,@Id)

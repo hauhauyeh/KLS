@@ -201,14 +201,35 @@ SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, CASE WHEN x.CartLin
 2. `CASE WHEN CartLineType='MAIN' THEN 0 ELSE 1 END ASC` — owner row before reward rows within the same group
 3. `LineId ASC` — stable tiebreaker for multiple reward rows
 
+2. **Added `ChangeStatus <> 'D'` filter** — excludes soft-deleted rows from cart display so edit-mode deletes are immediately reflected after `loadTempItems()`
+
 ### 4. `Sales_PartialUpdate` — Edit Save (TempSales → SalesDetail update)
 
 **Script:** `SQL/Update_Sales_PartialUpdate.sql`
 
-**Changes (applied in Phase 1B):**
+**Changes (applied in Phase 1B + 2E):**
 - Reads `CartLineType`, `IsSystemManaged`, `DisplaySort` from TempSales
 - Writes them to SalesDetail on INSERT (new lines) and UPDATE (modified lines)
 - Parent/Root ID translation still deferred (NULL) for new lines added during edit
+- **Added TempSalesPromo cleanup** before final `DELETE TempSales` (FK constraint fix):
+
+```sql
+DELETE tsp
+FROM TempSalesPromo tsp
+WHERE EXISTS (
+    SELECT 1
+    FROM TempSales ts
+    WHERE ts.PayeeId = @PayeeId
+      AND ts.EmpId = @EmpId
+      AND ts.SalesId = @SalesId
+      AND (
+            ts.TempSalesId = tsp.OwnerTempSalesId
+         OR ts.TempSalesId = tsp.PromoTempSalesId
+      )
+);
+
+DELETE TempSales WHERE PayeeId=@PayeeId AND EmpId=@EmpId AND SalesId=@SalesId
+```
 
 ---
 

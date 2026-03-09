@@ -514,6 +514,21 @@ BEGIN
 	ELSE
 		DELETE FROM TransactionJournalDetail WHERE TxId=@TxId AND AccountId=@AccountId
 
+	-- Clean up TempSalesPromo links before deleting TempSales (FK constraint)
+	DELETE tsp
+	FROM TempSalesPromo tsp
+	WHERE EXISTS (
+		SELECT 1
+		FROM TempSales ts
+		WHERE ts.PayeeId = @PayeeId
+		  AND ts.EmpId = @EmpId
+		  AND ts.SalesId = @SalesId
+		  AND (
+				ts.TempSalesId = tsp.OwnerTempSalesId
+			 OR ts.TempSalesId = tsp.PromoTempSalesId
+		  )
+	);
+
 	DELETE TempSales WHERE PayeeId=@PayeeId AND EmpId=@EmpId AND SalesId=@SalesId
 
 END
