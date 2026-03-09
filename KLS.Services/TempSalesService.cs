@@ -146,10 +146,17 @@ namespace KLS.Services
             {
                 if (temp.SalesDetailId.HasValue)
                 {
-                    Uow.TempSales.Find(c => c.TempSalesId == tempId).ExecuteUpdate(setters => setters.SetProperty(x => x.ChangeStatus, x => EnumHelper.ChangeStatus.D.ToString()));
+                    // Soft-delete the parent row
+                    Uow.TempSales.Find(c => c.TempSalesId == tempId)
+                        .ExecuteUpdate(setters => setters.SetProperty(x => x.ChangeStatus, x => EnumHelper.ChangeStatus.D.ToString()));
+                    // Soft-delete any promo free child rows linked to this parent
+                    Uow.TempSales.Find(c => c.SourceTempSalesId == tempId)
+                        .ExecuteUpdate(setters => setters.SetProperty(x => x.ChangeStatus, x => EnumHelper.ChangeStatus.D.ToString()));
                 }
                 else
                 {
+                    // Hard-delete child free rows first, then parent
+                    Uow.TempSales.Find(c => c.SourceTempSalesId == tempId).ExecuteDelete();
                     Uow.TempSales.Find(c => c.TempSalesId == tempId).ExecuteDelete();
                 }
             }

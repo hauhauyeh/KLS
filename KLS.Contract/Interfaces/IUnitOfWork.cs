@@ -192,6 +192,8 @@ namespace KLS.Contract.Interfaces
 
         IRest365DetailRepository Rest365Details { get; }
 
+        ISchedulerConfigRepository SchedulerConfigs { get; }
+
         void Commit();
     }
 }

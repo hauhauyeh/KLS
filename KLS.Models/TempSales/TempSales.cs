@@ -71,6 +71,8 @@ namespace KLS.Models
 
         public int? SalesDetailId { get; set; }
 
+        public int? SourceTempSalesId { get; set; }
+
         public bool IsStrike { get; set; }
 
         private void ApplyFlagRules()

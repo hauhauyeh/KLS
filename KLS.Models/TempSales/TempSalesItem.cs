@@ -47,6 +47,8 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18,6)")]
         public decimal? FactorToBase { get; set; }
 
+        public int? SourceTempSalesId { get; set; }
+
         public bool IsStrike { get; set; }
 
 

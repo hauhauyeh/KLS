@@ -145,5 +145,20 @@ namespace KLS.Common
             Allocated = 3,
             Closed = 4
         }
+
+        public enum PromotionType
+        {
+            DISCOUNT_FLAT,
+            DISCOUNT_PERCENTAGE,
+            DISCOUNT_CART,
+            DISCOUNT_ITEM_FLAT,
+            DISCOUNT_ITEM_PERCENTAGE,
+            BOGO_ITEM_CATEGORY,
+            BOGO_CART
+        }
+
+        public enum ConditionType { CART, ITEM, CATEGORY }
+        public enum RewardType    { SAME_AS_CONDITION, ITEM, CATEGORY }
+        public enum DiscountType  { FREE, FLAT, PERCENTAGE }
     }
 }

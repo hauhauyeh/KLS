@@ -2,152 +2,414 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Statement</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #E6F7E7;
+            margin: 0;
+            padding: 40px 20px;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top left, #f7fbef 0%, #edf6df 35%, #e4f0d0 100%);
+            color: #24311d;
         }
 
-        .container {
-            max-width: 800px;
+        .page-wrap {
+            max-width: 960px;
             margin: 0 auto;
-            padding: 30px;
-            background-color: #f7fce8;
-            border: 1px solid #DDDDDD;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
         }
 
-        .logo {
-            max-width: 200px;
+        .statement-card {
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdf7 100%);
+            border: 1px solid #dce8c8;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(55, 80, 20, 0.08), 0 2px 10px rgba(55, 80, 20, 0.05);
         }
 
-        .invoice-details {
-            margin-top: 30px;
-            padding-top: 30px;
+        .top-accent {
+            height: 8px;
+            background: linear-gradient(90deg, #6e9f10 0%, #9acb2d 50%, #c7e57d 100%);
         }
 
-        .logo-section {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #DDDDDD;
+        .header {
+            padding: 38px 42px 24px;
+            border-bottom: 1px solid #edf3e1;
+            background: linear-gradient(135deg, rgba(154, 203, 45, 0.08), rgba(255,255,255,0) 45%);
         }
 
-        .payment-details {
-            margin-top: 20px;
-            margin-bottom: 20px;
-            border-top: 1px solid #DDDDDD;
+        .header-box {
+            display: flex !important;
+            justify-content: space-between !important;
+        }
+
+        .brand-block {
+            min-width: 60%;
+        }
+
+        .statement-badge {
+            display: inline-block;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: #eef7da;
+            color: #5f8412;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            border: 1px solid #dce8c8;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.1;
+            font-weight: 700;
+            color: #1f2b19;
+        }
+
+        .subtitle {
+            margin: 10px 0 0;
+            font-size: 15px;
+            color: #66735c;
+        }
+
+        .summary-box {
+            min-width: 260px;
+            padding: 18px 22px;
+            background: linear-gradient(180deg, #f7fbef 0%, #eff6e1 100%);
+            border: 1px solid #dce8c8;
+            border-radius: 18px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+
+        .summary-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c7a61;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .summary-total {
+            font-size: 30px;
+            font-weight: 800;
+            color: #6a1f1f;
+            margin: 0;
+        }
+
+        .summary-note {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #66735c;
+        }
+
+        .content {
+            padding: 34px 42px 40px;
+        }
+
+        .greeting-box {
+            background: #fcfef8;
+            border: 1px solid #edf3e1;
+            border-left: 5px solid #8ebd24;
+            border-radius: 16px;
+            padding: 20px 22px;
+            margin-bottom: 28px;
+        }
+
+        .customer {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #283521;
+        }
+
+        .greeting-text {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #5f6c56;
+        }
+
+        .table-wrap {
+            border: 1px solid #e5edd6;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 4px 16px rgba(36, 49, 29, 0.04);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 30px;
-            margin-bottom: 30px;
         }
 
-        th, td {
-            padding: 10px;
+        thead th {
+            padding: 16px 18px;
             text-align: left;
-            border-bottom: 1px solid #DDDDDD;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            color: #ffffff;
+            background: linear-gradient(90deg, #6f9f10 0%, #86b91a 100%);
+            border: none;
         }
 
-        th {
-            background-color: #80B500;
-            color: #FFFFFF;
+        tbody td {
+            padding: 8px 16px;
+            border-bottom: 1px solid #eef3e5;
+            font-size: 14px;
+            color: #33412c;
+            vertical-align: middle;
         }
 
-        .total {
-            font-weight: bold;
-            color: darkred;
-            font-size: 16px;
+        tbody tr:last-child td {
+            border-bottom: none;
         }
 
-        .bold {
-            font-weight: bold;
+        .month-row td {
+            background: linear-gradient(90deg, #f7fbef 0%, #fcfef8 100%);
+            font-weight: 700;
+            color: #4e631f;
+            border-top: 1px solid #e8f0d9;
+            border-bottom: 1px solid #e8f0d9;
+            padding-top: 15px;
+            padding-bottom: 15px;
         }
 
-        .mb-0 {
-            margin-bottom: 0;
-        }
-
-        .mt-1 {
-            margin-top: 2px;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .pmt-detail-lable {
-            min-width: 125px;
+        .month-pill {
             display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #eaf4d1;
+            border: 1px solid #d6e6b5;
+            font-size: 13px;
+            color: #587414;
         }
 
-        .customer {
-            font-style: italic;
-            font-weight: bold;
+        .amount {
+            font-weight: 700;
+            color: #2f3a2a;
+            white-space: nowrap;
+        }
+
+        .amount-due {
+            font-weight: 800;
+            color: #7a1f1f;
+            white-space: nowrap;
+        }
+
+        .sales-no {
+            font-weight: 600;
+            color: #526348;
+        }
+
+        .route-chip {
+            display: inline-block;
+            background: #f3f7ea;
+            border: 1px solid #e1ebd0;
+            color: #4b5f3f;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        tfoot td {
+            padding: 18px;
+            background: #fafdf5;
+            border-top: 2px solid #dce8c8;
+        }
+
+        .grand-total-label {
+            text-align: right;
+            font-size: 16px;
+            font-weight: 800;
+            color: #34422d;
+        }
+
+        .grand-total-value {
+            font-size: 22px;
+            font-weight: 900;
+            color: #7a1f1f;
+            white-space: nowrap;
+        }
+
+        .footer {
+            margin-top: 28px;
+            padding: 22px 24px;
+            background: linear-gradient(180deg, #fcfef8 0%, #f6faee 100%);
+            border: 1px solid #e7efda;
+            border-radius: 16px;
+        }
+
+            .footer p {
+                margin: 0 0 10px 0;
+                color: #5d6a54;
+                line-height: 1.7;
+                font-size: 14px;
+            }
+
+                .footer p:last-child {
+                    margin-bottom: 0;
+                }
+
+        .signature {
+            margin-top: 16px;
+            font-weight: 700;
+            color: #314028;
+        }
+
+        @@media print {
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+
+            .statement-card {
+                box-shadow: none;
+                border: 1px solid #d9d9d9;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .header,
+            .content {
+                padding: 24px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .summary-total {
+                font-size: 24px;
+            }
+
+            thead th,
+            tbody td,
+            tfoot td {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-       @*  <div class="logo-section">
-            <partial name="_Header.cshtml" model="@Model.Company" />
-        </div> *@
-        <h1 class="text-center">Statement</h1>
-        <p class="customer">Dear @Model.Payee.PayeeName,</p>
-        <p>Here is the statement of your account:</p>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>ShipRoute</th>
-                    <th>ShipDate</th>
-                    <th>Sales#</th>
-                    <th>AmtDue</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Details != null)
-                {
-                    foreach (var grpMonth in Model.Details)
-                    {
-                        <tr>
-                            <td colspan="3">
-                                <strong>@grpMonth.ShipMonth</strong>
-                            </td>
-                            <td>
-                                <strong>@string.Format("{0:c}", grpMonth.Sales.Sum(c => c.AmountDue))</strong>
-                            </td>
-                        </tr>
+    <div class="page-wrap">
+        <div class="statement-card">
+            <div class="top-accent"></div>
 
-                        foreach (var item in grpMonth.Sales)
-                        {
+            <div class="header">
+                <div class="header-box">
+                    <div class="brand-block">
+                        @* Uncomment if needed *@
+                        @* <partial name="_Header.cshtml" model="@Model.Company" /> *@
+
+                        <div class="statement-badge">Customer Statement</div>
+                        <h2 class="title">Account Statement</h2>
+                        <p class="subtitle">
+                            A summary of outstanding sales transactions and balance due.
+                        </p>
+                    </div>
+
+                    <div class="summary-box">
+                        <div class="summary-label">Total Amount Due</div>
+                        <p class="summary-total">
+                            @string.Format("{0:c}", Model.Details?.Sum(s => s.Sales.Sum(c => c.AmountDue)) ?? 0)
+                        </p>
+                        <div class="summary-note">
+                            Please review the statement details below.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="greeting-box">
+                    <p class="customer">Dear @Model.Payee.PayeeName,</p>
+                    <p class="greeting-text">
+                        Please find below the latest statement of your account. This summary includes outstanding sales grouped by shipping month for your convenience.
+                    </p>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                             <tr>
-                                <td>@item.ShipRoute</td>
-                                <td>@string.Format("{0:d}", item.ShipDate)</td>
-                                <td>@item.SalesNumber</td>
-                                <td>@string.Format("{0:c}", item.AmountDue)</td>
+                                <th style="width: 28%;">Ship Route</th>
+                                <th style="width: 22%;">Ship Date</th>
+                                <th style="width: 20%;">Sales #</th>
+                                <th style="width: 30%; text-align:right;">Amount Due</th>
                             </tr>
-                        }
-                    }
-                }
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="3" class="total" style="text-align:end">Total Amount Due</td>
-                    <td class="total">@string.Format("{0:c}", Model.Details.Sum(s => s.Sales.Sum(c => c.AmountDue)))</td>
-                </tr>
-            </tfoot>
-        </table>
+                        </thead>
+                        <tbody>
+                            @if (Model.Details != null && Model.Details.Any())
+                            {
+                                foreach (var grpMonth in Model.Details)
+                                {
+                                    <tr class="month-row">
+                                        <td colspan="3">
+                                            <span class="month-pill">@grpMonth.ShipMonth</span>
+                                        </td>
+                                        <td style="text-align:right;" class="amount-due">
+                                            @string.Format("{0:c}", grpMonth.Sales.Sum(c => c.AmountDue))
+                                        </td>
+                                    </tr>
 
-        <div class="invoice-details">
-            <p>If you have any questions about this statement, please do not hesitate to contact us. We are happy to help!</p>
-            <p>Thank you for your business.</p>
+                                    foreach (var item in grpMonth.Sales)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="route-chip">@item.ShipRoute</span>
+                                            </td>
+                                            <td>@string.Format("{0:MMM dd yyyy}", item.ShipDate)</td>
+                                            <td class="sales-no">@item.SalesNumber</td>
+                                            <td style="text-align:right;" class="amount">
+                                                @string.Format("{0:c}", item.AmountDue)
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b7861;">
+                                        No statement details available.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="grand-total-label">Total Amount Due</td>
+                                <td class="grand-total-value" style="text-align:right;">
+                                    @string.Format("{0:c}", Model.Details?.Sum(s => s.Sales.Sum(c => c.AmountDue)) ?? 0)
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="footer">
+                    <p>
+                        If you have any questions regarding this statement, our team will be happy to assist you.
+                    </p>
+                    <p>
+                        We sincerely appreciate your continued business and trust.
+                    </p>
+                    <p class="signature">Thank you.</p>
+                </div>
+            </div>
         </div>
     </div>
 </body>

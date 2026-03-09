@@ -217,5 +217,7 @@ namespace KLS.Data.Repositories
         public IRest365Repository Rest365 { get { return new Rest365Repository(DbContext); } }
 
         public IRest365DetailRepository Rest365Details { get { return new Rest365DetailRepository(DbContext); } }
+
+        public ISchedulerConfigRepository SchedulerConfigs { get { return new SchedulerConfigRepository(DbContext); } }
     }
 }
