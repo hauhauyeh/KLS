@@ -1,6 +1,7 @@
--- Phase 2E: Sales_Inject — Reverse-map ParentSalesDetailId → ParentTempSalesId
+-- Phase 2F: Sales_Inject — Reverse-map parent/root + refresh DisplaySort on PROMO_REWARD
 -- Changes:
 --   1. After INSERT INTO TempSales, UPDATE parent/root references using SalesDetailId mapping
+--   2. Refresh DisplaySort on PROMO_REWARD rows to match owner's current LineId
 
 ALTER PROCEDURE [dbo].[Sales_Inject]
     @EmpId INT,
@@ -85,4 +86,14 @@ BEGIN
         AND rts.EmpId = @EmpId AND rts.SalesId = @SalesId AND rts.PayeeId = @PayeeId
     WHERE ts.EmpId = @EmpId AND ts.SalesId = @SalesId AND ts.PayeeId = @PayeeId
         AND sd.ParentSalesDetailId IS NOT NULL;
+
+    -- Refresh DisplaySort on PROMO_REWARD rows to match owner's current LineId
+    UPDATE ts
+    SET ts.DisplaySort = owner.LineId
+    FROM TempSales ts
+    INNER JOIN TempSales owner ON owner.TempSalesId = ts.ParentTempSalesId
+    WHERE ts.CartLineType = 'PROMO_REWARD'
+      AND ts.EmpId = @EmpId
+      AND ts.SalesId = @SalesId
+      AND ts.PayeeId = @PayeeId;
 END
