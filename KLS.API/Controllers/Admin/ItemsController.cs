@@ -17,15 +17,17 @@ namespace KLS.API.Controllers.Admin
 
         private readonly IItemService _itemService;
         private readonly IItemQuoteService _itemQuoteService;
+        private readonly IItemUnitService _itemUnitService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ItemsController(IItemService itemService, IItemQuoteService itemQuoteService)
+        public ItemsController(IItemService itemService, IItemQuoteService itemQuoteService, IItemUnitService itemUnitService)
         {
             _itemService = itemService;
             _itemQuoteService = itemQuoteService;
+            _itemUnitService = itemUnitService;
         }
 
         #endregion
@@ -138,6 +140,15 @@ namespace KLS.API.Controllers.Admin
         {
             _itemService.SaveFreight(defaultFreight);
             return Ok();
+        }
+
+
+        [HttpGet("GetBaseUnitPricing/{itemId}")]
+        public IActionResult GetBaseUnitPricing(int itemId)
+        {
+            var unit = _itemUnitService.GetBaseUnit(itemId);
+            if (unit == null) return NotFound("Base unit not found.");
+            return Ok(new { unit.RecentCost, unit.P1 });
         }
 
         #endregion

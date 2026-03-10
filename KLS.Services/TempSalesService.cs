@@ -7,8 +7,6 @@ using Omu.ValueInjecter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLS.Services
 {
@@ -103,11 +101,93 @@ namespace KLS.Services
                 Uow.TempSales.Update(existing);
                 Uow.Commit();
 
+                // --- Promo auto-sync ---
+                SyncPromoAfterUpdate(existing);
+
                 tempItem.InjectFrom(existing);
                 tempItem.IsDefaultPrice = false;
             }
 
             return tempItem;
+        }
+
+        private void SyncPromoAfterUpdate(TempSales existing)
+        {
+            // Only MAIN rows trigger promo sync — prevents reward lines from causing recursive logic
+            if (existing.CartLineType != "MAIN")
+                return;
+
+            // Double guard: system-managed rows should never trigger promo logic
+            if (existing.IsSystemManaged)
+                return;
+
+            // Check if this owner has an active promo link
+            var promoLink = Uow.TempSalesPromos.Find(l => l.OwnerTempSalesId == existing.TempSalesId).FirstOrDefault();
+            if (promoLink == null)
+                return;
+
+            // Load BOGO rule and parent promotion once
+            var bogo = Uow.PromotionBogos.GetById(promoLink.PromotionBogoId);
+            if (bogo == null)
+                return;
+
+            var promotion = Uow.Promotions.GetById(promoLink.PromotionId);
+
+            // Defensive check: verify reward line still exists
+            var rewardLine = Uow.TempSales.GetById(promoLink.PromoTempSalesId);
+            if (rewardLine == null)
+            {
+                // Reward line missing (orphaned link) — clean up link and restore owner price
+                Uow.TempSalesPromos.Remove(promoLink);
+                if (existing.OrgPrice != null)
+                {
+                    existing.UnitPrice = existing.OrgPrice;
+                    existing.OrgPrice = null;
+                }
+                Uow.TempSales.Update(existing);
+                Uow.Commit();
+                return;
+            }
+
+            var conditionQty = bogo.ConditionQty ?? 1;
+            if (conditionQty <= 0)
+                conditionQty = 1;
+
+            var rewardQtyPerSet = bogo.RewardQty ?? 0;
+            if (rewardQtyPerSet < 0)
+                rewardQtyPerSet = 0;
+
+            var ownerQty = existing.OrdQty ?? 0;
+            var maxRepeats = promotion?.BogoMaxRewardRepeats ?? 0;
+
+            var sets = Math.Floor(ownerQty / conditionQty);
+            if (maxRepeats > 0 && sets > maxRepeats)
+                sets = maxRepeats;
+
+            var newRewardQty = sets * rewardQtyPerSet;
+
+            if (newRewardQty <= 0)
+            {
+                // Owner qty dropped below threshold → remove link first (FK), then reward line, restore price
+                Uow.TempSalesPromos.Remove(promoLink);
+                Uow.Commit();
+                Uow.TempSales.Find(t => t.TempSalesId == promoLink.PromoTempSalesId).ExecuteDelete();
+
+                if (existing.OrgPrice != null)
+                {
+                    existing.UnitPrice = existing.OrgPrice;
+                    existing.OrgPrice = null;
+                }
+                Uow.TempSales.Update(existing);
+                Uow.Commit();
+            }
+            else if (rewardLine.OrdQty != newRewardQty)
+            {
+                // Update reward line qty (only if changed)
+                rewardLine.ApplyEdits(newRewardQty, true, false, false, 0, rewardLine.Notes);
+                Uow.TempSales.Update(rewardLine);
+                Uow.Commit();
+            }
         }
 
         public TempSalesItem UpdateUnit(TempSalesItem tempItem)
@@ -140,6 +220,65 @@ namespace KLS.Services
 
         public void Delete(int tempId)
         {
+            // Check if this item owns any promo links
+            var promoLinks = Uow.TempSalesPromos
+                .Find(l => l.OwnerTempSalesId == tempId)
+                .ToList();
+
+            foreach (var link in promoLinks)
+            {
+                Uow.TempSalesPromos.Remove(link);
+            }
+
+            if (promoLinks.Any())
+                Uow.Commit();
+
+            foreach (var link in promoLinks)
+            {
+                Uow.TempSales.Find(t => t.TempSalesId == link.PromoTempSalesId).ExecuteDelete();
+            }
+
+            // Also clean up links where this item is the reward (defensive)
+            var rewardLinks = Uow.TempSalesPromos
+                .Find(l => l.PromoTempSalesId == tempId)
+                .ToList();
+
+            foreach (var link in rewardLinks)
+            {
+                var owner = Uow.TempSales.GetById(link.OwnerTempSalesId);
+                if (owner != null && owner.OrgPrice != null)
+                {
+                    owner.UnitPrice = owner.OrgPrice;
+                    owner.OrgPrice = null;
+                    Uow.TempSales.Update(owner);
+                }
+                Uow.TempSalesPromos.Remove(link);
+            }
+
+            if (rewardLinks.Any())
+                Uow.Commit();
+
+            // --- Structural child cleanup (covers historical injected rows without TempSalesPromo links) ---
+            var structuralChildren = Uow.TempSales
+                .Find(t => t.ParentTempSalesId == tempId && t.CartLineType == "PROMO_REWARD")
+                .ToList();
+
+            foreach (var child in structuralChildren)
+            {
+                if (child.SalesDetailId.HasValue)
+                {
+                    // Historical injected reward — soft-delete so Sales_PartialUpdate removes the SalesDetail row
+                    Uow.TempSales.Find(c => c.TempSalesId == child.TempSalesId)
+                        .ExecuteUpdate(setters => setters.SetProperty(x => x.ChangeStatus, x => EnumHelper.ChangeStatus.D.ToString()));
+                }
+                else
+                {
+                    // Newly added reward (no SalesDetail) — hard-delete
+                    Uow.TempSales.Find(c => c.TempSalesId == child.TempSalesId).ExecuteDelete();
+                }
+            }
+
+            // Original delete logic
             var temp = Uow.TempSales.GetById(tempId);
 
             if (temp != null)
@@ -164,6 +303,22 @@ namespace KLS.Services
 
         public void Clear(TempSalesReq tempReq)
         {
+            // Get all TempSalesIds for this cart scope
+            var cartIds = Uow.TempSales
+                .Find(c => c.EmpId == UserContext.EmpId && c.SalesId == tempReq.SalesId && c.PayeeId == tempReq.PayeeId)
+                .Select(c => c.TempSalesId)
+                .ToList();
+
+            // Delete all promo links referencing these cart items (both owner and reward sides)
+            if (cartIds.Any())
+            {
+                Uow.TempSalesPromos
+                    .Find(l => cartIds.Contains(l.OwnerTempSalesId)
+                            || cartIds.Contains(l.PromoTempSalesId))
+                    .ExecuteDelete();
+            }
+
+            // Then delete all cart items
             Uow.TempSales.Find(c => c.EmpId == UserContext.EmpId && c.SalesId == tempReq.SalesId && c.PayeeId == tempReq.PayeeId).ExecuteDelete();
         }
 

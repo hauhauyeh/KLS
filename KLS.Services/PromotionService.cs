@@ -207,6 +207,7 @@ namespace KLS.Services
                             oldRule.RewardQty = newRule.RewardQty;
                             oldRule.DiscountType = newRule.DiscountType;
                             oldRule.DiscountValue = newRule.DiscountValue;
+                            oldRule.PromoPrice = newRule.PromoPrice;
 
                             Uow.PromotionBogos.Update(oldRule);
                         }

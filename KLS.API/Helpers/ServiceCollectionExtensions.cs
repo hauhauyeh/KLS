@@ -100,7 +100,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IPromotionItemService, PromotionItemService>();
             services.AddScoped<IPromotionCategoryService, PromotionCategoryService>();
             services.AddScoped<IPromotionBogoService, PromotionBogoService>();
-            services.AddScoped<IPromoHelperService, PromoHelperService>();
+            services.AddScoped<IPromotionEvaluationService, PromotionEvaluationService>();
             services.AddScoped<IRest365Service, Rest365Service>();
             services.AddScoped<IRest365DetailService, Rest365DetailService>();
             services.AddScoped<ISchedulerConfigService, SchedulerConfigService>();

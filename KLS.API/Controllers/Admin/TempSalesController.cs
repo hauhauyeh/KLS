@@ -1,6 +1,7 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Models.PromotionEval;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -14,16 +15,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly ITempSalesService _tempSalesService;
-        private readonly IPromoHelperService _promoHelperService;
+        private readonly IPromotionEvaluationService _promoEvalService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public TempSalesController(ITempSalesService tempSalesService, IPromoHelperService promoHelperService)
+        public TempSalesController(ITempSalesService tempSalesService, IPromotionEvaluationService promoEvalService)
         {
             _tempSalesService = tempSalesService;
-            _promoHelperService = promoHelperService;
+            _promoEvalService = promoEvalService;
         }
 
         #endregion
@@ -88,17 +89,17 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("AvailablePromotions")]
-        public IActionResult AvailablePromotions([FromQuery] TempSalesReq req)
+        [HttpPost("EvaluatePromotions")]
+        public IActionResult EvaluatePromotions([FromBody] PromotionEvalRequest request)
         {
-            return Ok(_promoHelperService.GetAvailablePromotions(req.SalesId, req.PayeeId));
+            return Ok(_promoEvalService.EvaluateCart(request));
         }
 
 
-        [HttpPost("ApplyPromotion")]
-        public IActionResult ApplyPromotion([FromBody] TempSalesReq req)
+        [HttpPost("TogglePromotion")]
+        public IActionResult TogglePromotion([FromBody] PromoToggleRequest request)
         {
-            return Ok(_promoHelperService.ApplyPromotion(req.SalesId, req.PayeeId));
+            return Ok(_promoEvalService.TogglePromotion(request));
         }
 
         #endregion
