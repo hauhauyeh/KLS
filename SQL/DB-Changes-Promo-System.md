@@ -207,10 +207,10 @@ SET @Qry += ' ORDER BY ISNULL(x.DisplaySort, x.LineId) DESC, CASE WHEN x.CartLin
 
 **Script:** `SQL/Update_Sales_PartialUpdate.sql`
 
-**Changes (applied in Phase 1B + 2E):**
+**Changes (applied in Phase 1B + 2E + 2F):**
 - Reads `CartLineType`, `IsSystemManaged`, `DisplaySort` from TempSales
 - Writes them to SalesDetail on INSERT (new lines) and UPDATE (modified lines)
-- Parent/Root ID translation still deferred (NULL) for new lines added during edit
+- **Added parent/root ID translation** for new lines (ChangeStatus='I') using `@IdMap` table variable — same pattern as `Sales_Insert` MERGE
 - **Added TempSalesPromo cleanup** before final `DELETE TempSales` (FK constraint fix):
 
 ```sql
@@ -230,6 +230,35 @@ WHERE EXISTS (
 
 DELETE TempSales WHERE PayeeId=@PayeeId AND EmpId=@EmpId AND SalesId=@SalesId
 ```
+
+**Key SQL (parent/root ID translation for new lines):**
+
+Added `TempSalesId`, `ParentTempSalesId`, `RootTempSalesId` to `@TempSaleTable`. During the WHILE loop, `@IdMap` captures TempSalesId → SalesDetailId for both 'I' (via SCOPE_IDENTITY) and 'U' (existing SalesDetailId) rows. After the loop:
+
+```sql
+DECLARE @IdMap TABLE (
+    TempSalesId INT,
+    SalesDetailId INT
+);
+
+-- (populated inside WHILE loop for 'I' and 'U' rows)
+
+-- After WHILE loop:
+UPDATE sd
+SET sd.ParentSalesDetailId = pmap.SalesDetailId,
+    sd.RootSalesDetailId = ISNULL(rmap.SalesDetailId, pmap.SalesDetailId)
+FROM SalesDetail sd
+INNER JOIN @IdMap m ON m.SalesDetailId = sd.SalesDetailId
+INNER JOIN @TempSaleTable t ON t.TempSalesId = m.TempSalesId
+LEFT JOIN @IdMap pmap ON pmap.TempSalesId = t.ParentTempSalesId
+LEFT JOIN @IdMap rmap ON rmap.TempSalesId = t.RootTempSalesId
+WHERE t.ChangeStatus = 'I'
+  AND (t.ParentTempSalesId IS NOT NULL OR t.RootTempSalesId IS NOT NULL);
+```
+
+**Target:** Only `ChangeStatus = 'I'` rows get translated. 'U' rows already have correct `ParentSalesDetailId`.
+
+**Why 'U' rows are still in @IdMap:** They serve as lookup targets only. A new reward ('I') may reference an existing owner ('U') as parent. The owner's mapping must exist in `@IdMap` so the `pmap`/`rmap` joins resolve, but the 'U' row itself is never updated.
 
 ---
 

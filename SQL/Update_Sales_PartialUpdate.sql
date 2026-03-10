@@ -1,3 +1,9 @@
+-- Phase 2F: Sales_PartialUpdate — Parent/Root ID translation for new lines added during edit
+-- Changes:
+--   1. Added TempSalesId, ParentTempSalesId, RootTempSalesId to @TempSaleTable
+--   2. Added @IdMap table to capture TempSalesId → SalesDetailId mapping for 'I' and 'U' rows
+--   3. After WHILE loop, translates ParentTempSalesId/RootTempSalesId → ParentSalesDetailId/RootSalesDetailId
+
 ALTER PROCEDURE [dbo].[Sales_PartialUpdate]
 	@SalesId INT,
 	@EmpId INT
@@ -46,7 +52,13 @@ BEGIN
         @ItemType NVARCHAR(100),
         @CartLineType NVARCHAR(30),
         @IsSystemManaged BIT,
-        @DisplaySort INT;
+        @DisplaySort INT,
+        @TempSalesId_Current INT;
+
+	DECLARE @IdMap TABLE (
+		TempSalesId INT,
+		SalesDetailId INT
+	);
 
 	DECLARE @AcctTable AS Table(
 		Id INT IDENTITY(1,1),
@@ -87,10 +99,19 @@ BEGIN
 		[ItemType] [nvarchar](100) NULL,
 		[CartLineType] [nvarchar](30) NOT NULL,
 		[IsSystemManaged] [bit] NOT NULL,
-		[DisplaySort] [int] NULL
+		[DisplaySort] [int] NULL,
+		[TempSalesId] [int] NULL,
+		[ParentTempSalesId] [int] NULL,
+		[RootTempSalesId] [int] NULL
 	)
 
 	INSERT INTO @TempSaleTable
+		([LineId],[LineType],[ItemId],[AccountId],[ItemUnitId],[Unit],
+		 [OrdQty],[ShipQty],[BillQty],[UnitPrice],[ExtTotal],[Notes],
+		 [IsTaxable],[OrgPrice],[DiscountPercent],[FactorToBase],
+		 [ChangeStatus],[SalesDetailId],[ItemType],
+		 [CartLineType],[IsSystemManaged],[DisplaySort],
+		 [TempSalesId],[ParentTempSalesId],[RootTempSalesId])
 	SELECT [LineId]
       ,[LineType]
       ,t.[ItemId]
@@ -117,6 +138,9 @@ BEGIN
       ,[CartLineType]
       ,[IsSystemManaged]
       ,[DisplaySort]
+      ,t.[TempSalesId]
+      ,t.[ParentTempSalesId]
+      ,t.[RootTempSalesId]
 	FROM TempSales AS t LEFT JOIN Item AS i ON t.ItemId=i.ItemId
 	WHERE EmpId=@EmpId AND PayeeId=@PayeeId AND SalesId=@SalesId AND ChangeStatus IS NOT NULL
 
@@ -148,7 +172,8 @@ BEGIN
             @ItemType        = ItemType,
             @CartLineType    = CartLineType,
             @IsSystemManaged = IsSystemManaged,
-            @DisplaySort     = DisplaySort
+            @DisplaySort     = DisplaySort,
+            @TempSalesId_Current = TempSalesId
         FROM @TempSaleTable
         WHERE AutoId = @RowNum;
 
@@ -204,6 +229,8 @@ BEGIN
                 @DisplaySort)
 
             SET @SalesDetailId=SCOPE_IDENTITY();
+
+            INSERT INTO @IdMap (TempSalesId, SalesDetailId) VALUES (@TempSalesId_Current, @SalesDetailId);
 
             -- If It's Account Code
             IF @LineType='A'
@@ -347,6 +374,8 @@ BEGIN
         END
         ELSE IF @ChangeStatus = 'U'
         BEGIN
+			INSERT INTO @IdMap (TempSalesId, SalesDetailId) VALUES (@TempSalesId_Current, @SalesDetailId);
+
 			SET @ExtTotal= ROUND(@BillQty*@UnitPrice,2)
 
 			UPDATE SalesDetail
@@ -462,6 +491,18 @@ BEGIN
 
 		SET @RowNum+=1
 	END
+
+	-- Translate ParentTempSalesId/RootTempSalesId → ParentSalesDetailId/RootSalesDetailId for new rows only
+	UPDATE sd
+	SET sd.ParentSalesDetailId = pmap.SalesDetailId,
+		sd.RootSalesDetailId = ISNULL(rmap.SalesDetailId, pmap.SalesDetailId)
+	FROM SalesDetail sd
+	INNER JOIN @IdMap m ON m.SalesDetailId = sd.SalesDetailId
+	INNER JOIN @TempSaleTable t ON t.TempSalesId = m.TempSalesId
+	LEFT JOIN @IdMap pmap ON pmap.TempSalesId = t.ParentTempSalesId
+	LEFT JOIN @IdMap rmap ON rmap.TempSalesId = t.RootTempSalesId
+	WHERE t.ChangeStatus = 'I'
+	  AND (t.ParentTempSalesId IS NOT NULL OR t.RootTempSalesId IS NOT NULL);
 
 	INSERT INTO RecalculationLog(ItemId,TxId,TxDate)
 	SELECT ItemId,@TxId,@ShipDate FROM @TempSaleTable WHERE ChangeStatus IS NOT NULL AND LineType='I'
