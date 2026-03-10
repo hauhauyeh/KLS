@@ -11,11 +11,11 @@ namespace KLS.Contract.Services
     {
         UserAccount? GetByEmail(string email);
 
-        LoginResult LoginUser(LoginReq loginReq, string ipAddress);
+        LoginResult LoginUser(LoginReq loginReq);
 
         LoginResult RefreshToken(RefreshTokenReq tokenReq);
 
-        string ForgetPassword(string email, string url);
+        string? ForgetPassword(string email, string url);
 
         bool ResetPassword(ResetPassword resetPassword);
     }
