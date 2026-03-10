@@ -222,6 +222,7 @@ namespace KLS.Services
             rewardLine.ParentTempSalesId = owner.TempSalesId;
             rewardLine.RootTempSalesId = owner.TempSalesId;
             rewardLine.IsTaxable = owner.IsTaxable;
+            rewardLine.LineType = "I";
             rewardLine.ApplyEdits(newRewardQty, true, false, false, 0, null);
             rewardLine.ApplyUnit(rewardUnit ?? "", rewardItemUnitId, rewardFactorToBase);
             rewardLine.DisplaySort = owner.LineId ?? 0;

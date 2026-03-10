@@ -54,6 +54,7 @@ namespace KLS.Models
         public string CartLineType { get; set; } = "MAIN";
         public bool IsSystemManaged { get; set; }
         public int? DisplaySort { get; set; }
+        public int? SalesDetailId { get; set; }
 
         public decimal? ExtTotal => Utilities.Rounding((BillQty ?? 0m) * (UnitPrice ?? 0m), 2);
 
