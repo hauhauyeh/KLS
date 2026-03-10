@@ -47,12 +47,12 @@ namespace KLS.Services
             return Uow.UserAccounts.Find(e => e.Email == email).FirstOrDefault();
         }
 
-        public LoginResult LoginUser(LoginReq loginReq, string ipAddress)
+        public LoginResult LoginUser(LoginReq loginReq)
         {
             var user = CheckUserUsername(loginReq);
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-                return new LoginResult { Success = false, ErrorMessage = "Username/Email or password is incorrect" };
+                return new LoginResult { Success = false, ErrorMessage = "Email or password is incorrect" };
 
             if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
                 return new LoginResult { Success = false, ErrorMessage = "Password is incorrect" };
@@ -85,8 +85,7 @@ namespace KLS.Services
                 Token = token,
                 RefreshToken = refreshToken,
                 Username = user.Username,
-                IsAdmin = role.IsAdmin,
-                IsSalesRole = role.IsSalesRole
+                IsAdmin = role.IsAdmin
             };
         }
 
@@ -110,8 +109,7 @@ namespace KLS.Services
                 Token = newToken,
                 RefreshToken = jwtClaim.RefreshToken,
                 Username = jwtClaim.Username,
-                IsAdmin = role.IsAdmin,
-                IsSalesRole = role?.IsSalesRole ?? false
+                IsAdmin = role.IsAdmin
             };
         }
 
@@ -129,7 +127,7 @@ namespace KLS.Services
             }
         }
 
-        public string ForgetPassword(string email, string url)
+        public string? ForgetPassword(string email, string url)
         {
             var user = GetByEmail(email);
 

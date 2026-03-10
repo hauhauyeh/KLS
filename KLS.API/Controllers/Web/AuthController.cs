@@ -1,5 +1,4 @@
-﻿using KLS.Common;
-using KLS.Contract.Services;
+﻿using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,11 +24,10 @@ namespace KLS.API.Controllers.Web
 
         #region --- Method(s) ---
 
-        [HttpPost("login")]
-        public IActionResult UserLogin(LoginReq loginReq)
+        [HttpPost("Login")]
+        public IActionResult Login(LoginReq loginReq)
         {
-            var ipAddress = Utilities.GetIpAddress(HttpContext);
-            var result = _userAccountService.LoginUser(loginReq, ipAddress);
+            var result = _userAccountService.LoginUser(loginReq);
 
             if (!result.Success)
                 return Unauthorized(result.ErrorMessage);
@@ -38,7 +36,7 @@ namespace KLS.API.Controllers.Web
         }
 
 
-        [HttpPost("refreshtoken")]
+        [HttpPost("RefreshToken")]
         public IActionResult RefreshToken([FromBody] RefreshTokenReq tokenReq)
         {
             var result = _userAccountService.RefreshToken(tokenReq);
@@ -56,7 +54,7 @@ namespace KLS.API.Controllers.Web
             var user = _userAccountService.GetByEmail(email);
 
             if (user == null)
-                return Unauthorized("Invalid Email");
+                return Unauthorized("This email address is not registered in our system");
 
             var headers = Request.Headers;
             var url = headers?["Origin"].FirstOrDefault() ?? headers?["Referer"].FirstOrDefault();
