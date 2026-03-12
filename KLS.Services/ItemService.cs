@@ -450,5 +450,10 @@ namespace KLS.Services
         //        }
         //    }
         //}
+
+        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
+        {
+            return Uow.Items.GetSearchList(payeeId);
+        }
     }
 }

@@ -24,5 +24,7 @@ namespace KLS.Contract.Interfaces
         void UpdateBaseP1(ItemUpdateReq updateReq);
 
         ItemDefaultFreight GetDefaultFreight(int itemId);
+
+        IEnumerable<ItemSearch> GetSearchList(int payeeId);
     }
 }

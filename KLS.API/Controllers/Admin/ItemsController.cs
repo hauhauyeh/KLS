@@ -47,6 +47,12 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemService.ActiveItems());
         }
 
+        [HttpGet("ListActiveForKeybox/{payeeId}")]
+        public IActionResult ListActiveForKeybox(int payeeId)
+        {
+            return Ok(_itemService.GetSearchList(payeeId));
+        }
+
 
         [HttpGet("{itemId}")]
         public IActionResult GetById(int itemId)
