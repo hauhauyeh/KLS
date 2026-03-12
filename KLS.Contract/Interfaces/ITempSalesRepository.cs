@@ -12,5 +12,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<TempSalesItem>? GetList(TempSalesReq tempReq);
 
         IQueryable<ItemSearch> Search(TempSalesReq tempReq);
+
+        TempSalesItem? AddLine(AddLineRequest req);
     }
 }
