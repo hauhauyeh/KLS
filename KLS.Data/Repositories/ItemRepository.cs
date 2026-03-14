@@ -151,6 +151,13 @@ namespace KLS.Data.Repositories
             return DbContext.ItemDefaultFreight.FromSqlRaw("[Item_GetDefaultFreight] @ItemId", ItemIdParam).ToList().FirstOrDefault();
         }
 
+        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_ListActiveForKeybox] @PayeeId", PayeeIdParam).ToList();
+        }
+
 
         public IQueryable<ItemWebRowList> GetWebPagedList(ItemWebListReq webListReq)
         {

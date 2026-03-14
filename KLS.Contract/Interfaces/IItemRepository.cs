@@ -29,5 +29,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<ItemWebRowList> GetWebPagedList(ItemWebListReq webListReq);
 
         int WebCount(ItemWebListReq webListReq);
+
+        IEnumerable<ItemSearch> GetSearchList(int payeeId);
     }
 }
