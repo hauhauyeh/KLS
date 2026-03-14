@@ -40,5 +40,10 @@ namespace KLS.Contract.Services
         ItemDefaultFreight GetDefaultFreight(int itemId);
 
         void SaveFreight(ItemDefaultFreight defaultFreight);
+
+        IEnumerable<ItemSearch> GetSearchList(int payeeId);
+
+
+        PagingResponse<ItemWebList> GetWebPagedList(ItemWebListReq webListReq);
     }
 }

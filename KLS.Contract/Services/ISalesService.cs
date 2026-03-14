@@ -68,5 +68,8 @@ namespace KLS.Contract.Services
         void UpdateRouteOrder(List<ShipRouteDetail> routeDetails);
 
         void UpdateRoute(List<ShipRouteDetail> routeDetails);
+
+        //--Web
+        PagingResponse<OrderWebList>? GetWebPagedList(SalesListReq salesListReq);
     }
 }

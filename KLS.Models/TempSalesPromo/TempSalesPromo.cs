@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace KLS.Models.TempSalesPromo
+namespace KLS.Models
 {
     public class TempSalesPromo
     {

@@ -21,5 +21,13 @@ namespace KLS.Models
         public decimal? LCloseQty { get; set; }
 
         public bool Inactive { get; set; }
+
+        public string? ItemSearchTag { get; set; }
+
+        public DateTime? LastOrderDate { get; set; }
+
+        public decimal? LastOrderQty { get; set; }
+
+        public string? LastOrderUnit { get; set; }
     }
 }

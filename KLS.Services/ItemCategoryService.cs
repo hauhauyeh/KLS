@@ -30,7 +30,9 @@ namespace KLS.Services
 
         public IEnumerable<ItemCategory> GetTree()
         {
-            var category = Uow.ItemCategories.GetAll().OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName).ToList();
+            var qry = Uow.ItemCategories.GetAll();
+
+            var category = qry.OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName).ToList();
 
             return BuildTree(category, null);
         }
@@ -53,6 +55,43 @@ namespace KLS.Services
                     item.ChildCategories = BuildTree(itemCategories, x.CategoryId).ToList();
 
                     return item;
+                });
+        }
+
+        public IEnumerable<ItemCategoryTree> GetWebTree()
+        {
+            var categories = Uow.ItemCategories.GetAll()
+                .Where(c => !c.Inactive)
+                .OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName)
+                .ToList();
+
+            var itemCounts = Uow.Items.Find(c => !c.Inactive)
+                .Where(i => i.CategoryId != null)
+                .GroupBy(i => i.CategoryId!.Value)
+                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.CategoryId, x => x.Count);
+
+            return BuildWebTree(categories, null, itemCounts);
+        }
+
+        private IEnumerable<ItemCategoryTree> BuildWebTree(IEnumerable<ItemCategory> itemCategories, int? parentId, Dictionary<int, int> itemCounts)
+        {
+            return itemCategories
+                .Where(x => x.ParentId == parentId)
+                .Select(x =>
+                {
+                    var children = BuildWebTree(itemCategories, x.CategoryId, itemCounts).ToList();
+
+                    return new ItemCategoryTree
+                    {
+                        CategoryId = x.CategoryId,
+                        ParentId = x.ParentId,
+                        CategoryName = x.CategoryName,
+                        DisplayName = x.DisplayName,
+                        ImageUrl = x.ImageUrl,
+                        ItemCount = itemCounts.GetValueOrDefault(x.CategoryId),
+                        ChildCategories = children.Count > 0 ? children : null
+                    };
                 });
         }
 

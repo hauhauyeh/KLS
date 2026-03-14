@@ -19,7 +19,8 @@ namespace KLS.Services
 
         public IEnumerable<UserRole> GetAllUserRoles()
         {
-            return Uow.UserRoles.Find(r => r.PayeeId == UserContext.EmpId).OrderBy(r => r.RoleName);
+            return Uow.UserRoles.GetAll().OrderBy(r => r.RoleName);
+            //return Uow.UserRoles.Find(r => r.PayeeId == UserContext.EmpId).OrderBy(r => r.RoleName);
         }
 
         public UserRole GetById(int roleId)

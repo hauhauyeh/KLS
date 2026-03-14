@@ -47,5 +47,34 @@ namespace KLS.Data.Repositories
 
             return DbContext.ItemSearch.FromSqlRaw("[TempSales_SearchByTerm] @EmpId,@PayeeId,@SalesId,@SearchTerm", EmpIdParam, PayeeIdParam, SalesIdParam, SearchTermParam);
         }
+
+        public TempSalesItem? AddLine(AddLineRequest req)
+        {
+            var payeeIdParam = new SqlParameter("@PayeeId", req.PayeeId);
+            var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var itemIdParam = req.ItemId.HasValue
+                ? new SqlParameter("@ItemId", req.ItemId.Value)
+                : new SqlParameter("@ItemId", DBNull.Value);
+            var itemCodeParam = !string.IsNullOrEmpty(req.ItemCode)
+                ? new SqlParameter("@ItemCode", req.ItemCode)
+                : new SqlParameter("@ItemCode", DBNull.Value);
+            var qtyParam = new SqlParameter("@Qty", req.Qty);
+            var unitPriceParam = req.UnitPrice.HasValue
+                ? new SqlParameter("@UnitPrice", req.UnitPrice.Value)
+                : new SqlParameter("@UnitPrice", DBNull.Value);
+            var unitParam = !string.IsNullOrEmpty(req.Unit)
+                ? new SqlParameter("@Unit", req.Unit)
+                : new SqlParameter("@Unit", DBNull.Value);
+            var notesParam = !string.IsNullOrEmpty(req.Notes)
+                ? new SqlParameter("@Notes", req.Notes)
+                : new SqlParameter("@Notes", DBNull.Value);
+
+            return DbContext.TempSalesItem.FromSqlRaw(
+                "[TempSales_AddLine] @PayeeId,@SalesId,@EmpId,@ItemId,@ItemCode,@Qty,@UnitPrice,@Unit,@Notes",
+                payeeIdParam, salesIdParam, empIdParam, itemIdParam, itemCodeParam,
+                qtyParam, unitPriceParam, unitParam, notesParam
+            ).AsEnumerable().FirstOrDefault();
+        }
     }
 }

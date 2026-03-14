@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Web
         #region --- Method(s) ---
 
         [HttpGet]
-        [DisplayName("List UserRole")]
+        [DisplayName("List Roles")]
         public IActionResult List()
         {
             return Ok(_userRoleService.GetAllUserRoles());
@@ -50,7 +50,7 @@ namespace KLS.API.Controllers.Web
 
 
         [HttpPost]
-        [DisplayName("Create UserRole")]
+        [DisplayName("Create Role")]
         public IActionResult Create([FromBody] UserRole userRole)
         {
             if (_userRoleService.UserRoleNameExists(userRole))
@@ -63,7 +63,7 @@ namespace KLS.API.Controllers.Web
 
 
         [HttpPut]
-        [DisplayName("Update UserRole")]
+        [DisplayName("Update Role")]
         public IActionResult Update([FromBody] UserRole userRole)
         {
             if (_userRoleService.UserRoleNameExists(userRole))
@@ -76,7 +76,7 @@ namespace KLS.API.Controllers.Web
 
 
         [HttpDelete("{roleId}")]
-        [DisplayName("Delete UserRole")]
+        [DisplayName("Delete Role")]
         public IActionResult Delete(int roleId)
         {
             var existing = _userRoleService.GetById(roleId);

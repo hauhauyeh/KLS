@@ -340,6 +340,11 @@ namespace KLS.Services
             return Uow.TempSales.Search(tempReq);
         }
 
+        public TempSalesItem? AddLine(AddLineRequest req)
+        {
+            return Uow.TempSales.AddLine(req);
+        }
+
         private TempSalesItem AddItem(TempSalesItem tempItem)
         {
             var item = _itemService.GetBySearch(tempItem.ItemCode);

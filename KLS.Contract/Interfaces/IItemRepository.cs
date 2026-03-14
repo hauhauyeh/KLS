@@ -24,5 +24,12 @@ namespace KLS.Contract.Interfaces
         void UpdateBaseP1(ItemUpdateReq updateReq);
 
         ItemDefaultFreight GetDefaultFreight(int itemId);
+
+
+        IQueryable<ItemWebRowList> GetWebPagedList(ItemWebListReq webListReq);
+
+        int WebCount(ItemWebListReq webListReq);
+
+        IEnumerable<ItemSearch> GetSearchList(int payeeId);
     }
 }

@@ -325,6 +325,70 @@ namespace KLS.Services
             }
         }
 
+
+        public PagingResponse<ItemWebList> GetWebPagedList(ItemWebListReq webListReq)
+        {
+            webListReq.PayeeId = UserContext.EmpId;
+
+            var rows = Uow.Items.GetWebPagedList(webListReq).ToList();
+            var totalRecords = Uow.Items.WebCount(webListReq);
+
+            var request = _httpContextAccessor.HttpContext?.Request;
+            string baseUrl = "";
+            if (request != null)
+                baseUrl = $"{request.Scheme}://{request.Host}";
+
+            var dict = new Dictionary<int, ItemWebList>();
+
+            foreach (var row in rows)
+            {
+                if (!dict.TryGetValue(row.ItemId, out var item))
+                {
+                    item = new ItemWebList
+                    {
+                        ItemId = row.ItemId,
+                        ItemCode = row.ItemCode,
+                        ItemName = row.ItemName,
+                        ItemName2 = row.ItemName2,
+                        SetPacking = row.SetPacking,
+                        PackSize = row.PackSize,
+                        LCloseQty = row.LCloseQty,
+                        ExpiryDate = row.ExpiryDate,
+                        PrimaryImageUrl = string.IsNullOrEmpty(row.PrimaryImageUrl)
+                            ? null
+                            : baseUrl + row.PrimaryImageUrl,
+                        ItemUnits = [],
+                    };
+
+                    dict.Add(row.ItemId, item);
+                }
+
+                // Units
+                if (row.ItemUnitId > 0 && !item.ItemUnits!.Any(x => x.ItemUnitId == row.ItemUnitId))
+                {
+                    item.ItemUnits!.Add(new ItemWebUnitList
+                    {
+                        ItemUnitId = row.ItemUnitId,
+                        Unit = row.Unit,
+                        Barcode = string.IsNullOrWhiteSpace(row.Barcode)
+                            ? row.Barcode
+                            : Utilities.EAN13(row.Barcode),
+                        IsBaseUnit = row.IsBaseUnit,
+                        IsDefaultSalesUnit = row.IsDefaultSalesUnit,
+                        MSRP = row.MSRP,
+                        MarketPrice = row.MarketPrice,
+                        Price = row.Price,
+                        Discount = row.Discount
+                    });
+                }
+            }
+
+            return new PagingResponse<ItemWebList>(totalRecords, webListReq.Pageno, webListReq.Pagesize)
+            {
+                RowData = dict.Values.ToList(),
+            };
+        }
+
         //public void UpdateDefautCost(int itemId, decimal? defaultCost)
         //{
         //    var item = GetById(itemId);
@@ -450,5 +514,10 @@ namespace KLS.Services
         //        }
         //    }
         //}
+
+        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
+        {
+            return Uow.Items.GetSearchList(payeeId);
+        }
     }
 }

@@ -102,5 +102,15 @@ namespace KLS.Models
         public int? ShippingCarrierId { get; set; }
         
         public bool IsOnlineRegister { get; set; }
+
+        public string? EIN { get; set; }
+
+        public bool IsEINVerified { get; set; }
+
+        public DateTime? EINVerifiedAt { get; set; }
+
+        public int? EINVerifiedBy { get; set; }
+
+        public string? StoreType { get; set; }
     }
 }

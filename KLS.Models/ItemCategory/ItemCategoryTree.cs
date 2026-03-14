@@ -21,12 +21,8 @@ namespace KLS.Models
 
         public string? ImageUrl { get; set; }
 
-        public bool Inactive { get; set; }
-
         public IEnumerable<ItemCategoryTree>? ChildCategories { get; set; }
-
-        public bool IsCollapsed { get; set; }
-
+        
         public bool HasChild { get { return ChildCategories != null && ChildCategories.Any(); } }
 
         public int ItemCount { get; set; }

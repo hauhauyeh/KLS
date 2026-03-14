@@ -25,37 +25,37 @@ namespace KLS.API.Helpers
                 if (!IsProtectedAction(context))
                     return;
 
-                var isAdmin = Convert.ToBoolean(context.HttpContext.Items["IsAdmin"]?.ToString());
+                //var isAdmin = Convert.ToBoolean(context.HttpContext.Items["IsAdmin"]?.ToString());
 
-                if (!isAdmin)
-                {
-                    var routeValues = context.RouteData.Values;
+                //if (!isAdmin)
+                //{
+                //    var routeValues = context.RouteData.Values;
 
-                    string? controllerName = "";
-                    string? actionName = "";
+                //    string? controllerName = "";
+                //    string? actionName = "";
 
-                    if (routeValues.ContainsKey("controller"))
-                        controllerName = (string?)routeValues["controller"];
+                //    if (routeValues.ContainsKey("controller"))
+                //        controllerName = (string?)routeValues["controller"];
 
-                    if (routeValues.ContainsKey("action"))
-                        actionName = (string?)routeValues["action"];
+                //    if (routeValues.ContainsKey("action"))
+                //        actionName = (string?)routeValues["action"];
 
-                    string actionId = $"{controllerName}-{actionName}";
+                //    string actionId = $"{controllerName}-{actionName}";
 
-                    string? accessPermission = context.HttpContext.Items["AccessPermission"]?.ToString();
+                //    string? accessPermission = context.HttpContext.Items["AccessPermission"]?.ToString();
 
-                    var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(accessPermission);
+                //    var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(accessPermission);
 
-                    if (permissions == null)
-                        context.Result = new UnprocessableEntityResult();
-                    else
-                    {
-                        var isAllow = permissions.SelectMany(g => g.Controllers.SelectMany(c => c.Actions.Where(a => a.Id.ToLower() == actionId.ToLower()))).Any();
+                //    if (permissions == null)
+                //        context.Result = new UnprocessableEntityResult();
+                //    else
+                //    {
+                //        var isAllow = permissions.SelectMany(g => g.Controllers.SelectMany(c => c.Actions.Where(a => a.Id.ToLower() == actionId.ToLower()))).Any();
 
-                        if (!isAllow)
-                            context.Result = new UnprocessableEntityResult();
-                    }
-                }
+                //        if (!isAllow)
+                //            context.Result = new UnprocessableEntityResult();
+                //    }
+                //}
             }
             else
             {

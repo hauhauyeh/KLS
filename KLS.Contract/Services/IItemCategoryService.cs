@@ -14,6 +14,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<ItemCategory> GetTree();
 
+        IEnumerable<ItemCategoryTree> GetWebTree();
+
         ItemCategory GetById(int id);
 
         bool NameExists(ItemCategory itemCategory);

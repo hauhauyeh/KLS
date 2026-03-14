@@ -18,5 +18,23 @@ namespace KLS.Contract.Services
         string? ForgetPassword(string email, string url);
 
         bool ResetPassword(ResetPassword resetPassword);
+
+        void ResendEmailVerification(string email, string url);
+
+        bool VerifyEmail(string token);
+
+        ICollection<UserAccountList> GetListByPayeeId();
+
+        bool Delete(int userId);
+
+        bool UsernameExists(string username, int userId);
+
+        bool EmailExists(string email, int userId);
+
+        bool PhoneExists(string phone, int userId);
+
+        UserAccount Create(UserAccount account, string loginUrl);
+
+        UserAccount? Update(UserAccount account);
     }
 }

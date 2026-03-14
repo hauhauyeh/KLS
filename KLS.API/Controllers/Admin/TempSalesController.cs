@@ -89,6 +89,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("AddLine")]
+        public IActionResult AddLine([FromBody] AddLineRequest req)
+        {
+            return Ok(_tempSalesService.AddLine(req));
+        }
+
+
         [HttpPost("EvaluatePromotions")]
         public IActionResult EvaluatePromotions([FromBody] PromotionEvalRequest request)
         {

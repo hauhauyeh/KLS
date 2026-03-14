@@ -150,5 +150,65 @@ namespace KLS.Data.Repositories
 
             return DbContext.ItemDefaultFreight.FromSqlRaw("[Item_GetDefaultFreight] @ItemId", ItemIdParam).ToList().FirstOrDefault();
         }
+
+        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_ListActiveForKeybox] @PayeeId", PayeeIdParam).ToList();
+        }
+
+
+        public IQueryable<ItemWebRowList> GetWebPagedList(ItemWebListReq webListReq)
+        {
+            var param = WebBuildParam(webListReq);
+
+            return DbContext.ItemWebRowList.FromSqlRaw("[dbo].[Web_Item_List] @Pageno,@Pagesize,@PayeeId,@Search,@InStockOnly,@CategoryId,@SortField,@IsCount,@TotalCount OUTPUT", param);
+        }
+
+        public int WebCount(ItemWebListReq webListReq)
+        {
+            webListReq.IsCount = true;
+            var param = WebBuildParam(webListReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Web_Item_List] @Pageno,@Pagesize,@PayeeId,@Search,@InStockOnly,@CategoryId,@SortField,@IsCount,@TotalCount OUTPUT", param);
+
+            var output = param[8] as SqlParameter;
+            return Convert.ToInt32(output.Value);
+        }
+
+        private static object[] WebBuildParam(ItemWebListReq webListReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", webListReq.Pageno),
+
+                new SqlParameter("@Pagesize", webListReq.Pagesize),
+
+                new SqlParameter("@PayeeId", webListReq.PayeeId),
+
+                string.IsNullOrEmpty(webListReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", webListReq.Search),
+
+                new SqlParameter("@InStockOnly", webListReq.InStockOnly),
+
+                webListReq.CategoryId.HasValue ? new SqlParameter("@CategoryId", webListReq.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value),
+
+                //string.IsNullOrEmpty(itemListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", itemListReq.Filterby),
+
+                string.IsNullOrEmpty(webListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", webListReq.SortField),
+
+                //string.IsNullOrEmpty(webListReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", webListReq.SortOrder),
+
+                new SqlParameter("@IsCount", webListReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = ParameterDirection.Output,
+                    SqlDbType = SqlDbType.Int
+                }
+            };
+
+            return param;
+        }
     }
 }

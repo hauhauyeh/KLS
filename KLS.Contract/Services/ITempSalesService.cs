@@ -24,5 +24,7 @@ namespace KLS.Contract.Services
         IEnumerable<PayeeSearch>? DraftCustomers();
 
         IEnumerable<ItemSearch> Search(TempSalesReq tempReq);
+
+        TempSalesItem? AddLine(AddLineRequest req);
     }
 }

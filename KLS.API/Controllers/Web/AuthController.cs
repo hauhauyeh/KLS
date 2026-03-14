@@ -30,7 +30,7 @@ namespace KLS.API.Controllers.Web
             var result = _userAccountService.LoginUser(loginReq);
 
             if (!result.Success)
-                return Unauthorized(result.ErrorMessage);
+                return Unauthorized(new { result.Success, result.ErrorMessage, result.RequireEmailVerification });
 
             return Ok(result);
         }
@@ -74,6 +74,35 @@ namespace KLS.API.Controllers.Web
                 return Unauthorized("Invalid reset link. Request a new one.");
 
             return Ok();
+        }
+
+
+        [HttpPost("ResendEmail/{email}")]
+        public IActionResult ResendEmail(string email)
+        {
+            var user = _userAccountService.GetByEmail(email);
+
+            if (user == null)
+                return Unauthorized("This email address is not registered in our system");
+
+            var headers = Request.Headers;
+            var url = headers?["Origin"].FirstOrDefault() ?? headers?["Referer"].FirstOrDefault();
+
+            _userAccountService.ResendEmailVerification(email, url);
+
+            return Ok(new { Message = "Email verification link sent to your email." });
+        }
+
+
+        [HttpPost("VerifyEmail/{token}")]
+        public IActionResult VerifyEmail(string token)
+        {
+            var isVerified = _userAccountService.VerifyEmail(token);
+
+            if (!isVerified)
+                return Unauthorized("Invalid or expired verification link. Please request a new one.");
+
+            return Ok(new { Message = "Email verified successfully. You can now log in." });
         }
 
         #endregion
