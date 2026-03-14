@@ -1,0 +1,353 @@
+﻿@model KLS.Models.ForgotPassword
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Your Email</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top left, #f8fcef 0%, #edf7df 40%, #e4f0d0 100%);
+            color: #24311d;
+        }
+
+        .page-wrap {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .mail-card {
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdf8 100%);
+            border: 1px solid #dfe9cd;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 18px 44px rgba(48, 74, 18, 0.10), 0 4px 14px rgba(48, 74, 18, 0.06);
+        }
+
+        .top-accent {
+            height: 8px;
+            background: linear-gradient(90deg, #6f9f10 0%, #8fbe22 45%, #c7e57d 100%);
+        }
+
+        .header {
+            padding: 36px 42px 28px;
+            border-bottom: 1px solid #edf3e1;
+            background: linear-gradient(135deg, rgba(143, 190, 34, 0.10), rgba(255,255,255,0) 45%);
+        }
+
+        .logo-section {
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e9f0dd;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            vertical-align: top;
+            border: none;
+            padding: 0;
+        }
+
+        .title-block {
+            padding-right: 20px;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 14px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: #eef7da;
+            color: #5d8210;
+            border: 1px solid #dce8c8;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.15px;
+            text-transform: uppercase;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 36px;
+            line-height: 1.1;
+            font-weight: 800;
+            color: #1f2b19;
+        }
+
+        .subtitle {
+            margin: 10px 0 0;
+            color: #66735c;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .status-box {
+            padding: 20px 24px;
+            border-radius: 20px;
+            border: 1px solid #dce8c8;
+            background: linear-gradient(180deg, #f8fcef 0%, #eff6e2 100%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+        }
+
+        .status-label {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b785f;
+            margin-bottom: 8px;
+        }
+
+        .status-value {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 900;
+            color: #256328;
+            line-height: 1.2;
+        }
+
+        .status-note {
+            margin-top: 8px;
+            color: #66735c;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .content {
+            padding: 34px 42px 40px;
+        }
+
+        .welcome-box {
+            margin-bottom: 28px;
+            padding: 22px 24px;
+            border-radius: 18px;
+            background: #fcfef8;
+            border: 1px solid #e8efdb;
+            border-left: 5px solid #8fbe22;
+        }
+
+        .customer {
+            margin: 0 0 8px 0;
+            font-size: 21px;
+            font-weight: 800;
+            color: #293521;
+        }
+
+        .welcome-text {
+            margin: 0;
+            color: #5f6c56;
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        .info-card {
+            margin-bottom: 28px;
+            padding: 22px 24px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #fafdf5 100%);
+            border: 1px solid #e5edd7;
+            box-shadow: 0 4px 14px rgba(36, 49, 29, 0.04);
+        }
+
+        .info-title {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: #2b3724;
+        }
+
+        .info-text {
+            margin: 0;
+            color: #5d6a54;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .button-wrap {
+            margin: 30px 0 26px;
+            text-align: center;
+        }
+
+        .verify-btn {
+            display: inline-block;
+            padding: 15px 32px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #6f9f10 0%, #87b91a 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            box-shadow: 0 10px 24px rgba(90, 129, 22, 0.22);
+        }
+
+        .verify-btn:hover {
+            text-decoration: none;
+        }
+
+        .link-card {
+            margin-top: 10px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            background: #f8fbf1;
+            border: 1px dashed #d6e3be;
+        }
+
+        .link-label {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #6c7a61;
+        }
+
+        .link-text {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.8;
+            color: #4f5f45;
+            word-break: break-all;
+        }
+
+        .footer {
+            margin-top: 28px;
+            padding: 22px 24px;
+            border-radius: 18px;
+            border: 1px solid #e7efda;
+            background: linear-gradient(180deg, #fcfef8 0%, #f6faef 100%);
+        }
+
+        .footer p {
+            margin: 0 0 10px 0;
+            color: #5d6a54;
+            font-size: 14px;
+            line-height: 1.75;
+        }
+
+        .footer p:last-child {
+            margin-bottom: 0;
+        }
+
+        .signature {
+            margin-top: 14px;
+            font-weight: 800;
+            color: #314028;
+        }
+
+        @@media print {
+            body {
+                padding: 0;
+                background: #ffffff;
+            }
+
+            .mail-card {
+                box-shadow: none;
+                border: 1px solid #d9d9d9;
+            }
+        }
+
+        @@media only screen and (max-width: 768px) {
+            .header,
+            .content {
+                padding: 24px;
+            }
+
+            .title {
+                font-size: 28px;
+            }
+
+            .status-value {
+                font-size: 22px;
+            }
+
+            .header-table,
+            .header-table tbody,
+            .header-table tr,
+            .header-table td {
+                display: block !important;
+                width: 100% !important;
+            }
+
+            .title-block {
+                padding-right: 0;
+                padding-bottom: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrap">
+        <div class="mail-card">
+            <div class="top-accent"></div>
+
+            <div class="header">
+                <table class="header-table" role="presentation">
+                    <tr>
+                        <td style="width:65%;">
+                            <div class="title-block">
+                                <div class="eyebrow">Account Registration</div>
+                                <h1 class="title">Verify Your Email</h1>
+                                <p class="subtitle">
+                                    Welcome to your new account. Please confirm your email address to activate access securely.
+                                </p>
+                            </div>
+                        </td>
+                        <td style="width:35%;">
+                            <div class="status-box">
+                                <div class="status-label">Account Status</div>
+                                <p class="status-value">Pending Verification</p>
+                                <div class="status-note">
+                                    Complete the verification step below to confirm your registration.
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="content">
+                <div class="welcome-box">
+                    <p class="customer">Dear @(Model.Username ?? "Customer"),</p>
+                    <p class="welcome-text">
+                        Thank you for registering with us. To complete your account setup, please verify your email address by clicking the button below.
+                    </p>
+                </div>
+
+                <div class="info-card">
+                    <h3 class="info-title">Email Verification Required</h3>
+                    <p class="info-text">
+                        This verification helps us protect your account and ensures that your email address is valid. Once verified, you will be able to continue using your account normally.
+                    </p>
+
+                    <div class="button-wrap">
+                        <a href="@Model.ResetUrl" class="verify-btn">Verify Email Address</a>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>
+                        If you did not create this account, you may safely ignore this email.
+                    </p>
+                    <p>
+                        For security reasons, we recommend verifying your email as soon as possible.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

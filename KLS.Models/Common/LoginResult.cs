@@ -19,5 +19,7 @@ namespace KLS.Models
         public bool IsSalesRole { get; set; }
         public int EmpId { get; set; }
         public string? EmpSortName { get; set; }
+
+        public bool RequireEmailVerification { get; set; }
     }
 }

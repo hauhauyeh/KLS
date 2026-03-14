@@ -383,5 +383,25 @@ namespace KLS.Services
                 .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
             }
         }
+
+        //--Web
+        public PagingResponse<OrderWebList>? GetWebPagedList(SalesListReq salesListReq)
+        {
+            salesListReq.PayeeId = UserContext.EmpId;
+
+            var sales = Uow.Sales.GetWebPagedList(salesListReq).ToList();
+
+            var totalRecords = Uow.Sales.WebOrderCount(salesListReq);
+
+            foreach (var invoice in sales)
+            {
+                invoice.IsPdfExist = IsInvoicePdfExist(invoice.SalesNumber);
+            }
+
+            return new PagingResponse<OrderWebList>(totalRecords, salesListReq.Pageno, salesListReq.Pagesize)
+            {
+                RowData = sales,
+            };
+        }
     }
 }

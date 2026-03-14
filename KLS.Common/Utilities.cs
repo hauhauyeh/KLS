@@ -203,7 +203,7 @@ namespace KLS.Common
             }
         }
 
-        public static string EAN13(string DataToEncode)
+        public static string EAN13(string? DataToEncode)
         {
             string DataToPrint = "";
 
@@ -744,6 +744,13 @@ namespace KLS.Common
             return accountNumber.Length <= 4
                 ? accountNumber
                 : accountNumber.Substring(accountNumber.Length - 4);
+        }
+
+        public static string GenerateRandomPassword()
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 12).Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

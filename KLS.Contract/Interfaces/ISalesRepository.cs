@@ -38,5 +38,10 @@ namespace KLS.Contract.Interfaces
         int MergeOrder(SalesMergeReq mergeReq);
 
         IQueryable<SalesExport>? Export(SalesExportReq exportReq);
+
+        //--Web
+        IQueryable<OrderWebList>? GetWebPagedList(SalesListReq salesListReq);
+
+        int WebOrderCount(SalesListReq salesListReq);
     }
 }

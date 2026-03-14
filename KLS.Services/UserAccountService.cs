@@ -5,10 +5,12 @@ using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using Twilio.Jwt.AccessToken;
 
 namespace KLS.Services
 {
@@ -34,7 +36,7 @@ namespace KLS.Services
         public UserAccount? CheckUserUsername(LoginReq loginReq)
         {
             return Uow.UserAccounts
-                .Find(e => (e.Username == loginReq.Username || e.Email == loginReq.Username) && !e.Inactive).FirstOrDefault();
+                .Find(e => (e.Username.ToLower() == loginReq.Username.ToLower() || e.Email.ToLower() == loginReq.Username.ToLower()) && !e.Inactive).FirstOrDefault();
         }
 
         public UserAccount GetById(int userId)
@@ -56,6 +58,29 @@ namespace KLS.Services
 
             if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
                 return new LoginResult { Success = false, ErrorMessage = "Password is incorrect" };
+
+            // EMAIL VERIFICATION CHECK
+            if (!user.IsEmailVerified)
+            {
+                return new LoginResult
+                {
+                    Success = false,
+                    ErrorMessage = "Email is not verified. Please verify your email",
+                    RequireEmailVerification = true
+                };
+            }
+
+            // IsApproved
+            var customer = Uow.Customers.GetById(user.PayeeId);
+
+            if (!customer.IsApproved)
+            {
+                return new LoginResult
+                {
+                    Success = false,
+                    ErrorMessage = "Your account has not been approved yet"
+                };
+            }
 
             var refreshToken = _jWTService.GenerateRefreshToken();
             user.RefToken = refreshToken;
@@ -146,7 +171,6 @@ namespace KLS.Services
 
             // Build reset link
             string resetUrl = $"{url}/resetpassword/{Uri.EscapeDataString(token)}";
-
             var subject = "Reset your password";
 
             var model = new ForgotPassword
@@ -180,6 +204,170 @@ namespace KLS.Services
             user.UpdatedAt = DateTime.UtcNow;
 
             Uow.UserAccounts.Update(user);
+            Uow.Commit();
+
+            return true;
+        }
+
+        public void ResendEmailVerification(string email, string url)
+        {
+            var user = GetByEmail(email);
+
+            if (user == null || user.IsEmailVerified)
+                return;
+
+            // Generate token
+            var token = TokenHelper.GenerateToken();
+
+            user.EmailVerifyCode = token;
+            user.EmailVerifyExpire = DateTime.UtcNow.AddMinutes(15);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(user);
+            Uow.Commit();
+
+            // Build reset link
+            string resetUrl = $"{url}/verifyemail/{Uri.EscapeDataString(token)}";
+            var subject = "Verify your email";
+
+            var model = new ForgotPassword
+            {
+                Username = user.Username ?? user.Email,
+                ResetUrl = resetUrl
+            };
+
+            string mailBody = _emailService.RenderEmailTemplate("~/Views/Register.cshtml", model);
+
+            EmailSetting setting = _emailSettingService.GetSetting();
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
+                .ContinueWith((t) => { });
+        }
+
+        public bool VerifyEmail(string token)
+        {
+            string? decoded = HttpUtility.UrlDecode(token);
+
+            var user = Uow.UserAccounts
+                .Find(u => u.EmailVerifyCode == decoded && u.EmailVerifyExpire > DateTime.UtcNow)
+                .FirstOrDefault();
+
+            if (user == null)
+                return false;
+
+            user.IsEmailVerified = true;
+            user.EmailVerifyCode = null;
+            user.EmailVerifyExpire = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(user);
+            Uow.Commit();
+
+            return true;
+        }
+
+        //Web method
+        public ICollection<UserAccountList> GetListByPayeeId()
+        {
+            var users = Uow.UserAccounts.Find(e => e.PayeeId == UserContext.EmpId);
+            var roles = Uow.UserRoles.GetAll();
+
+            return users.Join(roles,
+                    u => u.RoleId,
+                    r => r.RoleId,
+                    (u, r) => new UserAccountList
+                    {
+                        UserId = u.UserId,
+                        RoleId = u.RoleId,
+                        RoleName = r.RoleName,
+                        Username = u.Username,
+                        Email = u.Email,
+                        Phone = u.Phone,
+                        IsEmailVerified = u.IsEmailVerified,
+                        IsPhoneVerified = u.IsPhoneVerified,
+                        Inactive = u.Inactive,
+                        CreatedAt = u.CreatedAt
+                    })
+                .ToList();
+        }
+
+        public bool EmailExists(string email, int userId)
+        {
+            return Uow.UserAccounts.Exists(e =>
+                e.Email.ToLower() == email.ToLower() &&
+                e.UserId != userId);
+        }
+
+        public bool UsernameExists(string username, int userId)
+        {
+            return Uow.UserAccounts.Exists(e =>
+                e.Username.ToLower() == username.ToLower() &&
+                e.UserId != userId);
+        }
+
+        public bool PhoneExists(string phone, int userId)
+        {
+            return Uow.UserAccounts.Exists(e =>
+                e.Phone != null &&
+                e.Phone == phone &&
+                e.UserId != userId);
+        }
+
+        public UserAccount Create(UserAccount account, string loginUrl)
+        {
+            var tempPassword = Utilities.GenerateRandomPassword();
+
+            account.PayeeId = UserContext.EmpId;
+            account.PasswordHash = Utilities.Encrypt(tempPassword);
+            account.IsEmailVerified = true;
+
+            Uow.UserAccounts.Add(account);
+            Uow.Commit();
+
+            var model = new WelcomeEmail
+            {
+                Username = account.Username,
+                Email = account.Email,
+                TempPassword = tempPassword,
+                LoginUrl = loginUrl
+            };
+
+            string mailBody = _emailService.RenderEmailTemplate("~/Views/WelcomeEmail.cshtml", model);
+            EmailSetting setting = _emailSettingService.GetSetting();
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(setting, account.Email, "Your Account Is Ready", mailBody, null), TaskCreationOptions.LongRunning)
+                .ContinueWith((t) => { });
+
+            return account;
+        }
+
+        public UserAccount? Update(UserAccount account)
+        {
+            var existing = GetById(account.UserId);
+
+            if (existing == null)
+                return null;
+
+            existing.RoleId = account.RoleId;
+            existing.Username = account.Username;
+            existing.Phone = account.Phone;
+            existing.Inactive = account.Inactive;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(existing);
+            Uow.Commit();
+
+            return existing;
+        }
+
+        public bool Delete(int userId)
+        {
+            var user = Uow.UserAccounts.Find(e => e.UserId == userId && e.PayeeId == UserContext.EmpId).FirstOrDefault();
+
+            if (user == null)
+                return false;
+
+            Uow.UserAccounts.Remove(user);
             Uow.Commit();
 
             return true;

@@ -222,5 +222,56 @@ namespace KLS.Data.Repositories
 
             return DbContext.SalesExport.FromSqlRaw("[Sales_Export] @StartDate,@EndDate", StartDateParam, EndDateParam).AsNoTracking();
         }
+
+        //--Web
+        public IQueryable<OrderWebList>? GetWebPagedList(SalesListReq salesListReq)
+        {
+            var param = BuildWebOrderParam(salesListReq);
+
+            return DbContext.OrderWebList.FromSqlRaw("[dbo].[Web_Order_List] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+        }
+
+        public int WebOrderCount(SalesListReq salesListReq)
+        {
+            salesListReq.IsCount = true;
+            var param = BuildWebOrderParam(salesListReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Web_Order_List] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+
+            var output = param[9] as SqlParameter;
+            return Convert.ToInt32(output.Value);
+        }
+
+        private static object[] BuildWebOrderParam(SalesListReq salesListReq)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", salesListReq.Pageno),
+
+                new SqlParameter("@Pagesize", salesListReq.Pagesize),
+
+                string.IsNullOrEmpty(salesListReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", salesListReq.Search),
+
+                salesListReq.StartDate.HasValue ? new SqlParameter("@StartDate", salesListReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                salesListReq.EndDate.HasValue ? new SqlParameter("@EndDate", salesListReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                 salesListReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", salesListReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value),
+
+                string.IsNullOrEmpty(salesListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", salesListReq.SortField),
+
+                string.IsNullOrEmpty(salesListReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", salesListReq.SortOrder),
+
+                new SqlParameter("@IsCount", salesListReq.IsCount),
+
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+
+            return param;
+        }
     }
 }

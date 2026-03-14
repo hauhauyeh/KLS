@@ -1,7 +1,6 @@
 ﻿using KLS.Common;
 using KLS.Models;
 using KLS.Models.Reports;
-using KLS.Models.TempSalesPromo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System;
@@ -131,6 +130,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Payee>().Property(c => c.Id).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
             modelBuilder.Entity<SalesExport>().HasNoKey();
+            modelBuilder.Entity<ItemWebRowList>().HasNoKey();
         }
 
         #region ---DBSET---
@@ -473,5 +473,9 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptPricesheet> RptPricesheet { get; set; }
 
         #endregion
+
+        public virtual DbSet<OrderWebList> OrderWebList { get; set; }
+
+        public virtual DbSet<ItemWebRowList> ItemWebRowList { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace KLS.Models
@@ -13,6 +14,7 @@ namespace KLS.Models
         public UserAccount()
         {
             this.CreatedAt = DateTime.UtcNow;
+            this.PasswordHash = string.Empty;
         }
 
         [Key]
@@ -27,6 +29,9 @@ namespace KLS.Models
 
         public string Username { get; set; }
 
+        public string? Phone { get; set; }
+
+        [JsonIgnore]
         public string PasswordHash { get; set; }
 
         public bool Inactive { get; set; }
@@ -39,10 +44,21 @@ namespace KLS.Models
 
         public DateTime? ResetTokenExpire { get; set; }
 
+        public bool IsEmailVerified { get; set; }
+
+        public string? EmailVerifyCode { get; set; }
+
+        public DateTime? EmailVerifyExpire { get; set; }
+
+        public bool IsPhoneVerified { get; set; }
+
+        public string? PhoneVerifyCode { get; set; }
+
+        public DateTime? PhoneVerifyExpire { get; set; }
+
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
-
-
     }
 }
