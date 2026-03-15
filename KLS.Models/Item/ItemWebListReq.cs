@@ -13,5 +13,7 @@ namespace KLS.Models
         public int? CategoryId { get; set; }
 
         public bool InStockOnly { get; set; }
+
+        public bool IsWishList { get; set; }
     }
 }

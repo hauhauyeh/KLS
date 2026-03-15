@@ -2,8 +2,11 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Models.Cart;
 using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
+using OneOf.Types;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,18 +18,20 @@ namespace KLS.Services
         private readonly IItemService _itemService;
         private readonly IItemUnitService _itemUnitService;
         private readonly IAccountService _accountService;
+        private readonly IItemImageService _itemImageService;
 
-        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService) : base(uow)
+        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService, IItemImageService itemImageService) : base(uow)
         {
             _itemService = itemService;
             _itemUnitService = itemUnitService;
             _accountService = accountService;
+            _itemImageService = itemImageService;
         }
 
 
         public IEnumerable<TempSalesItem>? GetList(TempSalesReq tempReq)
         {
-            return Uow.TempSales.GetList(tempReq);
+            return Uow.TempSales.GetList(tempReq)?.ToList();
         }
 
         public TempSales? GetById(int tempId)
@@ -410,6 +415,97 @@ namespace KLS.Services
             Uow.Commit();
 
             return GetListById(tempSales);
+        }
+
+        //---Web
+        private WebCartItem ToWebCartItem(TempSalesItem item) => new WebCartItem
+        {
+            TempSalesId = item.TempSalesId,
+            ItemId = item.ItemId,
+            ItemCode = item.ItemCode,
+            ItemName = item.ItemName,
+            ItemUnitId = item.ItemUnitId,
+            Unit = item.Unit,
+            OrdQty = item.OrdQty,
+            UnitPrice = item.UnitPrice,
+            ExtTotal = item.ExtTotal,
+            PrimaryImageUrl = item.ItemId.HasValue
+                ? _itemImageService.GetPrimary(item.ItemId.Value)?.ThumbnailUrl
+                : null
+        };
+
+        public IEnumerable<WebCartItem>? GetCartItems()
+        {
+            var items = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
+
+            return items?.Select(ToWebCartItem);
+        }
+
+        public WebCartItem? AddCartItem(AddToCartReq req)
+        {
+            var cartItems = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
+
+            var existing = cartItems?.FirstOrDefault(c =>
+                c.ItemId == req.ItemId && c.ItemUnitId == req.ItemUnitId);
+
+            TempSalesItem result;
+
+            if (existing != null)
+            {
+                existing.OrdQty = (existing.OrdQty ?? 0) + req.Qty;
+                existing.BillQty = existing.OrdQty;
+                result = Update(existing);
+            }
+            else
+            {
+                var addReq = new AddLineRequest
+                {
+                    PayeeId = UserContext.EmpId,
+                    SalesId = 0,
+                    ItemId = req.ItemId,
+                    Qty = req.Qty,
+                    Unit = req.Unit
+                };
+
+                result = AddLine(addReq);
+
+                if (result == null)
+                    return null;
+            }
+
+            return ToWebCartItem(result);
+        }
+
+        public WebCartItem? UpdateCartQty(WebCartItem cartItem)
+        {
+            var existing = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0, TempId = cartItem.TempSalesId })?.FirstOrDefault();
+
+            if (existing == null)
+                return null;
+
+            existing.OrdQty = cartItem.OrdQty;
+            existing.BillQty = existing.OrdQty;
+
+            var result = Update(existing);
+
+            return ToWebCartItem(result);
+        }
+
+        public WebCartItem? UpdateCartUnit(WebCartItem cartItem)
+        {
+            var existing = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0, TempId = cartItem.TempSalesId })?.FirstOrDefault();
+
+            if (existing == null)
+                return null;
+
+            var result = UpdateUnit(existing);
+
+            return ToWebCartItem(result);
+        }
+
+        public void ClearCart()
+        {
+            Clear(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
         }
     }
 }

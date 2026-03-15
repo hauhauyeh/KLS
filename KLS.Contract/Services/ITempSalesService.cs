@@ -1,4 +1,5 @@
 ﻿using KLS.Models;
+using KLS.Models.Cart;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,5 +27,18 @@ namespace KLS.Contract.Services
         IEnumerable<ItemSearch> Search(TempSalesReq tempReq);
 
         TempSalesItem? AddLine(AddLineRequest req);
+
+
+        //----Web
+
+        IEnumerable<WebCartItem>? GetCartItems();
+
+        WebCartItem? AddCartItem(AddToCartReq req);
+
+        WebCartItem? UpdateCartQty(WebCartItem cartItem);
+
+        WebCartItem? UpdateCartUnit(WebCartItem cartItem);
+
+        void ClearCart();
     }
 }

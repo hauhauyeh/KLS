@@ -32,7 +32,7 @@ namespace KLS.Data.Repositories
 
             var IdParam = tempReq.TempId.HasValue ? new SqlParameter("@Id", tempReq.TempId) : new SqlParameter("@Id", DBNull.Value);
 
-            return DbContext.TempSalesItem.FromSqlRaw("[TempSales_GetList] @EmpId,@PayeeId,@SalesId,@SortField,@SortOrder,@Id", EmpIdParam, PayeeIdParam, SalesIdParam, SortFieldParam, SortOrderParam, IdParam);
+            return DbContext.TempSalesItem.FromSqlRaw("[TempSales_GetList] @EmpId,@PayeeId,@SalesId,@SortField,@SortOrder,@Id", EmpIdParam, PayeeIdParam, SalesIdParam, SortFieldParam, SortOrderParam, IdParam).AsNoTracking();
         }
 
         public IQueryable<ItemSearch> Search(TempSalesReq tempReq)

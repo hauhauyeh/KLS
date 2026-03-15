@@ -54,6 +54,11 @@ namespace KLS.Services
             return images;
         }
 
+        public ItemImageList? GetPrimary(int itemId)
+        {
+            return GetList(itemId)?.Where(c => c.IsPrimary).FirstOrDefault();
+        }
+
         public ItemImage GetById(int imageId)
         {
             return Uow.ItemImages.GetById(imageId);

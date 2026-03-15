@@ -246,10 +246,10 @@ namespace KLS.Services
 
         public bool VerifyEmail(string token)
         {
-            string? decoded = HttpUtility.UrlDecode(token);
+            //string? decoded = HttpUtility.UrlDecode(token);
 
             var user = Uow.UserAccounts
-                .Find(u => u.EmailVerifyCode == decoded && u.EmailVerifyExpire > DateTime.UtcNow)
+                .Find(u => u.EmailVerifyCode == token && u.EmailVerifyExpire > DateTime.UtcNow)
                 .FirstOrDefault();
 
             if (user == null)

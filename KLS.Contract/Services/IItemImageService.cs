@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         IEnumerable<ItemImageList>? GetList(int itemId);
 
+        ItemImageList? GetPrimary(int itemId);
+
         void Upload(ImageUploadReq uploadReq);
 
         void Delete(int imageId);
