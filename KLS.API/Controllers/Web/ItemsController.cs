@@ -52,6 +52,13 @@ namespace KLS.API.Controllers.Web
             return Ok(_itemCategoryService.GetWebTree());
         }
 
+
+        [HttpGet("Search")]
+        public IActionResult Search([FromQuery] string term)
+        {
+            return Ok(_itemService.WebSearch(term));
+        }
+
         #endregion
     }
 }

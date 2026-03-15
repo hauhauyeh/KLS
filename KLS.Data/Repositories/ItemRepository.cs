@@ -163,7 +163,7 @@ namespace KLS.Data.Repositories
         {
             var param = WebBuildParam(webListReq);
 
-            return DbContext.ItemWebRowList.FromSqlRaw("[dbo].[Web_Item_List] @Pageno,@Pagesize,@PayeeId,@Search,@InStockOnly,@CategoryId,@SortField,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ItemWebRowList.FromSqlRaw("[dbo].[Web_Item_List] @Pageno,@Pagesize,@PayeeId,@Search,@InStockOnly,@CategoryId,@IsWishList,@SortField,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int WebCount(ItemWebListReq webListReq)
@@ -171,9 +171,9 @@ namespace KLS.Data.Repositories
             webListReq.IsCount = true;
             var param = WebBuildParam(webListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Web_Item_List] @Pageno,@Pagesize,@PayeeId,@Search,@InStockOnly,@CategoryId,@SortField,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Web_Item_List] @Pageno,@Pagesize,@PayeeId,@Search,@InStockOnly,@CategoryId,@IsWishList,@SortField,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[8] as SqlParameter;
+            var output = param[9] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -191,6 +191,8 @@ namespace KLS.Data.Repositories
                 new SqlParameter("@InStockOnly", webListReq.InStockOnly),
 
                 webListReq.CategoryId.HasValue ? new SqlParameter("@CategoryId", webListReq.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value),
+
+                new SqlParameter("@IsWishList", webListReq.IsWishList),
 
                 //string.IsNullOrEmpty(itemListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", itemListReq.Filterby),
 

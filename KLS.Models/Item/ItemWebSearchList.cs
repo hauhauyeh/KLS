@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class ItemSearch
+    public class ItemWebSearchList
     {
         [Key]
         public int ItemId { get; set; }
@@ -15,20 +15,6 @@ namespace KLS.Models
         public string? ItemCode { get; set; }
 
         public string? ItemName { get; set; }
-
-        public string? BaseUnit { get; set; }
-
-        public decimal? LCloseQty { get; set; }
-
-        public bool Inactive { get; set; }
-
-        public string? ItemSearchTag { get; set; }
-
-        public DateOnly? LastOrderDate { get; set; }
-
-        public decimal? LastOrderQty { get; set; }
-
-        public string? LastOrderUnit { get; set; }
 
         public string? PrimaryImageUrl { get; set; }
     }

@@ -45,5 +45,7 @@ namespace KLS.Contract.Services
 
 
         PagingResponse<ItemWebList> GetWebPagedList(ItemWebListReq webListReq);
+
+        IEnumerable<ItemWebSearchList>? WebSearch(string searchTerm);
     }
 }

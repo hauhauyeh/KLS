@@ -4,7 +4,6 @@ using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Polly.Caching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -325,6 +324,11 @@ namespace KLS.Services
             }
         }
 
+        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
+        {
+            return Uow.Items.GetSearchList(payeeId);
+        }
+
 
         public PagingResponse<ItemWebList> GetWebPagedList(ItemWebListReq webListReq)
         {
@@ -333,10 +337,7 @@ namespace KLS.Services
             var rows = Uow.Items.GetWebPagedList(webListReq).ToList();
             var totalRecords = Uow.Items.WebCount(webListReq);
 
-            var request = _httpContextAccessor.HttpContext?.Request;
-            string baseUrl = "";
-            if (request != null)
-                baseUrl = $"{request.Scheme}://{request.Host}";
+            string baseUrl = GetbaseUrl();
 
             var dict = new Dictionary<int, ItemWebList>();
 
@@ -387,6 +388,33 @@ namespace KLS.Services
             {
                 RowData = dict.Values.ToList(),
             };
+        }
+
+        public IEnumerable<ItemWebSearchList>? WebSearch(string searchTerm)
+        {
+            var items = Uow.Items.Search(new ItemSearchReq { IsActiveOnly = true, Term = searchTerm })?.ToList();
+
+            string baseUrl = GetbaseUrl();
+
+            return items?.Select(c => new ItemWebSearchList
+            {
+                ItemId = c.ItemId,
+                ItemCode = c.ItemCode,
+                ItemName = c.ItemName,
+                PrimaryImageUrl = string.IsNullOrEmpty(c.PrimaryImageUrl)
+                            ? null
+                            : baseUrl + c.PrimaryImageUrl,
+            });
+        }
+
+        private string GetbaseUrl()
+        {
+            var request = _httpContextAccessor.HttpContext?.Request;
+            string baseUrl = "";
+            if (request != null)
+                baseUrl = $"{request.Scheme}://{request.Host}";
+
+            return baseUrl;
         }
 
         //public void UpdateDefautCost(int itemId, decimal? defaultCost)
@@ -514,10 +542,5 @@ namespace KLS.Services
         //        }
         //    }
         //}
-
-        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
-        {
-            return Uow.Items.GetSearchList(payeeId);
-        }
     }
 }

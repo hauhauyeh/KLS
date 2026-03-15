@@ -41,11 +41,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemService.GetPagedList(itemListReq));
         }
 
+
         [HttpGet("ActiveItems")]
         public IActionResult ActiveItems()
         {
             return Ok(_itemService.ActiveItems());
         }
+
 
         [HttpGet("ListActiveForKeybox/{payeeId}")]
         public IActionResult ListActiveForKeybox(int payeeId)
