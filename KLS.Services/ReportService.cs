@@ -337,11 +337,6 @@ namespace KLS.Services
             return Uow.Reports.Pricesheet(payeeId);
         }
 
-        public IQueryable<RptOrderGuideItem> OrderGuide(int payeeId)
-        {
-            return Uow.Reports.OrderGuide(payeeId);
-        }
-
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDaily(reportReq);

@@ -121,20 +121,6 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.AccountHistory(PayeeId));
         }
 
-        [HttpGet("Pricesheet/{PayeeId}")]
-        [DisplayName("Customer -> Pricesheet")]
-        public IActionResult Pricesheet(int PayeeId)
-        {
-            return Ok(_reportService.Pricesheet(PayeeId));
-        }
-
-        [HttpGet("OrderGuide/{PayeeId}")]
-        [DisplayName("Customer -> Order Guide")]
-        public IActionResult OrderGuide(int PayeeId)
-        {
-            return Ok(_reportService.OrderGuide(PayeeId));
-        }
-
         #endregion
     }
 }
