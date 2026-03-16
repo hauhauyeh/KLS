@@ -476,6 +476,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptAccountHistory> RptAccountHistory { get; set; }
 
+        public virtual DbSet<RptOrderGuideItem> RptOrderGuideItem { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }
