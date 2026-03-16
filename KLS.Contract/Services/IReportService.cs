@@ -33,5 +33,7 @@ namespace KLS.Contract.Services
         IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId);
 
         RptLedger? Ledger(ReportRequest reportReq);
+
+        IEnumerable<RptAccountHistory>? AccountHistory(int payeeId);
     }
 }

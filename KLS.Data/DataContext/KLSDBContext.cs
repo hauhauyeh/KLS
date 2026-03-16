@@ -474,6 +474,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptLedgerRow> RptLedgerRow { get; set; }
 
+        public virtual DbSet<RptAccountHistory> RptAccountHistory { get; set; }
+
         #endregion
     }
 }

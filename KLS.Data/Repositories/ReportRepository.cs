@@ -36,6 +36,11 @@ namespace KLS.Data.Repositories
 
         public RptCustStmt CustStmt(int payeeId)
         {
+            // Recalculate aging on demand before reading Payee
+            var payeeIdParam = new SqlParameter("@PayeeId", payeeId);
+            var isSalesParam = new SqlParameter("@IsSales", true);
+            DbContext.Database.ExecuteSqlRaw("EXEC [dbo].[Payee_UpdateAging] @PayeeId, @IsSales", payeeIdParam, isSalesParam);
+
             var details = DbContext.Sales.Where(s => s.ShipId == payeeId && s.AmountDue != 0)
                 .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })
                 .Select(g => new RptCustStmtDetail
@@ -196,6 +201,13 @@ namespace KLS.Data.Repositories
             var AccountIdParam = reportReq.AccountId.HasValue ? new SqlParameter("@AccountId", reportReq.AccountId) : new SqlParameter("@AccountId", DBNull.Value);
 
             return DbContext.RptLedgerRow.FromSqlRaw("[dbo].[Report_Ledger] @StartDate,@EndDate,@AccountId", StartDateParam, EndDateParam, AccountIdParam);
+        }
+
+        public IQueryable<RptAccountHistory> AccountHistory(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.RptAccountHistory.FromSqlRaw("[dbo].[Report_AccountHistory] @PayeeId", PayeeIdParam);
         }
 
         public IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq)

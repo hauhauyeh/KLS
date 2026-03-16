@@ -104,5 +104,23 @@ namespace KLS.API.Controllers.Admin
         {
             return Ok(_reportService.Ledger(reportReq));
         }
+
+        #region --- Customer ---
+
+        [HttpGet("CustStmt/{PayeeId}")]
+        [DisplayName("Customer -> Statement")]
+        public IActionResult CustStmt(int PayeeId)
+        {
+            return Ok(_reportService.CustStmt(PayeeId));
+        }
+
+        [HttpGet("AccountHistory/{PayeeId}")]
+        [DisplayName("Customer -> Account History")]
+        public IActionResult AccountHistory(int PayeeId)
+        {
+            return Ok(_reportService.AccountHistory(PayeeId));
+        }
+
+        #endregion
     }
 }

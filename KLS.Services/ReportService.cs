@@ -358,6 +358,11 @@ namespace KLS.Services
                 }).ToList();
         }
 
+        public IEnumerable<RptAccountHistory>? AccountHistory(int payeeId)
+        {
+            return Uow.Reports.AccountHistory(payeeId);
+        }
+
         public RptLedger? Ledger(ReportRequest reportReq)
         {
             var rows = Uow.Reports.Ledger(reportReq).ToList();

@@ -51,5 +51,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq);
 
         IQueryable<RptLedgerRow> Ledger(ReportRequest reportReq);
+
+        IQueryable<RptAccountHistory> AccountHistory(int payeeId);
     }
 }
