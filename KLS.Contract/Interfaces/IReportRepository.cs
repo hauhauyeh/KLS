@@ -53,5 +53,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptLedgerRow> Ledger(ReportRequest reportReq);
 
         IQueryable<RptAccountHistory> AccountHistory(int payeeId);
+
+        IQueryable<RptOrderGuideItem> OrderGuide(int payeeId);
     }
 }

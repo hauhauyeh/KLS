@@ -35,5 +35,9 @@ namespace KLS.Contract.Services
         RptLedger? Ledger(ReportRequest reportReq);
 
         IEnumerable<RptAccountHistory>? AccountHistory(int payeeId);
+
+        IQueryable<RptPricesheet> Pricesheet(int payeeId);
+
+        IQueryable<RptOrderGuideItem> OrderGuide(int payeeId);
     }
 }
