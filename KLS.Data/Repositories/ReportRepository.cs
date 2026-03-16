@@ -189,6 +189,15 @@ namespace KLS.Data.Repositories
             return DbContext.RptSalesDaily.FromSqlRaw("[dbo].[Report_SalesDaily] @StartDate,@EndDate,@SalesRepId", StartDateParam, EndDateParam, SalesRepIdParam);
         }
 
+        public IQueryable<RptLedgerRow> Ledger(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var AccountIdParam = reportReq.AccountId.HasValue ? new SqlParameter("@AccountId", reportReq.AccountId) : new SqlParameter("@AccountId", DBNull.Value);
+
+            return DbContext.RptLedgerRow.FromSqlRaw("[dbo].[Report_Ledger] @StartDate,@EndDate,@AccountId", StartDateParam, EndDateParam, AccountIdParam);
+        }
+
         public IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq)
         {
             var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);

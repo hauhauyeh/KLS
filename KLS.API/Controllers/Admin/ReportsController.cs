@@ -97,5 +97,12 @@ namespace KLS.API.Controllers.Admin
         {
             return Ok(_reportService.PaymentHistory(PayeeId));
         }
+
+        [HttpGet("Ledger")]
+        [DisplayName("PL -> Ledger")]
+        public IActionResult Ledger([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.Ledger(reportReq));
+        }
     }
 }

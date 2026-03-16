@@ -49,5 +49,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq);
 
         IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq);
+
+        IQueryable<RptLedgerRow> Ledger(ReportRequest reportReq);
     }
 }

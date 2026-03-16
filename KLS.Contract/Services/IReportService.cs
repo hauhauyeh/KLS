@@ -31,5 +31,7 @@ namespace KLS.Contract.Services
         IEnumerable<RptDescDollar>? DescDollar(ReportRequest reportReq);
 
         IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId);
+
+        RptLedger? Ledger(ReportRequest reportReq);
     }
 }

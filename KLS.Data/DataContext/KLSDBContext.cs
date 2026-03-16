@@ -472,6 +472,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptPricesheet> RptPricesheet { get; set; }
 
+        public virtual DbSet<RptLedgerRow> RptLedgerRow { get; set; }
+
         #endregion
     }
 }

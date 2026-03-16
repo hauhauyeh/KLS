@@ -108,35 +108,74 @@ namespace KLS.Services
 
         public IEnumerable<RptBalanceSheet>? BalanceSheet(DateOnly? endDate)
         {
-            var balance = Uow.Reports.BalanceSheet(endDate).ToList();
+            var balance = Uow.Reports.BalanceSheet(endDate)
+                .AsEnumerable()
+                .OrderBy(r => r.CategorySort0 ?? 9999)
+                .ThenBy(r => r.CategorySort1 ?? 9999)
+                .ThenBy(r => r.CategorySort2 ?? 9999)
+                .ThenBy(r => r.CategorySort3 ?? 9999)
+                .ThenBy(r => r.AccountSortOrder ?? 9999)
+                .ThenBy(r => r.AccountName)
+                .ToList();
 
             var result = balance
+                .Where(x => !string.IsNullOrEmpty(x.CategoryLevel0))
                 .GroupBy(a => a.CategoryLevel0)
+                .OrderBy(g => g.Min(x => x.CategorySort0))
                 .Select(g0 => new RptBalanceSheet
                 {
                     GroupName = g0.Key,
-                    GroupTotal = g0.Sum(x => x.ClosingBalance),
-                    Children = g0
+                    ClassCode = g0.First().ClassCode,
+                    GroupTotal = g0.Sum(x => x.ClosingBalance ?? 0),
+
+                    // Accounts directly under Level 0 (no Level1)
+                    Items = g0.Where(x => string.IsNullOrEmpty(x.CategoryLevel1))
+                        .Select(a => new RptBalanceSheetItem
+                        {
+                            AccountId = a.AccountId,
+                            AccountCode = a.AccountCode,
+                            AccountName = a.AccountName,
+                            ClassCode = a.ClassCode,
+                            ClosingBalance = a.ClosingBalance
+                        }).ToList(),
+
+                    // Sub-groups that have Level1
+                    Children = g0.Where(x => !string.IsNullOrEmpty(x.CategoryLevel1))
                         .GroupBy(a => a.CategoryLevel1)
+                        .OrderBy(g => g.Min(x => x.CategorySort1))
                         .Select(g1 => new RptBalanceSheet
                         {
                             GroupName = g1.Key,
-                            Children = g1
+                            GroupTotal = g1.Sum(x => x.ClosingBalance ?? 0),
+
+                            Items = g1.Where(x => string.IsNullOrEmpty(x.CategoryLevel2))
+                                .Select(a => new RptBalanceSheetItem
+                                {
+                                    AccountCode = a.AccountCode,
+                                    AccountName = a.AccountName,
+                                    ClassCode = a.ClassCode,
+                                    ClosingBalance = a.ClosingBalance
+                                }).ToList(),
+
+                            Children = g1.Where(x => !string.IsNullOrEmpty(x.CategoryLevel2))
                                 .GroupBy(a => a.CategoryLevel2)
+                                .OrderBy(g => g.Min(x => x.CategorySort2))
                                 .Select(g2 => new RptBalanceSheet
                                 {
                                     GroupName = g2.Key,
-                                    GroupTotal = g2.Sum(x => x.ClosingBalance),
-                                    // Leaf nodes = accounts (still using same RptBalanceSheet type)
-                                    Children = g2.Select(a => new RptBalanceSheet
+                                    GroupTotal = g2.Sum(x => x.ClosingBalance ?? 0),
+
+                                    Items = g2.Select(a => new RptBalanceSheetItem
                                     {
-                                        GroupName = a.AccountName,
+                                        AccountId = a.AccountId,
                                         AccountCode = a.AccountCode,
-                                        GroupTotal = a.ClosingBalance,
-                                        Children = null
-                                    }).ToList()
-                                }).ToList(),
-                            GroupTotal = g1.Sum(x => x.ClosingBalance)
+                                        AccountName = a.AccountName,
+                                        ClassCode = a.ClassCode,
+                                        ClosingBalance = a.ClosingBalance
+                                    }).ToList(),
+
+                                    Children = null
+                                }).ToList()
                         }).ToList()
                 })
                 .ToList();
@@ -159,41 +198,90 @@ namespace KLS.Services
                     return new RptProfitLoss
                     {
                         GroupName = g0.Key,
+                        ClassCode = g0.First().ClassCode,
                         GroupTotal = total0,
                         GrossMargin = grossMargin,
-
-                        Children = g0
-                            .GroupBy(a => a.CategoryLevel1 ?? "Uncategorized")
-                            .Select(g1 => new RptProfitLoss
-                            {
-                                GroupName = g1.Key,
-                                GroupTotal = g1.Sum(x => x.AcctBalance),
-
-                                Children = g1
-                                    .GroupBy(a => a.CategoryLevel2 ?? "Uncategorized")
-                                    .Select(g2 => new RptProfitLoss
-                                    {
-                                        GroupName = g2.Key,
-
-                                        // Level3 (accounts) mapped into same class as leaf nodes
-                                        Children = g2.Select(a => new RptProfitLoss
-                                        {
-                                            GroupName = a.AccountName,
-                                            AccountCode = a.AccountCode,
-                                            GroupTotal = a.AcctBalance,
-                                            Children = null
-                                        }).ToList(),
-
-                                        GroupTotal = g2.Sum(x => x.AcctBalance)
-                                    })
-                                    .ToList()
-                            })
-                            .ToList()
+                        Children = BuildLevel1Children(g0)
                     };
                 })
                 .ToList();
 
             return result;
+        }
+
+        private List<RptProfitLoss> BuildLevel1Children(IGrouping<string, RptProfitLossRow> g0)
+        {
+            var children = new List<RptProfitLoss>();
+
+            // Rows with null Level1 → direct leaf accounts under Level0
+            var leafRows = g0.Where(a => a.CategoryLevel1 == null).ToList();
+            foreach (var a in leafRows)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = a.AccountName,
+                    AccountId = a.AccountId,
+                    AccountCode = a.AccountCode,
+                    GroupTotal = a.AcctBalance,
+                    Children = null
+                });
+            }
+
+            // Rows with non-null Level1 → group into sub-groups
+            var grouped = g0.Where(a => a.CategoryLevel1 != null)
+                .GroupBy(a => a.CategoryLevel1!);
+            foreach (var g1 in grouped)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = g1.Key,
+                    GroupTotal = g1.Sum(x => x.AcctBalance),
+                    Children = BuildLevel2Children(g1)
+                });
+            }
+
+            return children;
+        }
+
+        private List<RptProfitLoss> BuildLevel2Children(IGrouping<string, RptProfitLossRow> g1)
+        {
+            var children = new List<RptProfitLoss>();
+
+            // Rows with null Level2 → direct leaf accounts under Level1
+            var leafRows = g1.Where(a => a.CategoryLevel2 == null).ToList();
+            foreach (var a in leafRows)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = a.AccountName,
+                    AccountId = a.AccountId,
+                    AccountCode = a.AccountCode,
+                    GroupTotal = a.AcctBalance,
+                    Children = null
+                });
+            }
+
+            // Rows with non-null Level2 → group into sub-groups with leaf accounts
+            var grouped = g1.Where(a => a.CategoryLevel2 != null)
+                .GroupBy(a => a.CategoryLevel2!);
+            foreach (var g2 in grouped)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = g2.Key,
+                    GroupTotal = g2.Sum(x => x.AcctBalance),
+                    Children = g2.Select(a => new RptProfitLoss
+                    {
+                        GroupName = a.AccountName,
+                        AccountId = a.AccountId,
+                        AccountCode = a.AccountCode,
+                        GroupTotal = a.AcctBalance,
+                        Children = null
+                    }).ToList()
+                });
+            }
+
+            return children;
         }
 
         public IEnumerable<RptSalesTax>? SalesTax(ReportRequest reportReq)
@@ -268,6 +356,18 @@ namespace KLS.Services
                     PaymentMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
                     Payments = g.ToList()
                 }).ToList();
+        }
+
+        public RptLedger? Ledger(ReportRequest reportReq)
+        {
+            var rows = Uow.Reports.Ledger(reportReq).ToList();
+            if (!rows.Any()) return new RptLedger { OpeningBalance = 0, Rows = new() };
+
+            return new RptLedger
+            {
+                OpeningBalance = rows.First().OpeningBalance,
+                Rows = rows
+            };
         }
     }
 }
