@@ -41,5 +41,7 @@ namespace KLS.Contract.Services
         IQueryable<RptOrderGuideItem> OrderGuide(int payeeId);
 
         IQueryable<RptCustItemVolume> CustItemVolume(int payeeId);
+
+        IEnumerable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq);
     }
 }

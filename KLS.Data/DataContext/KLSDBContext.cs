@@ -480,6 +480,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptCustItemVolume> RptCustItemVolume { get; set; }
 
+        public virtual DbSet<RptCustSalesByItem> RptCustSalesByItem { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

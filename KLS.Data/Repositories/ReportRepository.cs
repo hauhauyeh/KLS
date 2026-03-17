@@ -197,6 +197,18 @@ namespace KLS.Data.Repositories
             return DbContext.RptCustItemVolume.FromSqlRaw("[dbo].[Report_CustItemVolume] @PayeeId", PayeeIdParam);
         }
 
+        public IQueryable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq)
+        {
+            var SearchParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", reportReq.Search);
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var GrpbycatParam = new SqlParameter("@Grpbycat", false);
+            var SortbyParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@Sortby", DBNull.Value) : new SqlParameter("@Sortby", reportReq.SortField);
+
+            return DbContext.RptCustSalesByItem.FromSqlRaw("[dbo].[Report_CustSalesbyItem] @Search,@StartDate,@EndDate,@Grpbycat,@Sortby",
+                SearchParam, StartDateParam, EndDateParam, GrpbycatParam, SortbyParam);
+        }
+
         public IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);

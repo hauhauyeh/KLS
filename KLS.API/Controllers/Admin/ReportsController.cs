@@ -142,6 +142,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.CustItemVolume(PayeeId));
         }
 
+        [HttpGet("CustSalesByItem")]
+        [DisplayName("Customer -> Sales By Item")]
+        public IActionResult CustSalesByItem([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.CustSalesByItem(reportReq));
+        }
+
         #endregion
     }
 }
