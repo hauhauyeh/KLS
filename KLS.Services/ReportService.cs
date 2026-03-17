@@ -342,6 +342,11 @@ namespace KLS.Services
             return Uow.Reports.OrderGuide(payeeId);
         }
 
+        public IQueryable<RptCustItemVolume> CustItemVolume(int payeeId)
+        {
+            return Uow.Reports.CustItemVolume(payeeId);
+        }
+
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDaily(reportReq);

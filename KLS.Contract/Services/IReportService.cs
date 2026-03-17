@@ -39,5 +39,7 @@ namespace KLS.Contract.Services
         IQueryable<RptPricesheet> Pricesheet(int payeeId);
 
         IQueryable<RptOrderGuideItem> OrderGuide(int payeeId);
+
+        IQueryable<RptCustItemVolume> CustItemVolume(int payeeId);
     }
 }

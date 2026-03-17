@@ -135,6 +135,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.OrderGuide(PayeeId));
         }
 
+        [HttpGet("CustItemVolume/{PayeeId}")]
+        [DisplayName("Customer -> Item Volume History")]
+        public IActionResult CustItemVolume(int PayeeId)
+        {
+            return Ok(_reportService.CustItemVolume(PayeeId));
+        }
+
         #endregion
     }
 }

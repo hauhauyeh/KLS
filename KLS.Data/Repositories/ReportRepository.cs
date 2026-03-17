@@ -190,6 +190,13 @@ namespace KLS.Data.Repositories
             return DbContext.RptOrderGuideItem.FromSqlRaw("[dbo].[Report_OrderGuide] @PayeeId", PayeeIdParam);
         }
 
+        public IQueryable<RptCustItemVolume> CustItemVolume(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.RptCustItemVolume.FromSqlRaw("[dbo].[Report_CustItemVolume] @PayeeId", PayeeIdParam);
+        }
+
         public IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
