@@ -10,7 +10,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @TotalSales MONEY;
+    DECLARE @TotalSales DECIMAL(18,2);
     DECLARE @INVAccountId INT;
     DECLARE @ISALEAccountId INT;
     DECLARE @COGSAccountId INT;
@@ -50,14 +50,14 @@ BEGIN
         v.Cat1,
         v.Sort0,
         v.Sort1,
-        c.Qty,
-        c.Amount,
-        CAST(0 AS MONEY) AS SalesPerc,
-        CASE WHEN c.Qty <> 0 THEN c.Amount / c.Qty ELSE 0 END AS AvgPrice,
-        c.Cost,
-        CASE WHEN c.Qty <> 0 THEN c.Cost / c.Qty ELSE 0 END AS AvgCost,
-        (c.Amount - c.Cost) AS GrossMargin,
-        CASE WHEN c.Amount <> 0 THEN (c.Amount - c.Cost) / c.Amount ELSE 0 END AS GrossMarginPerc
+        CAST(c.Qty AS DECIMAL(18,6)) AS Qty,
+        CAST(c.Amount AS DECIMAL(18,2)) AS Amount,
+        CAST(0 AS DECIMAL(18,6)) AS SalesPerc,
+        CAST(CASE WHEN c.Qty <> 0 THEN c.Amount / c.Qty ELSE 0 END AS DECIMAL(18,6)) AS AvgPrice,
+        CAST(c.Cost AS DECIMAL(18,2)) AS Cost,
+        CAST(CASE WHEN c.Qty <> 0 THEN c.Cost / c.Qty ELSE 0 END AS DECIMAL(18,6)) AS AvgCost,
+        CAST(c.Amount - c.Cost AS DECIMAL(18,2)) AS GrossMargin,
+        CAST(CASE WHEN c.Amount <> 0 THEN (c.Amount - c.Cost) / c.Amount ELSE 0 END AS DECIMAL(18,6)) AS GrossMarginPerc
     INTO #Result
     FROM cte c
     INNER JOIN Item i ON c.ItemId = i.ItemId
