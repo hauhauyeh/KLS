@@ -47,5 +47,7 @@ namespace KLS.Contract.Services
         IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq);
 
         IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq);
+
+        IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq);
     }
 }

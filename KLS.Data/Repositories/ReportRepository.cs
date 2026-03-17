@@ -230,6 +230,14 @@ namespace KLS.Data.Repositories
                 StartDateParam, EndDateParam, PayeeIdParam, PmtMethodParam);
         }
 
+        public IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptCreditMemo.FromSqlRaw("[dbo].[Report_CreditMemo] @StartDate,@EndDate", StartDateParam, EndDateParam);
+        }
+
         public IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);

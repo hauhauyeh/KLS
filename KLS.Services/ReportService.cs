@@ -362,6 +362,11 @@ namespace KLS.Services
             return Uow.Reports.CustPayment(reportReq);
         }
 
+        public IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq)
+        {
+            return Uow.Reports.CreditMemo(reportReq);
+        }
+
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDaily(reportReq);

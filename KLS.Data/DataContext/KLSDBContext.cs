@@ -486,6 +486,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptCustPayment> RptCustPayment { get; set; }
 
+        public virtual DbSet<RptCreditMemo> RptCreditMemo { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

@@ -15,14 +15,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IReportService _reportService;
+        private readonly ICustomerPaymentService _customerPaymentService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ReportsController(IReportService reportService)
+        public ReportsController(IReportService reportService, ICustomerPaymentService customerPaymentService)
         {
             _reportService = reportService;
+            _customerPaymentService = customerPaymentService;
         }
 
         #endregion
@@ -161,6 +163,20 @@ namespace KLS.API.Controllers.Admin
         public IActionResult CustPayment([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.CustPayment(reportReq));
+        }
+
+        [HttpGet("CreditMemo")]
+        [DisplayName("Sales -> Credit Memo")]
+        public IActionResult CreditMemo([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.CreditMemo(reportReq));
+        }
+
+        [HttpGet("PmtReceipt/{CustomerPaymentId}")]
+        [DisplayName("Banking -> Payment Receipt")]
+        public IActionResult PmtReceipt(int CustomerPaymentId)
+        {
+            return Ok(_customerPaymentService.GetByIdWithInclude(CustomerPaymentId));
         }
 
         #endregion
