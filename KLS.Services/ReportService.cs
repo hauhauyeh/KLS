@@ -352,6 +352,11 @@ namespace KLS.Services
             return Uow.Reports.CustSalesByItem(reportReq);
         }
 
+        public IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesHistory(reportReq);
+        }
+
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDaily(reportReq);

@@ -149,6 +149,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.CustSalesByItem(reportReq));
         }
 
+        [HttpGet("SalesHistory")]
+        [DisplayName("Customer -> Sales History")]
+        public IActionResult SalesHistory([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesHistory(reportReq));
+        }
+
         #endregion
     }
 }
