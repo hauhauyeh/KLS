@@ -61,5 +61,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq);
 
         IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq);
+
+        IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq);
     }
 }

@@ -357,6 +357,11 @@ namespace KLS.Services
             return Uow.Reports.SalesHistory(reportReq);
         }
 
+        public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
+        {
+            return Uow.Reports.CustPayment(reportReq);
+        }
+
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDaily(reportReq);
@@ -369,7 +374,7 @@ namespace KLS.Services
 
         public IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId)
         {
-            return Uow.CustomerPayments.Find(s => s.CustomerPaymentId == payeeId).OrderByDescending(c => c.PaymentDate).ToList()
+            return Uow.CustomerPayments.Find(s => s.PayeeId == payeeId).OrderByDescending(c => c.PaymentDate).ToList()
                 .GroupBy(s => new { s.PaymentDate.Value.Year, s.PaymentDate.Value.Month })
                 .Select(g => new RptPaymentHistory
                 {

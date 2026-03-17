@@ -219,6 +219,17 @@ namespace KLS.Data.Repositories
                 PayeeIdParam, StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+            var PmtMethodParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@PmtMethod", DBNull.Value) : new SqlParameter("@PmtMethod", reportReq.Search);
+
+            return DbContext.RptCustPayment.FromSqlRaw("[dbo].[Report_CustomerPayment] @StartDate,@EndDate,@PayeeId,@PmtMethod",
+                StartDateParam, EndDateParam, PayeeIdParam, PmtMethodParam);
+        }
+
         public IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
