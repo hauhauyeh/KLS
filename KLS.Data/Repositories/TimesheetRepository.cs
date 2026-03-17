@@ -87,6 +87,64 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public List<PayPeriod> GetPayPeriods(int count)
+        {
+            var periods = new List<PayPeriod>();
+
+            // Get current period first, then derive next future period from it
+            var currentPeriod = GetPayPeriod();
+            var currentStart = currentPeriod!.PayrollStartDate!.Value;
+            var currentEnd = currentPeriod!.PayrollEndDate!.Value;
+            var periodDays = currentEnd.DayNumber - currentStart.DayNumber; // 6 for weekly, 13 for biweekly
+
+            var nextStart = currentEnd.AddDays(1);
+            var nextEnd = nextStart.AddDays(periodDays);
+            periods.Add(new PayPeriod
+            {
+                PayrollStartDate = nextStart,
+                PayrollEndDate = nextEnd
+            });
+
+            // Now get current + past periods from the SP
+            var currentDate = DateTime.Now;
+
+            for (int i = 1; i < count; i++)
+            {
+                var payOptionParam = new SqlParameter("@Payoption", DBNull.Value);
+                var payDateParam = new SqlParameter("@Paydate", currentDate);
+                var payrollStartDate = new SqlParameter()
+                {
+                    ParameterName = "@PayrollStartDate",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Date
+                };
+                var payrollEndDate = new SqlParameter()
+                {
+                    ParameterName = "@PayrollEndDate",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Date
+                };
+
+                DbContext.Database.ExecuteSqlRaw(
+                    "[Fn_Calc_PayrollDate] @Payoption,@Paydate,@PayrollStartDate OUTPUT,@PayrollEndDate OUTPUT",
+                    payOptionParam, payDateParam, payrollStartDate, payrollEndDate);
+
+                var start = (DateTime)payrollStartDate.Value;
+                var end = (DateTime)payrollEndDate.Value;
+
+                periods.Add(new PayPeriod
+                {
+                    PayrollStartDate = DateOnly.FromDateTime(start),
+                    PayrollEndDate = DateOnly.FromDateTime(end)
+                });
+
+                // Step back one day before this period's start to get the previous period
+                currentDate = start.AddDays(-1);
+            }
+
+            return periods;
+        }
+
         public CheckInOut CheckInOut(CheckInOutReq checkInOutReq)
         {
             var PayeeIdParam = new SqlParameter("@PayeeId", checkInOutReq.PayeeId);

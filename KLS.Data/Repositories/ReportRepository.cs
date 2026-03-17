@@ -265,6 +265,14 @@ namespace KLS.Data.Repositories
             return DbContext.RptAccountHistory.FromSqlRaw("[dbo].[Report_AccountHistory] @PayeeId", PayeeIdParam);
         }
 
+        public IQueryable<RptJobSummary> JobSummary(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptJobSummary.FromSqlRaw("[dbo].[Report_JobSummary] @StartDate,@EndDate", StartDateParam, EndDateParam);
+        }
+
         public IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq)
         {
             var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);

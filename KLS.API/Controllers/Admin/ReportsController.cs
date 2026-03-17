@@ -16,15 +16,17 @@ namespace KLS.API.Controllers.Admin
 
         private readonly IReportService _reportService;
         private readonly ICustomerPaymentService _customerPaymentService;
+        private readonly ITimesheetService _timesheetService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ReportsController(IReportService reportService, ICustomerPaymentService customerPaymentService)
+        public ReportsController(IReportService reportService, ICustomerPaymentService customerPaymentService, ITimesheetService timesheetService)
         {
             _reportService = reportService;
             _customerPaymentService = customerPaymentService;
+            _timesheetService = timesheetService;
         }
 
         #endregion
@@ -177,6 +179,25 @@ namespace KLS.API.Controllers.Admin
         public IActionResult PmtReceipt(int CustomerPaymentId)
         {
             return Ok(_customerPaymentService.GetByIdWithInclude(CustomerPaymentId));
+        }
+
+        #endregion
+
+        #region --- Timesheet ---
+
+        [HttpGet("Timesheet")]
+        [DisplayName("Timesheet -> Timesheet")]
+        public IActionResult Timesheet([FromQuery] TimesheetReq timesheetReq)
+        {
+            return Ok(_timesheetService.GetWeeklyTimesheets(timesheetReq));
+        }
+
+
+        [HttpGet("JobSummary")]
+        [DisplayName("Timesheet -> Job Summary")]
+        public IActionResult JobSummary([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.JobSummary(reportReq));
         }
 
         #endregion

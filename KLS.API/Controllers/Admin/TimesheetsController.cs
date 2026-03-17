@@ -87,6 +87,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_timesheetService.GetPayPeriod());
         }
 
+
+        [HttpGet("PayPeriods")]
+        public IActionResult PayPeriods([FromQuery] int count = 52)
+        {
+            return Ok(_timesheetService.GetPayPeriods(count));
+        }
+
         #endregion
     }
 }

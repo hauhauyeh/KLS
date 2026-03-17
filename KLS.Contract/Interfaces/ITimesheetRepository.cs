@@ -15,6 +15,8 @@ namespace KLS.Contract.Interfaces
 
         PayPeriod? GetPayPeriod();
 
+        List<PayPeriod> GetPayPeriods(int count);
+
         CheckInOut CheckInOut(CheckInOutReq checkInOutReq);
     }
 }
