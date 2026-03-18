@@ -416,5 +416,56 @@ namespace KLS.Data.Repositories
 
             return DbContext.RptDescDollar.FromSqlRaw("[dbo].[Report_DescDollar] @PayeeId,@StartDate,@EndDate,@SortField,@SortOrder", PayeeIdParam, StartDateParam, EndDateParam, SortFieldParam, SortOrderParam);
         }
+
+        #region --- Inventory Reports ---
+
+        public IQueryable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req)
+        {
+            var searchParam = !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value);
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var storParam = req.StorageId.HasValue ? new SqlParameter("@StorageId", req.StorageId) : new SqlParameter("@StorageId", DBNull.Value);
+            var inactiveParam = new SqlParameter("@ShowInactive", req.ShowInactive ?? false);
+
+            return DbContext.RptInventoryStatusRow.FromSqlRaw(
+                "[dbo].[Report_InventoryStatus] @Search,@CategoryId,@StorageId,@ShowInactive",
+                searchParam, catParam, storParam, inactiveParam);
+        }
+
+        public IQueryable<RptReorderRow> Reorder(InventoryReportRequest req)
+        {
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var storParam = req.StorageId.HasValue ? new SqlParameter("@StorageId", req.StorageId) : new SqlParameter("@StorageId", DBNull.Value);
+
+            return DbContext.RptReorderRow.FromSqlRaw(
+                "[dbo].[Report_Reorder] @CategoryId,@StorageId",
+                catParam, storParam);
+        }
+
+        public IQueryable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req)
+        {
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+
+            return DbContext.RptInventoryValuationRow.FromSqlRaw(
+                "[dbo].[Report_InventoryValuation] @CategoryId",
+                catParam);
+        }
+
+        public IQueryable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req)
+        {
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var storParam = req.StorageId.HasValue ? new SqlParameter("@StorageId", req.StorageId) : new SqlParameter("@StorageId", DBNull.Value);
+            var expiryParam = new SqlParameter("@ShowExpiry", req.ShowExpiry ?? false);
+
+            return DbContext.RptInventoryMovementRow.FromSqlRaw(
+                "[dbo].[Report_InventoryMovement] @CategoryId,@StorageId,@ShowExpiry",
+                catParam, storParam, expiryParam);
+        }
+
+        public IQueryable<RptInventoryIncomingRow> InventoryIncoming()
+        {
+            return DbContext.RptInventoryIncomingRow.FromSqlRaw("[dbo].[Report_InventoryIncoming]");
+        }
+
+        #endregion
     }
 }

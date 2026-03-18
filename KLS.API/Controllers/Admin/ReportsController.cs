@@ -339,5 +339,48 @@ namespace KLS.API.Controllers.Admin
         }
 
         #endregion
+
+        #region --- Inventory ---
+
+        [HttpGet("InventoryStatus")]
+        [DisplayName("Inventory -> Inventory Status")]
+        public IActionResult InventoryStatus([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.InventoryStatus(req));
+        }
+
+
+        [HttpGet("Reorder")]
+        [DisplayName("Inventory -> Reorder")]
+        public IActionResult Reorder([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.Reorder(req));
+        }
+
+
+        [HttpGet("InventoryValuation")]
+        [DisplayName("Inventory -> Inventory Valuation")]
+        public IActionResult InventoryValuation([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.InventoryValuation(req));
+        }
+
+
+        [HttpGet("InventoryMovement")]
+        [DisplayName("Inventory -> Inventory Movement")]
+        public IActionResult InventoryMovement([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.InventoryMovement(req));
+        }
+
+
+        [HttpGet("InventoryIncoming")]
+        [DisplayName("Inventory -> Incoming Purchases")]
+        public IActionResult InventoryIncoming()
+        {
+            return Ok(_reportService.InventoryIncoming());
+        }
+
+        #endregion
     }
 }

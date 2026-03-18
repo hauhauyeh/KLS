@@ -79,5 +79,15 @@ namespace KLS.Contract.Services
         RptARInvoice ARInvoice(ReportRequest reportReq);
 
         RptARMonth ARMonth(ReportRequest reportReq);
+
+        IEnumerable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req);
+
+        IEnumerable<RptReorderRow> Reorder(InventoryReportRequest req);
+
+        IEnumerable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req);
+
+        IEnumerable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req);
+
+        IEnumerable<RptInventoryIncomingRow> InventoryIncoming();
     }
 }

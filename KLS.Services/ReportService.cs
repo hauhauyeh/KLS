@@ -633,5 +633,34 @@ namespace KLS.Services
                 Rows = rows
             };
         }
+
+        #region --- Inventory Reports ---
+
+        public IEnumerable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req)
+        {
+            return Uow.Reports.InventoryStatus(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptReorderRow> Reorder(InventoryReportRequest req)
+        {
+            return Uow.Reports.Reorder(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req)
+        {
+            return Uow.Reports.InventoryValuation(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req)
+        {
+            return Uow.Reports.InventoryMovement(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptInventoryIncomingRow> InventoryIncoming()
+        {
+            return Uow.Reports.InventoryIncoming().AsEnumerable();
+        }
+
+        #endregion
     }
 }

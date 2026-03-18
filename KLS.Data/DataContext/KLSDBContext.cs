@@ -518,6 +518,16 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptAPInvoiceRow> RptAPInvoiceRow { get; set; }
 
+        public virtual DbSet<RptInventoryStatusRow> RptInventoryStatusRow { get; set; }
+
+        public virtual DbSet<RptReorderRow> RptReorderRow { get; set; }
+
+        public virtual DbSet<RptInventoryValuationRow> RptInventoryValuationRow { get; set; }
+
+        public virtual DbSet<RptInventoryMovementRow> RptInventoryMovementRow { get; set; }
+
+        public virtual DbSet<RptInventoryIncomingRow> RptInventoryIncomingRow { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

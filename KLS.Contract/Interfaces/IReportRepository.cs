@@ -95,5 +95,15 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod);
 
         IQueryable<RptAPInvoiceRow> APInvoice(ReportRequest reportReq);
+
+        IQueryable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req);
+
+        IQueryable<RptReorderRow> Reorder(InventoryReportRequest req);
+
+        IQueryable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req);
+
+        IQueryable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req);
+
+        IQueryable<RptInventoryIncomingRow> InventoryIncoming();
     }
 }
