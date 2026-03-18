@@ -221,6 +221,63 @@ namespace KLS.API.Controllers.Admin
 
         #endregion
 
+        #region --- Sales By Item / Detail ---
+
+        [HttpGet("SalesByItem")]
+        [DisplayName("Sales -> Sales By Item")]
+        public IActionResult SalesByItem([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.CustSalesByItem(reportReq));
+        }
+
+
+        [HttpGet("SalesDetail")]
+        [DisplayName("Sales -> Sales Detail")]
+        public IActionResult SalesDetail([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesDetail(reportReq));
+        }
+
+        #endregion
+
+        #region --- Sales Daily/Yearly ---
+
+        [HttpGet("SalesDaily2")]
+        [DisplayName("Sales -> Sales Daily 2")]
+        public IActionResult SalesDaily2([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesDaily2(reportReq));
+        }
+
+
+        [HttpGet("SalesYearly")]
+        [DisplayName("Sales -> Sales Yearly")]
+        public IActionResult SalesYearly()
+        {
+            return Ok(_reportService.SalesYearly());
+        }
+
+        #endregion
+
+        #region --- Sales Commission ---
+
+        [HttpGet("SalesCommission")]
+        [DisplayName("Sales -> Sales Commission")]
+        public IActionResult SalesCommission([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesCommission(reportReq));
+        }
+
+
+        [HttpGet("SalesCommission2")]
+        [DisplayName("Sales -> Sales Commission 2")]
+        public IActionResult SalesCommission2([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesCommission2(reportReq));
+        }
+
+        #endregion
+
         #region --- AR ---
 
         [HttpGet("ARInvoice")]

@@ -498,6 +498,16 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptARMonthRow> RptARMonthRow { get; set; }
 
+        public virtual DbSet<RptSalesCommissionRow> RptSalesCommissionRow { get; set; }
+
+        public virtual DbSet<RptSalesCommission2Row> RptSalesCommission2Row { get; set; }
+
+        public virtual DbSet<RptSalesDaily2Row> RptSalesDaily2Row { get; set; }
+
+        public virtual DbSet<RptSalesYearlyRow> RptSalesYearlyRow { get; set; }
+
+        public virtual DbSet<RptSalesDetailRow> RptSalesDetailRow { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

@@ -382,6 +382,78 @@ namespace KLS.Services
             return Uow.Reports.EmpLoanLedger(reportReq);
         }
 
+        public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesDetail(reportReq);
+        }
+
+        public IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesDaily2(reportReq);
+        }
+
+        public RptSalesYearly SalesYearly()
+        {
+            var data = Uow.Reports.SalesYearly().AsEnumerable().ToList();
+
+            var yearlySales = data
+                .GroupBy(r => new { r.SalesMonth, r.SalesMonthName })
+                .OrderBy(g => g.Key.SalesMonth)
+                .Select(g =>
+                {
+                    var y1Total = g.Sum(r => r.Y1 ?? 0);
+                    var y2Total = g.Sum(r => r.Y2 ?? 0);
+                    var y3Total = g.Sum(r => r.Y3 ?? 0);
+                    return new RptSalesYearlyMonth
+                    {
+                        Month = g.Key.SalesMonthName,
+                        Y1Total = y1Total,
+                        Y2Total = y2Total,
+                        Y3Total = y3Total,
+                        Y1Perc = y2Total != 0 ? (y1Total - y2Total) / y2Total : 0,
+                        Y2Perc = y3Total != 0 ? (y2Total - y3Total) / y3Total : 0,
+                        MonthlySales = g.ToList()
+                    };
+                })
+                .ToList();
+
+            var accounts = data
+                .GroupBy(r => r.AccountName)
+                .Select(g => new RptSalesYearlyAccount
+                {
+                    AcctName = g.Key,
+                    Y1Total = g.Sum(r => r.Y1 ?? 0),
+                    Y2Total = g.Sum(r => r.Y2 ?? 0),
+                    Y3Total = g.Sum(r => r.Y3 ?? 0)
+                })
+                .ToList();
+
+            var grandY1 = data.Sum(r => r.Y1 ?? 0);
+            var grandY2 = data.Sum(r => r.Y2 ?? 0);
+            var grandY3 = data.Sum(r => r.Y3 ?? 0);
+
+            return new RptSalesYearly
+            {
+                YearlySales = yearlySales,
+                Accounts = accounts,
+                Y1Total = grandY1,
+                Y2Total = grandY2,
+                Y3Total = grandY3,
+                Y1Perc = grandY2 != 0 ? (grandY1 - grandY2) / grandY2 : 0,
+                Y2Perc = grandY3 != 0 ? (grandY2 - grandY3) / grandY3 : 0
+            };
+        }
+
+        public IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesCommission(reportReq);
+        }
+
+        public IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesCommission2(reportReq);
+        }
+
         public RptARInvoice ARInvoice(ReportRequest reportReq)
         {
             var data = Uow.Reports.ARInvoice(reportReq).AsEnumerable().ToList();

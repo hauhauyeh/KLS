@@ -75,5 +75,15 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptARInvoiceRow> ARInvoice(ReportRequest reportReq);
 
         IQueryable<RptARMonthRow> ARMonth(ReportRequest reportReq);
+
+        IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq);
+
+        IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
+
+        IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
+
+        IQueryable<RptSalesYearlyRow> SalesYearly();
+
+        IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
     }
 }

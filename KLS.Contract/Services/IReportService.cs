@@ -56,6 +56,16 @@ namespace KLS.Contract.Services
 
         IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq);
 
+        IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
+
+        IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
+
+        RptSalesYearly SalesYearly();
+
+        IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq);
+
+        IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
+
         RptARInvoice ARInvoice(ReportRequest reportReq);
 
         RptARMonth ARMonth(ReportRequest reportReq);
