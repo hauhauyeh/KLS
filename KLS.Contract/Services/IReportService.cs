@@ -56,6 +56,16 @@ namespace KLS.Contract.Services
 
         IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq);
 
+        IQueryable<RptLedgerByPayeeRow> LedgerByPayee(ReportRequest reportReq);
+
+        RptBankRecon BankRecon(int bankReconId);
+
+        IQueryable<RptAPCheckRow> APCheck(ReportRequest reportReq);
+
+        IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod);
+
+        RptARInvoice APInvoice(ReportRequest reportReq);
+
         IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
 
         IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);

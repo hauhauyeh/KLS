@@ -85,5 +85,15 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptSalesYearlyRow> SalesYearly();
 
         IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
+
+        IQueryable<RptLedgerByPayeeRow> LedgerByPayee(ReportRequest reportReq);
+
+        IQueryable<RptBankReconRow> BankRecon(int bankReconId);
+
+        IQueryable<RptAPCheckRow> APCheck(ReportRequest reportReq);
+
+        IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod);
+
+        IQueryable<RptAPInvoiceRow> APInvoice(ReportRequest reportReq);
     }
 }

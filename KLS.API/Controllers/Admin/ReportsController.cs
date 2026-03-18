@@ -109,6 +109,22 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.Ledger(reportReq));
         }
 
+
+        [HttpGet("LedgerByPayee")]
+        [DisplayName("PL -> Ledger By Payee")]
+        public IActionResult LedgerByPayee([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.LedgerByPayee(reportReq));
+        }
+
+
+        [HttpGet("BankRecon/{BankReconId}")]
+        [DisplayName("Banking -> Bank Reconciliation")]
+        public IActionResult BankRecon(int BankReconId)
+        {
+            return Ok(_reportService.BankRecon(BankReconId));
+        }
+
         #region --- Customer ---
 
         [HttpGet("CustStmt/{PayeeId}")]
@@ -179,6 +195,33 @@ namespace KLS.API.Controllers.Admin
         public IActionResult PmtReceipt(int CustomerPaymentId)
         {
             return Ok(_customerPaymentService.GetByIdWithInclude(CustomerPaymentId));
+        }
+
+        #endregion
+
+        #region --- AP ---
+
+        [HttpGet("APCheck")]
+        [DisplayName("AP -> AP Check")]
+        public IActionResult APCheck([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.APCheck(reportReq));
+        }
+
+
+        [HttpGet("CheckToBePrinted/{PmtMethod?}")]
+        [DisplayName("AP -> Check To Be Printed")]
+        public IActionResult CheckToBePrinted(string? PmtMethod)
+        {
+            return Ok(_reportService.CheckToBePrinted(PmtMethod));
+        }
+
+
+        [HttpGet("APInvoice")]
+        [DisplayName("AP -> AP From Invoice")]
+        public IActionResult APInvoice([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.APInvoice(reportReq));
         }
 
         #endregion

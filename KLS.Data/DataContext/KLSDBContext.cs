@@ -508,6 +508,16 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptSalesDetailRow> RptSalesDetailRow { get; set; }
 
+        public virtual DbSet<RptLedgerByPayeeRow> RptLedgerByPayeeRow { get; set; }
+
+        public virtual DbSet<RptBankReconRow> RptBankReconRow { get; set; }
+
+        public virtual DbSet<RptAPCheckRow> RptAPCheckRow { get; set; }
+
+        public virtual DbSet<RptCheckToBePrintedRow> RptCheckToBePrintedRow { get; set; }
+
+        public virtual DbSet<RptAPInvoiceRow> RptAPInvoiceRow { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

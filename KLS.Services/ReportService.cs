@@ -382,6 +382,91 @@ namespace KLS.Services
             return Uow.Reports.EmpLoanLedger(reportReq);
         }
 
+        public IQueryable<RptLedgerByPayeeRow> LedgerByPayee(ReportRequest reportReq)
+        {
+            return Uow.Reports.LedgerByPayee(reportReq);
+        }
+
+        public RptBankRecon BankRecon(int bankReconId)
+        {
+            var data = Uow.Reports.BankRecon(bankReconId).AsEnumerable().ToList();
+
+            var first = data.FirstOrDefault();
+
+            return new RptBankRecon
+            {
+                AccountName = first?.AccountName,
+                StatementDate = first?.StatementDate,
+                StatementBalance = first?.StatementBalance,
+                BeginningBalance = first?.BeginningBalance,
+                ClearedDeposits = data.Where(r => r.IsCleared == 1 && r.Amount > 0).ToList(),
+                ClearedPayments = data.Where(r => r.IsCleared == 1 && r.Amount < 0).ToList(),
+                OutstandingDeposits = data.Where(r => r.IsCleared == 0 && r.Amount > 0).ToList(),
+                OutstandingPayments = data.Where(r => r.IsCleared == 0 && r.Amount < 0).ToList(),
+                TotalClearedDeposits = data.Where(r => r.IsCleared == 1 && r.Amount > 0).Sum(r => r.Amount ?? 0),
+                TotalClearedPayments = data.Where(r => r.IsCleared == 1 && r.Amount < 0).Sum(r => r.Amount ?? 0),
+                TotalOutstandingDeposits = data.Where(r => r.IsCleared == 0 && r.Amount > 0).Sum(r => r.Amount ?? 0),
+                TotalOutstandingPayments = data.Where(r => r.IsCleared == 0 && r.Amount < 0).Sum(r => r.Amount ?? 0)
+            };
+        }
+
+        public IQueryable<RptAPCheckRow> APCheck(ReportRequest reportReq)
+        {
+            return Uow.Reports.APCheck(reportReq);
+        }
+
+        public IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod)
+        {
+            return Uow.Reports.CheckToBePrinted(pmtMethod);
+        }
+
+        public RptARInvoice APInvoice(ReportRequest reportReq)
+        {
+            var data = Uow.Reports.APInvoice(reportReq).AsEnumerable().ToList();
+
+            var terms = data
+                .GroupBy(r => r.TermId)
+                .Select(g =>
+                {
+                    var dueDays = g.First().DueDays ?? 0;
+                    var term = Uow.Terms.Find(t => t.TermId == g.Key).FirstOrDefault();
+                    return new RptARInvoiceTerm
+                    {
+                        TermName = term?.TermName ?? "No Term",
+                        DueDays = dueDays,
+                        IsFirstColumn = dueDays > 0 && dueDays < 30,
+                        Payee = g.Select(r => new RptARInvoiceRow
+                        {
+                            PayeeId = r.PayeeId,
+                            PayeeName = r.PayeeName,
+                            PhoneDesc1 = r.PhoneDesc1,
+                            Phone1 = r.Phone1,
+                            Inv0 = r.Inv0,
+                            Inv30 = r.Inv30,
+                            Invoice60 = r.Invoice60,
+                            Invoice90 = r.Invoice90,
+                            InvoiceOver90 = r.InvoiceOver90,
+                            PayeeTotalDue = r.PayeeTotalDue
+                        }).ToList()
+                    };
+                })
+                .ToList();
+
+            return new RptARInvoice
+            {
+                Terms = terms,
+                Sec1 = "0-30",
+                Sec2 = "31-60",
+                Sec3 = "61-90",
+                Sec4 = "Over 90",
+                Inv30Total = data.Sum(r => r.Inv30 ?? 0),
+                Inv60Total = data.Sum(r => r.Invoice60 ?? 0),
+                Inv90Total = data.Sum(r => r.Invoice90 ?? 0),
+                InvOver90Total = data.Sum(r => r.InvoiceOver90 ?? 0),
+                ARTotal = data.Sum(r => r.PayeeTotalDue ?? 0)
+            };
+        }
+
         public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDetail(reportReq);
