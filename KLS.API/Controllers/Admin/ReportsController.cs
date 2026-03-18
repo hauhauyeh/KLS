@@ -201,5 +201,43 @@ namespace KLS.API.Controllers.Admin
         }
 
         #endregion
+
+        #region --- Payroll ---
+
+        [HttpGet("Payroll")]
+        [DisplayName("Payroll -> Payroll")]
+        public IActionResult Payroll([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.Payroll(reportReq));
+        }
+
+
+        [HttpGet("EmpLoanLedger")]
+        [DisplayName("Payroll -> Employee Loan Ledger")]
+        public IActionResult EmpLoanLedger([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.EmpLoanLedger(reportReq));
+        }
+
+        #endregion
+
+        #region --- AR ---
+
+        [HttpGet("ARInvoice")]
+        [DisplayName("AR -> AR From Invoice")]
+        public IActionResult ARInvoice([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.ARInvoice(reportReq));
+        }
+
+
+        [HttpGet("ARMonth")]
+        [DisplayName("AR -> AR Month")]
+        public IActionResult ARMonth([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.ARMonth(reportReq));
+        }
+
+        #endregion
     }
 }

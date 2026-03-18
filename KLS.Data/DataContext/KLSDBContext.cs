@@ -490,6 +490,14 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptJobSummary> RptJobSummary { get; set; }
 
+        public virtual DbSet<RptPayroll> RptPayroll { get; set; }
+
+        public virtual DbSet<RptEmpLoanLedger> RptEmpLoanLedger { get; set; }
+
+        public virtual DbSet<RptARInvoiceRow> RptARInvoiceRow { get; set; }
+
+        public virtual DbSet<RptARMonthRow> RptARMonthRow { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

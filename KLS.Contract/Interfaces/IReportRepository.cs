@@ -67,5 +67,13 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq);
 
         IQueryable<RptJobSummary> JobSummary(ReportRequest reportReq);
+
+        IQueryable<RptPayroll> Payroll(ReportRequest reportReq);
+
+        IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq);
+
+        IQueryable<RptARInvoiceRow> ARInvoice(ReportRequest reportReq);
+
+        IQueryable<RptARMonthRow> ARMonth(ReportRequest reportReq);
     }
 }

@@ -372,6 +372,73 @@ namespace KLS.Services
             return Uow.Reports.JobSummary(reportReq);
         }
 
+        public IQueryable<RptPayroll> Payroll(ReportRequest reportReq)
+        {
+            return Uow.Reports.Payroll(reportReq);
+        }
+
+        public IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq)
+        {
+            return Uow.Reports.EmpLoanLedger(reportReq);
+        }
+
+        public RptARInvoice ARInvoice(ReportRequest reportReq)
+        {
+            var data = Uow.Reports.ARInvoice(reportReq).AsEnumerable().ToList();
+
+            var terms = data
+                .GroupBy(r => r.TermId)
+                .Select(g =>
+                {
+                    var dueDays = g.First().DueDays ?? 0;
+                    var term = Uow.Terms.Find(t => t.TermId == g.Key).FirstOrDefault();
+                    var termName = term?.TermName ?? "No Term";
+                    return new RptARInvoiceTerm
+                    {
+                        TermName = termName,
+                        DueDays = dueDays,
+                        IsFirstColumn = dueDays > 0 && dueDays < 30,
+                        Payee = g.ToList()
+                    };
+                })
+                .ToList();
+
+            return new RptARInvoice
+            {
+                Terms = terms,
+                Sec1 = "0-30",
+                Sec2 = "31-60",
+                Sec3 = "61-90",
+                Sec4 = "Over 90",
+                Inv30Total = data.Sum(r => r.Inv30 ?? 0),
+                Inv60Total = data.Sum(r => r.Invoice60 ?? 0),
+                Inv90Total = data.Sum(r => r.Invoice90 ?? 0),
+                InvOver90Total = data.Sum(r => r.InvoiceOver90 ?? 0),
+                ARTotal = data.Sum(r => r.PayeeTotalDue ?? 0)
+            };
+        }
+
+        public RptARMonth ARMonth(ReportRequest reportReq)
+        {
+            var data = Uow.Reports.ARMonth(reportReq).AsEnumerable().ToList();
+
+            var regions = data
+                .GroupBy(r => r.Region ?? "No Region")
+                .Select(g => new RptARMonthRegion
+                {
+                    Region = g.Key,
+                    Total = g.Sum(r => r.Total ?? 0),
+                    Customers = g.ToList()
+                })
+                .ToList();
+
+            return new RptARMonth
+            {
+                Regions = regions,
+                Total = data.Sum(r => r.Total ?? 0)
+            };
+        }
+
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDaily(reportReq);
