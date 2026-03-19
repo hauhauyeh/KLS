@@ -8,6 +8,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    ;WITH FutureSales AS (
+        SELECT sd.ItemId, SUM(sd.BaseShipQty) AS FutureSalesQty
+        FROM SalesDetail sd
+        INNER JOIN Sales s ON s.SalesId = sd.SalesId
+        WHERE s.ShipDate > CAST(GETDATE() AS DATE)
+          AND sd.ItemId IS NOT NULL
+        GROUP BY sd.ItemId
+    )
     SELECT
         ROW_NUMBER() OVER (ORDER BY i.Last3M DESC, i.ItemName) AS AutoId,
         i.ItemId,
@@ -17,7 +25,7 @@ BEGIN
         vc.Sort0,
         ist.DisplayName AS StorageName,
         iu.Unit,
-        (i.LCloseQty - ISNULL(i.FutureQty, 0)) AS OnHand,
+        (i.LCloseQty - ISNULL(fs.FutureSalesQty, 0)) AS OnHand,
         i.M0,
         i.M1,
         i.M2,
@@ -40,6 +48,7 @@ BEGIN
     LEFT JOIN View_Category vc ON vc.CategoryId = i.CategoryId
     LEFT JOIN ItemStorage ist ON ist.StorageId = i.StorageId
     LEFT JOIN Payee py ON py.PayeeId = i.PreferredVendorId
+    LEFT JOIN FutureSales fs ON fs.ItemId = i.ItemId
     WHERE i.IsDeleted = 0
       AND i.Inactive = 0
       AND (@CategoryId IS NULL OR i.CategoryId = @CategoryId

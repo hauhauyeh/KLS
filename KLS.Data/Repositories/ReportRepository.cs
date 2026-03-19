@@ -423,22 +423,22 @@ namespace KLS.Data.Repositories
         {
             var searchParam = !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value);
             var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
-            var storParam = req.StorageId.HasValue ? new SqlParameter("@StorageId", req.StorageId) : new SqlParameter("@StorageId", DBNull.Value);
+            var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
             var inactiveParam = new SqlParameter("@ShowInactive", req.ShowInactive ?? false);
 
             return DbContext.RptInventoryStatusRow.FromSqlRaw(
-                "[dbo].[Report_InventoryStatus] @Search,@CategoryId,@StorageId,@ShowInactive",
-                searchParam, catParam, storParam, inactiveParam);
+                "[dbo].[Report_InventoryStatus] @Search,@CategoryId,@Zone,@ShowInactive",
+                searchParam, catParam, zoneParam, inactiveParam);
         }
 
         public IQueryable<RptReorderRow> Reorder(InventoryReportRequest req)
         {
             var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
-            var storParam = req.StorageId.HasValue ? new SqlParameter("@StorageId", req.StorageId) : new SqlParameter("@StorageId", DBNull.Value);
+            var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
 
             return DbContext.RptReorderRow.FromSqlRaw(
-                "[dbo].[Report_Reorder] @CategoryId,@StorageId",
-                catParam, storParam);
+                "[dbo].[Report_Reorder] @CategoryId,@Zone",
+                catParam, zoneParam);
         }
 
         public IQueryable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req)
@@ -453,12 +453,12 @@ namespace KLS.Data.Repositories
         public IQueryable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req)
         {
             var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
-            var storParam = req.StorageId.HasValue ? new SqlParameter("@StorageId", req.StorageId) : new SqlParameter("@StorageId", DBNull.Value);
+            var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
             var expiryParam = new SqlParameter("@ShowExpiry", req.ShowExpiry ?? false);
 
             return DbContext.RptInventoryMovementRow.FromSqlRaw(
-                "[dbo].[Report_InventoryMovement] @CategoryId,@StorageId,@ShowExpiry",
-                catParam, storParam, expiryParam);
+                "[dbo].[Report_InventoryMovement] @CategoryId,@Zone,@ShowExpiry",
+                catParam, zoneParam, expiryParam);
         }
 
         public IQueryable<RptInventoryIncomingRow> InventoryIncoming()

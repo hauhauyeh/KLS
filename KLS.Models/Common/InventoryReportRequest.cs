@@ -12,7 +12,7 @@ namespace KLS.Models
 
         public int? CategoryId { get; set; }
 
-        public int? StorageId { get; set; }
+        public string? Zone { get; set; }
 
         public bool? ShowInactive { get; set; }
 

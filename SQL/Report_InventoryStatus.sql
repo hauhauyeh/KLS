@@ -17,6 +17,14 @@ BEGIN
           AND pd.ItemId IS NOT NULL
           AND (pd.OrdQty0 - ISNULL(pd.BaseReceiveQty, 0)) > 0
         GROUP BY pd.ItemId
+    ),
+    FutureSales AS (
+        SELECT sd.ItemId, SUM(sd.BaseShipQty) AS FutureSalesQty
+        FROM SalesDetail sd
+        INNER JOIN Sales s ON s.SalesId = sd.SalesId
+        WHERE s.ShipDate > CAST(GETDATE() AS DATE)
+          AND sd.ItemId IS NOT NULL
+        GROUP BY sd.ItemId
     )
     SELECT
         ROW_NUMBER() OVER (ORDER BY vc.Sort0, vc.Sort1, i.ItemName) AS AutoId,
@@ -29,8 +37,8 @@ BEGIN
         vc.Sort1,
         ist.DisplayName AS StorageName,
         iu.Unit,
-        (i.LCloseQty - ISNULL(i.FutureQty, 0)) AS OnHand,
-        ABS(ISNULL(i.FutureQty, 0)) AS FutureSales,
+        (i.LCloseQty - ISNULL(fs.FutureSalesQty, 0)) AS OnHand,
+        ISNULL(fs.FutureSalesQty, 0) AS FutureSales,
         ISNULL(fi.IncomingQty, 0) AS TotalIncoming,
         i.LAvgCost,
         i.LInventoryValue,
@@ -51,6 +59,7 @@ BEGIN
     LEFT JOIN ItemStorage ist ON ist.StorageId = i.StorageId
     LEFT JOIN Payee py ON py.PayeeId = i.PreferredVendorId
     LEFT JOIN FutureIncoming fi ON fi.ItemId = i.ItemId
+    LEFT JOIN FutureSales fs ON fs.ItemId = i.ItemId
     WHERE i.IsDeleted = 0
       AND (@ShowInactive = 1 OR i.Inactive = 0)
       AND (@CategoryId IS NULL OR i.CategoryId = @CategoryId
