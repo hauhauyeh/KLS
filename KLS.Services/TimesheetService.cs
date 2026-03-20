@@ -151,6 +151,11 @@ namespace KLS.Services
             return Uow.Timesheets.GetPayPeriod();
         }
 
+        public List<PayPeriod> GetPayPeriods(int count)
+        {
+            return Uow.Timesheets.GetPayPeriods(count);
+        }
+
         public PayeeSearch? Validate(string SSNNumber)
         {
             var employee = Uow.Employees.Find(c => c.SSN != null && c.SSN.EndsWith(SSNNumber)).FirstOrDefault();

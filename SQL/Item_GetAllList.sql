@@ -1,8 +1,4 @@
--- Add @CategoryId filter to Item_GetAllList stored procedure
--- Safe: new optional parameter with NULL default, no impact on existing callers
--- Filters by selected category AND all descendant categories
-
-ALTER PROCEDURE [dbo].[Item_GetAllList]
+CREATE PROCEDURE [dbo].[Item_GetAllList]
 	@Pageno INT,
 	@Pagesize INT,
 	@Search NVARCHAR(200),
@@ -59,7 +55,13 @@ BEGIN
 		OnHandQty DECIMAL(18,2),
 		UpcomingQty DECIMAL(18,2),
 		LastAdjDate DATE,
-		PrimaryImageUrl NVARCHAR(300)
+		PrimaryImageUrl NVARCHAR(300),
+		CategoryId INT,
+		FullCategoryPath NVARCHAR(500),
+		StorageId INT,
+		StorageName NVARCHAR(255),
+		ActualSaftyInventory DECIMAL(18,2),
+		RefillInventory DECIMAL(18,2)
 	);
 
 	IF @IsCount = 1
@@ -98,7 +100,13 @@ BEGIN
 		NULL AS OnHandQty,
 		NULL AS UpcomingQty,
 		NULL AS LastAdjDate,
-		im.ThumbnailPath';
+		im.ThumbnailPath,
+		i.CategoryId,
+		ISNULL(v.RootNode, '''') AS FullCategoryPath,
+		i.StorageId,
+		s.DisplayName AS StorageName,
+		i.ActualSaftyInventory,
+		i.RefillInventory';
 
 	-- Base query with joins and filters
 	SET @Qry += ' FROM Item AS i
@@ -109,6 +117,8 @@ BEGIN
         ) bu
 	LEFT JOIN dbo.Payee p ON p.PayeeId = i.PreferredVendorId
 	LEFT JOIN ItemImage im ON i.ItemId = im.ItemId AND im.IsPrimary=1
+	LEFT JOIN View_Category v ON v.CategoryId = i.CategoryId
+	LEFT JOIN ItemStorage s ON s.StorageId = i.StorageId
 	WHERE ItemType IN (''Inventory'', ''NonInventory'') ';
 
 	IF @Id IS NOT NULL
@@ -193,7 +203,7 @@ BEGIN
 		IF @SortField='cat'
 			SET @Qry += ' ORDER BY v.RootNode, ItemName'
 		ELSE IF @SortField='storage'
-			SET @Qry += ' ORDER BY s.StorageName, ItemName'
+			SET @Qry += ' ORDER BY s.DisplayName, ItemName'
 		ELSE IF @SortField='exp'
 			SET @Qry += ' ORDER BY ExpiryDate'
 		ELSE
@@ -230,7 +240,7 @@ BEGIN
 	UPDATE #itmtbl
 	SET OnHandQty = LCloseQty - ISNULL(FutureQty, 0);
 
-	-- 3. Populate RecentCost, RecentCostB4, LastCostDate, and IntervalDays from View_RecentCost
+	-- 3. Populate LastCostDate from View_RecentCost
 	UPDATE m
 	SET
 		m.LastCostDate = r1.ArrivalDate
@@ -238,22 +248,19 @@ BEGIN
 	LEFT JOIN View_RecentCost r1
 		ON r1.ItemId = m.ItemId AND r1.RN = 1
 
-	-- 4. Update Upcoming PO
-	;WITH UpcomingPurchase AS (
-		SELECT
-			pd.ItemId,
-			SUM(pd.ShipQty/pd.FactorToBase) AS Qty
-		FROM Purchase p
-		INNER JOIN PurchaseDetail pd ON p.PurchaseId = pd.PurchaseId
-		WHERE p.ArrivalDate > CONVERT(DATE, GETDATE()) AND pd.ItemId IS NOT NULL
+	-- 4. Update Incoming (unreceived PO lines)
+	;WITH IncomingPurchase AS (
+		SELECT pd.ItemId, SUM(pd.OrdQty0) AS Qty
+		FROM PurchaseDetail pd
+		WHERE pd.ReceiveQty IS NULL AND pd.ItemId IS NOT NULL
 		GROUP BY pd.ItemId
 	)
 	UPDATE m
-	SET m.UpcomingQty = fs.Qty
+	SET m.UpcomingQty = ip.Qty
 	FROM #itmtbl m
-	INNER JOIN UpcomingPurchase fs ON m.ItemId = fs.ItemId;
+	INNER JOIN IncomingPurchase ip ON m.ItemId = ip.ItemId;
 
-	-- 3. Update LastAdjDate from InventoryAdj
+	-- 5. Update LastAdjDate from InventoryAdj
 	;WITH LastAdjDate AS (
 		SELECT
 			ad.ItemId,
@@ -268,7 +275,7 @@ BEGIN
 	FROM #itmtbl m
 	INNER JOIN LastAdjDate l ON m.ItemId = l.ItemId;
 
-	-- Re-apply sort on final SELECT (INSERT...EXEC doesn't guarantee IDENTITY follows ORDER BY)
+	-- Re-apply sort on final SELECT
 	IF @SortField IS NOT NULL
 	BEGIN
 		IF @SortField = 'cat' OR @SortField = 'storage'

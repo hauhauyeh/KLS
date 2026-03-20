@@ -37,6 +37,8 @@ namespace KLS.Contract.Services
 
         void UpdateBaseP1(ItemUpdateReq updateReq);
 
+        void UpdateInventorySettings(ItemInventorySettingsReq req);
+
         ItemDefaultFreight GetDefaultFreight(int itemId);
 
         void SaveFreight(ItemDefaultFreight defaultFreight);

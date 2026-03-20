@@ -21,5 +21,7 @@ namespace KLS.Models
         public int? SalesRepId { get; set; }
 
         public int? PayeeId { get; set; }
+
+        public int? AccountId { get; set; }
     }
 }

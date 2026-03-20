@@ -25,6 +25,8 @@ namespace KLS.Contract.Services
 
         PayPeriod? GetPayPeriod();
 
+        List<PayPeriod> GetPayPeriods(int count);
+
         PayeeSearch? Validate(string SSNNumber);
 
         CheckInOut CheckInOut(CheckInOutReq checkInOutReq);

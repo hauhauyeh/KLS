@@ -52,7 +52,7 @@ namespace KLS.Services
                         AccountCode = acc.AccountCode,
                         Type = "Account",
                         ClassCode = cat.ClassCode, // Inherit? Not specified, but useful context
-                        NormalSide = cat.NormalSide, // Inherit
+                        NormalSide = acc.IsAccountDebit ? "D" : "C",
                         SortOrder = acc.SortOrder,
                         IsAccountDebit = acc.IsAccountDebit,
                         IsDefaultAccount = acc.IsDefaultAccount,

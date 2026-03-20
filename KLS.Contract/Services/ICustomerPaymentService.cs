@@ -13,6 +13,8 @@ namespace KLS.Contract.Services
 
         CustomerPayment GetById(int customerPaymentId);
 
+        CustomerPayment GetByIdWithInclude(int customerPaymentId);
+
         void Delete(int customerPaymentId);
 
         void UpdateNotes(CustomerPaymentUpdateReq updateReq);

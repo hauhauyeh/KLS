@@ -117,5 +117,19 @@ namespace KLS.Models
         }
 
         public string? PrimaryImageUrl { get; set; }
+
+        public decimal? UpcomingQty { get; set; }
+
+        public decimal? ActualSaftyInventory { get; set; }
+
+        public decimal? RefillInventory { get; set; }
+
+        public int? CategoryId { get; set; }
+
+        public string? FullCategoryPath { get; set; }
+
+        public int? StorageId { get; set; }
+
+        public string? StorageName { get; set; }
     }
 }

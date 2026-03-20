@@ -15,14 +15,18 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IReportService _reportService;
+        private readonly ICustomerPaymentService _customerPaymentService;
+        private readonly ITimesheetService _timesheetService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ReportsController(IReportService reportService)
+        public ReportsController(IReportService reportService, ICustomerPaymentService customerPaymentService, ITimesheetService timesheetService)
         {
             _reportService = reportService;
+            _customerPaymentService = customerPaymentService;
+            _timesheetService = timesheetService;
         }
 
         #endregion
@@ -97,5 +101,286 @@ namespace KLS.API.Controllers.Admin
         {
             return Ok(_reportService.PaymentHistory(PayeeId));
         }
+
+        [HttpGet("Ledger")]
+        [DisplayName("PL -> Ledger")]
+        public IActionResult Ledger([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.Ledger(reportReq));
+        }
+
+
+        [HttpGet("LedgerByPayee")]
+        [DisplayName("PL -> Ledger By Payee")]
+        public IActionResult LedgerByPayee([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.LedgerByPayee(reportReq));
+        }
+
+
+        [HttpGet("BankRecon/{BankReconId}")]
+        [DisplayName("Banking -> Bank Reconciliation")]
+        public IActionResult BankRecon(int BankReconId)
+        {
+            return Ok(_reportService.BankRecon(BankReconId));
+        }
+
+        #region --- Customer ---
+
+        [HttpGet("CustStmt/{PayeeId}")]
+        [DisplayName("Customer -> Statement")]
+        public IActionResult CustStmt(int PayeeId)
+        {
+            return Ok(_reportService.CustStmt(PayeeId));
+        }
+
+        [HttpGet("AccountHistory/{PayeeId}")]
+        [DisplayName("Customer -> Account History")]
+        public IActionResult AccountHistory(int PayeeId)
+        {
+            return Ok(_reportService.AccountHistory(PayeeId));
+        }
+
+        [HttpGet("Pricesheet/{PayeeId}")]
+        [DisplayName("Customer -> Pricesheet")]
+        public IActionResult Pricesheet(int PayeeId)
+        {
+            return Ok(_reportService.Pricesheet(PayeeId));
+        }
+
+        [HttpGet("OrderGuide/{PayeeId}")]
+        [DisplayName("Customer -> Order Guide")]
+        public IActionResult OrderGuide(int PayeeId)
+        {
+            return Ok(_reportService.OrderGuide(PayeeId));
+        }
+
+        [HttpGet("CustItemVolume/{PayeeId}")]
+        [DisplayName("Customer -> Item Volume History")]
+        public IActionResult CustItemVolume(int PayeeId)
+        {
+            return Ok(_reportService.CustItemVolume(PayeeId));
+        }
+
+        [HttpGet("CustSalesByItem")]
+        [DisplayName("Customer -> Sales By Item")]
+        public IActionResult CustSalesByItem([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.CustSalesByItem(reportReq));
+        }
+
+        [HttpGet("SalesHistory")]
+        [DisplayName("Customer -> Sales History")]
+        public IActionResult SalesHistory([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesHistory(reportReq));
+        }
+
+        [HttpGet("CustPayment")]
+        [DisplayName("Customer -> Customer Payment")]
+        public IActionResult CustPayment([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.CustPayment(reportReq));
+        }
+
+        [HttpGet("CreditMemo")]
+        [DisplayName("Sales -> Credit Memo")]
+        public IActionResult CreditMemo([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.CreditMemo(reportReq));
+        }
+
+        [HttpGet("PmtReceipt/{CustomerPaymentId}")]
+        [DisplayName("Banking -> Payment Receipt")]
+        public IActionResult PmtReceipt(int CustomerPaymentId)
+        {
+            return Ok(_customerPaymentService.GetByIdWithInclude(CustomerPaymentId));
+        }
+
+        #endregion
+
+        #region --- AP ---
+
+        [HttpGet("APCheck")]
+        [DisplayName("AP -> AP Check")]
+        public IActionResult APCheck([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.APCheck(reportReq));
+        }
+
+
+        [HttpGet("CheckToBePrinted/{PmtMethod?}")]
+        [DisplayName("AP -> Check To Be Printed")]
+        public IActionResult CheckToBePrinted(string? PmtMethod)
+        {
+            return Ok(_reportService.CheckToBePrinted(PmtMethod));
+        }
+
+
+        [HttpGet("APInvoice")]
+        [DisplayName("AP -> AP From Invoice")]
+        public IActionResult APInvoice([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.APInvoice(reportReq));
+        }
+
+        #endregion
+
+        #region --- Timesheet ---
+
+        [HttpGet("Timesheet")]
+        [DisplayName("Timesheet -> Timesheet")]
+        public IActionResult Timesheet([FromQuery] TimesheetReq timesheetReq)
+        {
+            return Ok(_timesheetService.GetWeeklyTimesheets(timesheetReq));
+        }
+
+
+        [HttpGet("JobSummary")]
+        [DisplayName("Timesheet -> Job Summary")]
+        public IActionResult JobSummary([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.JobSummary(reportReq));
+        }
+
+        #endregion
+
+        #region --- Payroll ---
+
+        [HttpGet("Payroll")]
+        [DisplayName("Payroll -> Payroll")]
+        public IActionResult Payroll([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.Payroll(reportReq));
+        }
+
+
+        [HttpGet("EmpLoanLedger")]
+        [DisplayName("Payroll -> Employee Loan Ledger")]
+        public IActionResult EmpLoanLedger([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.EmpLoanLedger(reportReq));
+        }
+
+        #endregion
+
+        #region --- Sales By Item / Detail ---
+
+        [HttpGet("SalesByItem")]
+        [DisplayName("Sales -> Sales By Item")]
+        public IActionResult SalesByItem([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.CustSalesByItem(reportReq));
+        }
+
+
+        [HttpGet("SalesDetail")]
+        [DisplayName("Sales -> Sales Detail")]
+        public IActionResult SalesDetail([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesDetail(reportReq));
+        }
+
+        #endregion
+
+        #region --- Sales Daily/Yearly ---
+
+        [HttpGet("SalesDaily2")]
+        [DisplayName("Sales -> Sales Daily 2")]
+        public IActionResult SalesDaily2([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesDaily2(reportReq));
+        }
+
+
+        [HttpGet("SalesYearly")]
+        [DisplayName("Sales -> Sales Yearly")]
+        public IActionResult SalesYearly()
+        {
+            return Ok(_reportService.SalesYearly());
+        }
+
+        #endregion
+
+        #region --- Sales Commission ---
+
+        [HttpGet("SalesCommission")]
+        [DisplayName("Sales -> Sales Commission")]
+        public IActionResult SalesCommission([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesCommission(reportReq));
+        }
+
+
+        [HttpGet("SalesCommission2")]
+        [DisplayName("Sales -> Sales Commission 2")]
+        public IActionResult SalesCommission2([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesCommission2(reportReq));
+        }
+
+        #endregion
+
+        #region --- AR ---
+
+        [HttpGet("ARInvoice")]
+        [DisplayName("AR -> AR From Invoice")]
+        public IActionResult ARInvoice([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.ARInvoice(reportReq));
+        }
+
+
+        [HttpGet("ARMonth")]
+        [DisplayName("AR -> AR Month")]
+        public IActionResult ARMonth([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.ARMonth(reportReq));
+        }
+
+        #endregion
+
+        #region --- Inventory ---
+
+        [HttpGet("InventoryStatus")]
+        [DisplayName("Inventory -> Inventory Status")]
+        public IActionResult InventoryStatus([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.InventoryStatus(req));
+        }
+
+
+        [HttpGet("Reorder")]
+        [DisplayName("Inventory -> Reorder")]
+        public IActionResult Reorder([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.Reorder(req));
+        }
+
+
+        [HttpGet("InventoryValuation")]
+        [DisplayName("Inventory -> Inventory Valuation")]
+        public IActionResult InventoryValuation([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.InventoryValuation(req));
+        }
+
+
+        [HttpGet("InventoryMovement")]
+        [DisplayName("Inventory -> Inventory Movement")]
+        public IActionResult InventoryMovement([FromQuery] InventoryReportRequest req)
+        {
+            return Ok(_reportService.InventoryMovement(req));
+        }
+
+
+        [HttpGet("InventoryIncoming")]
+        [DisplayName("Inventory -> Incoming Purchases")]
+        public IActionResult InventoryIncoming()
+        {
+            return Ok(_reportService.InventoryIncoming());
+        }
+
+        #endregion
     }
 }

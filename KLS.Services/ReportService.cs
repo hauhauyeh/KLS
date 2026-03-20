@@ -108,35 +108,74 @@ namespace KLS.Services
 
         public IEnumerable<RptBalanceSheet>? BalanceSheet(DateOnly? endDate)
         {
-            var balance = Uow.Reports.BalanceSheet(endDate).ToList();
+            var balance = Uow.Reports.BalanceSheet(endDate)
+                .AsEnumerable()
+                .OrderBy(r => r.CategorySort0 ?? 9999)
+                .ThenBy(r => r.CategorySort1 ?? 9999)
+                .ThenBy(r => r.CategorySort2 ?? 9999)
+                .ThenBy(r => r.CategorySort3 ?? 9999)
+                .ThenBy(r => r.AccountSortOrder ?? 9999)
+                .ThenBy(r => r.AccountName)
+                .ToList();
 
             var result = balance
+                .Where(x => !string.IsNullOrEmpty(x.CategoryLevel0))
                 .GroupBy(a => a.CategoryLevel0)
+                .OrderBy(g => g.Min(x => x.CategorySort0))
                 .Select(g0 => new RptBalanceSheet
                 {
                     GroupName = g0.Key,
-                    GroupTotal = g0.Sum(x => x.ClosingBalance),
-                    Children = g0
+                    ClassCode = g0.First().ClassCode,
+                    GroupTotal = g0.Sum(x => x.ClosingBalance ?? 0),
+
+                    // Accounts directly under Level 0 (no Level1)
+                    Items = g0.Where(x => string.IsNullOrEmpty(x.CategoryLevel1))
+                        .Select(a => new RptBalanceSheetItem
+                        {
+                            AccountId = a.AccountId,
+                            AccountCode = a.AccountCode,
+                            AccountName = a.AccountName,
+                            ClassCode = a.ClassCode,
+                            ClosingBalance = a.ClosingBalance
+                        }).ToList(),
+
+                    // Sub-groups that have Level1
+                    Children = g0.Where(x => !string.IsNullOrEmpty(x.CategoryLevel1))
                         .GroupBy(a => a.CategoryLevel1)
+                        .OrderBy(g => g.Min(x => x.CategorySort1))
                         .Select(g1 => new RptBalanceSheet
                         {
                             GroupName = g1.Key,
-                            Children = g1
+                            GroupTotal = g1.Sum(x => x.ClosingBalance ?? 0),
+
+                            Items = g1.Where(x => string.IsNullOrEmpty(x.CategoryLevel2))
+                                .Select(a => new RptBalanceSheetItem
+                                {
+                                    AccountCode = a.AccountCode,
+                                    AccountName = a.AccountName,
+                                    ClassCode = a.ClassCode,
+                                    ClosingBalance = a.ClosingBalance
+                                }).ToList(),
+
+                            Children = g1.Where(x => !string.IsNullOrEmpty(x.CategoryLevel2))
                                 .GroupBy(a => a.CategoryLevel2)
+                                .OrderBy(g => g.Min(x => x.CategorySort2))
                                 .Select(g2 => new RptBalanceSheet
                                 {
                                     GroupName = g2.Key,
-                                    GroupTotal = g2.Sum(x => x.ClosingBalance),
-                                    // Leaf nodes = accounts (still using same RptBalanceSheet type)
-                                    Children = g2.Select(a => new RptBalanceSheet
+                                    GroupTotal = g2.Sum(x => x.ClosingBalance ?? 0),
+
+                                    Items = g2.Select(a => new RptBalanceSheetItem
                                     {
-                                        GroupName = a.AccountName,
+                                        AccountId = a.AccountId,
                                         AccountCode = a.AccountCode,
-                                        GroupTotal = a.ClosingBalance,
-                                        Children = null
-                                    }).ToList()
-                                }).ToList(),
-                            GroupTotal = g1.Sum(x => x.ClosingBalance)
+                                        AccountName = a.AccountName,
+                                        ClassCode = a.ClassCode,
+                                        ClosingBalance = a.ClosingBalance
+                                    }).ToList(),
+
+                                    Children = null
+                                }).ToList()
                         }).ToList()
                 })
                 .ToList();
@@ -159,41 +198,90 @@ namespace KLS.Services
                     return new RptProfitLoss
                     {
                         GroupName = g0.Key,
+                        ClassCode = g0.First().ClassCode,
                         GroupTotal = total0,
                         GrossMargin = grossMargin,
-
-                        Children = g0
-                            .GroupBy(a => a.CategoryLevel1 ?? "Uncategorized")
-                            .Select(g1 => new RptProfitLoss
-                            {
-                                GroupName = g1.Key,
-                                GroupTotal = g1.Sum(x => x.AcctBalance),
-
-                                Children = g1
-                                    .GroupBy(a => a.CategoryLevel2 ?? "Uncategorized")
-                                    .Select(g2 => new RptProfitLoss
-                                    {
-                                        GroupName = g2.Key,
-
-                                        // Level3 (accounts) mapped into same class as leaf nodes
-                                        Children = g2.Select(a => new RptProfitLoss
-                                        {
-                                            GroupName = a.AccountName,
-                                            AccountCode = a.AccountCode,
-                                            GroupTotal = a.AcctBalance,
-                                            Children = null
-                                        }).ToList(),
-
-                                        GroupTotal = g2.Sum(x => x.AcctBalance)
-                                    })
-                                    .ToList()
-                            })
-                            .ToList()
+                        Children = BuildLevel1Children(g0)
                     };
                 })
                 .ToList();
 
             return result;
+        }
+
+        private List<RptProfitLoss> BuildLevel1Children(IGrouping<string, RptProfitLossRow> g0)
+        {
+            var children = new List<RptProfitLoss>();
+
+            // Rows with null Level1 → direct leaf accounts under Level0
+            var leafRows = g0.Where(a => a.CategoryLevel1 == null).ToList();
+            foreach (var a in leafRows)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = a.AccountName,
+                    AccountId = a.AccountId,
+                    AccountCode = a.AccountCode,
+                    GroupTotal = a.AcctBalance,
+                    Children = null
+                });
+            }
+
+            // Rows with non-null Level1 → group into sub-groups
+            var grouped = g0.Where(a => a.CategoryLevel1 != null)
+                .GroupBy(a => a.CategoryLevel1!);
+            foreach (var g1 in grouped)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = g1.Key,
+                    GroupTotal = g1.Sum(x => x.AcctBalance),
+                    Children = BuildLevel2Children(g1)
+                });
+            }
+
+            return children;
+        }
+
+        private List<RptProfitLoss> BuildLevel2Children(IGrouping<string, RptProfitLossRow> g1)
+        {
+            var children = new List<RptProfitLoss>();
+
+            // Rows with null Level2 → direct leaf accounts under Level1
+            var leafRows = g1.Where(a => a.CategoryLevel2 == null).ToList();
+            foreach (var a in leafRows)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = a.AccountName,
+                    AccountId = a.AccountId,
+                    AccountCode = a.AccountCode,
+                    GroupTotal = a.AcctBalance,
+                    Children = null
+                });
+            }
+
+            // Rows with non-null Level2 → group into sub-groups with leaf accounts
+            var grouped = g1.Where(a => a.CategoryLevel2 != null)
+                .GroupBy(a => a.CategoryLevel2!);
+            foreach (var g2 in grouped)
+            {
+                children.Add(new RptProfitLoss
+                {
+                    GroupName = g2.Key,
+                    GroupTotal = g2.Sum(x => x.AcctBalance),
+                    Children = g2.Select(a => new RptProfitLoss
+                    {
+                        GroupName = a.AccountName,
+                        AccountId = a.AccountId,
+                        AccountCode = a.AccountCode,
+                        GroupTotal = a.AcctBalance,
+                        Children = null
+                    }).ToList()
+                });
+            }
+
+            return children;
         }
 
         public IEnumerable<RptSalesTax>? SalesTax(ReportRequest reportReq)
@@ -249,6 +337,265 @@ namespace KLS.Services
             return Uow.Reports.Pricesheet(payeeId);
         }
 
+        public IQueryable<RptOrderGuideItem> OrderGuide(int payeeId)
+        {
+            return Uow.Reports.OrderGuide(payeeId);
+        }
+
+        public IQueryable<RptCustItemVolume> CustItemVolume(int payeeId)
+        {
+            return Uow.Reports.CustItemVolume(payeeId);
+        }
+
+        public IEnumerable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq)
+        {
+            return Uow.Reports.CustSalesByItem(reportReq);
+        }
+
+        public IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesHistory(reportReq);
+        }
+
+        public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
+        {
+            return Uow.Reports.CustPayment(reportReq);
+        }
+
+        public IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq)
+        {
+            return Uow.Reports.CreditMemo(reportReq);
+        }
+
+        public IQueryable<RptJobSummary> JobSummary(ReportRequest reportReq)
+        {
+            return Uow.Reports.JobSummary(reportReq);
+        }
+
+        public IQueryable<RptPayroll> Payroll(ReportRequest reportReq)
+        {
+            return Uow.Reports.Payroll(reportReq);
+        }
+
+        public IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq)
+        {
+            return Uow.Reports.EmpLoanLedger(reportReq);
+        }
+
+        public IQueryable<RptLedgerByPayeeRow> LedgerByPayee(ReportRequest reportReq)
+        {
+            return Uow.Reports.LedgerByPayee(reportReq);
+        }
+
+        public RptBankRecon BankRecon(int bankReconId)
+        {
+            var data = Uow.Reports.BankRecon(bankReconId).AsEnumerable().ToList();
+
+            var first = data.FirstOrDefault();
+
+            return new RptBankRecon
+            {
+                AccountName = first?.AccountName,
+                StatementDate = first?.StatementDate,
+                StatementBalance = first?.StatementBalance,
+                BeginningBalance = first?.BeginningBalance,
+                ClearedDeposits = data.Where(r => r.IsCleared == 1 && r.Amount > 0).ToList(),
+                ClearedPayments = data.Where(r => r.IsCleared == 1 && r.Amount < 0).ToList(),
+                OutstandingDeposits = data.Where(r => r.IsCleared == 0 && r.Amount > 0).ToList(),
+                OutstandingPayments = data.Where(r => r.IsCleared == 0 && r.Amount < 0).ToList(),
+                TotalClearedDeposits = data.Where(r => r.IsCleared == 1 && r.Amount > 0).Sum(r => r.Amount ?? 0),
+                TotalClearedPayments = data.Where(r => r.IsCleared == 1 && r.Amount < 0).Sum(r => r.Amount ?? 0),
+                TotalOutstandingDeposits = data.Where(r => r.IsCleared == 0 && r.Amount > 0).Sum(r => r.Amount ?? 0),
+                TotalOutstandingPayments = data.Where(r => r.IsCleared == 0 && r.Amount < 0).Sum(r => r.Amount ?? 0)
+            };
+        }
+
+        public IQueryable<RptAPCheckRow> APCheck(ReportRequest reportReq)
+        {
+            return Uow.Reports.APCheck(reportReq);
+        }
+
+        public IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod)
+        {
+            return Uow.Reports.CheckToBePrinted(pmtMethod);
+        }
+
+        public RptARInvoice APInvoice(ReportRequest reportReq)
+        {
+            var data = Uow.Reports.APInvoice(reportReq).AsEnumerable().ToList();
+
+            var terms = data
+                .GroupBy(r => r.TermId)
+                .Select(g =>
+                {
+                    var dueDays = g.First().DueDays ?? 0;
+                    var term = Uow.Terms.Find(t => t.TermId == g.Key).FirstOrDefault();
+                    return new RptARInvoiceTerm
+                    {
+                        TermName = term?.TermName ?? "No Term",
+                        DueDays = dueDays,
+                        IsFirstColumn = dueDays > 0 && dueDays < 30,
+                        Payee = g.Select(r => new RptARInvoiceRow
+                        {
+                            PayeeId = r.PayeeId,
+                            PayeeName = r.PayeeName,
+                            PhoneDesc1 = r.PhoneDesc1,
+                            Phone1 = r.Phone1,
+                            Inv0 = r.Inv0,
+                            Inv30 = r.Inv30,
+                            Invoice60 = r.Invoice60,
+                            Invoice90 = r.Invoice90,
+                            InvoiceOver90 = r.InvoiceOver90,
+                            PayeeTotalDue = r.PayeeTotalDue
+                        }).ToList()
+                    };
+                })
+                .ToList();
+
+            return new RptARInvoice
+            {
+                Terms = terms,
+                Sec1 = "0-30",
+                Sec2 = "31-60",
+                Sec3 = "61-90",
+                Sec4 = "Over 90",
+                Inv30Total = data.Sum(r => r.Inv30 ?? 0),
+                Inv60Total = data.Sum(r => r.Invoice60 ?? 0),
+                Inv90Total = data.Sum(r => r.Invoice90 ?? 0),
+                InvOver90Total = data.Sum(r => r.InvoiceOver90 ?? 0),
+                ARTotal = data.Sum(r => r.PayeeTotalDue ?? 0)
+            };
+        }
+
+        public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesDetail(reportReq);
+        }
+
+        public IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesDaily2(reportReq);
+        }
+
+        public RptSalesYearly SalesYearly()
+        {
+            var data = Uow.Reports.SalesYearly().AsEnumerable().ToList();
+
+            var yearlySales = data
+                .GroupBy(r => new { r.SalesMonth, r.SalesMonthName })
+                .OrderBy(g => g.Key.SalesMonth)
+                .Select(g =>
+                {
+                    var y1Total = g.Sum(r => r.Y1 ?? 0);
+                    var y2Total = g.Sum(r => r.Y2 ?? 0);
+                    var y3Total = g.Sum(r => r.Y3 ?? 0);
+                    return new RptSalesYearlyMonth
+                    {
+                        Month = g.Key.SalesMonthName,
+                        Y1Total = y1Total,
+                        Y2Total = y2Total,
+                        Y3Total = y3Total,
+                        Y1Perc = y2Total != 0 ? (y1Total - y2Total) / y2Total : 0,
+                        Y2Perc = y3Total != 0 ? (y2Total - y3Total) / y3Total : 0,
+                        MonthlySales = g.ToList()
+                    };
+                })
+                .ToList();
+
+            var accounts = data
+                .GroupBy(r => r.AccountName)
+                .Select(g => new RptSalesYearlyAccount
+                {
+                    AcctName = g.Key,
+                    Y1Total = g.Sum(r => r.Y1 ?? 0),
+                    Y2Total = g.Sum(r => r.Y2 ?? 0),
+                    Y3Total = g.Sum(r => r.Y3 ?? 0)
+                })
+                .ToList();
+
+            var grandY1 = data.Sum(r => r.Y1 ?? 0);
+            var grandY2 = data.Sum(r => r.Y2 ?? 0);
+            var grandY3 = data.Sum(r => r.Y3 ?? 0);
+
+            return new RptSalesYearly
+            {
+                YearlySales = yearlySales,
+                Accounts = accounts,
+                Y1Total = grandY1,
+                Y2Total = grandY2,
+                Y3Total = grandY3,
+                Y1Perc = grandY2 != 0 ? (grandY1 - grandY2) / grandY2 : 0,
+                Y2Perc = grandY3 != 0 ? (grandY2 - grandY3) / grandY3 : 0
+            };
+        }
+
+        public IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesCommission(reportReq);
+        }
+
+        public IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq)
+        {
+            return Uow.Reports.SalesCommission2(reportReq);
+        }
+
+        public RptARInvoice ARInvoice(ReportRequest reportReq)
+        {
+            var data = Uow.Reports.ARInvoice(reportReq).AsEnumerable().ToList();
+
+            var terms = data
+                .GroupBy(r => r.TermId)
+                .Select(g =>
+                {
+                    var dueDays = g.First().DueDays ?? 0;
+                    var term = Uow.Terms.Find(t => t.TermId == g.Key).FirstOrDefault();
+                    var termName = term?.TermName ?? "No Term";
+                    return new RptARInvoiceTerm
+                    {
+                        TermName = termName,
+                        DueDays = dueDays,
+                        IsFirstColumn = dueDays > 0 && dueDays < 30,
+                        Payee = g.ToList()
+                    };
+                })
+                .ToList();
+
+            return new RptARInvoice
+            {
+                Terms = terms,
+                Sec1 = "0-30",
+                Sec2 = "31-60",
+                Sec3 = "61-90",
+                Sec4 = "Over 90",
+                Inv30Total = data.Sum(r => r.Inv30 ?? 0),
+                Inv60Total = data.Sum(r => r.Invoice60 ?? 0),
+                Inv90Total = data.Sum(r => r.Invoice90 ?? 0),
+                InvOver90Total = data.Sum(r => r.InvoiceOver90 ?? 0),
+                ARTotal = data.Sum(r => r.PayeeTotalDue ?? 0)
+            };
+        }
+
+        public RptARMonth ARMonth(ReportRequest reportReq)
+        {
+            var data = Uow.Reports.ARMonth(reportReq).AsEnumerable().ToList();
+
+            var regions = data
+                .GroupBy(r => r.Region ?? "No Region")
+                .Select(g => new RptARMonthRegion
+                {
+                    Region = g.Key,
+                    Total = g.Sum(r => r.Total ?? 0),
+                    Customers = g.ToList()
+                })
+                .ToList();
+
+            return new RptARMonth
+            {
+                Regions = regions,
+                Total = data.Sum(r => r.Total ?? 0)
+            };
+        }
+
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             return Uow.Reports.SalesDaily(reportReq);
@@ -261,7 +608,7 @@ namespace KLS.Services
 
         public IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId)
         {
-            return Uow.CustomerPayments.Find(s => s.CustomerPaymentId == payeeId).OrderByDescending(c => c.PaymentDate).ToList()
+            return Uow.CustomerPayments.Find(s => s.PayeeId == payeeId).OrderByDescending(c => c.PaymentDate).ToList()
                 .GroupBy(s => new { s.PaymentDate.Value.Year, s.PaymentDate.Value.Month })
                 .Select(g => new RptPaymentHistory
                 {
@@ -269,5 +616,51 @@ namespace KLS.Services
                     Payments = g.ToList()
                 }).ToList();
         }
+
+        public IEnumerable<RptAccountHistory>? AccountHistory(int payeeId)
+        {
+            return Uow.Reports.AccountHistory(payeeId);
+        }
+
+        public RptLedger? Ledger(ReportRequest reportReq)
+        {
+            var rows = Uow.Reports.Ledger(reportReq).ToList();
+            if (!rows.Any()) return new RptLedger { OpeningBalance = 0, Rows = new() };
+
+            return new RptLedger
+            {
+                OpeningBalance = rows.First().OpeningBalance,
+                Rows = rows
+            };
+        }
+
+        #region --- Inventory Reports ---
+
+        public IEnumerable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req)
+        {
+            return Uow.Reports.InventoryStatus(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptReorderRow> Reorder(InventoryReportRequest req)
+        {
+            return Uow.Reports.Reorder(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req)
+        {
+            return Uow.Reports.InventoryValuation(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req)
+        {
+            return Uow.Reports.InventoryMovement(req).AsEnumerable();
+        }
+
+        public IEnumerable<RptInventoryIncomingRow> InventoryIncoming()
+        {
+            return Uow.Reports.InventoryIncoming().AsEnumerable();
+        }
+
+        #endregion
     }
 }
