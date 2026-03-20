@@ -223,6 +223,13 @@ namespace KLS.Data.Repositories
             return DbContext.SalesExport.FromSqlRaw("[Sales_Export] @StartDate,@EndDate", StartDateParam, EndDateParam).AsNoTracking();
         }
 
+        public IQueryable<SalesDetailList>? GetSalesDetails(int salesId)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+
+            return DbContext.SalesDetailList.FromSqlRaw("[Sales_GetDetail] @SalesId", SalesIdParam).AsNoTracking();
+        }
+
         //--Web
         public IQueryable<OrderWebList>? GetWebPagedList(SalesListReq salesListReq)
         {

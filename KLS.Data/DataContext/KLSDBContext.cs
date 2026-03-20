@@ -427,6 +427,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<SalesExport> SalesExport { get; set; }
 
+        public virtual DbSet<SalesDetailList> SalesDetailList { get; set; }
+
         #endregion
 
         #region ---Report DBSET---
