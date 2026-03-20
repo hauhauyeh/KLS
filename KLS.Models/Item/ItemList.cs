@@ -120,6 +120,10 @@ namespace KLS.Models
 
         public decimal? UpcomingQty { get; set; }
 
+        public decimal? ActualSaftyInventory { get; set; }
+
+        public decimal? RefillInventory { get; set; }
+
         public int? CategoryId { get; set; }
 
         public string? FullCategoryPath { get; set; }

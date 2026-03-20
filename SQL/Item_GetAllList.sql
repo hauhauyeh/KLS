@@ -59,7 +59,9 @@ BEGIN
 		CategoryId INT,
 		FullCategoryPath NVARCHAR(500),
 		StorageId INT,
-		StorageName NVARCHAR(255)
+		StorageName NVARCHAR(255),
+		ActualSaftyInventory DECIMAL(18,2),
+		RefillInventory DECIMAL(18,2)
 	);
 
 	IF @IsCount = 1
@@ -102,7 +104,9 @@ BEGIN
 		i.CategoryId,
 		ISNULL(v.RootNode, '''') AS FullCategoryPath,
 		i.StorageId,
-		s.DisplayName AS StorageName';
+		s.DisplayName AS StorageName,
+		i.ActualSaftyInventory,
+		i.RefillInventory';
 
 	-- Base query with joins and filters
 	SET @Qry += ' FROM Item AS i
