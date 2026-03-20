@@ -61,6 +61,8 @@ namespace KLS.Contract.Services
 
         byte[] Export(SalesExportReq exportReq);
 
+        IEnumerable<SalesDetailList>? GetSalesDetails(int salesId);
+
         //--Routing
 
         IEnumerable<ShipRouteSummary>? ShipRouteSummary(DateOnly shipDate);

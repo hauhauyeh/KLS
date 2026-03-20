@@ -36,6 +36,11 @@ namespace KLS.Data.Repositories
 
         public RptCustStmt CustStmt(int payeeId)
         {
+            // Recalculate aging on demand before reading Payee
+            var payeeIdParam = new SqlParameter("@PayeeId", payeeId);
+            var isSalesParam = new SqlParameter("@IsSales", true);
+            DbContext.Database.ExecuteSqlRaw("EXEC [dbo].[Payee_UpdateAging] @PayeeId, @IsSales", payeeIdParam, isSalesParam);
+
             var details = DbContext.Sales.Where(s => s.ShipId == payeeId && s.AmountDue != 0)
                 .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })
                 .Select(g => new RptCustStmtDetail
@@ -178,6 +183,61 @@ namespace KLS.Data.Repositories
             return DbContext.RptPricesheet.FromSqlRaw("[dbo].[Report_PriceSheet] @PayeeId", PayeeIdParam);
         }
 
+        public IQueryable<RptOrderGuideItem> OrderGuide(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.RptOrderGuideItem.FromSqlRaw("[dbo].[Report_OrderGuide] @PayeeId", PayeeIdParam);
+        }
+
+        public IQueryable<RptCustItemVolume> CustItemVolume(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.RptCustItemVolume.FromSqlRaw("[dbo].[Report_CustItemVolume] @PayeeId", PayeeIdParam);
+        }
+
+        public IQueryable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq)
+        {
+            var SearchParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", reportReq.Search);
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var GrpbycatParam = new SqlParameter("@Grpbycat", false);
+            var SortbyParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@Sortby", DBNull.Value) : new SqlParameter("@Sortby", reportReq.SortField);
+
+            return DbContext.RptCustSalesByItem.FromSqlRaw("[dbo].[Report_CustSalesbyItem] @Search,@StartDate,@EndDate,@Grpbycat,@Sortby",
+                SearchParam, StartDateParam, EndDateParam, GrpbycatParam, SortbyParam);
+        }
+
+        public IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq)
+        {
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptSalesHistoryRow.FromSqlRaw("[dbo].[Report_SalesHistory] @PayeeId,@StartDate,@EndDate",
+                PayeeIdParam, StartDateParam, EndDateParam);
+        }
+
+        public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+            var PmtMethodParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@PmtMethod", DBNull.Value) : new SqlParameter("@PmtMethod", reportReq.Search);
+
+            return DbContext.RptCustPayment.FromSqlRaw("[dbo].[Report_CustomerPayment] @StartDate,@EndDate,@PayeeId,@PmtMethod",
+                StartDateParam, EndDateParam, PayeeIdParam, PmtMethodParam);
+        }
+
+        public IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptCreditMemo.FromSqlRaw("[dbo].[Report_CreditMemo] @StartDate,@EndDate", StartDateParam, EndDateParam);
+        }
+
         public IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
@@ -187,6 +247,159 @@ namespace KLS.Data.Repositories
             var SalesRepIdParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRepId", reportReq.SalesRepId) : new SqlParameter("@SalesRepId", DBNull.Value);
 
             return DbContext.RptSalesDaily.FromSqlRaw("[dbo].[Report_SalesDaily] @StartDate,@EndDate,@SalesRepId", StartDateParam, EndDateParam, SalesRepIdParam);
+        }
+
+        public IQueryable<RptLedgerRow> Ledger(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var AccountIdParam = reportReq.AccountId.HasValue ? new SqlParameter("@AccountId", reportReq.AccountId) : new SqlParameter("@AccountId", DBNull.Value);
+
+            return DbContext.RptLedgerRow.FromSqlRaw("[dbo].[Report_Ledger] @StartDate,@EndDate,@AccountId", StartDateParam, EndDateParam, AccountIdParam);
+        }
+
+        public IQueryable<RptAccountHistory> AccountHistory(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.RptAccountHistory.FromSqlRaw("[dbo].[Report_AccountHistory] @PayeeId", PayeeIdParam);
+        }
+
+        public IQueryable<RptJobSummary> JobSummary(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptJobSummary.FromSqlRaw("[dbo].[Report_JobSummary] @StartDate,@EndDate", StartDateParam, EndDateParam);
+        }
+
+        public IQueryable<RptPayroll> Payroll(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+            var PmtMethodParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@PmtMethod", DBNull.Value) : new SqlParameter("@PmtMethod", reportReq.Search);
+
+            return DbContext.RptPayroll.FromSqlRaw("[dbo].[Report_Payroll] @StartDate,@EndDate,@PayeeId,@PmtMethod",
+                StartDateParam, EndDateParam, PayeeIdParam, PmtMethodParam);
+        }
+
+        public IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+
+            return DbContext.RptEmpLoanLedger.FromSqlRaw("[dbo].[Report_LedgerEmpLoan] @StartDate,@EndDate,@PayeeId",
+                StartDateParam, EndDateParam, PayeeIdParam);
+        }
+
+        public IQueryable<RptLedgerByPayeeRow> LedgerByPayee(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+
+            return DbContext.RptLedgerByPayeeRow.FromSqlRaw("[dbo].[Report_LedgerByPayee] @StartDate,@EndDate,@PayeeId",
+                StartDateParam, EndDateParam, PayeeIdParam);
+        }
+
+        public IQueryable<RptBankReconRow> BankRecon(int bankReconId)
+        {
+            var BankReconIdParam = new SqlParameter("@BankReconId", bankReconId);
+
+            return DbContext.RptBankReconRow.FromSqlRaw("[dbo].[Report_BankRecon] @BankReconId", BankReconIdParam);
+        }
+
+        public IQueryable<RptAPCheckRow> APCheck(ReportRequest reportReq)
+        {
+            var FilterbyParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", reportReq.Search);
+
+            return DbContext.RptAPCheckRow.FromSqlRaw("[dbo].[Report_Check] @Filterby", FilterbyParam);
+        }
+
+        public IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod)
+        {
+            var PmtMethodParam = string.IsNullOrEmpty(pmtMethod) ? new SqlParameter("@PmtMethod", DBNull.Value) : new SqlParameter("@PmtMethod", pmtMethod);
+
+            return DbContext.RptCheckToBePrintedRow.FromSqlRaw("[dbo].[Report_CheckToBePrinted] @PmtMethod", PmtMethodParam);
+        }
+
+        public IQueryable<RptAPInvoiceRow> APInvoice(ReportRequest reportReq)
+        {
+            var TermParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Term", DBNull.Value) : new SqlParameter("@Term", reportReq.Search);
+            var SortbyParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@Sortby", DBNull.Value) : new SqlParameter("@Sortby", reportReq.SortField);
+            var FilterbyParam = string.IsNullOrEmpty(reportReq.SortOrder) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", reportReq.SortOrder);
+
+            return DbContext.RptAPInvoiceRow.FromSqlRaw("[dbo].[Report_APFromInvoice] @Term,@Sortby,@Filterby",
+                TermParam, SortbyParam, FilterbyParam);
+        }
+
+        public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var ItemCodeParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@ItemCode", DBNull.Value) : new SqlParameter("@ItemCode", reportReq.Search);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
+
+            return DbContext.RptSalesDetailRow.FromSqlRaw("[dbo].[Report_SalesDetail] @StartDate,@EndDate,@ItemCode,@SalesRep",
+                StartDateParam, EndDateParam, ItemCodeParam, SalesRepParam);
+        }
+
+        public IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
+
+            return DbContext.RptSalesDaily2Row.FromSqlRaw("[dbo].[Report_SalesDaily2] @StartDate,@EndDate,@SalesRep",
+                StartDateParam, EndDateParam, SalesRepParam);
+        }
+
+        public IQueryable<RptSalesYearlyRow> SalesYearly()
+        {
+            return DbContext.RptSalesYearlyRow.FromSqlRaw("[dbo].[Report_SalesYearly]");
+        }
+
+        public IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
+
+            return DbContext.RptSalesCommissionRow.FromSqlRaw("[dbo].[Report_SalesCommission] @StartDate,@EndDate,@SalesRep",
+                StartDateParam, EndDateParam, SalesRepParam);
+        }
+
+        public IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
+
+            return DbContext.RptSalesCommission2Row.FromSqlRaw("[dbo].[Report_SalesCommission2] @StartDate,@EndDate,@SalesRep",
+                StartDateParam, EndDateParam, SalesRepParam);
+        }
+
+        public IQueryable<RptARInvoiceRow> ARInvoice(ReportRequest reportReq)
+        {
+            var TermParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Term", DBNull.Value) : new SqlParameter("@Term", reportReq.Search);
+            var SortbyParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@Sortby", DBNull.Value) : new SqlParameter("@Sortby", reportReq.SortField);
+            var FilterbyParam = string.IsNullOrEmpty(reportReq.SortOrder) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", reportReq.SortOrder);
+
+            return DbContext.RptARInvoiceRow.FromSqlRaw("[dbo].[Report_ARFromInvoice] @Term,@Sortby,@Filterby",
+                TermParam, SortbyParam, FilterbyParam);
+        }
+
+        public IQueryable<RptARMonthRow> ARMonth(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
+            var SortByParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@SortBy", DBNull.Value) : new SqlParameter("@SortBy", reportReq.SortField);
+
+            return DbContext.RptARMonthRow.FromSqlRaw("[dbo].[Report_ARMonth] @StartDate,@EndDate,@SalesRep,@SortBy",
+                StartDateParam, EndDateParam, SalesRepParam, SortByParam);
         }
 
         public IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq)
@@ -203,5 +416,56 @@ namespace KLS.Data.Repositories
 
             return DbContext.RptDescDollar.FromSqlRaw("[dbo].[Report_DescDollar] @PayeeId,@StartDate,@EndDate,@SortField,@SortOrder", PayeeIdParam, StartDateParam, EndDateParam, SortFieldParam, SortOrderParam);
         }
+
+        #region --- Inventory Reports ---
+
+        public IQueryable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req)
+        {
+            var searchParam = !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value);
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
+            var inactiveParam = new SqlParameter("@ShowInactive", req.ShowInactive ?? false);
+
+            return DbContext.RptInventoryStatusRow.FromSqlRaw(
+                "[dbo].[Report_InventoryStatus] @Search,@CategoryId,@Zone,@ShowInactive",
+                searchParam, catParam, zoneParam, inactiveParam);
+        }
+
+        public IQueryable<RptReorderRow> Reorder(InventoryReportRequest req)
+        {
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
+
+            return DbContext.RptReorderRow.FromSqlRaw(
+                "[dbo].[Report_Reorder] @CategoryId,@Zone",
+                catParam, zoneParam);
+        }
+
+        public IQueryable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req)
+        {
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+
+            return DbContext.RptInventoryValuationRow.FromSqlRaw(
+                "[dbo].[Report_InventoryValuation] @CategoryId",
+                catParam);
+        }
+
+        public IQueryable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req)
+        {
+            var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
+            var expiryParam = new SqlParameter("@ShowExpiry", req.ShowExpiry ?? false);
+
+            return DbContext.RptInventoryMovementRow.FromSqlRaw(
+                "[dbo].[Report_InventoryMovement] @CategoryId,@Zone,@ShowExpiry",
+                catParam, zoneParam, expiryParam);
+        }
+
+        public IQueryable<RptInventoryIncomingRow> InventoryIncoming()
+        {
+            return DbContext.RptInventoryIncomingRow.FromSqlRaw("[dbo].[Report_InventoryIncoming]");
+        }
+
+        #endregion
     }
 }

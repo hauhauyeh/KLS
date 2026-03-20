@@ -384,6 +384,11 @@ namespace KLS.Services
             }
         }
 
+        public IEnumerable<SalesDetailList>? GetSalesDetails(int salesId)
+        {
+            return Uow.Sales.GetSalesDetails(salesId);
+        }
+
         //--Web
         public PagingResponse<OrderWebList>? GetWebPagedList(SalesListReq salesListReq)
         {

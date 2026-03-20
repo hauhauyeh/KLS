@@ -31,5 +31,63 @@ namespace KLS.Contract.Services
         IEnumerable<RptDescDollar>? DescDollar(ReportRequest reportReq);
 
         IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId);
+
+        RptLedger? Ledger(ReportRequest reportReq);
+
+        IEnumerable<RptAccountHistory>? AccountHistory(int payeeId);
+
+        IQueryable<RptPricesheet> Pricesheet(int payeeId);
+
+        IQueryable<RptOrderGuideItem> OrderGuide(int payeeId);
+
+        IQueryable<RptCustItemVolume> CustItemVolume(int payeeId);
+
+        IEnumerable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq);
+
+        IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq);
+
+        IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq);
+
+        IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq);
+
+        IQueryable<RptJobSummary> JobSummary(ReportRequest reportReq);
+
+        IQueryable<RptPayroll> Payroll(ReportRequest reportReq);
+
+        IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq);
+
+        IQueryable<RptLedgerByPayeeRow> LedgerByPayee(ReportRequest reportReq);
+
+        RptBankRecon BankRecon(int bankReconId);
+
+        IQueryable<RptAPCheckRow> APCheck(ReportRequest reportReq);
+
+        IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod);
+
+        RptARInvoice APInvoice(ReportRequest reportReq);
+
+        IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
+
+        IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
+
+        RptSalesYearly SalesYearly();
+
+        IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq);
+
+        IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
+
+        RptARInvoice ARInvoice(ReportRequest reportReq);
+
+        RptARMonth ARMonth(ReportRequest reportReq);
+
+        IEnumerable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req);
+
+        IEnumerable<RptReorderRow> Reorder(InventoryReportRequest req);
+
+        IEnumerable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req);
+
+        IEnumerable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req);
+
+        IEnumerable<RptInventoryIncomingRow> InventoryIncoming();
     }
 }

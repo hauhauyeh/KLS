@@ -51,6 +51,13 @@ namespace KLS.API.Controllers.Web
             return File(fileStream, "application/pdf");
         }
 
+
+        [HttpGet("Details/{salesId}")]
+        public IActionResult Details(int salesId)
+        {
+            return Ok(_salesService.GetSalesDetails(salesId));
+        }
+
         #endregion
     }
 }

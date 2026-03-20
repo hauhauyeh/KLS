@@ -128,6 +128,14 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        [HttpPut("UpdateInventorySettings")]
+        [DisplayName("Edit Inventory Settings")]
+        public IActionResult UpdateInventorySettings([FromBody] ItemInventorySettingsReq req)
+        {
+            _itemService.UpdateInventorySettings(req);
+            return Ok();
+        }
+
 
         [HttpGet("GetTargetPrice/{itemId}")]
         public IActionResult GetTargetPrice(int itemId, [FromQuery] string? filterby)

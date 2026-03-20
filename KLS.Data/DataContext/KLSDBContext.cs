@@ -427,6 +427,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<SalesExport> SalesExport { get; set; }
 
+        public virtual DbSet<SalesDetailList> SalesDetailList { get; set; }
+
         #endregion
 
         #region ---Report DBSET---
@@ -471,6 +473,62 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptProfitLossRow> RptProfitLossRow { get; set; }
 
         public virtual DbSet<RptPricesheet> RptPricesheet { get; set; }
+
+        public virtual DbSet<RptLedgerRow> RptLedgerRow { get; set; }
+
+        public virtual DbSet<RptAccountHistory> RptAccountHistory { get; set; }
+
+        public virtual DbSet<RptOrderGuideItem> RptOrderGuideItem { get; set; }
+
+        public virtual DbSet<RptCustItemVolume> RptCustItemVolume { get; set; }
+
+        public virtual DbSet<RptCustSalesByItem> RptCustSalesByItem { get; set; }
+
+        public virtual DbSet<RptSalesHistoryRow> RptSalesHistoryRow { get; set; }
+
+        public virtual DbSet<RptCustPayment> RptCustPayment { get; set; }
+
+        public virtual DbSet<RptCreditMemo> RptCreditMemo { get; set; }
+
+        public virtual DbSet<RptJobSummary> RptJobSummary { get; set; }
+
+        public virtual DbSet<RptPayroll> RptPayroll { get; set; }
+
+        public virtual DbSet<RptEmpLoanLedger> RptEmpLoanLedger { get; set; }
+
+        public virtual DbSet<RptARInvoiceRow> RptARInvoiceRow { get; set; }
+
+        public virtual DbSet<RptARMonthRow> RptARMonthRow { get; set; }
+
+        public virtual DbSet<RptSalesCommissionRow> RptSalesCommissionRow { get; set; }
+
+        public virtual DbSet<RptSalesCommission2Row> RptSalesCommission2Row { get; set; }
+
+        public virtual DbSet<RptSalesDaily2Row> RptSalesDaily2Row { get; set; }
+
+        public virtual DbSet<RptSalesYearlyRow> RptSalesYearlyRow { get; set; }
+
+        public virtual DbSet<RptSalesDetailRow> RptSalesDetailRow { get; set; }
+
+        public virtual DbSet<RptLedgerByPayeeRow> RptLedgerByPayeeRow { get; set; }
+
+        public virtual DbSet<RptBankReconRow> RptBankReconRow { get; set; }
+
+        public virtual DbSet<RptAPCheckRow> RptAPCheckRow { get; set; }
+
+        public virtual DbSet<RptCheckToBePrintedRow> RptCheckToBePrintedRow { get; set; }
+
+        public virtual DbSet<RptAPInvoiceRow> RptAPInvoiceRow { get; set; }
+
+        public virtual DbSet<RptInventoryStatusRow> RptInventoryStatusRow { get; set; }
+
+        public virtual DbSet<RptReorderRow> RptReorderRow { get; set; }
+
+        public virtual DbSet<RptInventoryValuationRow> RptInventoryValuationRow { get; set; }
+
+        public virtual DbSet<RptInventoryMovementRow> RptInventoryMovementRow { get; set; }
+
+        public virtual DbSet<RptInventoryIncomingRow> RptInventoryIncomingRow { get; set; }
 
         #endregion
 

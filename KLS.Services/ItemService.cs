@@ -292,6 +292,17 @@ namespace KLS.Services
             Uow.Items.UpdateBaseP1(updateReq);
         }
 
+        public void UpdateInventorySettings(ItemInventorySettingsReq req)
+        {
+            var item = GetById(req.ItemId);
+            if (item == null) return;
+            item.ActualSaftyInventory = req.ActualSaftyInventory;
+            item.RefillInventory = req.RefillInventory;
+            item.UpdatedAt = DateTime.UtcNow;
+            Uow.Items.Update(item);
+            Uow.Commit();
+        }
+
         public ItemDefaultFreight GetDefaultFreight(int itemId)
         {
             return Uow.Items.GetDefaultFreight(itemId);

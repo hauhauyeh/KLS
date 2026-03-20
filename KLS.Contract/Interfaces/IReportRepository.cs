@@ -49,5 +49,61 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq);
 
         IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq);
+
+        IQueryable<RptLedgerRow> Ledger(ReportRequest reportReq);
+
+        IQueryable<RptAccountHistory> AccountHistory(int payeeId);
+
+        IQueryable<RptOrderGuideItem> OrderGuide(int payeeId);
+
+        IQueryable<RptCustItemVolume> CustItemVolume(int payeeId);
+
+        IQueryable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq);
+
+        IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq);
+
+        IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq);
+
+        IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq);
+
+        IQueryable<RptJobSummary> JobSummary(ReportRequest reportReq);
+
+        IQueryable<RptPayroll> Payroll(ReportRequest reportReq);
+
+        IQueryable<RptEmpLoanLedger> EmpLoanLedger(ReportRequest reportReq);
+
+        IQueryable<RptARInvoiceRow> ARInvoice(ReportRequest reportReq);
+
+        IQueryable<RptARMonthRow> ARMonth(ReportRequest reportReq);
+
+        IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq);
+
+        IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
+
+        IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
+
+        IQueryable<RptSalesYearlyRow> SalesYearly();
+
+        IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
+
+        IQueryable<RptLedgerByPayeeRow> LedgerByPayee(ReportRequest reportReq);
+
+        IQueryable<RptBankReconRow> BankRecon(int bankReconId);
+
+        IQueryable<RptAPCheckRow> APCheck(ReportRequest reportReq);
+
+        IQueryable<RptCheckToBePrintedRow> CheckToBePrinted(string? pmtMethod);
+
+        IQueryable<RptAPInvoiceRow> APInvoice(ReportRequest reportReq);
+
+        IQueryable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req);
+
+        IQueryable<RptReorderRow> Reorder(InventoryReportRequest req);
+
+        IQueryable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req);
+
+        IQueryable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req);
+
+        IQueryable<RptInventoryIncomingRow> InventoryIncoming();
     }
 }

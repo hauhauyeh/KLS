@@ -10,6 +10,10 @@ namespace KLS.Models.Reports
     {
         public string? GroupName { get; set; }
 
+        public string? ClassCode { get; set; }
+
+        public int? AccountId { get; set; }
+
         public string? AccountCode { get; set; }
 
         public decimal? GroupTotal { get; set; }

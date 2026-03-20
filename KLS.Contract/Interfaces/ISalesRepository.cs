@@ -39,6 +39,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<SalesExport>? Export(SalesExportReq exportReq);
 
+        IQueryable<SalesDetailList>? GetSalesDetails(int salesId);
+
         //--Web
         IQueryable<OrderWebList>? GetWebPagedList(SalesListReq salesListReq);
 

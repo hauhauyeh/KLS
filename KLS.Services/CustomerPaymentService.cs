@@ -64,7 +64,7 @@ namespace KLS.Services
 
         public CustomerPayment GetByIdWithInclude(int customerPaymentId)
         {
-            return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.PaymentDetails).ThenInclude(s => s.Sales).FirstOrDefault();
+            return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.Payee).Include(c => c.PaymentDetails).ThenInclude(s => s.Sales).FirstOrDefault();
         }
 
         public CustomerPaymentList? GetListById(int customerPaymentId)
