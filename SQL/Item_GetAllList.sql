@@ -244,20 +244,17 @@ BEGIN
 	LEFT JOIN View_RecentCost r1
 		ON r1.ItemId = m.ItemId AND r1.RN = 1
 
-	-- 4. Update Upcoming PO
-	;WITH UpcomingPurchase AS (
-		SELECT
-			pd.ItemId,
-			SUM(pd.ShipQty/pd.FactorToBase) AS Qty
-		FROM Purchase p
-		INNER JOIN PurchaseDetail pd ON p.PurchaseId = pd.PurchaseId
-		WHERE p.ArrivalDate > CONVERT(DATE, GETDATE()) AND pd.ItemId IS NOT NULL
+	-- 4. Update Incoming (unreceived PO lines)
+	;WITH IncomingPurchase AS (
+		SELECT pd.ItemId, SUM(pd.OrdQty0) AS Qty
+		FROM PurchaseDetail pd
+		WHERE pd.ReceiveQty IS NULL AND pd.ItemId IS NOT NULL
 		GROUP BY pd.ItemId
 	)
 	UPDATE m
-	SET m.UpcomingQty = fs.Qty
+	SET m.UpcomingQty = ip.Qty
 	FROM #itmtbl m
-	INNER JOIN UpcomingPurchase fs ON m.ItemId = fs.ItemId;
+	INNER JOIN IncomingPurchase ip ON m.ItemId = ip.ItemId;
 
 	-- 5. Update LastAdjDate from InventoryAdj
 	;WITH LastAdjDate AS (

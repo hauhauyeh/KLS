@@ -118,6 +118,8 @@ namespace KLS.Models
 
         public string? PrimaryImageUrl { get; set; }
 
+        public decimal? UpcomingQty { get; set; }
+
         public int? CategoryId { get; set; }
 
         public string? FullCategoryPath { get; set; }
