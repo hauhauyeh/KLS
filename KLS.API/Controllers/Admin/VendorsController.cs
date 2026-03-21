@@ -113,19 +113,6 @@ namespace KLS.API.Controllers.Admin
             return Ok(_vendorService.ShippingCarriers());
         }
 
-
-        [HttpGet("Export")]
-        [DisplayName("Export Vendor")]
-        public IActionResult Export()
-        {
-            var bytes = _vendorService.Export();
-
-            return File(
-                bytes,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"Vendor_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
-        }
-
         #endregion
     }
 }
