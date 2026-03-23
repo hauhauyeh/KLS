@@ -10,14 +10,16 @@ namespace KLS.API.Controllers.Web
         #region --- Member(s) ---
 
         private readonly IUserAccountService _userAccountService;
+        private readonly ISystemUserService _systemUserService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public AuthController(IUserAccountService userAccountService)
+        public AuthController(IUserAccountService userAccountService, ISystemUserService systemUserService)
         {
             _userAccountService = userAccountService;
+            _systemUserService = systemUserService;
         }
 
         #endregion
@@ -40,6 +42,33 @@ namespace KLS.API.Controllers.Web
         public IActionResult RefreshToken([FromBody] RefreshTokenReq tokenReq)
         {
             var result = _userAccountService.RefreshToken(tokenReq);
+
+            if (!result.Success)
+                return Unauthorized(result.ErrorMessage);
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("SalesLogin")]
+        public IActionResult SalesLogin(LoginReq loginReq)
+        {
+            var result = _systemUserService.LoginEmployee(loginReq);
+
+            if (!result.Success)
+                return Unauthorized(new { result.Success, result.ErrorMessage });
+
+            if (!result.IsSalesRole)
+                return Unauthorized(new { Success = false, ErrorMessage = "Access denied. Only sales representatives can login here." });
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("SalesRefreshToken")]
+        public IActionResult SalesRefreshToken([FromBody] RefreshTokenReq tokenReq)
+        {
+            var result = _systemUserService.RefreshToken(tokenReq);
 
             if (!result.Success)
                 return Unauthorized(result.ErrorMessage);
@@ -103,6 +132,22 @@ namespace KLS.API.Controllers.Web
                 return Unauthorized("Invalid or expired verification link. Please request a new one.");
 
             return Ok(new { Message = "Email verified successfully. You can now log in." });
+        }
+
+
+        [HttpPost("Logout")]
+        public IActionResult Logout()
+        {
+            _userAccountService.Logout();
+            return Ok();
+        }
+
+
+        [HttpPost("SalesLogout")]
+        public IActionResult SalesLogout()
+        {
+            _systemUserService.Logout();
+            return Ok();
         }
 
         #endregion
