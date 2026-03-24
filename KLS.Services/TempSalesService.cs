@@ -110,6 +110,15 @@ namespace KLS.Services
                 SyncPromoAfterUpdate(existing);
 
                 tempItem.InjectFrom(existing);
+                // InjectFrom skips private-setter properties — copy them explicitly
+                tempItem.Unit = existing.Unit;
+                tempItem.ItemUnitId = existing.ItemUnitId;
+                tempItem.OrdQty = existing.OrdQty;
+                tempItem.ShipQty = existing.ShipQty;
+                tempItem.BillQty = existing.BillQty;
+                tempItem.IsFree = existing.IsFree;
+                tempItem.IsOut = existing.IsOut;
+                tempItem.IsCRCG = existing.IsCRCG;
                 tempItem.IsDefaultPrice = false;
             }
 
@@ -218,6 +227,15 @@ namespace KLS.Services
                 Uow.Commit();
 
                 tempItem.InjectFrom(existing);
+                // InjectFrom skips private-setter properties — copy them explicitly
+                tempItem.Unit = existing.Unit;
+                tempItem.ItemUnitId = existing.ItemUnitId;
+                tempItem.OrdQty = existing.OrdQty;
+                tempItem.ShipQty = existing.ShipQty;
+                tempItem.BillQty = existing.BillQty;
+                tempItem.IsFree = existing.IsFree;
+                tempItem.IsOut = existing.IsOut;
+                tempItem.IsCRCG = existing.IsCRCG;
             }
 
             return tempItem;

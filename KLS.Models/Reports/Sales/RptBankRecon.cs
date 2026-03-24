@@ -7,7 +7,7 @@ namespace KLS.Models.Reports
         [Key]
         public int RowId { get; set; }
 
-        public int? TxId { get; set; }
+        public Int64? TxId { get; set; }
 
         public DateOnly? TxDate { get; set; }
 
