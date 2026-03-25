@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[Report_Reorder]
+CREATE OR ALTER PROCEDURE [dbo].[Report_Reorder]
 (
     @CategoryId INT = NULL,
     @Zone       NVARCHAR(50) = NULL,
