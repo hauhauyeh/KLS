@@ -198,6 +198,13 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("OpenBills/{payeeId}")]
+        public IActionResult OpenBills(int payeeId)
+        {
+            return Ok(_purchaseService.GetOpenBills(payeeId));
+        }
+
         #endregion
     }
 }

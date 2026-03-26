@@ -27,10 +27,23 @@ namespace KLS.Contract.Interfaces
 
         int ImportPayNow(ImportPayNow importPayNow);
 
+        IQueryable<VendorPaymentList> GetByPurchaseId(int purchaseId);
+
+        void SaveAdvance(VendorPaymentAdvanceReq req);
+
+        void ApplyAdvance(int purchaseId);
+
+        void ApplyAdvanceManual(AdvanceApplyReq req);
+
+        void UnapplyAdvance(int vendorPaymentId);
+
+        IQueryable<VendorAppliedBill> GetAppliedBills(int vendorPaymentId);
+
+
         IQueryable<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq);
 
         int CountCheckRegister(CheckRegisterReq checkRegisterReq);
 
-        IQueryable<VendorPaymentList> GetByPurchaseId(int purchaseId);
+        void UpdateBankDate(CheckRegister checkRegister);
     }
 }

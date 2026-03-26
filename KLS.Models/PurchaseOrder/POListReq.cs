@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class PurchaseOrderReq : PagingRequest
+    public class POListReq : PagingRequest
     {
         public int? PayeeId { get; set; }
     }

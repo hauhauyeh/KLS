@@ -10,6 +10,8 @@ namespace KLS.Models
     public class CheckRegister
     {
         [Key]
+        public int VendorPaymentId { get; set; }
+
         public int PaymentNumber { get; set; }
 
         public DateOnly? PaymentDate { get; set; }
@@ -26,9 +28,9 @@ namespace KLS.Models
 
         public bool IsLocked { get; set; }
 
-        public DateTime? BankDate { get; set; }
+        public DateOnly? BankDate { get; set; }
 
-        public DateTime? MailDate { get; set; }
+        public DateOnly? MailDate { get; set; }
 
         public string? AccountName { get; set; }
     }

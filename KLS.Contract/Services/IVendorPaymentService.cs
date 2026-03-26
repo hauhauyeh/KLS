@@ -32,6 +32,19 @@ namespace KLS.Contract.Services
         int ImportPayNow(ImportPayNow importPayNow);
 
 
+        void SaveAdvance(VendorPaymentAdvanceReq req);
+
+        IEnumerable<VendorPaymentList>? GetAdvances(int purchaseId);
+
+        VendorPaymentList? ApplyAdvance(AdvanceApplyReq req);
+
+        VendorPaymentList? UnapplyAdvance(int vendorPaymentId);
+
+        IEnumerable<VendorAppliedBill>? GetAppliedBills(int vendorPaymentId);
+
+
         PagingResponse<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq);
+
+        void UpdateBankDate(CheckRegister checkRegister);
     }
 }

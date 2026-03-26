@@ -35,6 +35,8 @@ namespace KLS.Models
 
         public decimal? PaymentAmount { get; set; }
 
+        public decimal? UnappliedAmount { get; set; }
+
         public string? Notes { get; set; }
 
         public bool IsLocked { get; set; }

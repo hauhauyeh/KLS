@@ -343,6 +343,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<VendorPaymentList> VendorPaymentList { get; set; }
 
+        public virtual DbSet<VendorAppliedBill> VendorAppliedBill { get; set; }
+
         public virtual DbSet<PayrollList> PayrollList { get; set; }
 
         public virtual DbSet<CheckInOut> CheckInOut { get; set; }
@@ -351,7 +353,7 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<IncomingPaymentList> IncomingPaymentList { get; set; }
 
-        public virtual DbSet<PurchaseOrderList> PurchaseOrderList { get; set; }
+        public virtual DbSet<POList> POList { get; set; }
 
         public virtual DbSet<SalesList> SalesList { get; set; }
 

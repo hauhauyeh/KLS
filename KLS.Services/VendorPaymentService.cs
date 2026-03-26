@@ -154,6 +154,34 @@ namespace KLS.Services
         }
 
 
+        public void SaveAdvance(VendorPaymentAdvanceReq req)
+        {
+            Uow.VendorPayments.SaveAdvance(req);
+        }
+
+        public IEnumerable<VendorPaymentList>? GetAdvances(int purchaseId)
+        {
+            return Uow.VendorPayments.GetByPurchaseId(purchaseId);
+        }
+
+        public VendorPaymentList? ApplyAdvance(AdvanceApplyReq req)
+        {
+            Uow.VendorPayments.ApplyAdvanceManual(req);
+            return GetListById(req.VendorPaymentId);
+        }
+
+        public VendorPaymentList? UnapplyAdvance(int vendorPaymentId)
+        {
+            Uow.VendorPayments.UnapplyAdvance(vendorPaymentId);
+            return GetListById(vendorPaymentId);
+        }
+
+        public IEnumerable<VendorAppliedBill>? GetAppliedBills(int vendorPaymentId)
+        {
+            return Uow.VendorPayments.GetAppliedBills(vendorPaymentId);
+        }
+
+
         public PagingResponse<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq)
         {
             var list = Uow.VendorPayments.GetPagedCheckRegister(checkRegisterReq);
@@ -164,6 +192,11 @@ namespace KLS.Services
             {
                 RowData = list,
             };
+        }
+
+        public void UpdateBankDate(CheckRegister checkRegister)
+        {
+            Uow.VendorPayments.UpdateBankDate(checkRegister);
         }
     }
 }

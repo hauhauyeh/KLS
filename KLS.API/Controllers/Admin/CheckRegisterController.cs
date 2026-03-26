@@ -36,6 +36,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_vendorPmtService.GetPagedCheckRegister(checkRegisterReq));
         }
 
+
+        [HttpPut("Update")]
+        [DisplayName("Update Check Register")]
+        public IActionResult Update([FromBody] CheckRegister checkRegister)
+        {
+            _vendorPmtService.UpdateBankDate(checkRegister);
+            return Ok();
+        }
+
         #endregion
     }
 }
