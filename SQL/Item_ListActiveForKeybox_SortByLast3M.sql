@@ -1,3 +1,9 @@
+-- Deploy: Change Item_ListActiveForKeybox to sort by Last3M DESC instead of ItemName
+-- Step 1: Rename existing proc
+EXEC sp_rename 'Item_ListActiveForKeybox', 'Item_ListActiveForKeybox_prev';
+GO
+
+-- Step 2: Create new version
 CREATE PROCEDURE [dbo].[Item_ListActiveForKeybox]
     @PayeeId INT
 AS
@@ -23,6 +29,6 @@ BEGIN
     LEFT JOIN ItemUnit bu ON i.ItemId = bu.ItemId AND bu.IsBaseUnit = 1 AND bu.Inactive = 0
     LEFT JOIN LastOrder lo ON i.ItemId = lo.ItemId AND lo.rn = 1
     WHERE i.IsDeleted = 0 AND i.Inactive = 0
-    --ORDER BY i.ItemName;
     ORDER BY i.Last3M DESC;
 END
+GO

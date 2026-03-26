@@ -425,29 +425,33 @@ namespace KLS.Data.Repositories
             var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
             var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
             var inactiveParam = new SqlParameter("@ShowInactive", req.ShowInactive ?? false);
+            var payeeParam = req.PayeeId.HasValue ? new SqlParameter("@PayeeId", req.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
 
             return DbContext.RptInventoryStatusRow.FromSqlRaw(
-                "[dbo].[Report_InventoryStatus] @Search,@CategoryId,@Zone,@ShowInactive",
-                searchParam, catParam, zoneParam, inactiveParam);
+                "[dbo].[Report_InventoryStatus] @Search,@CategoryId,@Zone,@ShowInactive,@PayeeId",
+                searchParam, catParam, zoneParam, inactiveParam, payeeParam);
         }
 
         public IQueryable<RptReorderRow> Reorder(InventoryReportRequest req)
         {
             var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
             var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
+            var payeeParam = req.PayeeId.HasValue ? new SqlParameter("@PayeeId", req.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
 
             return DbContext.RptReorderRow.FromSqlRaw(
-                "[dbo].[Report_Reorder] @CategoryId,@Zone",
-                catParam, zoneParam);
+                "[dbo].[Report_Reorder] @CategoryId,@Zone,@PayeeId",
+                catParam, zoneParam, payeeParam);
         }
 
         public IQueryable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req)
         {
             var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
+            var payeeParam = req.PayeeId.HasValue ? new SqlParameter("@PayeeId", req.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
 
             return DbContext.RptInventoryValuationRow.FromSqlRaw(
-                "[dbo].[Report_InventoryValuation] @CategoryId",
-                catParam);
+                "[dbo].[Report_InventoryValuation] @CategoryId,@Zone,@PayeeId",
+                catParam, zoneParam, payeeParam);
         }
 
         public IQueryable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req)
@@ -455,10 +459,11 @@ namespace KLS.Data.Repositories
             var catParam = req.CategoryId.HasValue ? new SqlParameter("@CategoryId", req.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
             var zoneParam = !string.IsNullOrEmpty(req.Zone) ? new SqlParameter("@Zone", req.Zone) : new SqlParameter("@Zone", DBNull.Value);
             var expiryParam = new SqlParameter("@ShowExpiry", req.ShowExpiry ?? false);
+            var payeeParam = req.PayeeId.HasValue ? new SqlParameter("@PayeeId", req.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
 
             return DbContext.RptInventoryMovementRow.FromSqlRaw(
-                "[dbo].[Report_InventoryMovement] @CategoryId,@Zone,@ShowExpiry",
-                catParam, zoneParam, expiryParam);
+                "[dbo].[Report_InventoryMovement] @CategoryId,@Zone,@ShowExpiry,@PayeeId",
+                catParam, zoneParam, expiryParam, payeeParam);
         }
 
         public IQueryable<RptInventoryIncomingRow> InventoryIncoming()

@@ -45,6 +45,7 @@ namespace KLS.Services
             tempItem.ItemName = item.ItemName;
             tempItem.ItemId = item.ItemId;
             tempItem.PackSize = item.PackSize;
+            tempItem.CurrentAvgCost = item.LAvgCost ?? 0;
             tempItem.NewQty = tempItem.NewQty ?? 0;
             tempItem.NewPrice = 0;
 

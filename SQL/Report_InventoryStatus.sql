@@ -2,8 +2,9 @@ CREATE PROCEDURE [dbo].[Report_InventoryStatus]
 (
     @Search       NVARCHAR(100) = NULL,
     @CategoryId   INT = NULL,
-    @StorageId    INT = NULL,
-    @ShowInactive BIT = 0
+    @Zone         NVARCHAR(50) = NULL,
+    @ShowInactive BIT = 0,
+    @PayeeId      INT = NULL
 )
 AS
 BEGIN
@@ -64,8 +65,9 @@ BEGIN
       AND (@ShowInactive = 1 OR i.Inactive = 0)
       AND (@CategoryId IS NULL OR i.CategoryId = @CategoryId
            OR i.CategoryId IN (SELECT CategoryId FROM ItemCategory WHERE ParentId = @CategoryId))
-      AND (@StorageId IS NULL OR i.StorageId = @StorageId)
+      AND (@Zone IS NULL OR ist.Zone = @Zone)
       AND (@Search IS NULL OR i.ItemName LIKE '%' + @Search + '%' OR i.ItemCode LIKE '%' + @Search + '%')
+      AND (@PayeeId IS NULL OR i.PreferredVendorId = @PayeeId)
     ORDER BY vc.Sort0, vc.Sort1, i.ItemName;
 END
 GO

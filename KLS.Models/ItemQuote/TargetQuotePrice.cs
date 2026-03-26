@@ -36,6 +36,7 @@ namespace KLS.Models
 
         public decimal? RecentCost { get; set; }
 
+        public decimal? Payee30Volume { get; set; }
 
         public decimal? DefaultPrice
         {

@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[Report_InventoryValuation]
+CREATE OR ALTER PROCEDURE [dbo].[Report_InventoryValuation]
 (
     @CategoryId INT = NULL,
     @Zone       NVARCHAR(50) = NULL,

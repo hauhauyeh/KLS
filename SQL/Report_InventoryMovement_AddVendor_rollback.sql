@@ -1,8 +1,8 @@
-CREATE PROCEDURE [dbo].[Report_InventoryValuation]
+CREATE OR ALTER PROCEDURE [dbo].[Report_InventoryMovement]
 (
     @CategoryId INT = NULL,
-    @Zone       NVARCHAR(50) = NULL,
-    @PayeeId    INT = NULL
+    @StorageId  INT = NULL,
+    @ShowExpiry BIT = 0
 )
 AS
 BEGIN
@@ -17,18 +17,30 @@ BEGIN
         GROUP BY sd.ItemId
     )
     SELECT
-        ROW_NUMBER() OVER (ORDER BY vc.Sort0, vc.Sort1, i.ItemName) AS AutoId,
+        ROW_NUMBER() OVER (ORDER BY i.Last3M DESC, i.ItemName) AS AutoId,
         i.ItemId,
         i.ItemCode,
         i.ItemName,
         vc.Cat0,
-        vc.Cat1,
         vc.Sort0,
-        vc.Sort1,
+        ist.DisplayName AS StorageName,
         iu.Unit,
         (i.LCloseQty - ISNULL(fs.FutureSalesQty, 0)) AS OnHand,
-        i.LAvgCost,
-        ((i.LCloseQty - ISNULL(fs.FutureSalesQty, 0)) * ISNULL(i.LAvgCost, 0)) AS Value,
+        i.M0,
+        i.M1,
+        i.M2,
+        i.M3,
+        i.Last3M,
+        i.YTD,
+        i.YTDSalesPercent,
+        i.ExpiryDate,
+        DATEDIFF(DAY,
+            (SELECT MAX(s.ShipDate)
+             FROM SalesDetail sd
+             INNER JOIN Sales s ON s.SalesId = sd.SalesId
+             WHERE sd.ItemId = i.ItemId AND s.ShipDate IS NOT NULL),
+            GETDATE()
+        ) AS DaysSinceLastSold,
         i.PreferredVendorId,
         py.PayeeName AS VendorName
     FROM Item i
@@ -41,8 +53,8 @@ BEGIN
       AND i.Inactive = 0
       AND (@CategoryId IS NULL OR i.CategoryId = @CategoryId
            OR i.CategoryId IN (SELECT CategoryId FROM ItemCategory WHERE ParentId = @CategoryId))
-      AND (@Zone IS NULL OR ist.Zone = @Zone)
-      AND (@PayeeId IS NULL OR i.PreferredVendorId = @PayeeId)
-    ORDER BY vc.Sort0, vc.Sort1, i.ItemName;
+      AND (@StorageId IS NULL OR i.StorageId = @StorageId)
+      AND (@ShowExpiry = 0 OR i.ExpiryDate IS NOT NULL)
+    ORDER BY i.Last3M DESC, i.ItemName;
 END
 GO

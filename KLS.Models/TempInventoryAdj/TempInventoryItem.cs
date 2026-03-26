@@ -29,5 +29,9 @@ namespace KLS.Models
         public string? ItemName { get; set; }
 
         public string? PackSize { get; set; }
+
+        public string? Direction { get; set; }
+
+        public decimal? CurrentAvgCost { get; set; }
     }
 }

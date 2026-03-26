@@ -1,8 +1,6 @@
-CREATE PROCEDURE [dbo].[Report_InventoryValuation]
+CREATE OR ALTER PROCEDURE [dbo].[Report_InventoryValuation]
 (
-    @CategoryId INT = NULL,
-    @Zone       NVARCHAR(50) = NULL,
-    @PayeeId    INT = NULL
+    @CategoryId INT = NULL
 )
 AS
 BEGIN
@@ -34,15 +32,12 @@ BEGIN
     FROM Item i
     INNER JOIN ItemUnit iu ON iu.ItemId = i.ItemId AND iu.IsBaseUnit = 1
     LEFT JOIN View_Category vc ON vc.CategoryId = i.CategoryId
-    LEFT JOIN ItemStorage ist ON ist.StorageId = i.StorageId
     LEFT JOIN Payee py ON py.PayeeId = i.PreferredVendorId
     LEFT JOIN FutureSales fs ON fs.ItemId = i.ItemId
     WHERE i.IsDeleted = 0
       AND i.Inactive = 0
       AND (@CategoryId IS NULL OR i.CategoryId = @CategoryId
            OR i.CategoryId IN (SELECT CategoryId FROM ItemCategory WHERE ParentId = @CategoryId))
-      AND (@Zone IS NULL OR ist.Zone = @Zone)
-      AND (@PayeeId IS NULL OR i.PreferredVendorId = @PayeeId)
     ORDER BY vc.Sort0, vc.Sort1, i.ItemName;
 END
 GO

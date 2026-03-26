@@ -155,7 +155,19 @@ namespace KLS.Data.Repositories
         {
             var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
 
-            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_ListActiveForKeybox] @PayeeId", PayeeIdParam).ToList();
+            var items = DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_ListActiveForKeybox] @PayeeId", PayeeIdParam).ToList();
+
+            var last3mMap = DbContext.Items
+                .Where(i => !i.IsDeleted && !i.Inactive)
+                .ToDictionary(i => i.ItemId, i => i.Last3M);
+
+            foreach (var item in items)
+            {
+                if (last3mMap.TryGetValue(item.ItemId, out var val))
+                    item.Last3M = val;
+            }
+
+            return items;
         }
 
 
