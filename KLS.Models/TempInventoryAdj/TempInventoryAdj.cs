@@ -31,5 +31,7 @@ namespace KLS.Models
         public string? ChangeStatus { get; set; }
 
         public int? AdjDetailId { get; set; }
+
+        public string? Direction { get; set; }
     }
 }
