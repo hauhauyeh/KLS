@@ -9,18 +9,19 @@ namespace KLS.Contract.Services
 {
     public interface IPurchaseOrderService
     {
-        PagingResponse<PurchaseOrderList> GetPagedList(PurchaseOrderReq purchaseOrderReq);
+        PagingResponse<POList> GetPagedList(POListReq purchaseOrderReq);
 
-        PurchaseOrderList? Checkout(PurchaseOrderCheckoutReq checkoutReq);
+        POList? Checkout(POCheckoutReq checkoutReq);
 
         void Delete(int purchaseId);
 
         IEnumerable<PODetail> GetPODetail(int purchaseId);
 
-        PurchaseOrderList? CopyToBill(POCopyToBillReq copyToBillReq);
+        POList? CopyToBill(POCopyToBillReq copyToBillReq);
 
         string PrintPO(int purchaseId);
 
-        PurchaseOrderList? UpdateToBillStage(int purchaseId);
+        POList? UpdateToBillStage(int purchaseId);
+
     }
 }

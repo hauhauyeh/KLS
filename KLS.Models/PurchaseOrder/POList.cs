@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class PurchaseOrderList
+    public class POList
     {
         [Key]
         public int PurchaseId { get; set; }

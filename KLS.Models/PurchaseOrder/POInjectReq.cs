@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -7,13 +7,9 @@ using System.Threading.Tasks;
 
 namespace KLS.Models
 {
-    public class PurchaseOrderInjectReq
+    public class POInjectReq
     {
-        //public int POId { get; set; }
-
         public int PurchaseId { get; set; }
-
-        public int EmpId { get; set; }
 
         public int PayeeId { get; set; }
     }

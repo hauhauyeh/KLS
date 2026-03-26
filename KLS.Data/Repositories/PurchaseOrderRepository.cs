@@ -19,14 +19,14 @@ namespace KLS.Data.Repositories
 
         }
 
-        public IQueryable<PurchaseOrderList> GetPagedList(PurchaseOrderReq purchaseOrderReq)
+        public IQueryable<POList> GetPagedList(POListReq purchaseOrderReq)
         {
             var param = BuildParam(purchaseOrderReq);
 
-            return DbContext.PurchaseOrderList.FromSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.POList.FromSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
-        public int Count(PurchaseOrderReq purchaseOrderReq)
+        public int Count(POListReq purchaseOrderReq)
         {
             purchaseOrderReq.IsCount = true;
             var param = BuildParam(purchaseOrderReq);
@@ -37,7 +37,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        private static object[] BuildParam(PurchaseOrderReq poReq)
+        private static object[] BuildParam(POListReq poReq)
         {
             object[] param = {
                 new SqlParameter("@Pageno", poReq.Pageno),
@@ -75,7 +75,7 @@ namespace KLS.Data.Repositories
             return param;
         }
 
-        public void Inject(PurchaseOrderInjectReq injectReq)
+        public void Inject(POInjectReq injectReq)
         {
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
@@ -86,7 +86,7 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Inject] @EmpId,@PayeeId,@PurchaseId", EmpIdParam, PayeeIdParam, PurchaseIdParam);
         }
 
-        public int Checkout(PurchaseOrderCheckoutReq checkoutReq)
+        public int Checkout(POCheckoutReq checkoutReq)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", checkoutReq.PurchaseId);
 
@@ -116,34 +116,6 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_Insert] @PurchaseId,@PayeeId,@PurchaseDate,@ArrivalDate,@Notes,@EmpId,@NewPOId OUTPUT", PurchaseIdParam, PayeeIdParam, PurchaseDateParam, ArrivalDateParam, NotesParam, EmpIdParam, NewPOIdParam);
 
             return Convert.ToInt32(NewPOIdParam.Value);
-        }
-
-        public void SaveAdvancePayment(POAdvancePaymentReq advancePaymentReq)
-        {
-            var POIdParam = new SqlParameter("@POId", advancePaymentReq.POId);
-
-            var PaymentDateParam = advancePaymentReq.PaymentDate.HasValue
-                ? new SqlParameter("@PaymentDate", advancePaymentReq.PaymentDate)
-                : new SqlParameter("@PaymentDate", DBNull.Value);
-
-            var PaymentMethodParam = (!string.IsNullOrEmpty(advancePaymentReq.PaymentMethod))
-                ? new SqlParameter("@PaymentMethod", advancePaymentReq.PaymentMethod)
-                : new SqlParameter("@PaymentMethod", DBNull.Value);
-
-            var FromAccountIdParam = new SqlParameter("@FromAccountId", advancePaymentReq.FromAccountId);
-
-            var AdvanceTotalParam = advancePaymentReq.AdvanceTotal.HasValue
-                ? new SqlParameter("@AdvanceTotal", advancePaymentReq.AdvanceTotal)
-                : new SqlParameter("@AdvanceTotal", DBNull.Value);
-
-            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_InsertAdvance] @POId,@PaymentDate,@PaymentMethod,@FromAccountId,@AdvanceTotal", POIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, AdvanceTotalParam);
-        }
-
-        public void DeleteAdvancePayment(int poId)
-        {
-            var POIdParam = new SqlParameter("@POId", poId);
-
-            DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_DeleteAdvance] @POId", POIdParam);
         }
 
         public IQueryable<PODetail> GetPODetail(int purchaseId)

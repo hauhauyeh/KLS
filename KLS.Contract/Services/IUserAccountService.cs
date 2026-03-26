@@ -13,7 +13,11 @@ namespace KLS.Contract.Services
 
         LoginResult LoginUser(LoginReq loginReq);
 
+        LoginResult LoginByPayeeId(int payeeId);
+
         LoginResult RefreshToken(RefreshTokenReq tokenReq);
+
+        void Logout();
 
         string? ForgetPassword(string email, string url);
 

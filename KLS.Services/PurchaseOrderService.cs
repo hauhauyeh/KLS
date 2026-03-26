@@ -32,21 +32,21 @@ namespace KLS.Services
             _env = env;
         }
 
-        public PagingResponse<PurchaseOrderList> GetPagedList(PurchaseOrderReq purchaseOrderReq)
+        public PagingResponse<POList> GetPagedList(POListReq purchaseOrderReq)
         {
             var list = Uow.PurchaseOrders.GetPagedList(purchaseOrderReq);
 
             var totalRecords = Uow.PurchaseOrders.Count(purchaseOrderReq);
 
-            return new PagingResponse<PurchaseOrderList>(totalRecords, purchaseOrderReq.Pageno, purchaseOrderReq.Pagesize)
+            return new PagingResponse<POList>(totalRecords, purchaseOrderReq.Pageno, purchaseOrderReq.Pagesize)
             {
                 RowData = list,
             };
         }
 
-        public PurchaseOrderList? GetListById(int poId)
+        public POList? GetListById(int poId)
         {
-            var listReq = new PurchaseOrderReq
+            var listReq = new POListReq
             {
                 Id = poId
             };
@@ -55,7 +55,7 @@ namespace KLS.Services
                 FirstOrDefault();
         }
 
-        public PurchaseOrderList? Checkout(PurchaseOrderCheckoutReq checkoutReq)
+        public POList? Checkout(POCheckoutReq checkoutReq)
         {
             var poId = Uow.PurchaseOrders.Checkout(checkoutReq);
 
@@ -81,7 +81,7 @@ namespace KLS.Services
             return Uow.PurchaseOrders.GetPODetail(purchaseId);
         }
 
-        public PurchaseOrderList? CopyToBill(POCopyToBillReq copyToBillReq)
+        public POList? CopyToBill(POCopyToBillReq copyToBillReq)
         {
             Uow.PurchaseOrders.CopyToBill(copyToBillReq);
 
@@ -116,7 +116,7 @@ namespace KLS.Services
             return poFile;
         }
 
-        public PurchaseOrderList? UpdateToBillStage(int purchaseId)
+        public POList? UpdateToBillStage(int purchaseId)
         {
             Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.StageId, x => 6)
@@ -124,7 +124,10 @@ namespace KLS.Services
 
             Uow.Shipments.Allocation(purchaseId);
 
+            Uow.VendorPayments.ApplyAdvance(purchaseId);
+
             return GetListById(purchaseId);
         }
+
     }
 }

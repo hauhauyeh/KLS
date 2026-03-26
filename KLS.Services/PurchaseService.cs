@@ -255,5 +255,23 @@ namespace KLS.Services
         {
             Uow.Shipments.AssignShipment(copyToBillReq);
         }
+
+        public IEnumerable<PurchaseOpenBill>? GetOpenBills(int payeeId)
+        {
+            return Uow.Purchases
+                .Find(c => c.PayeeId == payeeId && c.AmountDue > 0)
+                .Select(c => new PurchaseOpenBill
+                {
+                    PurchaseId = c.PurchaseId,
+                    PurchaseNumber = c.PurchaseNumber,
+                    PurchaseDate = c.PurchaseDate,
+                    DueDate = c.DueDate,
+                    PurchaseTotal = c.PurchaseTotal,
+                    PaymentApplied = c.PaymentApplied,
+                    AmountDue = c.AmountDue
+                })
+                .OrderBy(c => c.DueDate ?? c.PurchaseDate)
+                .ToList();
+        }
     }
 }

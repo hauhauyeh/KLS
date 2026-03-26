@@ -120,6 +120,29 @@ namespace KLS.API.Controllers.Admin
             return Ok(result);
         }
 
+
+        [HttpGet("GetAppliedBills")]
+        public IActionResult GetAppliedBills(int vendorPaymentId)
+        {
+            return Ok(_vendorPaymentService.GetAppliedBills(vendorPaymentId));
+        }
+
+
+        [HttpPost("ApplyAdvance")]
+        [DisplayName("Apply Advance Payment")]
+        public IActionResult ApplyAdvance([FromBody] AdvanceApplyReq req)
+        {
+            return Ok(_vendorPaymentService.ApplyAdvance(req));
+        }
+
+
+        [HttpPost("UnapplyAdvance/{paymentId}")]
+        [DisplayName("Unapply Advance Payment")]
+        public IActionResult UnapplyAdvance(int paymentId)
+        {
+            return Ok(_vendorPaymentService.UnapplyAdvance(paymentId));
+        }
+
         #endregion
     }
 }

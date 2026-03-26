@@ -17,5 +17,7 @@ namespace KLS.Models
         public bool? ShowInactive { get; set; }
 
         public bool? ShowExpiry { get; set; }
+
+        public int? PayeeId { get; set; }
     }
 }

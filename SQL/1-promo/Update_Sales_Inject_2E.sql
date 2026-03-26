@@ -68,8 +68,8 @@ BEGIN
            ,[SalesDetailId]
            ,NULL  -- ParentTempSalesId (populated below)
            ,NULL  -- RootTempSalesId (populated below)
-           ,[CartLineType]
-           ,[IsSystemManaged]
+           ,ISNULL([CartLineType], 'MAIN')
+           ,ISNULL([IsSystemManaged], 0)
            ,[DisplaySort]
     FROM SalesDetail AS sd WHERE SalesId=@SalesId ORDER BY sd.LineId
 

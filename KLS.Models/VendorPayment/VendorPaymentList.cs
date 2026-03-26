@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +14,8 @@ namespace KLS.Models
 
         public int PaymentNumber { get; set; }
 
+        public string? PaymentType { get; set; }
+
         public int PayeeId { get; set; }
 
         public string? PayeeName { get; set; }
@@ -26,6 +27,8 @@ namespace KLS.Models
         public string? ReferenceId { get; set; }
 
         public decimal? PaymentAmount { get; set; }
+
+        public decimal? UnappliedAmount { get; set; }
 
         public bool IsLocked { get; set; }
 
@@ -40,5 +43,9 @@ namespace KLS.Models
         public string? FromAccountName { get; set; }
 
         public bool IsPayNow { get; set; }
+
+        public bool IsApplied => PaymentAmount != UnappliedAmount;
+
+        public bool IsAdvance => PaymentType == "Advance Bill Payment";
     }
 }

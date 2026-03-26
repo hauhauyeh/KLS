@@ -44,5 +44,7 @@ namespace KLS.Contract.Services
         IEnumerable<AssignedShipment>? AssignedShipments(int purchaseId, bool isShipment);
 
         void AssignShipment(POCopyToBillReq copyToBillReq);
+
+        IEnumerable<PurchaseOpenBill>? GetOpenBills(int payeeId);
     }
 }

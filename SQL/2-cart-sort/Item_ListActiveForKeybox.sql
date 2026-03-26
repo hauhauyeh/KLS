@@ -23,5 +23,6 @@ BEGIN
     LEFT JOIN ItemUnit bu ON i.ItemId = bu.ItemId AND bu.IsBaseUnit = 1 AND bu.Inactive = 0
     LEFT JOIN LastOrder lo ON i.ItemId = lo.ItemId AND lo.rn = 1
     WHERE i.IsDeleted = 0 AND i.Inactive = 0
-    ORDER BY i.ItemName;
+    --ORDER BY i.ItemName;
+    ORDER BY i.Last3M DESC;
 END

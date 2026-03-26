@@ -1,7 +1,8 @@
 CREATE PROCEDURE [dbo].[Report_Reorder]
 (
     @CategoryId INT = NULL,
-    @StorageId  INT = NULL
+    @Zone       NVARCHAR(50) = NULL,
+    @PayeeId    INT = NULL
 )
 AS
 BEGIN
@@ -56,7 +57,8 @@ BEGIN
           AND i.Inactive = 0
           AND (@CategoryId IS NULL OR i.CategoryId = @CategoryId
                OR i.CategoryId IN (SELECT CategoryId FROM ItemCategory WHERE ParentId = @CategoryId))
-          AND (@StorageId IS NULL OR i.StorageId = @StorageId)
+          AND (@Zone IS NULL OR ist.Zone = @Zone)
+          AND (@PayeeId IS NULL OR i.PreferredVendorId = @PayeeId)
     )
     SELECT
         ROW_NUMBER() OVER (ORDER BY DaysOfSupply ASC, ItemName) AS AutoId,

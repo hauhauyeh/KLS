@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,10 @@ namespace KLS.Models
 
         public string? LastOrderUnit { get; set; }
 
+        [NotMapped]
         public string? PrimaryImageUrl { get; set; }
+
+        [NotMapped]
+        public decimal? Last3M { get; set; }
     }
 }

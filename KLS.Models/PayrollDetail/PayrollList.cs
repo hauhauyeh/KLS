@@ -12,6 +12,8 @@ namespace KLS.Models
         [Key]
         public int VendorPaymentId { get; set; }
 
+        public int PaymentNumber { get; set; }
+
         public int PayeeId { get; set; }
 
         public DateOnly? PayrollStartDate { get; set; }

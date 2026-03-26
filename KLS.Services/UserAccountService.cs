@@ -114,6 +114,44 @@ namespace KLS.Services
             };
         }
 
+        public LoginResult LoginByPayeeId(int payeeId)
+        {
+            var user = Uow.UserAccounts.Find(u => u.PayeeId == payeeId && !u.Inactive).FirstOrDefault();
+
+            if (user == null)
+                return new LoginResult { Success = false, ErrorMessage = "No web account found for this customer." };
+
+            var refreshToken = _jWTService.GenerateRefreshToken();
+            user.RefToken = refreshToken;
+            user.RefTokenExpire = DateTime.Now.AddDays(_jWTService.RefreshTokenValidity());
+            UpdateToken(user);
+
+            var role = _userRoleService.GetById(user.RoleId);
+
+            var jwtClaim = new JWTClaim
+            {
+                Portal = EnumHelper.Portal.Web.ToString(),
+                Username = user.Username,
+                PayeeId = user.PayeeId,
+                UserId = user.UserId,
+                RefreshToken = refreshToken,
+                RefTokenExpire = user.RefTokenExpire,
+                RoleId = user.RoleId,
+                IsAdmin = role.IsAdmin
+            };
+
+            var token = _jWTService.GenerateJwtToken(jwtClaim);
+
+            return new LoginResult
+            {
+                Success = true,
+                Token = token,
+                RefreshToken = refreshToken,
+                Username = user.Username,
+                IsAdmin = role.IsAdmin
+            };
+        }
+
         public LoginResult RefreshToken(RefreshTokenReq tokenReq)
         {
             var jwtClaim = _jWTService.ValidateExpiredToken(tokenReq.AccessToken);
@@ -371,6 +409,21 @@ namespace KLS.Services
             Uow.Commit();
 
             return true;
+        }
+
+        public void Logout()
+        {
+            var user = GetById(UserContext.SystemUserId);
+
+            if (user != null)
+            {
+                user.RefToken = null;
+                user.RefTokenExpire = null;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                Uow.UserAccounts.Update(user);
+                Uow.Commit();
+            }
         }
     }
 }

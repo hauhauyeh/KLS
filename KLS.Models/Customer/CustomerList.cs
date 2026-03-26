@@ -63,7 +63,5 @@ namespace KLS.Models
         public int? MaxInvoiceAgingDays { get; set; }
 
         public int? OwnListCount { get; set; }
-
-        //public int? DueInvoiceCount { get; set; }
     }
 }

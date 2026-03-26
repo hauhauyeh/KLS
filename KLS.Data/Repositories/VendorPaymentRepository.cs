@@ -211,6 +211,69 @@ namespace KLS.Data.Repositories
         }
 
 
+        public void SaveAdvance(VendorPaymentAdvanceReq req)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", req.PurchaseId);
+
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", req.VendorPaymentId);
+
+            var PaymentDateParam = req.PaymentDate.HasValue
+                ? new SqlParameter("@PaymentDate", req.PaymentDate)
+                : new SqlParameter("@PaymentDate", DBNull.Value);
+
+            var PaymentMethodParam = string.IsNullOrWhiteSpace(req.PaymentMethod)
+                ? new SqlParameter("@PaymentMethod", DBNull.Value)
+                : new SqlParameter("@PaymentMethod", req.PaymentMethod);
+
+            var ReferenceIdParam = string.IsNullOrWhiteSpace(req.ReferenceId)
+                ? new SqlParameter("@ReferenceId", DBNull.Value)
+                : new SqlParameter("@ReferenceId", req.ReferenceId);
+
+            var FromAccountIdParam = new SqlParameter("@FromAccountId", req.FromAccountId);
+
+            var PaymentAmountParam = new SqlParameter("@PaymentAmount", req.PaymentAmount);
+
+            var NotesParam = string.IsNullOrWhiteSpace(req.Notes)
+                ? new SqlParameter("@Notes", DBNull.Value)
+                : new SqlParameter("@Notes", req.Notes);
+
+            DbContext.Database.ExecuteSqlRaw("[VendorPayment_InsertAdvance] @PurchaseId,@VendorPaymentId,@PaymentDate,@PaymentMethod,@ReferenceId,@FromAccountId,@PaymentAmount,@Notes",
+                PurchaseIdParam, VendorPaymentIdParam, PaymentDateParam, PaymentMethodParam, ReferenceIdParam, FromAccountIdParam, PaymentAmountParam, NotesParam);
+        }
+
+        public void ApplyAdvance(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_ApplyAdvance] @PurchaseId", PurchaseIdParam);
+        }
+
+        public void ApplyAdvanceManual(AdvanceApplyReq req)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", req.VendorPaymentId);
+
+            var BillsParam = string.IsNullOrWhiteSpace(req.Bills)
+                ? new SqlParameter("@Bills", DBNull.Value)
+                : new SqlParameter("@Bills", req.Bills);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_ApplyAdvanceManual] @VendorPaymentId,@Bills", VendorPaymentIdParam, BillsParam);
+        }
+
+        public void UnapplyAdvance(int vendorPaymentId)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@vendorPaymentId", vendorPaymentId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_UnapplyAdvance] @VendorPaymentId", VendorPaymentIdParam);
+        }
+
+        public IQueryable<VendorAppliedBill> GetAppliedBills(int vendorPaymentId)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", vendorPaymentId);
+
+            return DbContext.VendorAppliedBill.FromSqlRaw("[dbo].[VendorPayment_GetAppliedBills] @VendorPaymentId", VendorPaymentIdParam);
+        }
+
+
         public IQueryable<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq)
         {
             var param = BuildCheckRegisterParam(checkRegisterReq);
@@ -265,6 +328,23 @@ namespace KLS.Data.Repositories
             };
 
             return param;
+        }
+
+        public void UpdateBankDate(CheckRegister checkRegister)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", checkRegister.VendorPaymentId);
+
+            var IsLockedParam = new SqlParameter("@IsLocked", checkRegister.IsLocked);
+
+            var BankDateParam = checkRegister.BankDate.HasValue
+                ? new SqlParameter("@BankDate", checkRegister.BankDate)
+                : new SqlParameter("@BankDate", DBNull.Value);
+
+            var MailDateParam = checkRegister.MailDate.HasValue
+                ? new SqlParameter("@MailDate", checkRegister.MailDate)
+                : new SqlParameter("@MailDate", DBNull.Value);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_UpdateBankDate] @VendorPaymentId,@IsLocked,@BankDate,@MailDate", VendorPaymentIdParam, IsLockedParam, BankDateParam, MailDateParam);
         }
     }
 }

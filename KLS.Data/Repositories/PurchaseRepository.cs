@@ -194,5 +194,6 @@ namespace KLS.Data.Repositories
 
             return param;
         }
+
     }
 }

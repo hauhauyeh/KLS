@@ -53,7 +53,7 @@ namespace KLS.Models
 
         public int? ParentTempSalesId { get; set; }
         public int? RootTempSalesId { get; set; }
-        public string CartLineType { get; set; } = "MAIN";
+        public string? CartLineType { get; set; } = "MAIN";
         public bool IsSystemManaged { get; set; }
         public int? DisplaySort { get; set; }
         public int? SalesDetailId { get; set; }
