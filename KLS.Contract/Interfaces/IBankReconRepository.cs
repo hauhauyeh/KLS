@@ -9,6 +9,10 @@ namespace KLS.Contract.Interfaces
 {
     public interface IBankReconRepository : IRepository<BankRecon>
     {
+        BankReconBalance GetBalance(int bankReconId);
 
+        IQueryable<BankTx> GetTx(int bankReconId);
+
+        void UpdateBankDate(BankTx bankTx);
     }
 }

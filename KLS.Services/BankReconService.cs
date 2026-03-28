@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static KLS.Models.BankReconList;
 
 namespace KLS.Services
 {
@@ -95,6 +94,21 @@ namespace KLS.Services
         {
             Uow.BankRecons.RemoveById(bankReconId);
             Uow.Commit();
+        }
+
+        public BankReconBalance GetBalance(int bankReconId)
+        {
+            return Uow.BankRecons.GetBalance(bankReconId);
+        }
+
+        public List<BankTx> GetTx(int bankReconId)
+        {
+            return Uow.BankRecons.GetTx(bankReconId).ToList();
+        }
+
+        public void UpdateBankDate(BankTx bankTx)
+        {
+            Uow.BankRecons.UpdateBankDate(bankTx);
         }
     }
 }

@@ -22,5 +22,11 @@ namespace KLS.Contract.Services
         void UpdateNotes(BankRecon bankRecon);
 
         void Delete(int bankReconId);
+
+        BankReconBalance GetBalance(int bankReconId);
+
+        List<BankTx> GetTx(int bankReconId);
+
+        void UpdateBankDate(BankTx bankTx);
     }
 }

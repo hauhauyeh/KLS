@@ -273,6 +273,13 @@ namespace KLS.Data.Repositories
             return DbContext.VendorAppliedBill.FromSqlRaw("[dbo].[VendorPayment_GetAppliedBills] @VendorPaymentId", VendorPaymentIdParam);
         }
 
+        public IQueryable<VendorPaymentOpenAdvance> GetOpenAdvances(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.VendorPaymentOpenAdvance.FromSqlRaw("[dbo].[VendorPayment_GetOpenAdvances] @PayeeId", PayeeIdParam);
+        }
+
 
         public IQueryable<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq)
         {

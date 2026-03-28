@@ -42,6 +42,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<VendorAppliedBill>? GetAppliedBills(int vendorPaymentId);
 
+        IEnumerable<VendorPaymentOpenAdvance>? GetOpenAdvances(int payeeId);
+
 
         PagingResponse<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq);
 

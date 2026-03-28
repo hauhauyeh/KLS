@@ -181,6 +181,11 @@ namespace KLS.Services
             return Uow.VendorPayments.GetAppliedBills(vendorPaymentId);
         }
 
+        public IEnumerable<VendorPaymentOpenAdvance>? GetOpenAdvances(int payeeId)
+        {
+            return Uow.VendorPayments.GetOpenAdvances(payeeId);
+        }
+
 
         public PagingResponse<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq)
         {
