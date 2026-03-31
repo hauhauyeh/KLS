@@ -17,6 +17,15 @@ namespace KLS.Data.Repositories
         {
         }
 
+        public IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds)
+        {
+            var param = new SqlParameter("@ItemIds", (object?)itemIds ?? DBNull.Value);
+            return DbContext.ItemUnitListRow
+                .FromSqlRaw("EXEC [dbo].[ItemUnit_GetViewList] @ItemIds", param)
+                .AsNoTracking()
+                .ToList();
+        }
+
         public ItemPrice GetItemPriceByCustomer(int payeeId, int itemId, int? itemUnitId)
         {
             var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
