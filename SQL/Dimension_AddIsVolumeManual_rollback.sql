@@ -1,0 +1,2 @@
+ALTER TABLE Item DROP COLUMN IsVolumeManual;
+GO
