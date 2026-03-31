@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParam(itemListReq);
 
-            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Visibility", param);
         }
 
         public int Count(ItemListReq itemListReq)
@@ -31,7 +31,7 @@ namespace KLS.Data.Repositories
             itemListReq.IsCount = true;
             var param = BuildParam(itemListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Visibility", param);
 
             var output = param[13] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -71,7 +71,9 @@ namespace KLS.Data.Repositories
                     ParameterName = "@TotalCount",
                     Direction = ParameterDirection.Output,
                     SqlDbType = SqlDbType.Int
-                }
+                },
+
+                string.IsNullOrEmpty(itemListReq.Visibility) ? new SqlParameter("@Visibility", DBNull.Value) : new SqlParameter("@Visibility", itemListReq.Visibility)
             };
 
             return param;

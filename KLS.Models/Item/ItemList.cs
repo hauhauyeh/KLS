@@ -47,7 +47,7 @@ namespace KLS.Models
 
         //public decimal? RetailFactor { get; set; }
 
-        public int ItemUnitId { get; set; }
+        public int? ItemUnitId { get; set; }
 
         public string? BaseUnit { get; set; }
 
