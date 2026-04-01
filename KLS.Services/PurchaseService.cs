@@ -264,13 +264,14 @@ namespace KLS.Services
                 {
                     PurchaseId = c.PurchaseId,
                     PurchaseNumber = c.PurchaseNumber,
-                    PurchaseDate = c.PurchaseDate,
+                    ArrivalDate = c.ArrivalDate,
                     DueDate = c.DueDate,
                     PurchaseTotal = c.PurchaseTotal,
                     PaymentApplied = c.PaymentApplied,
                     AmountDue = c.AmountDue
                 })
-                .OrderBy(c => c.DueDate ?? c.PurchaseDate)
+                .OrderBy(c => c.ArrivalDate)
+                .ThenBy(c => c.PurchaseNumber)
                 .ToList();
         }
     }

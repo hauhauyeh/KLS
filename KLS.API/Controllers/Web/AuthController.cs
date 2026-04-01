@@ -11,20 +11,46 @@ namespace KLS.API.Controllers.Web
 
         private readonly IUserAccountService _userAccountService;
         private readonly ISystemUserService _systemUserService;
+        private readonly ICustomerService _customerService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public AuthController(IUserAccountService userAccountService, ISystemUserService systemUserService)
+        public AuthController(IUserAccountService userAccountService, ISystemUserService systemUserService, ICustomerService customerService)
         {
             _userAccountService = userAccountService;
             _systemUserService = systemUserService;
+            _customerService = customerService;
         }
 
         #endregion
 
         #region --- Method(s) ---
+
+        [HttpPost("Register")]
+        public IActionResult Register([FromBody] RegisterReq registerReq)
+        {
+            if (_customerService.NameExists(registerReq.PayeeName, 0))
+                return Conflict("Company name already exists.");
+
+            if (_userAccountService.EmailExists(registerReq.Email, 0))
+                return Conflict("Email already registered.");
+
+            if (_userAccountService.UsernameExists(registerReq.Username, 0))
+                return Conflict("Username already registered.");
+
+            if (!string.IsNullOrWhiteSpace(registerReq.Phone) && _userAccountService.PhoneExists(registerReq.Phone, 0))
+                return Conflict("Phone number already registered.");
+
+            var headers = Request.Headers;
+            var url = headers?["Origin"].FirstOrDefault() ?? headers?["Referer"].FirstOrDefault();
+
+            _customerService.Register(registerReq, url);
+
+            return Ok();
+        }
+
 
         [HttpPost("Login")]
         public IActionResult Login(LoginReq loginReq)

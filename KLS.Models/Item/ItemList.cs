@@ -47,7 +47,7 @@ namespace KLS.Models
 
         //public decimal? RetailFactor { get; set; }
 
-        public int ItemUnitId { get; set; }
+        public int? ItemUnitId { get; set; }
 
         public string? BaseUnit { get; set; }
 
@@ -131,5 +131,11 @@ namespace KLS.Models
         public int? StorageId { get; set; }
 
         public string? StorageName { get; set; }
+
+        public decimal? CaseLength { get; set; }
+        public decimal? CaseWidth { get; set; }
+        public decimal? CaseHeight { get; set; }
+        public decimal? CaseVolumeInCubicMeter { get; set; }
+        public bool IsVolumeManual { get; set; }
     }
 }

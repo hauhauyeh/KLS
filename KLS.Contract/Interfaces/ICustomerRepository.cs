@@ -17,5 +17,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<PayeeSearch>? Search(PayeeSearchReq searchReq);
 
         IQueryable<PayeeExport> Export();
+
+        DateOnly GetNextShipDate(int payeeId);
     }
 }

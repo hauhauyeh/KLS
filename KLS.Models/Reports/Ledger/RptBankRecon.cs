@@ -21,7 +21,9 @@ namespace KLS.Models.Reports
 
         public DateOnly? BankDate { get; set; }
 
-        public int IsCleared { get; set; }
+        public bool IsCleared { get; set; }
+
+        public string? ReferenceId { get; set; }
 
         public string? AccountName { get; set; }
 

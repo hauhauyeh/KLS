@@ -84,6 +84,29 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("GetBalance/{reconId}")]
+        public IActionResult GetBalance(int reconId)
+        {
+            return Ok(_bankReconService.GetBalance(reconId));
+        }
+
+
+        [HttpGet("GetTx/{reconId}")]
+        public IActionResult GetTx(int reconId)
+        {
+            return Ok(_bankReconService.GetTx(reconId));
+        }
+
+
+        [HttpPost("UpdateBankDate")]
+        public IActionResult UpdateBankDate([FromBody] BankTx bankTx)
+        {
+            _bankReconService.UpdateBankDate(bankTx);
+
+            return Ok();
+        }
+
         #endregion
     }
 }

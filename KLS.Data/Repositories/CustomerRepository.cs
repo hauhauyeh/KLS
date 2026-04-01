@@ -56,6 +56,23 @@ namespace KLS.Data.Repositories
             return DbContext.PayeeExport.FromSqlRaw("[dbo].[Customer_Export]");
         }
 
+        public DateOnly GetNextShipDate(int payeeId)
+        {
+            var payeeIdParam = new SqlParameter("@PayeeId", payeeId);
+            var shipDateParam = new SqlParameter()
+            {
+                ParameterName = "@ShipDate",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Date
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[Web_Customer_NextShipDate] @PayeeId, @ShipDate OUTPUT",
+                payeeIdParam, shipDateParam);
+
+            return DateOnly.FromDateTime((DateTime)shipDateParam.Value);
+        }
+
         private static object[] BuildCustomersParam(CustomerListReq customerListReq)
         {
             object[] param = {

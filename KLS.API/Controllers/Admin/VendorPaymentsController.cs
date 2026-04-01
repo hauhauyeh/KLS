@@ -128,6 +128,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("GetOpenAdvances/{payeeId}")]
+        public IActionResult OpenAdvances(int payeeId)
+        {
+            return Ok(_vendorPaymentService.GetOpenAdvances(payeeId));
+        }
+
+
         [HttpPost("ApplyAdvance")]
         [DisplayName("Apply Advance Payment")]
         public IActionResult ApplyAdvance([FromBody] AdvanceApplyReq req)

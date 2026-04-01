@@ -1,0 +1,43 @@
+﻿@model dynamic
+
+<div style="
+    margin-top:28px;
+    padding:22px 24px;
+    border-radius:18px;
+    border:1px solid #e7efda;
+    background:linear-gradient(180deg,#fcfef8 0%,#f6faef 100%);
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+">
+
+    <p style="margin:0 0 14px 0; color:#5d6a54; font-size:14px; line-height:1.7;">
+        If you have any questions or need assistance, please feel free to reach out to us.
+    </p>
+
+    <p style="margin:0 0 14px 0; color:#5d6a54; font-size:14px; line-height:1.7;">
+        📧 <strong>Email:</strong> @(Model?.SupportEmail ?? "support@yourcompany.com")<br />
+        📞 <strong>Phone:</strong> @(Model?.SupportPhone ?? "+1 (000) 000-0000")
+    </p>
+
+    <p style="margin:0 0 14px 0; color:#5d6a54; font-size:14px; line-height:1.7;">
+        Thank you for your continued trust and support.
+    </p>
+
+    <p style="margin-top:14px; font-weight:800; color:#314028;">
+        Regards,<br />
+        <strong>@(Model?.CompanyName ?? "Your Company")</strong>
+    </p>
+
+    <hr style="border:none; border-top:1px solid #e3ecd3; margin:18px 0;" />
+
+    <p style="font-size:12px; color:#7a866f; text-align:center; margin:0;">
+        © @DateTime.Now.Year @(Model?.CompanyName ?? "Your Company"). All rights reserved.
+    </p>
+
+    <div style="
+        margin-top:16px;
+        height:4px;
+        background:linear-gradient(90deg,#6f9f10,#8fbe22,#c7e57d);
+        border-radius:3px;">
+    </div>
+
+</div>

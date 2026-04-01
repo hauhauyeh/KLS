@@ -131,6 +131,9 @@ namespace KLS.Data.DataContext
 
             modelBuilder.Entity<SalesExport>().HasNoKey();
             modelBuilder.Entity<ItemWebRowList>().HasNoKey();
+            modelBuilder.Entity<BankReconBalance>().HasNoKey();
+            modelBuilder.Entity<BankTx>().HasNoKey();
+            modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
         }
 
         #region ---DBSET---
@@ -196,6 +199,10 @@ namespace KLS.Data.DataContext
         public DbSet<Company> Companies { get; set; }
 
         public DbSet<BankRecon> BankRecons { get; set; }
+
+        public DbSet<BankReconBalance> BankReconBalances { get; set; }
+
+        public DbSet<BankTx> BankTxs { get; set; }
 
         public DbSet<VendorPayment> VendorPayments { get; set; }
 
@@ -344,6 +351,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<VendorPaymentList> VendorPaymentList { get; set; }
 
         public virtual DbSet<VendorAppliedBill> VendorAppliedBill { get; set; }
+
+        public virtual DbSet<VendorPaymentOpenAdvance> VendorPaymentOpenAdvance { get; set; }
 
         public virtual DbSet<PayrollList> PayrollList { get; set; }
 
@@ -537,5 +546,7 @@ namespace KLS.Data.DataContext
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }
 
         public virtual DbSet<ItemWebRowList> ItemWebRowList { get; set; }
+
+        public virtual DbSet<ItemUnitListRow> ItemUnitListRow { get; set; }
     }
 }

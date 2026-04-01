@@ -399,14 +399,14 @@ namespace KLS.Services
                 StatementDate = first?.StatementDate,
                 StatementBalance = first?.StatementBalance,
                 BeginningBalance = first?.BeginningBalance,
-                ClearedDeposits = data.Where(r => r.IsCleared == 1 && r.Amount > 0).ToList(),
-                ClearedPayments = data.Where(r => r.IsCleared == 1 && r.Amount < 0).ToList(),
-                OutstandingDeposits = data.Where(r => r.IsCleared == 0 && r.Amount > 0).ToList(),
-                OutstandingPayments = data.Where(r => r.IsCleared == 0 && r.Amount < 0).ToList(),
-                TotalClearedDeposits = data.Where(r => r.IsCleared == 1 && r.Amount > 0).Sum(r => r.Amount ?? 0),
-                TotalClearedPayments = data.Where(r => r.IsCleared == 1 && r.Amount < 0).Sum(r => r.Amount ?? 0),
-                TotalOutstandingDeposits = data.Where(r => r.IsCleared == 0 && r.Amount > 0).Sum(r => r.Amount ?? 0),
-                TotalOutstandingPayments = data.Where(r => r.IsCleared == 0 && r.Amount < 0).Sum(r => r.Amount ?? 0)
+                ClearedDeposits = data.Where(r => r.IsCleared && r.Amount > 0).ToList(),
+                ClearedPayments = data.Where(r => r.IsCleared && r.Amount < 0).ToList(),
+                OutstandingDeposits = data.Where(r => !r.IsCleared && r.Amount > 0).ToList(),
+                OutstandingPayments = data.Where(r => !r.IsCleared && r.Amount < 0).ToList(),
+                TotalClearedDeposits = data.Where(r => r.IsCleared && r.Amount > 0).Sum(r => r.Amount ?? 0),
+                TotalClearedPayments = data.Where(r => r.IsCleared && r.Amount < 0).Sum(r => r.Amount ?? 0),
+                TotalOutstandingDeposits = data.Where(r => !r.IsCleared && r.Amount > 0).Sum(r => r.Amount ?? 0),
+                TotalOutstandingPayments = data.Where(r => !r.IsCleared && r.Amount < 0).Sum(r => r.Amount ?? 0)
             };
         }
 

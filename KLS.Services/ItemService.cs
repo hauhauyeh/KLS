@@ -296,8 +296,29 @@ namespace KLS.Services
         {
             var item = GetById(req.ItemId);
             if (item == null) return;
-            item.ActualSaftyInventory = req.ActualSaftyInventory;
-            item.RefillInventory = req.RefillInventory;
+
+            if (req.ActualSaftyInventory.HasValue) item.ActualSaftyInventory = req.ActualSaftyInventory;
+            if (req.RefillInventory.HasValue) item.RefillInventory = req.RefillInventory;
+
+            if (req.CaseLength.HasValue) item.CaseLength = req.CaseLength;
+            if (req.CaseWidth.HasValue) item.CaseWidth = req.CaseWidth;
+            if (req.CaseHeight.HasValue) item.CaseHeight = req.CaseHeight;
+            if (req.CaseWeight.HasValue) item.CaseWeight = req.CaseWeight;
+
+            if (req.IsVolumeManual.HasValue)
+                item.IsVolumeManual = req.IsVolumeManual.Value;
+
+            if (req.CaseVolumeInCubicMeter.HasValue)
+                item.CaseVolumeInCubicMeter = req.CaseVolumeInCubicMeter;
+            else if (!item.IsVolumeManual
+                && item.CaseLength.HasValue && item.CaseLength > 0
+                && item.CaseWidth.HasValue && item.CaseWidth > 0
+                && item.CaseHeight.HasValue && item.CaseHeight > 0)
+            {
+                item.CaseVolumeInCubicMeter = Math.Round(
+                    (item.CaseLength.Value / 100m) * (item.CaseWidth.Value / 100m) * (item.CaseHeight.Value / 100m), 4);
+            }
+
             item.UpdatedAt = DateTime.UtcNow;
             Uow.Items.Update(item);
             Uow.Commit();

@@ -9,7 +9,7 @@ namespace KLS.Models
 
         public int PurchaseNumber { get; set; }
 
-        public DateOnly? PurchaseDate { get; set; }
+        public DateOnly? ArrivalDate { get; set; }
 
         public DateOnly? DueDate { get; set; }
 

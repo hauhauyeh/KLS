@@ -11,9 +11,9 @@ namespace KLS.Contract.Services
     {
         PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq);
 
-        CustomerDto? GetById(int payeeId);
+        CustomerDto GetById(int payeeId);
 
-        bool NameExists(CustomerDto customerDto);
+        bool NameExists(string? payeeName, int payeeId);
 
         CustomerDto Create(CustomerDto customerDto);
 
@@ -28,5 +28,9 @@ namespace KLS.Contract.Services
         void EmailStatement(int payeeId);
 
         byte[] Export();
+
+        void Register(RegisterReq registerReq, string url);
+
+        DateOnly GetNextShipDate(int payeeId);
     }
 }

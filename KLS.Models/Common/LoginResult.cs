@@ -21,5 +21,7 @@ namespace KLS.Models
         public string? EmpSortName { get; set; }
 
         public bool RequireEmailVerification { get; set; }
+
+        public bool IsPriceShow { get; set; }
     }
 }

@@ -39,6 +39,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<VendorAppliedBill> GetAppliedBills(int vendorPaymentId);
 
+        IQueryable<VendorPaymentOpenAdvance> GetOpenAdvances(int payeeId);
+
 
         IQueryable<CheckRegister> GetPagedCheckRegister(CheckRegisterReq checkRegisterReq);
 

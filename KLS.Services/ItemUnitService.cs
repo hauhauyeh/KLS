@@ -80,5 +80,120 @@ namespace KLS.Services
             // fallback safe
             return baseUnit ?? units.First();
         }
+
+        public IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds)
+        {
+            return Uow.ItemUnits.GetUnitViewList(itemIds);
+        }
+
+        public void UpdateUnit(ItemUnitUpdateReq req)
+        {
+            var unit = Uow.ItemUnits.GetById(req.ItemUnitId);
+            if (unit == null) return;
+
+            // Base unit FactorToBase must remain 1
+            if (unit.IsBaseUnit && req.FactorToBase.HasValue && req.FactorToBase.Value != 1)
+                throw new InvalidOperationException("Cannot change FactorToBase on base unit.");
+
+            if (req.Unit != null)
+            {
+                var trimmedUnit = req.Unit.Trim();
+                if (!string.IsNullOrEmpty(trimmedUnit))
+                    unit.Unit = trimmedUnit;
+            }
+
+            if (req.P1.HasValue)
+                unit.P1 = req.P1.Value;
+
+            if (req.Barcode != null)
+            {
+                var trimmed = req.Barcode.Trim();
+                if (!string.IsNullOrEmpty(trimmed))
+                {
+                    var duplicate = Uow.ItemUnits.Find(u => u.Barcode == trimmed && u.ItemUnitId != req.ItemUnitId).Any();
+                    if (duplicate)
+                        throw new InvalidOperationException("Barcode already exists on another unit.");
+                }
+                unit.Barcode = trimmed;
+            }
+
+            if (req.FactorToBase.HasValue && !unit.IsBaseUnit)
+                unit.FactorToBase = req.FactorToBase.Value;
+
+            if (req.PricePercentToBase.HasValue && !unit.IsBaseUnit)
+                unit.PricePercentToBase = req.PricePercentToBase.Value;
+
+            if (req.IsDefaultSalesUnit.HasValue)
+            {
+                if (req.IsDefaultSalesUnit.Value)
+                {
+                    // Un-toggle all other units for this item
+                    var siblings = Uow.ItemUnits.Find(u => u.ItemId == unit.ItemId && u.ItemUnitId != unit.ItemUnitId && u.IsDefaultSalesUnit);
+                    foreach (var s in siblings)
+                    {
+                        s.IsDefaultSalesUnit = false;
+                        Uow.ItemUnits.Update(s);
+                    }
+                }
+                unit.IsDefaultSalesUnit = req.IsDefaultSalesUnit.Value;
+            }
+
+            if (req.Inactive.HasValue)
+                unit.Inactive = req.Inactive.Value;
+
+            Uow.ItemUnits.Update(unit);
+            Uow.Commit();
+        }
+
+        public ItemUnit CreateUnit(int itemId)
+        {
+            var baseUnit = GetBaseUnit(itemId);
+            var baseP1 = baseUnit?.P1 ?? 0;
+
+            // Get default markup from SystemSetting
+            var defaultPercent = Uow.SystemSettings
+                .Find(s => s.SettingKey == "ITEM_DEFAULT_RETAILPROFIT")
+                .Select(s => s.SettingValue)
+                .FirstOrDefault();
+            decimal markup = 0.4m;
+            if (decimal.TryParse(defaultPercent, out var parsed))
+                markup = parsed;
+
+            var existingCount = Uow.ItemUnits.Find(u => u.ItemId == itemId).Count();
+            decimal factorToBase = 1;
+            decimal p1 = CalcRetailP1(baseP1, factorToBase, markup);
+
+            var unit = new ItemUnit
+            {
+                ItemId = itemId,
+                Unit = "unit" + (existingCount + 1),
+                FactorToBase = factorToBase,
+                PricePercentToBase = markup,
+                P1 = p1,
+                IsBaseUnit = false,
+                IsDefaultSalesUnit = false,
+                Inactive = false
+            };
+            Uow.ItemUnits.Add(unit);
+            Uow.Commit();
+            return unit;
+        }
+
+        private static decimal CalcRetailP1(decimal baseP1, decimal factorToBase, decimal markup)
+        {
+            if (factorToBase <= 0) factorToBase = 1;
+            if (markup >= 1) return 0; // 100% markup is invalid
+            return Math.Round((baseP1 / (1 - markup)) / factorToBase, 2);
+        }
+
+        public void DeleteUnit(int itemUnitId)
+        {
+            var unit = Uow.ItemUnits.GetById(itemUnitId);
+            if (unit == null) return;
+            if (unit.IsBaseUnit)
+                throw new InvalidOperationException("Cannot delete base unit.");
+            Uow.ItemUnits.Remove(unit);
+            Uow.Commit();
+        }
     }
 }

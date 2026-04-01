@@ -20,5 +20,10 @@ namespace KLS.Contract.Services
         ItemPrice GetItemPriceByCustomer(int payeeId, int itemId, int? itemUnitId);
 
         ItemUnit? ResolveKeyboxUnit(int itemId, string? keyboxUnit);
+
+        IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds);
+        void UpdateUnit(ItemUnitUpdateReq req);
+        ItemUnit CreateUnit(int itemId);
+        void DeleteUnit(int itemUnitId);
     }
 }

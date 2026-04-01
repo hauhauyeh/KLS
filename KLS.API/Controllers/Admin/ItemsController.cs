@@ -159,6 +159,38 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("GetItemUnitList")]
+        public IActionResult GetItemUnitList(string? itemIds)
+        {
+            if (string.IsNullOrWhiteSpace(itemIds))
+                return Ok(Array.Empty<ItemUnitListRow>());
+            return Ok(_itemUnitService.GetUnitViewList(itemIds));
+        }
+
+        [HttpPut("UpdateItemUnit")]
+        [DisplayName("Edit Item Unit")]
+        public IActionResult UpdateItemUnit([FromBody] ItemUnitUpdateReq req)
+        {
+            _itemUnitService.UpdateUnit(req);
+            return Ok();
+        }
+
+        [HttpPost("CreateItemUnit/{itemId}")]
+        [DisplayName("Create Item Unit")]
+        public IActionResult CreateItemUnit(int itemId)
+        {
+            var unit = _itemUnitService.CreateUnit(itemId);
+            return Ok(unit);
+        }
+
+        [HttpDelete("DeleteItemUnit/{itemUnitId}")]
+        [DisplayName("Delete Item Unit")]
+        public IActionResult DeleteItemUnit(int itemUnitId)
+        {
+            _itemUnitService.DeleteUnit(itemUnitId);
+            return Ok();
+        }
+
         [HttpGet("GetBaseUnitPricing/{itemId}")]
         public IActionResult GetBaseUnitPricing(int itemId)
         {

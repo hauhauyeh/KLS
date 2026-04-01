@@ -19,16 +19,16 @@ namespace KLS.Models
                 return ReconAccounts?.Sum(c => c.BankRecons?.Count);
             }
         }
+    }
 
-        public class ReconAccount
-        {
-            public string? AccountType { get; set; }
+    public class ReconAccount
+    {
+        public string? AccountType { get; set; }
 
-            public string? AccountName { get; set; }
+        public string? AccountName { get; set; }
 
-            public DateOnly? MaxStatementDate { get; set; }
+        public DateOnly? MaxStatementDate { get; set; }
 
-            public ICollection<BankRecon>? BankRecons { get; set; }
-        }
+        public ICollection<BankRecon>? BankRecons { get; set; }
     }
 }
