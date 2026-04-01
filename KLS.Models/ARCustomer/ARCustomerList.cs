@@ -64,5 +64,16 @@ namespace KLS.Models
         public DateOnly? FirstDueDate { get; set; }
 
         public int? AvgPaymentDays { get; set; }
+
+        public bool IsCreditHold { get; set; }
+
+        public int? MaxDueAgingDays { get; set; }
+
+        public decimal? InvoiceAgeCurrent { get; set; }
+        public decimal? InvoiceAge5 { get; set; }
+        public decimal? InvoiceAge30 { get; set; }
+        public decimal? InvoiceAge60 { get; set; }
+        public decimal? InvoiceAge90 { get; set; }
+        public decimal? InvoiceAgeOver90 { get; set; }
     }
 }
