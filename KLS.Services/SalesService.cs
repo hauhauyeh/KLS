@@ -20,19 +20,22 @@ namespace KLS.Services
         private readonly IEmailSettingService _emailSettingService;
         private readonly IEmailService _emailService;
         private readonly IExportService _exportService;
+        private readonly ITwilioService _twilioService;
 
         public SalesService(IUnitOfWork uow,
             IWebHostEnvironment env,
             IDocumentService documentService,
             IEmailSettingService emailSettingService,
             IEmailService emailService,
-            IExportService exportService) : base(uow)
+            IExportService exportService,
+            ITwilioService twilioService) : base(uow)
         {
             _env = env;
             _documentService = documentService;
             _emailSettingService = emailSettingService;
             _emailService = emailService;
             _exportService = exportService;
+            _twilioService = twilioService;
         }
 
         public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
@@ -55,6 +58,11 @@ namespace KLS.Services
         public Sales GetById(int salesId)
         {
             return Uow.Sales.GetById(salesId);
+        }
+
+        public Sales? GetBySalesNumber(int salesNumber)
+        {
+            return Uow.Sales.Find(c => c.SalesNumber == salesNumber).FirstOrDefault();
         }
 
         public SalesList? GetListById(int salesId)
@@ -384,9 +392,15 @@ namespace KLS.Services
             }
         }
 
-        public IEnumerable<SalesDetailList>? GetSalesDetails(int salesId)
+        public SalesDetailDto? GetSalesDetails(int salesId)
         {
-            return Uow.Sales.GetSalesDetails(salesId);
+            var details = Uow.Sales.GetSalesDetails(salesId);
+
+            return new SalesDetailDto
+            {
+                Sales = GetListById(salesId),
+                SalesDetails = details?.ToList()
+            };
         }
 
         //--Web
@@ -407,6 +421,100 @@ namespace KLS.Services
             {
                 RowData = sales,
             };
+        }
+
+        public int WebCheckout(SalesWebCheckoutReq webCheckoutReq)
+        {
+            var checkoutReq = new SalesCheckoutReq
+            {
+                PayeeId = UserContext.EmpId,
+                StageId = 0,
+                Instruction = "Web " + webCheckoutReq.Instruction,
+                ShipDate = webCheckoutReq.ShipDate,
+                ShipRoute = webCheckoutReq.ShipRoute
+            };
+
+            if (webCheckoutReq.IsPickUp)
+                checkoutReq.ShipRoute = "P";
+
+            var salesId = Uow.Sales.Checkout(checkoutReq);
+
+            var payee = Uow.Payees.GetById(UserContext.EmpId);
+
+            if (payee.Email != webCheckoutReq.Email)
+            {
+                payee.Email = webCheckoutReq.Email;
+                payee.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Payees.Update(payee);
+            }
+
+            var customer = Uow.Customers.GetById(UserContext.EmpId);
+
+            if (customer.TextOrderConfirm != webCheckoutReq.Phone)
+            {
+                customer.TextOrderConfirm = webCheckoutReq.Phone;
+
+                Uow.Customers.Update(customer);
+            }
+
+            Uow.Commit();
+
+            var sales = GetById(salesId);
+
+            var toPhone = customer.TextOrderConfirm;
+
+            if (!string.IsNullOrEmpty(toPhone))
+            {
+                string msgbody = "Dear " + payee.PayeeName + "! We've received your order. Your order number " + sales.SalesNumber + " will be ship on " + sales.ShipDate?.ToString("MM/dd/yyyy") + ".";
+
+                _twilioService.SendMessage(toPhone, msgbody);
+            }
+
+            EmailOrderDetail(salesId);
+
+            return sales.SalesId;
+        }
+
+        private void EmailOrderDetail(int salesId)
+        {
+            var sales = GetListById(salesId);
+
+            if (sales == null)
+                return;
+
+            var timeZone = Uow.Companies.GetAll().FirstOrDefault()?.TimeZone;
+            if (sales.SalesDate.HasValue && !string.IsNullOrEmpty(timeZone))
+                sales.SalesDate = Utilities.ConvertFromUtcToLocal(sales.SalesDate.Value, timeZone);
+
+            var salesEmail = new SalesDetailDto
+            {
+                Sales = sales,
+                SalesDetails = Uow.Sales.GetSalesDetails(salesId)?.ToList()
+            };
+
+            var payee = Uow.Payees.GetById(UserContext.EmpId);
+
+            if (payee != null && !string.IsNullOrEmpty(payee.Email))
+            {
+                salesEmail.PayeeName = payee.PayeeName;
+
+                string toEmails = payee.Email;
+                string subject = "Thank You for Your Order – #" + sales.SalesNumber;
+
+                string mailBody = _emailService.RenderEmailTemplate("~/Views/Invoice.cshtml", salesEmail);
+
+                EmailSetting setting = _emailSettingService.GetSetting();
+
+                Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailBody, null), TaskCreationOptions.LongRunning)
+                    .ContinueWith((t) => { });
+
+                subject = "New Order Received – #" + sales.SalesNumber + " - " + payee.PayeeName;
+
+                //send to Admin
+                Task.Factory.StartNew(() => _emailService.SendEmail(setting, setting.AdminEmail, subject, mailBody, null), TaskCreationOptions.LongRunning)
+                    .ContinueWith((t) => { });
+            }
         }
     }
 }

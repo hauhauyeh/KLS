@@ -75,19 +75,19 @@ namespace KLS.API.Controllers.Web
         }
 
 
-        [HttpDelete("{roleId}")]
-        [DisplayName("Delete Role")]
-        public IActionResult Delete(int roleId)
-        {
-            var existing = _userRoleService.GetById(roleId);
+        //[HttpDelete("{roleId}")]
+        //[DisplayName("Delete Role")]
+        //public IActionResult Delete(int roleId)
+        //{
+        //    var existing = _userRoleService.GetById(roleId);
 
-            if (existing == null)
-                return NotFound($"User role with ID {roleId} not found.");
+        //    if (existing == null)
+        //        return NotFound($"User role with ID {roleId} not found.");
 
-            _userRoleService.DeleteUserRole(roleId);
+        //    _userRoleService.DeleteUserRole(roleId);
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
 
         #endregion
     }

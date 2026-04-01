@@ -13,6 +13,8 @@ namespace KLS.Contract.Services
 
         Sales GetById(int salesId);
 
+        Sales? GetBySalesNumber(int salesNumber);
+
         Sales UpdateShipRoute(int salesId, string? shipRoute);
 
         void UpdateInstruction(int salesId, string? instruction);
@@ -61,7 +63,7 @@ namespace KLS.Contract.Services
 
         byte[] Export(SalesExportReq exportReq);
 
-        IEnumerable<SalesDetailList>? GetSalesDetails(int salesId);
+        SalesDetailDto? GetSalesDetails(int salesId);
 
         //--Routing
 
@@ -73,5 +75,7 @@ namespace KLS.Contract.Services
 
         //--Web
         PagingResponse<OrderWebList>? GetWebPagedList(SalesListReq salesListReq);
+
+        int WebCheckout(SalesWebCheckoutReq webCheckoutReq);
     }
 }

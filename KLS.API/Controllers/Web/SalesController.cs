@@ -1,4 +1,4 @@
-﻿using KLS.API.Helpers;
+using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace KLS.API.Controllers.Web
 {
     [AuthorizeAdmin]
     [Route("api/web/[controller]")]
-    public class CustomersController : BaseController
+    public class SalesController : BaseController
     {
         #region --- Member(s) ---
 
@@ -19,7 +19,7 @@ namespace KLS.API.Controllers.Web
 
         #region --- Constructor(s) ---
 
-        public CustomersController(ICustomerService customerService, IUserAccountService userAccountService)
+        public SalesController(ICustomerService customerService, IUserAccountService userAccountService)
         {
             _customerService = customerService;
             _userAccountService = userAccountService;

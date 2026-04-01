@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
+using Twilio.Jwt.AccessToken;
 
 namespace KLS.Services
 {
@@ -56,7 +57,7 @@ namespace KLS.Services
             };
         }
 
-        public CustomerDto? GetById(int payeeId)
+        public CustomerDto GetById(int payeeId)
         {
             var payee = Uow.Payees.GetById(payeeId);
             var customer = Uow.Customers.GetById(payeeId);
@@ -109,9 +110,9 @@ namespace KLS.Services
             return dto;
         }
 
-        public bool NameExists(CustomerDto dto)
+        public bool NameExists(string? payeeName, int payeeId)
         {
-            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == dto.PayeeName.ToLower() && p.PayeeId != dto.PayeeId && p.PayeeType == EnumHelper.PayeeType.C.ToString());
+            return Uow.Payees.Exists(p => p.PayeeName.ToLower() == payeeName.ToLower() && p.PayeeId != payeeId && p.PayeeType == EnumHelper.PayeeType.C.ToString());
         }
 
         public CustomerDto Create(CustomerDto dto)
@@ -143,7 +144,7 @@ namespace KLS.Services
             customer.InjectFrom(dto);
             customer.PayeeId = newPayeeId;
 
-            customer.SalesRepId = dto.SalesRepId ?? UserContext.EmpId;
+            customer.SalesRepId = dto.SalesRepId ?? (UserContext.EmpId == 0 ? null : UserContext.EmpId);
             customer.BillId = dto.BillId ?? newPayeeId;
 
             Uow.Customers.Add(customer);
@@ -463,6 +464,82 @@ namespace KLS.Services
             {
                 return null;
             }
+        }
+
+
+        public DateOnly GetNextShipDate(int payeeId)
+        {
+            return Uow.Customers.GetNextShipDate(payeeId);
+        }
+
+        //---web method
+        public void Register(RegisterReq registerReq, string url)
+        {
+            var customerDto = new CustomerDto
+            {
+                PayeeName = registerReq.PayeeName,
+                EIN = registerReq.EIN,
+                StoreType = registerReq.StoreType,
+                Email = registerReq.Email,
+                Phone1 = registerReq.Phone,
+                Address = registerReq.Address,
+                City = registerReq.City,
+                State = registerReq.State,
+                ZipCode = registerReq.ZipCode,
+                TaxRate = _systemSettingService.GetByKey<decimal>(GlobalKey.SYSTEM_DEFAULT_TAXRATE),
+                StartDate = DateOnly.FromDateTime(DateTime.Now),
+                TermId = _termService.GetByName("COD")?.TermId,
+                CallSchedule = "123456",
+                GracePeriod = 0,
+                MinOrder = 500,
+                CreditLimit = 0,
+                BaseMarkup = 0,
+                PriceShow = "Hide",
+                IsPromotionEnabled = true,
+                IsStatementPrint = true,
+                SalesRepId = null,
+                IsApproved = false,
+                IsOnlineRegister = true
+            };
+
+            var customer = Create(customerDto);
+
+            var tempPassword = Utilities.GenerateRandomPassword();
+            var token = TokenHelper.GenerateToken();
+
+            var userAccount = new UserAccount
+            {
+                RoleId = 1,
+                PayeeId = customer.PayeeId,
+                Username = registerReq.Username,
+                Email = registerReq.Email,
+                Phone = registerReq.Phone,
+                PasswordHash = Utilities.Encrypt(tempPassword),
+                EmailVerifyCode = token,
+                EmailVerifyExpire = DateTime.UtcNow.AddDays(1),
+            };
+
+            Uow.UserAccounts.Add(userAccount);
+            Uow.Commit();
+
+            string verifyUrl = $"{url}/verifyemail/{Uri.EscapeDataString(token)}";
+
+            var model = new WelcomeEmail
+            {
+                Username = registerReq.Username,
+                Email = registerReq.Email,
+                TempPassword = tempPassword,
+                LoginUrl = verifyUrl
+            };
+
+            var company = _companyService.GetDefault();
+
+            string mailBody = _emailService.RenderEmailTemplate("~/Views/Register.cshtml", model);
+            EmailSetting setting = _emailSettingService.GetSetting();
+            string subject = "Welcome to " + company.CompanyName;
+
+            Task.Factory.StartNew(() => _emailService.SendEmail(setting, registerReq.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
+                .ContinueWith((t) => { });
         }
     }
 }

@@ -1,4 +1,5 @@
 using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +43,11 @@ namespace KLS.API.Controllers.Web
         [HttpGet("SeePdf/{salesNumber}")]
         public IActionResult SeePdf(int salesNumber)
         {
+            var sales = _salesService.GetBySalesNumber(salesNumber);
+
+            if (sales?.ShipId != UserContext.EmpId)
+                return NotFound("File not found.");
+
             var filePath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
 
             if (!System.IO.File.Exists(filePath))
@@ -55,7 +61,20 @@ namespace KLS.API.Controllers.Web
         [HttpGet("Details/{salesId}")]
         public IActionResult Details(int salesId)
         {
-            return Ok(_salesService.GetSalesDetails(salesId));
+            var detail = _salesService.GetSalesDetails(salesId);
+
+            if (detail?.Sales?.ShipId != UserContext.EmpId)
+                return Forbid("You are not authorized to view this order.");
+
+            return Ok(detail);
+        }
+
+
+        [HttpPost("Checkout")]
+        public IActionResult Checkout([FromBody] SalesWebCheckoutReq webCheckoutReq)
+        {
+            var salesId = _salesService.WebCheckout(webCheckoutReq);
+            return Ok(new { SalesId = salesId });
         }
 
         #endregion

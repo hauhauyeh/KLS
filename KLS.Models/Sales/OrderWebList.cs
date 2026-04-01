@@ -23,6 +23,10 @@ namespace KLS.Models
 
         public int? ShipId { get; set; }
 
+        public decimal? SubTotal { get; set; }
+
+        public decimal? TaxTotal { get; set; }
+
         public decimal? SalesTotal { get; set; }
 
         public string? Instruction { get; set; }

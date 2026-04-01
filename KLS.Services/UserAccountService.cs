@@ -2,14 +2,17 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using System.Xml;
 using Twilio.Jwt.AccessToken;
 
 namespace KLS.Services
@@ -110,7 +113,8 @@ namespace KLS.Services
                 Token = token,
                 RefreshToken = refreshToken,
                 Username = user.Username,
-                IsAdmin = role.IsAdmin
+                IsAdmin = role.IsAdmin,
+                IsPriceShow = customer.IsPriceShow
             };
         }
 
@@ -268,10 +272,10 @@ namespace KLS.Services
             string resetUrl = $"{url}/verifyemail/{Uri.EscapeDataString(token)}";
             var subject = "Verify your email";
 
-            var model = new ForgotPassword
+            var model = new WelcomeEmail
             {
                 Username = user.Username ?? user.Email,
-                ResetUrl = resetUrl
+                LoginUrl = resetUrl
             };
 
             string mailBody = _emailService.RenderEmailTemplate("~/Views/Register.cshtml", model);
@@ -284,8 +288,6 @@ namespace KLS.Services
 
         public bool VerifyEmail(string token)
         {
-            //string? decoded = HttpUtility.UrlDecode(token);
-
             var user = Uow.UserAccounts
                 .Find(u => u.EmailVerifyCode == token && u.EmailVerifyExpire > DateTime.UtcNow)
                 .FirstOrDefault();

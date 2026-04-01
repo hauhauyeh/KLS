@@ -50,7 +50,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Create Customer")]
         public IActionResult Create([FromBody] CustomerDto customerDto)
         {
-            if (_customerService.NameExists(customerDto))
+            if (_customerService.NameExists(customerDto.PayeeName, customerDto.PayeeId))
                 return Conflict("Customer name already exists.");
 
             return Ok(_customerService.Create(customerDto));
@@ -61,7 +61,7 @@ namespace KLS.API.Controllers.Admin
         [DisplayName("Update Customer")]
         public IActionResult Update([FromBody] CustomerDto customerDto)
         {
-            if (_customerService.NameExists(customerDto))
+            if (_customerService.NameExists(customerDto.PayeeName, customerDto.PayeeId))
                 return Conflict("Customer name already exists.");
 
             return Ok(_customerService.Update(customerDto));
