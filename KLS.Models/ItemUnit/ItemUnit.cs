@@ -21,8 +21,8 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18, 6)")]
         public decimal FactorToBase { get; set; }
 
-        //[Column(TypeName = "decimal(18, 4)")]
-        //public decimal? PricePercentToBase { get; set; }
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? PricePercentToBase { get; set; }
 
         public bool IsBaseUnit { get; set; }
         public bool IsDefaultSalesUnit { get; set; }

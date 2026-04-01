@@ -64,6 +64,8 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? CaseVolumeInCubicMeter { get; set; }
 
+        public bool IsVolumeManual { get; set; }
+
         [Column(TypeName = "decimal(18, 6)")]
         public decimal? LCloseQty { get; set; }
 

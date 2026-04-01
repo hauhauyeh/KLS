@@ -133,6 +133,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ItemWebRowList>().HasNoKey();
             modelBuilder.Entity<BankReconBalance>().HasNoKey();
             modelBuilder.Entity<BankTx>().HasNoKey();
+            modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
         }
 
         #region ---DBSET---
@@ -545,5 +546,7 @@ namespace KLS.Data.DataContext
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }
 
         public virtual DbSet<ItemWebRowList> ItemWebRowList { get; set; }
+
+        public virtual DbSet<ItemUnitListRow> ItemUnitListRow { get; set; }
     }
 }
