@@ -57,14 +57,14 @@ namespace KLS.Services
             };
         }
 
-        public CustomerPayment GetById(int customerPaymentId)
+        public CustomerPayment? GetById(int customerPaymentId)
         {
             return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.PaymentDetails).FirstOrDefault();
         }
 
-        public CustomerPayment GetByIdWithInclude(int customerPaymentId)
+        public CustomerPayment? GetByIdWithInclude(int customerPaymentId)
         {
-            return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.Payee).Include(c => c.PaymentDetails).ThenInclude(s => s.Sales).FirstOrDefault();
+            return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId)?.Include(c => c.Payee)?.Include(c => c.PaymentDetails!)?.ThenInclude(s => s.Sales).FirstOrDefault();
         }
 
         public CustomerPaymentList? GetListById(int customerPaymentId)
@@ -268,13 +268,13 @@ namespace KLS.Services
                         {
                             PayeeId = chargeReq.PayeeId,
                             PaymentMethod = "CREDIT CARD",
-                            ReferenceId = paymentResponse.Payment.Id,
+                            ReferenceId = paymentResponse.Payment?.Id,
                             PaymentAmount = dueTotal + ccFee,
                             SalesIds = chargeReq.SalesIds,
                             Gateway = "Square Payment",
                             CCFee = ccFee,
-                            CardType = Convert.ToString(paymentResponse.Payment.CardDetails?.Card?.CardBrand),
-                            Last4 = Convert.ToString(paymentResponse.Payment.CardDetails?.Card?.Last4)
+                            CardType = Convert.ToString(paymentResponse.Payment?.CardDetails?.Card?.CardBrand),
+                            Last4 = Convert.ToString(paymentResponse.Payment?.CardDetails?.Card?.Last4)
                         };
                     }
                 }
@@ -301,13 +301,13 @@ namespace KLS.Services
                     {
                         PayeeId = chargeReq.PayeeId,
                         PaymentMethod = "CREDIT CARD",
-                        ReferenceId = paymentResponse.Payment.Id,
+                        ReferenceId = paymentResponse?.Payment.Id,
                         PaymentAmount = paymentAmount,
                         SalesIds = chargeReq.SalesIds,
                         Gateway = "Square Payment",
                         CCFee = ccFee,
-                        CardType = Convert.ToString(paymentResponse.Payment.CardDetails?.Card?.CardBrand),
-                        Last4 = Convert.ToString(paymentResponse.Payment.CardDetails?.Card?.Last4)
+                        CardType = Convert.ToString(paymentResponse?.Payment?.CardDetails?.Card?.CardBrand),
+                        Last4 = Convert.ToString(paymentResponse?.Payment?.CardDetails?.Card?.Last4)
                     };
                 }
                 else if (chargeReq.PaymentMethod != null)
@@ -360,8 +360,7 @@ namespace KLS.Services
             }
         }
 
-
-        private decimal GetDueTotal(string salesIds)
+        public decimal GetDueTotal(string salesIds)
         {
             if (string.IsNullOrWhiteSpace(salesIds))
                 return 0m;
@@ -381,6 +380,47 @@ namespace KLS.Services
                 .Where(x => ids.Contains(x.SalesId))
                 .Sum(x => (decimal?)(x.AmountDue ?? 0m)) ?? 0m;
         }
+
+
+        public CustomerPaymentView? GetDetails(int paymentId)
+        {
+            var payment = GetByIdWithInclude(paymentId);
+
+            if (payment == null) return null;
+
+            return new CustomerPaymentView
+            {
+                CustomerPayment = new CustomerPaymentDto
+                {
+                    CustomerPaymentId = payment.CustomerPaymentId,
+                    PaymentNumber = payment.PaymentNumber,
+                    PaymentType = payment.PaymentType,
+                    PayeeId = payment.PayeeId,
+                    PayeeName = payment.Payee?.PayeeName,
+                    PaymentDate = payment.PaymentDate,
+                    PaymentMethod = payment.PaymentMethod,
+                    ReferenceId = payment.ReferenceId,
+                    PaymentAmount = payment.PaymentAmount,
+                    PaymentApplied = payment.PaymentApplied,
+                    UnappliedAmount = payment.UnappliedAmount,
+                    Notes = payment.Notes,
+                    IsLocked = payment.IsLocked,
+                    IsReturned = payment.IsReturned
+                },
+                CustomerPaymentDetails = payment.PaymentDetails?.Select(d => new CustomerPaymentDetailDto
+                {
+                    PaymentDetailId = d.PaymentDetailId,
+                    CustomerPaymentId = d.CustomerPaymentId,
+                    SalesId = d.SalesId,
+                    PaymentApplied = d.PaymentApplied,
+                    PaymentDiscount = d.PaymentDiscount,
+                    ShortDiscount = d.ShortDiscount,
+                    OtherDiscount = d.OtherDiscount,
+                    SalesNumber = d.Sales?.SalesNumber ?? 0
+                }).ToList()
+            };
+        }
+
 
         private static void ValidateSquareResponse(CreatePaymentResponse paymentResponse)
         {

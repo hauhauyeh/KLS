@@ -169,6 +169,7 @@ namespace KLS.Services
             var newToken = _jWTService.GenerateJwtToken(jwtClaim);
 
             var role = _userRoleService.GetById(jwtClaim.RoleId);
+            var customer = Uow.Customers.GetById(jwtClaim.PayeeId);
 
             return new LoginResult
             {
@@ -176,7 +177,8 @@ namespace KLS.Services
                 Token = newToken,
                 RefreshToken = jwtClaim.RefreshToken,
                 Username = jwtClaim.Username,
-                IsAdmin = role.IsAdmin
+                IsAdmin = role.IsAdmin,
+                IsPriceShow = customer?.IsPriceShow ?? false
             };
         }
 

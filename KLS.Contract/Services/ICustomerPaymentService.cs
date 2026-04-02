@@ -11,9 +11,9 @@ namespace KLS.Contract.Services
     {
         PagingResponse<CustomerPaymentList> GetPagedList(CustomerPaymentReq customerPaymentReq);
 
-        CustomerPayment GetById(int customerPaymentId);
+        CustomerPayment? GetById(int customerPaymentId);
 
-        CustomerPayment GetByIdWithInclude(int customerPaymentId);
+        CustomerPayment? GetByIdWithInclude(int customerPaymentId);
 
         void Delete(int customerPaymentId);
 
@@ -30,5 +30,10 @@ namespace KLS.Contract.Services
         IEnumerable<CustomerPaymentStatement>? Statement(int payeeId);
 
         CustomerPayment ChargePayment(PaymentChargeReq chargeReq);
+
+        decimal GetDueTotal(string salesIds);
+
+
+        CustomerPaymentView? GetDetails(int paymentId);
     }
 }
