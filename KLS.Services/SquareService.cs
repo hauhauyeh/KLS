@@ -2,7 +2,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
-using Org.BouncyCastle.Asn1.Cmp;
 using Square;
 using Square.Cards;
 using Square.Customers;
