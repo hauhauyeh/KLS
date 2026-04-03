@@ -23,5 +23,10 @@ namespace KLS.Models
         public decimal? ChargeAmount { get; set; }
 
         public string? Notes { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+
+        [NotMapped]
+        public string? UsedMethod { get; set; }
     }
 }

@@ -125,6 +125,27 @@ namespace KLS.API.Controllers.Admin
             return Ok(_shipmentService.AssignedPurchases(shipmentId));
         }
 
+
+        [HttpGet("ValidateAllocation/{purchaseId}")]
+        public IActionResult ValidateAllocation(int purchaseId)
+        {
+            return Ok(_shipmentService.ValidateAllocation(purchaseId));
+        }
+
+
+        [HttpGet("ValidateAllocationDetail/{purchaseId}/{method}")]
+        public IActionResult ValidateAllocationDetail(int purchaseId, string method)
+        {
+            return Ok(_shipmentService.ValidateAllocationDetail(purchaseId, method));
+        }
+
+
+        [HttpPost("Reallocate")]
+        public IActionResult Reallocate([FromBody] ReallocateReq req)
+        {
+            return Ok(_shipmentService.Reallocate(req));
+        }
+
         #endregion
     }
 }

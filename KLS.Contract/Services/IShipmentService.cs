@@ -32,5 +32,11 @@ namespace KLS.Contract.Services
         void UnAllocation(int shipmentPurchaseId);
 
         IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
+
+        AllocationValidationResult ValidateAllocation(int purchaseId);
+
+        List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);
+
+        ReallocateResponse Reallocate(ReallocateReq req);
     }
 }
