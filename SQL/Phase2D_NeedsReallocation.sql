@@ -131,25 +131,25 @@ BEGIN
                 -- Positive invoice (normal purchase)
                 WHEN p.PurchaseTotal > 0 THEN
                     CASE
-                        WHEN p.PaymentApplied = 0 THEN 5  -- Unpaid
-                        WHEN (p.PaymentApplied + ISNULL(p.DiscountApplied, 0)) <  p.PurchaseTotal THEN 6  -- Partially Paid
-                        WHEN (p.PaymentApplied + ISNULL(p.DiscountApplied, 0)) =  p.PurchaseTotal THEN 7  -- Paid
-                        WHEN (p.PaymentApplied + ISNULL(p.DiscountApplied, 0)) >  p.PurchaseTotal THEN 8  -- Over Paid
+                        WHEN ISNULL(p.PaymentApplied, 0) = 0 THEN 5  -- Unpaid
+                        WHEN (ISNULL(p.PaymentApplied, 0) + ISNULL(p.DiscountApplied, 0)) <  p.PurchaseTotal THEN 6  -- Partially Paid
+                        WHEN (ISNULL(p.PaymentApplied, 0) + ISNULL(p.DiscountApplied, 0)) =  p.PurchaseTotal THEN 7  -- Paid
+                        WHEN (ISNULL(p.PaymentApplied, 0) + ISNULL(p.DiscountApplied, 0)) >  p.PurchaseTotal THEN 8  -- Over Paid
                     END
 
                 -- Zero invoice amount
                 WHEN p.PurchaseTotal = 0 THEN
                     CASE
-                        WHEN (p.PaymentApplied + ISNULL(p.DiscountApplied, 0)) = 0 THEN 5  -- Unpaid
-                        WHEN (p.PaymentApplied + ISNULL(p.DiscountApplied, 0)) > 0 THEN 8  -- Over Paid
+                        WHEN (ISNULL(p.PaymentApplied, 0) + ISNULL(p.DiscountApplied, 0)) = 0 THEN 5  -- Unpaid
+                        WHEN (ISNULL(p.PaymentApplied, 0) + ISNULL(p.DiscountApplied, 0)) > 0 THEN 8  -- Over Paid
                     END
 
                 -- Negative invoice (credit note)
                 WHEN p.PurchaseTotal < 0 THEN
                     CASE
-                        WHEN p.PaymentApplied = 0 THEN 9                           -- Credit
-                        WHEN ABS(p.PaymentApplied) <  ABS(p.PurchaseTotal) THEN 10 -- Credit - Partial
-                        WHEN ABS(p.PaymentApplied) >= ABS(p.PurchaseTotal) THEN 11 -- Credit - Settled
+                        WHEN ISNULL(p.PaymentApplied, 0) = 0 THEN 9                           -- Credit
+                        WHEN ABS(ISNULL(p.PaymentApplied, 0)) <  ABS(p.PurchaseTotal) THEN 10 -- Credit - Partial
+                        WHEN ABS(ISNULL(p.PaymentApplied, 0)) >= ABS(p.PurchaseTotal) THEN 11 -- Credit - Settled
                     END
             END AS PaymentStatusId
         ) AS psCalc LEFT JOIN PaymentStatus AS ps ON ps.PaymentStatusId = psCalc.PaymentStatusId
