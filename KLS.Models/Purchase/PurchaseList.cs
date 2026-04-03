@@ -73,6 +73,12 @@ namespace KLS.Models
 
         public bool IsPayNow { get; set; }
 
+        public bool HasAllocation { get; set; }
+
+        public bool NeedsReallocation { get; set; }
+
+        public bool HasFallback { get; set; }
+
         [NotMapped]
         public bool IsPdfExist { get; set; }
     }

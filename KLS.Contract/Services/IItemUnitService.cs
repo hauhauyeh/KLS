@@ -22,8 +22,11 @@ namespace KLS.Contract.Services
         ItemUnit? ResolveKeyboxUnit(int itemId, string? keyboxUnit);
 
         IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds);
-        void UpdateUnit(ItemUnitUpdateReq req);
+
         ItemUnit CreateUnit(int itemId);
+
+        void UpdateUnit(ItemUnitUpdateReq req);
+
         void DeleteUnit(int itemUnitId);
     }
 }

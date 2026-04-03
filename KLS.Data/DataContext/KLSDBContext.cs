@@ -75,7 +75,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Purchase>().ToTable("Purchase");
             modelBuilder.Entity<TempSales>().ToTable("TempSales", tb => tb.HasTrigger("TRG_Insert_TempSalesSetLineId"));
             modelBuilder.Entity<TempPurchase>().ToTable("TempPurchase", tb => tb.HasTrigger("TRG_Insert_TempPurchaseSetLineId"));
-            modelBuilder.Entity<ItemQuote>().ToTable("ItemQuote");
+            modelBuilder.Entity<ItemQuote>().ToTable("ItemQuote", tb => tb.HasTrigger("ItemQuoteTrigger"));
             modelBuilder.Entity<TempItemQuote>().ToTable("TempItemQuote");
             modelBuilder.Entity<PurchaseStage>().ToTable("PurchaseStage");
             modelBuilder.Entity<SalesStage>().ToTable("SalesStage");

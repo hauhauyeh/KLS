@@ -36,11 +36,12 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
-        public void Allocation(int purchaseId)
+        public void Allocation(int purchaseId, bool refreshVolume = false)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+            var RefreshVolumeParam = new SqlParameter("@RefreshVolume", refreshVolume);
 
-            DbContext.Database.ExecuteSqlRaw("[Purchase_Allocation] @PurchaseId", PurchaseIdParam);
+            DbContext.Database.ExecuteSqlRaw("[Purchase_Allocation] @PurchaseId, @RefreshVolume", PurchaseIdParam, RefreshVolumeParam);
         }
 
         public void UnAllocation(int shipmentPurchaseId)
@@ -87,6 +88,122 @@ namespace KLS.Data.Repositories
             var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
 
             return DbContext.AssignedPurchase.FromSqlRaw("[Shipment_AssignedPurchase] @ShipmentId", ShipmentIdParam);
+        }
+
+        public AllocationValidationResult ValidateAllocation(int purchaseId)
+        {
+            var result = new AllocationValidationResult();
+            var conn = DbContext.Database.GetDbConnection();
+            var wasClosed = conn.State != System.Data.ConnectionState.Open;
+
+            if (wasClosed) conn.Open();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "[dbo].[Shipment_ValidateAllocation]";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@PurchaseId", purchaseId));
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result.Methods.Add(new AllocationMethodSummary
+                    {
+                        Method = reader.GetString(0),
+                        TotalItems = reader.GetInt32(1),
+                        ItemsWithData = reader.GetInt32(2),
+                        ItemsMissing = reader.GetInt32(3),
+                        Coverage = reader.GetInt32(4)
+                    });
+                }
+            }
+            finally
+            {
+                if (wasClosed) conn.Close();
+            }
+
+            return result;
+        }
+
+        public List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method)
+        {
+            var items = new List<AllocationMissingItem>();
+            var conn = DbContext.Database.GetDbConnection();
+            var wasClosed = conn.State != System.Data.ConnectionState.Open;
+
+            if (wasClosed) conn.Open();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "[dbo].[Shipment_ValidateAllocationDetail]";
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@PurchaseId", purchaseId));
+                cmd.Parameters.Add(new SqlParameter("@Method", method));
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    items.Add(new AllocationMissingItem
+                    {
+                        ItemId = reader.GetInt32(0),
+                        ItemCode = reader.GetString(1),
+                        ItemName = reader.GetString(2),
+                        MissingField = reader.GetString(3),
+                        Method = method
+                    });
+                }
+            }
+            finally
+            {
+                if (wasClosed) conn.Close();
+            }
+
+            return items;
+        }
+
+        public IEnumerable<AllocationResultItem> AllocationResult(int purchaseId)
+        {
+            var results = new List<AllocationResultItem>();
+
+            var sql = @"
+                SELECT sc.ChargeType, sc.AllocationMethod AS RequestedMethod, sa.AllocationMethod AS UsedMethod,
+                       COUNT(*) AS ItemCount,
+                       SUM(CASE WHEN sa.AllocationMethod = 'BY_VALUE_FALLBACK' THEN 1 ELSE 0 END) AS FallbackCount
+                FROM dbo.ShipmentAllocation sa
+                JOIN dbo.ShipmentCharge sc ON sa.ChargeId = sc.ChargeId
+                JOIN dbo.ShipmentPurchase sp ON sc.ShipmentId = sp.ShipmentId
+                WHERE sp.PurchaseId = @PurchaseId
+                GROUP BY sc.ChargeType, sc.AllocationMethod, sa.AllocationMethod";
+
+            var conn = DbContext.Database.GetDbConnection();
+            var wasClosed = conn.State != System.Data.ConnectionState.Open;
+
+            if (wasClosed) conn.Open();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+                cmd.Parameters.Add(new SqlParameter("@PurchaseId", purchaseId));
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    results.Add(new AllocationResultItem
+                    {
+                        ChargeType = reader.GetString(0),
+                        RequestedMethod = reader.GetString(1),
+                        UsedMethod = reader.GetString(2),
+                        ItemCount = reader.GetInt32(3),
+                        FallbackCount = reader.GetInt32(4)
+                    });
+                }
+            }
+            finally
+            {
+                if (wasClosed) conn.Close();
+            }
+
+            return results;
         }
 
         private static object[] BuildPagedList(ShipmentListReq shipmentListReq)

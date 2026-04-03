@@ -13,7 +13,7 @@ namespace KLS.Contract.Interfaces
 
         int Count(ShipmentListReq shipmentListReq);
 
-        void Allocation(int purchaseId);
+        void Allocation(int purchaseId, bool refreshVolume = false);
 
         void UnAllocation(int shipmentPurchaseId);
 
@@ -26,5 +26,11 @@ namespace KLS.Contract.Interfaces
         void AssignShipment(POCopyToBillReq copyToBillReq);
 
         IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
+
+        AllocationValidationResult ValidateAllocation(int purchaseId);
+
+        List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);
+
+        IEnumerable<AllocationResultItem> AllocationResult(int purchaseId);
     }
 }

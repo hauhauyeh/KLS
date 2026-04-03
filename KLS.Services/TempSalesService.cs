@@ -5,8 +5,6 @@ using KLS.Models;
 using KLS.Models.Cart;
 using Microsoft.EntityFrameworkCore;
 using Omu.ValueInjecter;
-using OneOf.Types;
-using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;

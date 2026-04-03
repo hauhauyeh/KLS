@@ -177,6 +177,7 @@ namespace KLS.Services
                         dbCharge.ChargeType = ch.ChargeType;
                         dbCharge.ChargeAmount = ch.ChargeAmount;
                         dbCharge.Notes = ch.Notes;
+                        dbCharge.UpdatedAt = DateTime.UtcNow;
 
                         dbCharge.AllocationMethod = GetAllocationMethodFromChargeType(ch.ChargeType);
 
@@ -237,12 +238,47 @@ namespace KLS.Services
             return Uow.Shipments.AssignedPurchases(shipmentId);
         }
 
+        public AllocationValidationResult ValidateAllocation(int purchaseId)
+        {
+            return Uow.Shipments.ValidateAllocation(purchaseId);
+        }
+
+        public List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method)
+        {
+            return Uow.Shipments.ValidateAllocationDetail(purchaseId, method);
+        }
+
+        public ReallocateResponse Reallocate(ReallocateReq req)
+        {
+            // Update charge methods via direct SQL — avoids EF tracking conflicts
+            if (req.Charges != null)
+            {
+                foreach (var ov in req.Charges)
+                {
+                    Uow.ShipmentCharges.Find(c => c.ChargeId == ov.ChargeId)
+                        .ExecuteUpdate(setters => setters
+                            .SetProperty(c => c.AllocationMethod, ov.AllocationMethod)
+                            .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
+                }
+            }
+
+            // Run allocation
+            Uow.Shipments.Allocation(req.PurchaseId, req.RefreshVolume);
+
+            // Return results
+            var results = Uow.Shipments.AllocationResult(req.PurchaseId);
+            return new ReallocateResponse { Results = results.ToList() };
+        }
+
         private static class AllocationMethods
         {
             public const string ByValue = "BY_VALUE";
             public const string ByVolume = "BY_VOLUME";
             public const string ByDuty = "BY_DUTY";
             public const string ByTariff = "BY_TARIFF";
+            public const string ByWeight = "BY_WEIGHT";
+            public const string ByPallet = "BY_PALLET";
+            public const string ByQuantity = "BY_QUANTITY";
         }
 
         private static string GetAllocationMethodFromChargeType(string? chargeTypeRaw)

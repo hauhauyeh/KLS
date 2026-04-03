@@ -24,5 +24,13 @@ namespace KLS.Contract.Services
         ItemQuote Update(TargetQuotePrice quotePrice);
 
         void Delete(int itemQuoteId);
+
+        bool Exists(int payeeId, int itemId, int itemUnitId);
+
+        void Create(ItemQuoteCreateReq createReq);
+
+        void Delete(int payeeId, int itemId, int itemUnitId);
+
+        IEnumerable<ItemQuote> GetByPayee(int payeeId);
     }
 }

@@ -25,6 +25,7 @@ namespace KLS.Models
         public string? AllocationMethod { get; set; }
         public decimal? ChargeAmount { get; set; }
         public string? Notes { get; set; }
+        public string? UsedMethod { get; set; }
     }
 
     public class AssignedShipment
