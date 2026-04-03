@@ -10,6 +10,9 @@ namespace KLS.Contract.Interfaces
     public interface IItemUnitRepository : IRepository<ItemUnit>
     {
         ItemPrice GetItemPriceByCustomer(int payeeId, int itemId, int? itemUnitId);
+
         IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds);
+
+        void Delete(int itemUnitId);
     }
 }

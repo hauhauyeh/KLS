@@ -114,7 +114,8 @@ namespace KLS.Services
                 RefreshToken = refreshToken,
                 Username = user.Username,
                 IsAdmin = role.IsAdmin,
-                IsPriceShow = customer.IsPriceShow
+                IsPriceShow = customer.IsPriceShow,
+                IsEditGuide = customer.IsEditGuide
             };
         }
 
@@ -178,7 +179,8 @@ namespace KLS.Services
                 RefreshToken = jwtClaim.RefreshToken,
                 Username = jwtClaim.Username,
                 IsAdmin = role.IsAdmin,
-                IsPriceShow = customer?.IsPriceShow ?? false
+                IsPriceShow = customer?.IsPriceShow ?? false,
+                IsEditGuide = customer?.IsEditGuide ?? false
             };
         }
 

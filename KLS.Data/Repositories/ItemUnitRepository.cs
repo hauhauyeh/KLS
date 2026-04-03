@@ -20,6 +20,7 @@ namespace KLS.Data.Repositories
         public IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds)
         {
             var param = new SqlParameter("@ItemIds", (object?)itemIds ?? DBNull.Value);
+
             return DbContext.ItemUnitListRow
                 .FromSqlRaw("EXEC [dbo].[ItemUnit_GetViewList] @ItemIds", param)
                 .AsNoTracking()
@@ -35,6 +36,13 @@ namespace KLS.Data.Repositories
             var ItemUnitIdParam = itemUnitId.HasValue ? new SqlParameter("@ItemUnitId", itemUnitId) : new SqlParameter("@ItemUnitId", DBNull.Value);
 
             return DbContext.ItemPrice.FromSqlRaw("[Get_ItemPriceByCustomer] @PayeeId,@ItemId,@ItemUnitId", PayeeIdParam, ItemIdParam, ItemUnitIdParam).AsEnumerable().FirstOrDefault();
+        }
+
+        public void Delete(int itemUnitId)
+        {
+            var ItemUnitIdParam = new SqlParameter("@ItemUnitId", itemUnitId);
+
+            DbContext.Database.ExecuteSqlRaw("EXEC [dbo].[ItemUnit_Delete] @ItemUnitId", ItemUnitIdParam);
         }
     }
 }

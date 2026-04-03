@@ -129,6 +129,7 @@ namespace KLS.Services
                 {
                     // Un-toggle all other units for this item
                     var siblings = Uow.ItemUnits.Find(u => u.ItemId == unit.ItemId && u.ItemUnitId != unit.ItemUnitId && u.IsDefaultSalesUnit);
+
                     foreach (var s in siblings)
                     {
                         s.IsDefaultSalesUnit = false;
@@ -155,7 +156,9 @@ namespace KLS.Services
                 .Find(s => s.SettingKey == "ITEM_DEFAULT_RETAILPROFIT")
                 .Select(s => s.SettingValue)
                 .FirstOrDefault();
+
             decimal markup = 0.4m;
+
             if (decimal.TryParse(defaultPercent, out var parsed))
                 markup = parsed;
 
@@ -174,8 +177,10 @@ namespace KLS.Services
                 IsDefaultSalesUnit = false,
                 Inactive = false
             };
+
             Uow.ItemUnits.Add(unit);
             Uow.Commit();
+
             return unit;
         }
 
@@ -188,12 +193,14 @@ namespace KLS.Services
 
         public void DeleteUnit(int itemUnitId)
         {
-            var unit = Uow.ItemUnits.GetById(itemUnitId);
-            if (unit == null) return;
-            if (unit.IsBaseUnit)
-                throw new InvalidOperationException("Cannot delete base unit.");
-            Uow.ItemUnits.Remove(unit);
-            Uow.Commit();
+            //var unit = Uow.ItemUnits.GetById(itemUnitId);
+
+            //if (unit == null) return;
+
+            //if (unit.IsBaseUnit)
+            //    throw new InvalidOperationException("Cannot delete base unit.");
+
+            Uow.ItemUnits.Delete(itemUnitId);
         }
     }
 }

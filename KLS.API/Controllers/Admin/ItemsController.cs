@@ -128,6 +128,7 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
         [HttpPut("UpdateInventorySettings")]
         [DisplayName("Edit Inventory Settings")]
         public IActionResult UpdateInventorySettings([FromBody] ItemInventorySettingsReq req)
@@ -167,6 +168,7 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemUnitService.GetUnitViewList(itemIds));
         }
 
+
         [HttpPut("UpdateItemUnit")]
         [DisplayName("Edit Item Unit")]
         public IActionResult UpdateItemUnit([FromBody] ItemUnitUpdateReq req)
@@ -174,6 +176,7 @@ namespace KLS.API.Controllers.Admin
             _itemUnitService.UpdateUnit(req);
             return Ok();
         }
+
 
         [HttpPost("CreateItemUnit/{itemId}")]
         [DisplayName("Create Item Unit")]
@@ -183,6 +186,7 @@ namespace KLS.API.Controllers.Admin
             return Ok(unit);
         }
 
+
         [HttpDelete("DeleteItemUnit/{itemUnitId}")]
         [DisplayName("Delete Item Unit")]
         public IActionResult DeleteItemUnit(int itemUnitId)
@@ -190,6 +194,7 @@ namespace KLS.API.Controllers.Admin
             _itemUnitService.DeleteUnit(itemUnitId);
             return Ok();
         }
+
 
         [HttpGet("GetBaseUnitPricing/{itemId}")]
         public IActionResult GetBaseUnitPricing(int itemId)

@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,6 +91,44 @@ namespace KLS.Services
         public void Delete(int itemQuoteId)
         {
             Uow.ItemQuotes.Find(c => c.ItemQuoteId == itemQuoteId).ExecuteDelete();
+        }
+
+        //----Web
+
+        public bool Exists(int payeeId, int itemId, int itemUnitId)
+        {
+            return Uow.ItemQuotes.Find(c => c.PayeeId == payeeId && c.ItemId == itemId && c.ItemUnitId == itemUnitId).Any();
+        }
+
+        public void Create(ItemQuoteCreateReq createReq)
+        {
+            foreach (var itemUnitId in createReq.ItemUnitIds)
+            {
+                // Skip if already exists
+                var exists = Exists(UserContext.EmpId, createReq.ItemId, itemUnitId);
+                if (exists) continue;
+
+                var quote = new ItemQuote
+                {
+                    PayeeId = UserContext.EmpId,
+                    ItemId = createReq.ItemId,
+                    ItemUnitId = itemUnitId
+                };
+
+                Uow.ItemQuotes.Add(quote);
+            }
+
+            Uow.Commit();
+        }
+
+        public void Delete(int payeeId, int itemId, int itemUnitId)
+        {
+            Uow.ItemQuotes.Find(c => c.PayeeId == payeeId && c.ItemId == itemId && c.ItemUnitId == itemUnitId).ExecuteDelete();
+        }
+
+        public IEnumerable<ItemQuote> GetByPayee(int payeeId)
+        {
+            return Uow.ItemQuotes.Find(c => c.PayeeId == payeeId).Select(c => new ItemQuote { ItemId = c.ItemId, ItemUnitId = c.ItemUnitId }).ToList();
         }
     }
 }
