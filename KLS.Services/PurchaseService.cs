@@ -244,7 +244,8 @@ namespace KLS.Services
                     AllocationMethod = x.AllocationMethod,
                     ChargeType = x.ChargeType,
                     ChargeAmount = x.ChargeAmount ?? 0m,
-                    Notes = x.Notes
+                    Notes = x.Notes,
+                    UsedMethod = x.UsedMethod
                 }).ToList()
             }).ToList();
 
