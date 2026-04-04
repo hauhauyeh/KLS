@@ -321,6 +321,12 @@ namespace KLS.Services
                         paymentAmount = chargeReq.PaymentAmount + ccFee;
                     }
 
+                    var isAch = chargeReq.PaymentMethod.IsACH;
+
+                    // For new card, include ccFee in payment amount
+                    if (!isAch && !chargeReq.IsPaymentChange)
+                        paymentAmount = dueTotal + ccFee;
+
                     var mxResp = _mxMerchantService
                            .ChargeAsync(chargeReq.PaymentMethod, paymentAmount, false)
                            .GetAwaiter()
@@ -332,13 +338,13 @@ namespace KLS.Services
                     paymentReq = new CreateGatewayPaymentReq
                     {
                         PayeeId = chargeReq.PayeeId,
-                        PaymentMethod = "ACH",
+                        PaymentMethod = isAch ? "ACH" : "CREDIT CARD",
                         ReferenceId = referenceId,
                         PaymentAmount = paymentAmount,
                         SalesIds = chargeReq.SalesIds,
                         Gateway = "MX Merchant",
-                        CCFee = 0m,
-                        CardType = null,
+                        CCFee = isAch ? 0m : ccFee,
+                        CardType = isAch ? null : chargeReq.PaymentMethod.AccountType,
                         Last4 = last4
                     };
                 }
