@@ -16,14 +16,14 @@ BEGIN
     FROM dbo.ShipmentPurchase sp
     WHERE sp.ShipmentPurchaseId = @ShipmentPurchaseId;
 
-    -- Guard: block if shipment bill is paid/locked
+    -- Guard: block if shipment bill has any payment applied or is locked
     IF EXISTS (
         SELECT 1 FROM dbo.Purchase p
         WHERE p.IsShipment = 1
           AND p.SourceShipmentId = @ShipmentId
-          AND p.IsLocked = 1
+          AND (p.IsLocked = 1 OR ISNULL(p.PaymentApplied, 0) > 0)
     )
-        THROW 50002, 'Cannot unassign. Shipment bill is paid and locked.', 1;
+        THROW 50002, 'Cannot unassign. Shipment bill has payment applied.', 1;
 
     -- Delete allocations for THIS shipment + THIS purchase
     DELETE sa
