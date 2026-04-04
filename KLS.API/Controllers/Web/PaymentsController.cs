@@ -15,19 +15,28 @@ namespace KLS.API.Controllers.Web
         #region --- Member(s) ---
 
         private readonly ICustomerPaymentService _customerPaymentService;
+        private readonly IPaymentMethodService _paymentMethodService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public PaymentsController(ICustomerPaymentService customerPaymentService)
+        public PaymentsController(ICustomerPaymentService customerPaymentService, IPaymentMethodService paymentMethodService)
         {
             _customerPaymentService = customerPaymentService;
+            _paymentMethodService = paymentMethodService;
         }
 
         #endregion
 
         #region --- Method(s) ---
+
+        [HttpGet("Methods")]
+        public IActionResult GetMethods()
+        {
+            return Ok(_paymentMethodService.GetByPayeeId(UserContext.EmpId));
+        }
+
 
         [HttpGet("Total")]
         public IActionResult GetTotal([FromQuery] string salesIds)
