@@ -1,0 +1,1 @@
+DELETE FROM SystemSetting WHERE SettingKey = 'AUTO_PRINTINVOICE';
