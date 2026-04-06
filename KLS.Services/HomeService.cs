@@ -20,12 +20,12 @@ namespace KLS.Services
         {
             return new HomePageData
             {
-                Categories = GetCategories(),
+                Categories = GetCategories(baseUrl),
                 Products = GetProducts(baseUrl)
             };
         }
 
-        private IEnumerable<HomeCategory> GetCategories()
+        private IEnumerable<HomeCategory> GetCategories(string baseUrl)
         {
             var itemCounts = Uow.Items.Find(i => !i.Inactive)
                 .Where(i => i.CategoryId != null)
@@ -44,16 +44,16 @@ namespace KLS.Services
                     CategoryId = c.CategoryId,
                     CategoryName = c.CategoryName,
                     DisplayName = c.DisplayName,
-                    ImageUrl = c.ImageUrl,
+                    ImageUrl = string.IsNullOrEmpty(c.ImageUrl) ? null : baseUrl + c.ImageUrl,
                     ItemCount = itemCounts.GetValueOrDefault(c.CategoryId)
                 });
         }
 
         private IEnumerable<HomeProduct> GetProducts(string baseUrl)
         {
-            var items = Uow.Items.Find(i => !i.Inactive)
-                .OrderByDescending(i => i.ItemId)
-                .Take(8)
+            var items = Uow.Items.Find(i => !i.Inactive && i.Last3M > 0)
+                .OrderByDescending(i => i.Last3M)
+                .Take(10)
                 .AsNoTracking()
                 .ToList();
 
