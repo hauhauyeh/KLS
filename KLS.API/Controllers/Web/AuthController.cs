@@ -149,6 +149,18 @@ namespace KLS.API.Controllers.Web
         }
 
 
+        [HttpPost("SetPassword")]
+        public IActionResult SetPassword([FromBody] SetPasswordReq req)
+        {
+            var result = _userAccountService.SetPasswordFromToken(req);
+
+            if (!result.Success && result.Token == null && result.ErrorMessage != null && !result.ErrorMessage.Contains("pending"))
+                return BadRequest(new { result.ErrorMessage });
+
+            return Ok(result);
+        }
+
+
         [HttpPost("VerifyEmail/{token}")]
         public IActionResult VerifyEmail(string token)
         {

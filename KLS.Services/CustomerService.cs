@@ -504,7 +504,6 @@ namespace KLS.Services
 
             var customer = Create(customerDto);
 
-            var tempPassword = Utilities.GenerateRandomPassword();
             var token = TokenHelper.GenerateToken();
 
             var userAccount = new UserAccount
@@ -514,7 +513,7 @@ namespace KLS.Services
                 Username = registerReq.Username,
                 Email = registerReq.Email,
                 Phone = registerReq.Phone,
-                PasswordHash = Utilities.Encrypt(tempPassword),
+                PasswordHash = Utilities.Encrypt(Utilities.GenerateRandomPassword()),
                 EmailVerifyCode = token,
                 EmailVerifyExpire = DateTime.UtcNow.AddDays(1),
             };
@@ -522,14 +521,13 @@ namespace KLS.Services
             Uow.UserAccounts.Add(userAccount);
             Uow.Commit();
 
-            string verifyUrl = $"{url}/verifyemail/{Uri.EscapeDataString(token)}";
+            string setPasswordUrl = $"{url}/setpassword/{Uri.EscapeDataString(token)}";
 
             var model = new WelcomeEmail
             {
                 Username = registerReq.Username,
                 Email = registerReq.Email,
-                TempPassword = tempPassword,
-                LoginUrl = verifyUrl
+                LoginUrl = setPasswordUrl
             };
 
             var company = _companyService.GetDefault();

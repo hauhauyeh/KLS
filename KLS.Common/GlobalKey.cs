@@ -38,5 +38,7 @@ namespace KLS.Common
         public const string LABEL_PRINTER_NAME = "LABEL_PRINTER_NAME";
         public const string DEFAULT_CCFEE_PERCENTAGE = "DEFAULT_CCFEE_PERCENTAGE";
 
+        public const string WEB_ENFORCE_STOCK_LIMIT = "WEB_ENFORCE_STOCK_LIMIT";
+
     }
 }

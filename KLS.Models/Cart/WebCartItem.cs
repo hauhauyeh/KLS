@@ -14,5 +14,6 @@ namespace KLS.Models.Cart
         public decimal? OrdQty { get; set; }
         public decimal? UnitPrice { get; set; }
         public decimal? ExtTotal { get; set; }
+        public decimal? LCloseQty { get; set; }
     }
 }
