@@ -300,18 +300,18 @@
                         <td style="width:65%;">
                             <div class="title-block">
                                 <div class="eyebrow">Account Registration</div>
-                                <h1 class="title">Verify Your Email</h1>
+                                <h1 class="title">Set Your Password</h1>
                                 <p class="subtitle">
-                                    Welcome to your new account. Please confirm your email address to activate access securely.
+                                    Welcome to your new account. Please set your password to complete your registration.
                                 </p>
                             </div>
                         </td>
                         <td style="width:35%;">
                             <div class="status-box">
                                 <div class="status-label">Account Status</div>
-                                <p class="status-value">Pending Verification</p>
+                                <p class="status-value">Pending Setup</p>
                                 <div class="status-note">
-                                    Complete the verification step below to confirm your registration.
+                                    Click the button below to set your password and activate your account.
                                 </div>
                             </div>
                         </td>
@@ -323,18 +323,18 @@
                 <div class="welcome-box">
                     <p class="customer">Dear @(Model.Username ?? "Customer"),</p>
                     <p class="welcome-text">
-                        Thank you for registering with us. To complete your account setup, please verify your email address by clicking the button below.
+                        Thank you for registering with us. To complete your account setup, please set your password by clicking the button below.
                     </p>
                 </div>
 
                 <div class="info-card">
-                    <h3 class="info-title">Email Verification Required</h3>
+                    <h3 class="info-title">Complete Your Registration</h3>
                     <p class="info-text">
-                        This verification helps us protect your account and ensures that your email address is valid. Once verified, you will be able to continue using your account normally.
+                        Click the button below to choose your password. This link will expire in 24 hours.
                     </p>
 
                     <div class="button-wrap">
-                        <a href="@Model.LoginUrl" class="verify-btn">Verify Email Address</a>
+                        <a href="@Model.LoginUrl" class="verify-btn">Set Your Password</a>
                     </div>
                 </div>
 

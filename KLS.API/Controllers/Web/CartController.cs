@@ -1,4 +1,5 @@
 using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models.Cart;
 using Microsoft.AspNetCore.Mvc;
@@ -14,19 +15,28 @@ namespace KLS.API.Controllers.Web
         #region --- Member(s) ---
 
         private readonly ITempSalesService _tempSalesService;
+        private readonly ISystemSettingService _systemSettingService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public CartController(ITempSalesService tempSalesService)
+        public CartController(ITempSalesService tempSalesService, ISystemSettingService systemSettingService)
         {
             _tempSalesService = tempSalesService;
+            _systemSettingService = systemSettingService;
         }
 
         #endregion
 
         #region --- Method(s) ---
+
+        [HttpGet("settings")]
+        public IActionResult GetSettings()
+        {
+            var enforceStock = _systemSettingService.GetByKey<bool>(GlobalKey.WEB_ENFORCE_STOCK_LIMIT);
+            return Ok(new { EnforceStockLimit = enforceStock });
+        }
 
         [HttpGet]
         public IActionResult GetList()

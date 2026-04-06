@@ -40,5 +40,7 @@ namespace KLS.Contract.Services
         UserAccount? Update(UserAccount account);
 
         bool Delete(int userId);
+
+        LoginResult SetPasswordFromToken(SetPasswordReq req);
     }
 }

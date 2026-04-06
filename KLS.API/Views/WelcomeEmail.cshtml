@@ -163,7 +163,7 @@
                             <div class="eyebrow">Account Created</div>
                             <h1 class="title">Your Account Is Ready</h1>
                             <p class="subtitle">
-                                An account has been set up for you. Use the credentials below to sign in.
+                                An account has been created for you. Click the button below to set your password and get started.
                             </p>
                         </td>
                         <td style="width:35%;">
@@ -180,13 +180,12 @@
                 <div class="welcome-box">
                     <p class="customer">Hello, @(Model.Username ?? "User"),</p>
                     <p class="welcome-text">
-                        Your account has been created. Below are your login credentials.
-                        We recommend changing your password after your first sign-in.
+                        Your account has been created. Please set your password using the link below to activate your account.
                     </p>
                 </div>
 
                 <div class="credentials-card">
-                    <h3 class="cred-title">Your Login Credentials</h3>
+                    <h3 class="cred-title">Your Account Details</h3>
 
                     <div class="cred-row">
                         <span class="cred-label">Email</span>
@@ -198,22 +197,17 @@
                         <span class="cred-value">@Model.Username</span>
                     </div>
 
-                    <div class="password-row">
-                        <div class="cred-label" style="margin-bottom:6px;">Temporary Password</div>
-                        <div class="password-value">@Model.TempPassword</div>
-                    </div>
-
                     <div class="button-wrap">
-                        <a href="@Model.LoginUrl" class="login-btn">Sign In to Your Account</a>
+                        <a href="@Model.LoginUrl" class="login-btn">Set Your Password</a>
                     </div>
                 </div>
 
                 <div class="footer">
                     <p>
-                        For your security, please change your password after signing in for the first time.
+                        This link will expire in 24 hours. If it expires, please contact your account administrator.
                     </p>
                     <p>
-                        If you did not expect this email or believe it was sent in error, please contact your account administrator.
+                        If you did not expect this email or believe it was sent in error, please ignore it.
                     </p>
                 </div>
             </div>

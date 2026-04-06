@@ -447,6 +447,9 @@ namespace KLS.Services
             ExtTotal = item.ExtTotal,
             PrimaryImageUrl = item.ItemId.HasValue
                 ? _itemImageService.GetPrimary(item.ItemId.Value)?.ThumbnailUrl
+                : null,
+            LCloseQty = item.ItemId.HasValue
+                ? Uow.Items.GetById(item.ItemId.Value)?.LCloseQty
                 : null
         };
 

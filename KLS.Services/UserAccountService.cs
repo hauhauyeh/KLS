@@ -2,7 +2,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,8 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
-using System.Xml;
-using Twilio.Jwt.AccessToken;
+
 
 namespace KLS.Services
 {
@@ -85,38 +83,7 @@ namespace KLS.Services
                 };
             }
 
-            var refreshToken = _jWTService.GenerateRefreshToken();
-            user.RefToken = refreshToken;
-            user.RefTokenExpire = DateTime.Now.AddDays(_jWTService.RefreshTokenValidity());
-            UpdateToken(user);
-
-            var role = _userRoleService.GetById(user.RoleId);
-
-            //--claim
-            var jwtClaim = new JWTClaim
-            {
-                Portal = EnumHelper.Portal.Web.ToString(),
-                Username = user.Username,
-                PayeeId = user.PayeeId,
-                UserId = user.UserId,
-                RefreshToken = refreshToken,
-                RefTokenExpire = user.RefTokenExpire,
-                RoleId = user.RoleId,
-                IsAdmin = role.IsAdmin
-            };
-
-            var token = _jWTService.GenerateJwtToken(jwtClaim);
-
-            return new LoginResult
-            {
-                Success = true,
-                Token = token,
-                RefreshToken = refreshToken,
-                Username = user.Username,
-                IsAdmin = role.IsAdmin,
-                IsPriceShow = customer.IsPriceShow,
-                IsEditGuide = customer.IsEditGuide
-            };
+            return GenerateLoginResult(user);
         }
 
         public LoginResult LoginByPayeeId(int payeeId)
@@ -126,35 +93,7 @@ namespace KLS.Services
             if (user == null)
                 return new LoginResult { Success = false, ErrorMessage = "No web account found for this customer." };
 
-            var refreshToken = _jWTService.GenerateRefreshToken();
-            user.RefToken = refreshToken;
-            user.RefTokenExpire = DateTime.Now.AddDays(_jWTService.RefreshTokenValidity());
-            UpdateToken(user);
-
-            var role = _userRoleService.GetById(user.RoleId);
-
-            var jwtClaim = new JWTClaim
-            {
-                Portal = EnumHelper.Portal.Web.ToString(),
-                Username = user.Username,
-                PayeeId = user.PayeeId,
-                UserId = user.UserId,
-                RefreshToken = refreshToken,
-                RefTokenExpire = user.RefTokenExpire,
-                RoleId = user.RoleId,
-                IsAdmin = role.IsAdmin
-            };
-
-            var token = _jWTService.GenerateJwtToken(jwtClaim);
-
-            return new LoginResult
-            {
-                Success = true,
-                Token = token,
-                RefreshToken = refreshToken,
-                Username = user.Username,
-                IsAdmin = role.IsAdmin
-            };
+            return GenerateLoginResult(user);
         }
 
         public LoginResult RefreshToken(RefreshTokenReq tokenReq)
@@ -178,6 +117,42 @@ namespace KLS.Services
                 Token = newToken,
                 RefreshToken = jwtClaim.RefreshToken,
                 Username = jwtClaim.Username,
+                IsAdmin = role.IsAdmin,
+                IsPriceShow = customer?.IsPriceShow ?? false,
+                IsEditGuide = customer?.IsEditGuide ?? false
+            };
+        }
+
+        private LoginResult GenerateLoginResult(UserAccount user)
+        {
+            var refreshToken = _jWTService.GenerateRefreshToken();
+            user.RefToken = refreshToken;
+            user.RefTokenExpire = DateTime.Now.AddDays(_jWTService.RefreshTokenValidity());
+            UpdateToken(user);
+
+            var role = _userRoleService.GetById(user.RoleId);
+            var customer = Uow.Customers.GetById(user.PayeeId);
+
+            var jwtClaim = new JWTClaim
+            {
+                Portal = EnumHelper.Portal.Web.ToString(),
+                Username = user.Username,
+                PayeeId = user.PayeeId,
+                UserId = user.UserId,
+                RefreshToken = refreshToken,
+                RefTokenExpire = user.RefTokenExpire,
+                RoleId = user.RoleId,
+                IsAdmin = role.IsAdmin
+            };
+
+            var token = _jWTService.GenerateJwtToken(jwtClaim);
+
+            return new LoginResult
+            {
+                Success = true,
+                Token = token,
+                RefreshToken = refreshToken,
+                Username = user.Username,
                 IsAdmin = role.IsAdmin,
                 IsPriceShow = customer?.IsPriceShow ?? false,
                 IsEditGuide = customer?.IsEditGuide ?? false
@@ -237,9 +212,7 @@ namespace KLS.Services
 
         public bool ResetPassword(ResetPassword resetPassword)
         {
-            string? token = HttpUtility.UrlDecode(resetPassword.Token);
-
-            var user = Uow.UserAccounts.Find(u => u.ResetTokenHash == token && u.ResetTokenExpire > DateTime.UtcNow).FirstOrDefault();
+            var user = Uow.UserAccounts.Find(u => u.ResetTokenHash == resetPassword.Token && u.ResetTokenExpire > DateTime.UtcNow).FirstOrDefault();
 
             if (user == null)
                 return false;
@@ -359,21 +332,24 @@ namespace KLS.Services
 
         public UserAccount Create(UserAccount account, string loginUrl)
         {
-            var tempPassword = Utilities.GenerateRandomPassword();
+            var token = TokenHelper.GenerateToken();
 
             account.PayeeId = UserContext.EmpId;
-            account.PasswordHash = Utilities.Encrypt(tempPassword);
+            account.PasswordHash = Utilities.Encrypt(Utilities.GenerateRandomPassword());
             account.IsEmailVerified = true;
+            account.EmailVerifyCode = token;
+            account.EmailVerifyExpire = DateTime.UtcNow.AddDays(1);
 
             Uow.UserAccounts.Add(account);
             Uow.Commit();
+
+            string setPasswordUrl = loginUrl.Replace("/login", $"/setpassword/{Uri.EscapeDataString(token)}");
 
             var model = new WelcomeEmail
             {
                 Username = account.Username,
                 Email = account.Email,
-                TempPassword = tempPassword,
-                LoginUrl = loginUrl
+                LoginUrl = setPasswordUrl
             };
 
             string mailBody = _emailService.RenderEmailTemplate("~/Views/WelcomeEmail.cshtml", model);
@@ -383,6 +359,43 @@ namespace KLS.Services
                 .ContinueWith((t) => { });
 
             return account;
+        }
+
+        public LoginResult SetPasswordFromToken(SetPasswordReq req)
+        {
+            if (req.Password != req.ConfirmPassword)
+                return new LoginResult { Success = false, ErrorMessage = "Passwords do not match." };
+
+            var user = Uow.UserAccounts.Find(u => u.EmailVerifyCode != null && u.EmailVerifyCode == req.Token && u.EmailVerifyExpire > DateTime.UtcNow
+            ).FirstOrDefault();
+
+            if (user == null)
+                return new LoginResult { Success = false, ErrorMessage = "Invalid or expired link." };
+
+            user.PasswordHash = Utilities.Encrypt(req.Password);
+
+            if (!user.IsEmailVerified)
+                user.IsEmailVerified = true;
+
+            user.EmailVerifyCode = null;
+            user.EmailVerifyExpire = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(user);
+            Uow.Commit();
+
+            var customer = Uow.Customers.GetById(user.PayeeId);
+
+            if (customer == null || !customer.IsApproved)
+            {
+                return new LoginResult
+                {
+                    Success = true,
+                    ErrorMessage = "Password set successfully. Your account is pending approval."
+                };
+            }
+
+            return GenerateLoginResult(user);
         }
 
         public UserAccount? Update(UserAccount account)
