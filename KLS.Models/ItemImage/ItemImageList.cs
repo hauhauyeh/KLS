@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KLS.Models
 {
@@ -14,12 +9,29 @@ namespace KLS.Models
 
         public int ItemId { get; set; }
 
-        public string? RelativeUrl { get; set; }
-
-        public string? ThumbnailUrl { get; set; }
+        public int ImageIndex { get; set; }
 
         public int SortOrder { get; set; }
 
         public bool IsPrimary { get; set; }
+
+        public bool IsProcessed { get; set; }
+
+        public int ImageCount { get; set; }
+
+        // With-bg URLs
+        public string? ThumbnailUrl { get; set; }       // {index}-300.png
+
+        public string? Url1200 { get; set; }             // {index}-1200.png
+
+        public string? Url2000 { get; set; }             // {index}-2000.png
+
+        // No-bg URLs (null when !IsProcessed)
+        public string? NoBgThumbnailUrl { get; set; }    // {index}-300-nobg.png
+
+        public string? NoBg1200Url { get; set; }         // {index}-1200-nobg.png
+
+        // Original
+        public string? OriginalUrl { get; set; }         // {index}-org.{ext}
     }
 }

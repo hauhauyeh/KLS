@@ -1,4 +1,4 @@
-﻿using KLS.API.Helpers;
+using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +52,63 @@ namespace KLS.API.Controllers.Admin
         {
             _itemImageService.Delete(imageId);
             return Ok();
+        }
+
+
+        [HttpPost("{imageId}/process-bg-local")]
+        [DisplayName("Process Background Removal (Local)")]
+        public async Task<IActionResult> ProcessBgLocal(int imageId)
+        {
+            var result = await _itemImageService.ProcessBgLocal(imageId);
+            return Ok(result);
+        }
+
+
+        [HttpPost("{imageId}/process-bg-api")]
+        [DisplayName("Process Background Removal (API)")]
+        public async Task<IActionResult> ProcessBgApi(int imageId)
+        {
+            var result = await _itemImageService.ProcessBgApi(imageId);
+            return Ok(result);
+        }
+
+
+        [HttpPost("finalize")]
+        [DisplayName("Finalize Image Version")]
+        public async Task<IActionResult> Finalize([FromBody] ImageFinalizeReq req)
+        {
+            await _itemImageService.Finalize(req);
+            return Ok();
+        }
+
+
+        /// <summary>
+        /// One-time migration endpoint. Import legacy images from source folder.
+        /// TODO: Remove this endpoint after migration is complete.
+        /// </summary>
+        [HttpPost("migrate")]
+        [DisplayName("Migrate Legacy Images")]
+        public IActionResult Migrate(
+            [FromQuery] string sourceFolder,
+            [FromQuery] bool confirm = false,
+            [FromQuery] bool dryRun = false,
+            [FromQuery] int limit = 0)
+        {
+            if (string.IsNullOrEmpty(sourceFolder))
+                return BadRequest("sourceFolder query parameter is required.");
+
+            // Dry-run doesn't need confirm
+            if (!dryRun && !confirm)
+                return BadRequest("Add &confirm=true to execute, or &dryRun=true to preview.");
+
+            // Safety: reject paths outside the expected location
+            var fullPath = Path.GetFullPath(sourceFolder);
+            if (!fullPath.StartsWith("C:\\Angular19\\", StringComparison.OrdinalIgnoreCase) &&
+                !fullPath.StartsWith("C:/Angular19/", StringComparison.OrdinalIgnoreCase))
+                return BadRequest("sourceFolder must be under C:\\Angular19\\");
+
+            var result = _itemImageService.MigrateLegacyImages(fullPath, dryRun, limit);
+            return Ok(result);
         }
 
         #endregion

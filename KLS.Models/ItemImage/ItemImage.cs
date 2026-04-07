@@ -31,6 +31,14 @@ namespace KLS.Models
 
         public bool IsPrimary { get; set; }
 
+        public int ImageIndex { get; set; }
+
+        public string? OriginalExtension { get; set; }
+
+        public bool IsProcessed { get; set; }
+
+        public bool IsProcessing { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 }
