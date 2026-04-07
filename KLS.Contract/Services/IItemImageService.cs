@@ -19,5 +19,7 @@ namespace KLS.Contract.Services
         Task Finalize(ImageFinalizeReq req);
 
         MigrationResult MigrateLegacyImages(string sourceFolder, bool dryRun = false, int limit = 0);
+
+        MigrationResult BackfillVersionFlags();
     }
 }

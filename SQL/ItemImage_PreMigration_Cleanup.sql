@@ -6,9 +6,8 @@
 --
 -- This script:
 --   1. Reports current ItemImage state
---   2. Deletes all migrated ItemImage records (those with per-item folder paths)
+--   2. Deletes migrated ItemImage records (those with ImageIndex > 0 and Has300 flag)
 --   3. Resets identity seed if table is empty
--- The old v19 records (flat path like /Images/items/47.webp) are preserved.
 
 SET QUOTED_IDENTIFIER ON;
 
@@ -16,14 +15,14 @@ SET QUOTED_IDENTIFIER ON;
 PRINT '=== Current ItemImage State ===';
 SELECT
     COUNT(*) AS TotalRecords,
-    SUM(CASE WHEN ThumbnailPath LIKE '%/Images/items/%/%' THEN 1 ELSE 0 END) AS MigratedRecords,
-    SUM(CASE WHEN ThumbnailPath NOT LIKE '%/Images/items/%/%' OR ThumbnailPath IS NULL THEN 1 ELSE 0 END) AS OldRecords
+    SUM(CAST(Has300 AS INT)) AS WithThumbnail,
+    SUM(CAST(Has1200 AS INT)) AS With1200,
+    SUM(CAST(Has2000 AS INT)) AS With2000
 FROM ItemImage;
 
--- Step 2: Delete migrated records (per-item folder pattern has TWO slashes after /items/)
--- Old records like /Images/items/47.webp have only ONE level — preserved.
+-- Step 2: Delete all migrated records
 PRINT 'Deleting migrated ItemImage records...';
-DELETE FROM ItemImage WHERE ThumbnailPath LIKE '/Images/items/%/%-300.png';
+DELETE FROM ItemImage WHERE ImageIndex > 0;
 
 PRINT 'Remaining records:';
 SELECT COUNT(*) AS RemainingRecords FROM ItemImage;

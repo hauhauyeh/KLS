@@ -60,9 +60,9 @@ namespace KLS.Services
             var itemIds = items.Select(i => i.ItemId).ToList();
 
             var primaryImages = Uow.ItemImages
-                .Find(img => itemIds.Contains(img.ItemId) && img.IsPrimary)
+                .Find(img => itemIds.Contains(img.ItemId) && img.IsPrimary && img.Has300)
                 .AsNoTracking()
-                .ToDictionary(img => img.ItemId, img => img.RelativePath);
+                .ToDictionary(img => img.ItemId, img => $"/Images/items/{img.ItemId}/{img.ImageIndex}-300.png");
 
             return items.Select(i =>
             {

@@ -60,7 +60,6 @@ namespace KLS.Services
         {
             var itemId = entity.ItemId;
             var idx = entity.ImageIndex;
-            var hasOriginal = !string.IsNullOrEmpty(entity.OriginalExtension);
             var folderUrl = $"{baseUrl}/Images/items/{itemId}";
 
             var dto = new ItemImageList
@@ -72,25 +71,16 @@ namespace KLS.Services
                 IsPrimary = entity.IsPrimary,
                 IsProcessed = entity.IsProcessed,
                 ImageCount = imageCount,
-
-                // 300 thumbnail — always present (created during upload or migration)
-                ThumbnailUrl = $"{folderUrl}/{idx}-300.png",
             };
 
-            // 1200, 2000, Original — only when original file exists (sizes were generated from it)
-            if (hasOriginal)
-            {
-                dto.Url1200 = $"{folderUrl}/{idx}-1200.png";
-                dto.Url2000 = $"{folderUrl}/{idx}-2000.png";
+            // URLs populated only when the actual file exists (flag-based, no inference)
+            if (entity.Has300) dto.ThumbnailUrl = $"{folderUrl}/{idx}-300.png";
+            if (entity.Has1200) dto.Url1200 = $"{folderUrl}/{idx}-1200.png";
+            if (entity.Has2000) dto.Url2000 = $"{folderUrl}/{idx}-2000.png";
+            if (entity.HasNoBg300) dto.NoBgThumbnailUrl = $"{folderUrl}/{idx}-300-nobg.png";
+            if (entity.HasNoBg1200) dto.NoBg1200Url = $"{folderUrl}/{idx}-1200-nobg.png";
+            if (!string.IsNullOrEmpty(entity.OriginalExtension))
                 dto.OriginalUrl = $"{folderUrl}/{idx}-org{entity.OriginalExtension}";
-            }
-
-            // No-bg URLs only when BG removal has been finalized
-            if (entity.IsProcessed)
-            {
-                dto.NoBgThumbnailUrl = $"{folderUrl}/{idx}-300-nobg.png";
-                dto.NoBg1200Url = $"{folderUrl}/{idx}-1200-nobg.png";
-            }
 
             return dto;
         }
@@ -135,7 +125,7 @@ namespace KLS.Services
             catch { /* best effort */ }
         }
 
-        private async Task<(string stdout, string stderr)> RunPythonAsync(string scriptPath, string[] args, int timeoutMs = 60000)
+        private async Task<(string stdout, string stderr)> RunPythonAsync(string scriptPath, string[] args, int timeoutMs = 300000)
         {
             var psi = new ProcessStartInfo
             {
@@ -153,10 +143,13 @@ namespace KLS.Services
             var pyCache = Path.Combine(appData, "python_cache");
             Directory.CreateDirectory(pyCache);
 
+            // Only override temp dirs. Don't override HOME/USERPROFILE in dev —
+            // rembg caches its model in ~/.u2net/ and needs to find it.
+            // For IIS deployment, uncomment HOME/USERPROFILE and pre-cache the model.
             psi.Environment["TEMP"] = pyCache;
             psi.Environment["TMP"] = pyCache;
-            psi.Environment["USERPROFILE"] = pyCache;
-            psi.Environment["HOME"] = pyCache;
+            // psi.Environment["USERPROFILE"] = pyCache;  // IIS only
+            // psi.Environment["HOME"] = pyCache;          // IIS only
             psi.Environment["XDG_CACHE_HOME"] = pyCache;
 
             psi.ArgumentList.Add(scriptPath);
@@ -345,10 +338,6 @@ namespace KLS.Services
                     IsPrimary = isPrimary,
                     IsProcessed = false,
                     IsProcessing = false,
-                    // Bridge columns (for SPs + HomeService compatibility)
-                    ThumbnailPath = $"/Images/items/{uploadReq.ItemId}/{imageIndex}-300.png",
-                    RelativePath = $"/Images/items/{uploadReq.ItemId}/{imageIndex}-300.png",
-                    FileName = $"{imageIndex}-org{ext}"
                 };
 
                 Uow.ItemImages.Add(entityNew);
@@ -370,6 +359,12 @@ namespace KLS.Services
                         SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-1200.png"), 1200);
                         SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-2000.png"), 2000);
                     }
+
+                    // Set version flags based on actual files created
+                    entityNew.Has300 = true;
+                    entityNew.Has1200 = true;
+                    entityNew.Has2000 = true;
+                    Uow.ItemImages.Update(entityNew);
                 }
                 catch
                 {
@@ -591,6 +586,8 @@ namespace KLS.Services
                     throw new Exception("create_sizes.py did not produce expected no-bg output files.");
 
                 entity.IsProcessed = true;
+                entity.HasNoBg300 = true;
+                entity.HasNoBg1200 = true;
                 Uow.ItemImages.Update(entity);
                 Uow.Commit();
             }
@@ -862,13 +859,18 @@ namespace KLS.Services
                 }
 
                 // Generate 1200 + 2000 ONLY if original exists
+                bool has1200 = false, has2000 = false;
                 if (hasOrg)
                 {
                     try
                     {
+                        var path1200 = Path.Combine(itemFolder, $"{imageIndex}-1200.png");
+                        var path2000 = Path.Combine(itemFolder, $"{imageIndex}-2000.png");
                         using var image = Image.Load(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-1200.png"), 1200);
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-2000.png"), 2000);
+                        SaveResized(image, path1200, 1200);
+                        SaveResized(image, path2000, 2000);
+                        has1200 = File.Exists(path1200);
+                        has2000 = File.Exists(path2000);
                     }
                     catch { /* 1200/2000 are non-critical */ }
                 }
@@ -882,9 +884,9 @@ namespace KLS.Services
                     IsPrimary = (maxSortOrder == 1 && !existingIndexes.Any()),
                     IsProcessed = false,
                     IsProcessing = false,
-                    ThumbnailPath = $"/Images/items/{itemId}/{imageIndex}-300.png",
-                    RelativePath = $"/Images/items/{itemId}/{imageIndex}-300.png",
-                    FileName = hasOrg ? $"{imageIndex}-org{orgExt}" : null
+                    Has300 = true,
+                    Has1200 = has1200,
+                    Has2000 = has2000,
                 };
 
                 Uow.ItemImages.Add(entity);
@@ -894,6 +896,60 @@ namespace KLS.Services
 
             if (anyNewForItem)
                 Uow.Commit();
+        }
+
+        /// <summary>
+        /// File-based backfill: scans item folders on disk and sets Has* flags
+        /// based on actual file existence. No inference.
+        /// </summary>
+        public MigrationResult BackfillVersionFlags()
+        {
+            var result = new MigrationResult();
+            var itemsRoot = Path.Combine(_env.WebRootPath, "Images", "items");
+
+            if (!Directory.Exists(itemsRoot))
+            {
+                result.Warnings.Add("Items image root not found.");
+                return result;
+            }
+
+            var allRecords = Uow.ItemImages.Find(_ => true).ToList();
+            int updated = 0;
+
+            foreach (var entity in allRecords)
+            {
+                var itemFolder = Path.Combine(itemsRoot, entity.ItemId.ToString());
+                var idx = entity.ImageIndex;
+                var ext = entity.OriginalExtension ?? ".png";
+
+                bool h300 = File.Exists(Path.Combine(itemFolder, $"{idx}-300.png"));
+                bool h1200 = File.Exists(Path.Combine(itemFolder, $"{idx}-1200.png"));
+                bool h2000 = File.Exists(Path.Combine(itemFolder, $"{idx}-2000.png"));
+                bool hNb300 = File.Exists(Path.Combine(itemFolder, $"{idx}-300-nobg.png"));
+                bool hNb1200 = File.Exists(Path.Combine(itemFolder, $"{idx}-1200-nobg.png"));
+
+                bool changed = false;
+                if (entity.Has300 != h300) { entity.Has300 = h300; changed = true; }
+                if (entity.Has1200 != h1200) { entity.Has1200 = h1200; changed = true; }
+                if (entity.Has2000 != h2000) { entity.Has2000 = h2000; changed = true; }
+                if (entity.HasNoBg300 != hNb300) { entity.HasNoBg300 = hNb300; changed = true; }
+                if (entity.HasNoBg1200 != hNb1200) { entity.HasNoBg1200 = hNb1200; changed = true; }
+
+                if (changed)
+                {
+                    Uow.ItemImages.Update(entity);
+                    updated++;
+                }
+
+                result.ItemsProcessed++;
+            }
+
+            if (updated > 0) Uow.Commit();
+
+            result.Imported = updated;
+            result.Success = true;
+            result.Details.Add($"Scanned {allRecords.Count} records, updated {updated} flags.");
+            return result;
         }
 
         private static bool TryParseLegacyFileName(string fileName, out int itemId, out int subIndex, out string fileType)
