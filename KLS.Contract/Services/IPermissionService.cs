@@ -10,7 +10,7 @@ namespace KLS.Contract.Services
 
         ICollection<PermissionGroup> GetGroupedByRole(int roleId);
 
-        void SaveRolePermissions(int roleId, List<int> permissionIds, int grantedBy);
+        void SaveRolePermissions(int roleId, List<int> permissionIds);
 
         void InvalidateCache(int roleId);
     }

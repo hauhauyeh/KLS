@@ -42,13 +42,32 @@ namespace KLS.Services
 
         public SystemRole Create(SystemRole role)
         {
-            var cloneRole = GetById(role.CloneId);
+            var cloneId = role.CloneId;
+            var cloneRole = cloneId > 0 ? GetById(cloneId) : null;
 
             if (cloneRole != null)
                 role.RoleAccess = cloneRole.RoleAccess;
 
             Uow.SystemRoles.Add(role);
             Uow.Commit();
+
+            // Clone new permission system (RolePermission records)
+            if (cloneRole != null)
+            {
+                var sourcePermissions = Uow.RolePermissions.Find(rp => rp.SystemRoleId == cloneId).ToList();
+
+                foreach (var sp in sourcePermissions)
+                {
+                    Uow.RolePermissions.Add(new RolePermission
+                    {
+                        SystemRoleId = role.SystemRoleId,
+                        PermissionId = sp.PermissionId,
+                        GrantedBy = sp.GrantedBy
+                    });
+                }
+
+                Uow.Commit();
+            }
 
             return role;
         }

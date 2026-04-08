@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
-using System.ComponentModel;
-using Newtonsoft.Json;
 using KLS.Models;
 
 namespace KLS.API.Helpers
@@ -14,137 +12,84 @@ namespace KLS.API.Helpers
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            if (context.HttpContext.Items["CurrentUser"] == null)
+            var actionDescriptor = context.ActionDescriptor as ControllerActionDescriptor;
+            if (actionDescriptor == null)
+            {
+                context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
+                return;
+            }
+
+            // Skip authorization if [AllowAnonymous] is applied on action or controller
+            if (HasAllowAnonymous(actionDescriptor))
+                return;
+
+            var currentUser = context.HttpContext.Items["CurrentUser"] as JWTClaim;
+            var refreshToken = context.HttpContext.Items["RefreshToken"]?.ToString();
+
+            if (currentUser == null)
             {
                 context.Result = new UnauthorizedResult();
                 return;
             }
 
-            var CurrentUser = context.HttpContext.Items["CurrentUser"] as JWTClaim;
-            var refreshToken = context.HttpContext.Items["RefreshToken"]?.ToString();
-
-            if (CurrentUser == null || refreshToken != CurrentUser.RefreshToken)
+            if (string.IsNullOrWhiteSpace(refreshToken) || refreshToken != currentUser.RefreshToken)
             {
-                context.Result = new UnsupportedMediaTypeResult();
+                context.Result = new UnauthorizedResult();
                 return;
             }
 
-            if (!IsProtectedAction(context))
-                return;
-
-            // only employee can access api
-            if (!CurrentUser.PayeeId.ToString().StartsWith('1'))
+            // Employee-only check
+            // Prefer replacing this with a real flag/property if available.
+            if (!IsEmployee(currentUser))
             {
-                context.Result = new UnsupportedMediaTypeResult();
+                context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
                 return;
             }
 
-            var isAdmin = Convert.ToBoolean(context.HttpContext.Items["IsAdmin"]?.ToString());
-
+            // Admin bypass
+            var isAdmin = TryGetBool(context.HttpContext.Items["IsAdmin"]);
             if (isAdmin)
                 return;
 
-            // Check if this action uses the NEW permission system
-            var actionDescriptor = (ControllerActionDescriptor)context.ActionDescriptor;
-            var permKeyAttr = actionDescriptor.MethodInfo.GetCustomAttribute<PermissionKeyAttribute>();
+            // Permission check only if [PermissionKey] exists on the action
+            var permissionKeyAttribute = actionDescriptor.MethodInfo.GetCustomAttribute<PermissionKeyAttribute>();
+            if (permissionKeyAttribute == null)
+                return;
 
-            // NEW PATH: HashSet lookup (fast, cached)
-            if (permKeyAttr != null)
+            var permissionKeys = context.HttpContext.Items["PermissionKeys"] as HashSet<string>;
+            if (permissionKeys == null || !permissionKeys.Contains(permissionKeyAttribute.Key))
             {
-                var permKeys = context.HttpContext.Items["PermissionKeys"] as HashSet<string>;
-                if (permKeys == null || !permKeys.Contains(permKeyAttr.Key))
-                {
-                    context.Result = new StatusCodeResult(403);
-                    return;
-                }
-            }
-            else
-            {
-                // All actions should now have [PermissionKey]. Deny if missing.
-                context.Result = new StatusCodeResult(403);
+                context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
                 return;
             }
-
-            /* [DEPRECATED-PERMISSION] Old JSON deserialization path — commented out, not deleted.
-               Uncomment this else block (and remove the deny-all else above) to rollback.
-
-            else
-            {
-                // OLD PATH: JSON deserialization (existing logic for unmigrated actions)
-                var routeValues = context.RouteData.Values;
-
-                string? controllerName = "";
-                string? actionName = "";
-
-                if (routeValues.ContainsKey("controller"))
-                    controllerName = (string?)routeValues["controller"];
-
-                if (routeValues.ContainsKey("action"))
-                    actionName = (string?)routeValues["action"];
-
-                string actionId = $"{controllerName}-{actionName}";
-
-                string? accessPermission = context.HttpContext.Items["AccessPermission"]?.ToString();
-
-                if (string.IsNullOrEmpty(accessPermission))
-                {
-                    context.Result = new StatusCodeResult(403);
-                    return;
-                }
-
-                var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(accessPermission);
-
-                if (permissions == null)
-                {
-                    context.Result = new StatusCodeResult(403);
-                    return;
-                }
-
-                var isAllow = permissions
-                    .SelectMany(g => g.Controllers
-                        .SelectMany(c => c.Actions
-                            .Where(a => a.Id.ToLower() == actionId.ToLower())))
-                    .Any();
-
-                if (!isAllow)
-                {
-                    context.Result = new StatusCodeResult(403);
-                    return;
-                }
-            }
-            */
         }
 
-        public bool IsProtectedAction(AuthorizationFilterContext context)
+        private static bool HasAllowAnonymous(ControllerActionDescriptor actionDescriptor)
         {
-            //if (context.Filters.Any(item => item is IAllowAnonymousFilter))
-            //    return false;
+            var actionAllowAnonymous = actionDescriptor.MethodInfo.GetCustomAttribute<AllowAnonymousAttribute>();
+            if (actionAllowAnonymous != null)
+                return true;
 
-            var controllerActionDescriptor = (ControllerActionDescriptor)context.ActionDescriptor;
-            var controllerTypeInfo = controllerActionDescriptor.ControllerTypeInfo;
-            var actionMethodInfo = controllerActionDescriptor.MethodInfo;
+            var controllerAllowAnonymous = actionDescriptor.ControllerTypeInfo.GetCustomAttribute<AllowAnonymousAttribute>();
+            return controllerAllowAnonymous != null;
+        }
 
-            var AnonymousAttribute = actionMethodInfo.GetCustomAttribute<AllowAnonymousAttribute>();
-            if (AnonymousAttribute != null)
+        private static bool IsEmployee(JWTClaim currentUser)
+        {
+            // Temporary legacy rule.
+            // Replace with currentUser.IsEmployee or Role/Type check when possible.
+            return currentUser.PayeeId.ToString().StartsWith("1");
+        }
+
+        private static bool TryGetBool(object? value)
+        {
+            if (value == null)
                 return false;
 
-            var permKeyAttribute = actionMethodInfo.GetCustomAttribute<PermissionKeyAttribute>();
-            if (permKeyAttribute != null)
-                return true;
+            if (value is bool boolValue)
+                return boolValue;
 
-            var displayAttribute = actionMethodInfo.GetCustomAttribute<DisplayNameAttribute>();
-            if (displayAttribute == null)
-                return false;
-
-            var authorizeAttribute = controllerTypeInfo.GetCustomAttribute<AuthorizeAdminAttribute>();
-            if (authorizeAttribute != null)
-                return true;
-
-            authorizeAttribute = actionMethodInfo.GetCustomAttribute<AuthorizeAdminAttribute>();
-            if (authorizeAttribute != null)
-                return true;
-
-            return false;
+            return bool.TryParse(value.ToString(), out var parsed) && parsed;
         }
     }
 }

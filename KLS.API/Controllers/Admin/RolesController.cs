@@ -113,9 +113,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Admin.Role.SavePermission")]
         public IActionResult SavePermissions(int roleId, [FromBody] List<int> permissionIds)
         {
-            var userId = Convert.ToInt32(HttpContext.Items["RoleId"]);
-
-            _permissionService.SaveRolePermissions(roleId, permissionIds, userId);
+            _permissionService.SaveRolePermissions(roleId, permissionIds);
 
             return Ok();
         }

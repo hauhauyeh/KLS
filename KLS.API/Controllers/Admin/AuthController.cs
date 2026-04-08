@@ -1,4 +1,4 @@
-﻿using KLS.Common;
+﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -78,7 +78,7 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        //[AuthorizeAdmin]
+        [AuthorizeAdmin]
         [HttpPost("logout")]
         public IActionResult Logout()
         {

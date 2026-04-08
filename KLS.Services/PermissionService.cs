@@ -1,3 +1,4 @@
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
@@ -67,7 +68,7 @@ namespace KLS.Services
                 .ToList();
         }
 
-        public void SaveRolePermissions(int roleId, List<int> permissionIds, int grantedBy)
+        public void SaveRolePermissions(int roleId, List<int> permissionIds)
         {
             var existing = Uow.RolePermissions.GetAll()
                 .Where(rp => rp.SystemRoleId == roleId)
@@ -82,7 +83,7 @@ namespace KLS.Services
                 {
                     SystemRoleId = roleId,
                     PermissionId = permId,
-                    GrantedBy = grantedBy
+                    GrantedBy = UserContext.EmpId
                 });
             }
 
