@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Timesheets")]
+        [PermissionKey("Employee.Timesheet.List")]
         public IActionResult List([FromQuery] TimesheetReq timesheetReq)
         {
             return Ok(_timesheetService.GetPagedList(timesheetReq));
@@ -53,6 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create/Update Timesheet")]
+        [PermissionKey("Employee.Timesheet.Save")]
         public IActionResult Save([FromBody] KLS.Models.Timesheet timeSheet)
         {
             if (_timesheetService.ValidateTime(timeSheet))
@@ -64,6 +66,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{timesheetId}")]
         [DisplayName("Delete Timesheet")]
+        [PermissionKey("Employee.Timesheet.Delete")]
         public IActionResult Delete(int timesheetId)
         {
             _timesheetService.Delete(timesheetId);

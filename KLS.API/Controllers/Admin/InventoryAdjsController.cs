@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Adjustments")]
+        [PermissionKey("Product.InventoryAdj.List")]
         public IActionResult List([FromQuery] InventoryAdjListReq inventoryAdjListReq)
         {
             return Ok(_inventoryAdjService.GetPagedList(inventoryAdjListReq));
@@ -51,6 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create/Update Adjustment")]
+        [PermissionKey("Product.InventoryAdj.Save")]
         public IActionResult Save([FromBody] InventoryAdj inventoryAdj)
         {
             return Ok(_inventoryAdjService.Save(inventoryAdj));
@@ -68,6 +70,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{adjId}")]
         [DisplayName("Delete Adjustment")]
+        [PermissionKey("Product.InventoryAdj.Delete")]
         public IActionResult Delete(int adjId)
         {
             _inventoryAdjService.Delete(adjId);
@@ -78,6 +81,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("DeleteDetail/{adjDetailId}")]
         [DisplayName("Delete Detail")]
+        [PermissionKey("Product.InventoryAdj.DeleteDetail")]
         public IActionResult DeleteDetail(int adjDetailId)
         {
             _inventoryAdjService.DeleteDetail(adjDetailId);
@@ -106,6 +110,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("QtyAdj")]
         [DisplayName("Qty Adjustment")]
+        [PermissionKey("Product.InventoryAdj.QtyAdj")]
         public IActionResult QtyAdj([FromBody] QtyAdjReq adjReq)
         {
             _inventoryAdjService.QtyAdj(adjReq);

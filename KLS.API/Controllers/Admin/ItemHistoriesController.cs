@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Sales")]
         [DisplayName("View Order History")]
+        [PermissionKey("Product.ItemHistory.Sales")]
         public IActionResult Sales([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetSalesHistory(itemHistoryReq));
@@ -41,6 +42,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Purchase")]
         [DisplayName("View Cost History")]
+        [PermissionKey("Product.ItemHistory.Purchase")]
         public IActionResult Purchase([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetPurchaseHistory(itemHistoryReq));
@@ -49,6 +51,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Inventory")]
         [DisplayName("View Inventory History")]
+        [PermissionKey("Product.ItemHistory.Inventory")]
         public IActionResult Inventory([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(_itemHistoryService.GetInventoryHistory(itemHistoryReq));
@@ -57,6 +60,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesCost")]
         [DisplayName("View Cost + Order History")]
+        [PermissionKey("Product.ItemHistory.SalesCost")]
         public IActionResult SalesCost([FromQuery] ItemHistoryReq itemHistoryReq)
         {
             return Ok(new
@@ -69,6 +73,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Adjustment/{itemId}")]
         [DisplayName("View Adjustment History")]
+        [PermissionKey("Product.ItemHistory.Adjustment")]
         public IActionResult Adjustment(string itemId)
         {
             var adjustments = _adjustmentService.GetPagedList(new InventoryAdjListReq

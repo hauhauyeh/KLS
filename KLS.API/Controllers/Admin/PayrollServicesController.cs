@@ -34,6 +34,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Payroll Service")]
+        [PermissionKey("Employee.PayrollService.List")]
         public IActionResult List([FromQuery] PayrollServiceReq payrollServiceReq)
         {
             return Ok(_payrollService.GetPagedList(payrollServiceReq));
@@ -56,6 +57,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create/Update Payroll Service")]
+        [PermissionKey("Employee.PayrollService.Save")]
         public IActionResult Save([FromBody] PayrollService payrollService)
         {
             return Ok(_payrollService.Save(payrollService));
@@ -64,6 +66,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{payrollId}")]
         [DisplayName("Delete Payroll Service")]
+        [PermissionKey("Employee.PayrollService.Delete")]
         public IActionResult Delete(int payrollId)
         {
             _payrollService.Delete(payrollId);

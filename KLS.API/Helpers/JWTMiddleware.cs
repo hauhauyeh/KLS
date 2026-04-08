@@ -32,9 +32,6 @@ namespace KLS.API.Helpers
                     UserContext.SystemUserId = jwtClaim.UserId;
                     UserContext.IsAdmin = jwtClaim.IsAdmin;
 
-                    // 🔑 Resolve scoped service correctly
-
-                    string? accessPermission = null;
                     bool? isAdmin = null;
                     int roleId = 0;
 
@@ -45,9 +42,21 @@ namespace KLS.API.Helpers
 
                         if (role != null)
                         {
-                            accessPermission = role.RoleAccess;
                             isAdmin = role.IsAdmin;
                             roleId = role.SystemRoleId;
+
+                            // New permission system: load permission keys from cache
+                            if (!role.IsAdmin)
+                            {
+                                var permService = context.RequestServices.GetRequiredService<IPermissionService>();
+                                var permKeys = permService.GetPermissionKeys(role.SystemRoleId);
+                                context.Items["PermissionKeys"] = permKeys;
+                            }
+
+                            /* [DEPRECATED-PERMISSION] Old RoleAccess loading — no longer needed.
+                               Uncomment to rollback to JSON-based permission checking.
+                            accessPermission = role.RoleAccess;
+                            */
                         }
                     }
                     else
@@ -57,7 +66,8 @@ namespace KLS.API.Helpers
 
                         if (role != null)
                         {
-                            accessPermission = role.RoleAccess;
+                            // Web/Sales portals still use old RoleAccess — not in scope
+                            context.Items["AccessPermission"] = role.RoleAccess;
                             isAdmin = role.IsAdmin;
                             roleId = role.RoleId;
                         }
@@ -66,10 +76,12 @@ namespace KLS.API.Helpers
                     context.Items["IsAdmin"] = isAdmin;
                     context.Items["RoleId"] = roleId.ToString();
 
+                    /* [DEPRECATED-PERMISSION] Old AccessPermission for Admin portal — commented out.
                     if (accessPermission != null)
                     {
                         context.Items["AccessPermission"] = accessPermission;
                     }
+                    */
                 }
             }
             else //for Timesheet portal

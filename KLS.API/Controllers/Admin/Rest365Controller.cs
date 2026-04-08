@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Rest365")]
+        [PermissionKey("Admin.Rest365.List")]
         public IActionResult List()
         {
             return Ok(_rest365Service.GetList());
@@ -51,6 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Rest365")]
+        [PermissionKey("Admin.Rest365.Create")]
         public IActionResult Create([FromBody] Rest365 rest365)
         {
             if (_rest365Service.NameExists(rest365))
@@ -62,6 +64,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Rest365")]
+        [PermissionKey("Admin.Rest365.Update")]
         public IActionResult Update([FromBody] Rest365 rest365)
         {
             if (_rest365Service.NameExists(rest365))
@@ -73,6 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Inactive")]
+        [PermissionKey("Admin.Rest365.Inactive")]
         public IActionResult Inactive(int id)
         {
             _rest365Service.Inactive(id);

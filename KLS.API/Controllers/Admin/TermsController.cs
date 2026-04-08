@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Terms")]
+        [PermissionKey("Admin.Term.List")]
         public IActionResult List()
         {
             return Ok(_termService.GetList());
@@ -53,6 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Term")]
+        [PermissionKey("Admin.Term.Create")]
         public IActionResult Create([FromBody] Term term)
         {
             return Ok(_termService.Create(term));
@@ -61,6 +63,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Term")]
+        [PermissionKey("Admin.Term.Update")]
         public IActionResult Update([FromBody] Term term)
         {
             return Ok(_termService.Update(term));
@@ -69,6 +72,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Term")]
+        [PermissionKey("Admin.Term.Delete")]
         public IActionResult Delete(int id)
         {
             _termService.Delete(id);

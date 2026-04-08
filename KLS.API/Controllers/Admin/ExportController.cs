@@ -35,6 +35,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Customers")]
         [DisplayName("Export Customers")]
+        [PermissionKey("Admin.Export.Customers")]
         public IActionResult Customers()
         {
             var bytes = _customerService.Export();
@@ -48,6 +49,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Vendors")]
         [DisplayName("Export Vendors")]
+        [PermissionKey("Admin.Export.Vendors")]
         public IActionResult Vendors()
         {
             var bytes = _vendorService.Export();
@@ -61,6 +63,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Orders")]
         [DisplayName("Export Orders")]
+        [PermissionKey("Admin.Export.Order")]
         public IActionResult Order([FromQuery] SalesExportReq exportReq)
         {
             var bytes = _salesService.Export(exportReq);

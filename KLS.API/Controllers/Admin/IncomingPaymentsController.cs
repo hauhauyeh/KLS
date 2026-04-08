@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Incoming Payments")]
+        [PermissionKey("Accounting.IncomingPayment.List")]
         public IActionResult List([FromQuery] IncomingPaymentListReq incomingPaymentReq)
         {
             return Ok(_incomingPaymentService.GetPagedList(incomingPaymentReq));
@@ -53,6 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Save")]
         [DisplayName("Create/Update Incoming Payment")]
+        [PermissionKey("Accounting.IncomingPayment.Save")]
         public IActionResult Save([FromBody] IncomingPaymentReq incomingPaymentReq)
         {
             return Ok(_incomingPaymentService.Save(incomingPaymentReq));
@@ -61,6 +63,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Incoming Payment")]
+        [PermissionKey("Accounting.IncomingPayment.Delete")]
         public IActionResult Delete(int id)
         {
             _incomingPaymentService.Delete(id);

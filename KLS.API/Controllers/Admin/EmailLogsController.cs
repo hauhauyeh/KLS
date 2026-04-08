@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Email Logs")]
+        [PermissionKey("Admin.EmailLog.List")]
         public IActionResult List([FromQuery] EmailLogReq emailLogReq)
         {
             return Ok(_emailLogService.GetPagedList(emailLogReq));

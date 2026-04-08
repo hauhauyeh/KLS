@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Trucks")]
+        [PermissionKey("Admin.Truck.List")]
         public IActionResult List()
         {
             return Ok(_truckService.GetList());
@@ -53,6 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Truck")]
+        [PermissionKey("Admin.Truck.Create")]
         public IActionResult Create([FromBody] Truck truck)
         {
             if (_truckService.ExistsNumber(truck))
@@ -64,6 +66,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Truck")]
+        [PermissionKey("Admin.Truck.Update")]
         public IActionResult Update([FromBody] Truck truck)
         {
             if (_truckService.ExistsNumber(truck))
@@ -75,6 +78,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Truck")]
+        [PermissionKey("Admin.Truck.Delete")]
         public IActionResult Delete(int id)
         {
             _truckService.Delete(id);

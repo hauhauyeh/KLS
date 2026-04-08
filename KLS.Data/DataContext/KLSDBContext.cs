@@ -117,6 +117,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PromotionSchedule>().ToTable("PromotionSchedule");
             modelBuilder.Entity<SchedulerConfig>().ToTable("SchedulerConfig");
             modelBuilder.Entity<TempSalesPromo>().ToTable("TempSalesPromo");
+            modelBuilder.Entity<Permission>().ToTable("Permission");
+            modelBuilder.Entity<RolePermission>().ToTable("RolePermission");
 
             modelBuilder.Entity<Country>().ToTable("Country");
             modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
@@ -319,6 +321,10 @@ namespace KLS.Data.DataContext
         public DbSet<Rest365> Rest365 { get; set; }
 
         public DbSet<Rest365Detail> Rest365Details { get; set; }
+
+        public DbSet<Permission> Permissions { get; set; }
+
+        public DbSet<RolePermission> RolePermissions { get; set; }
 
         #endregion
 

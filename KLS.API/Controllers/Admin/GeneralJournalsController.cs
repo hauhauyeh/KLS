@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List General Journals")]
+        [PermissionKey("Accounting.GeneralJournal.List")]
         public IActionResult List([FromQuery] GJReq gJReq)
         {
             return Ok(_gjService.GetPagedList(gJReq));
@@ -51,6 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Save")]
         [DisplayName("Create/Update General Journal")]
+        [PermissionKey("Accounting.GeneralJournal.Save")]
         public IActionResult Save([FromBody] GeneralJournal generalJournal)
         {
             return Ok(_gjService.Save(generalJournal));
@@ -59,6 +61,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete General Journal")]
+        [PermissionKey("Accounting.GeneralJournal.Delete")]
         public IActionResult Delete(int id)
         {
             _gjService.Delete(id);

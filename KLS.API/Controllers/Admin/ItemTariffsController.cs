@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Item Tariffs")]
+        [PermissionKey("Admin.ItemTariff.List")]
         public IActionResult List([FromQuery] ItemTariffListReq tariffListReq)
         {
             return Ok(_itemTariffService.GetPagedList(tariffListReq));
@@ -51,6 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Item Tariff")]
+        [PermissionKey("Admin.ItemTariff.Create")]
         public IActionResult Create([FromBody] ItemTariff itemTariff)
         {
             if (_itemTariffService.Exists(itemTariff))
@@ -62,6 +64,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Item Tariff")]
+        [PermissionKey("Admin.ItemTariff.Update")]
         public IActionResult Update([FromBody] ItemTariff itemTariff)
         {
             if (_itemTariffService.Exists(itemTariff))
@@ -73,6 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Item Tariff")]
+        [PermissionKey("Admin.ItemTariff.Delete")]
         public IActionResult Delete(int id)
         {
             _itemTariffService.Delete(id);

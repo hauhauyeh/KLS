@@ -35,6 +35,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List PO")]
+        [PermissionKey("Vendor.PurchaseOrder.List")]
         public IActionResult List([FromQuery] POListReq purchaseOrderReq)
         {
             return Ok(_purchaseOrderService.GetPagedList(purchaseOrderReq));
@@ -43,6 +44,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Checkout")]
         [DisplayName("Create/Update PO")]
+        [PermissionKey("Vendor.PurchaseOrder.Create")]
         public IActionResult Checkout([FromBody] POCheckoutReq checkoutReq)
         {
             return Ok(_purchaseOrderService.Checkout(checkoutReq));
@@ -51,6 +53,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{purchaseId}")]
         [DisplayName("Delete PO")]
+        [PermissionKey("Vendor.PurchaseOrder.Delete")]
         public IActionResult Delete(int purchaseId)
         {
             _purchaseOrderService.Delete(purchaseId);
@@ -68,6 +71,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("CopyToBill")]
         [DisplayName("Receive Product")]
+        [PermissionKey("Vendor.PurchaseOrder.CopyToBill")]
         public IActionResult CopyToBill([FromBody] POCopyToBillReq copyToBillReq)
         {
             return Ok(_purchaseOrderService.CopyToBill(copyToBillReq));
@@ -76,6 +80,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("PrintPO/{purchaseId}")]
         [DisplayName("Print PO")]
+        [PermissionKey("Vendor.PurchaseOrder.Print")]
         public IActionResult PrintPO(int purchaseId)
         {
             var poFilePath = _purchaseOrderService.PrintPO(purchaseId);
@@ -90,6 +95,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateToBillStage/{purchaseId}")]
         [DisplayName("Convert To Bill")]
+        [PermissionKey("Vendor.PurchaseOrder.ConvertToBill")]
         public IActionResult UpdateToBillStage(int purchaseId)
         {
             return Ok(_purchaseOrderService.UpdateToBillStage(purchaseId));
@@ -98,6 +104,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("SaveAdvance")]
         [DisplayName("Save Advance Payment")]
+        [PermissionKey("Vendor.PurchaseOrder.SaveAdvance")]
         public IActionResult SaveAdvance([FromBody] VendorPaymentAdvanceReq advancePaymentReq)
         {
             _vendorPaymentService.SaveAdvance(advancePaymentReq);
@@ -107,6 +114,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("GetAdvances")]
         [DisplayName("Advance Payments")]
+        [PermissionKey("Vendor.PurchaseOrder.GetAdvances")]
         public IActionResult GetAdvances(int purchaseId)
         {
             return Ok(_vendorPaymentService.GetAdvances(purchaseId));
@@ -115,6 +123,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("DeleteAdvance/{paymentId}")]
         [DisplayName("Delete Advance Payment")]
+        [PermissionKey("Vendor.PurchaseOrder.DeleteAdvance")]
         public IActionResult DeleteAdvance(int paymentId)
         {
             _vendorPaymentService.Delete(paymentId);

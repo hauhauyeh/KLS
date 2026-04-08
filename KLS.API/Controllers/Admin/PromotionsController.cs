@@ -32,6 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Promotion")]
+        [PermissionKey("Admin.Promotion.List")]
         public IActionResult List([FromQuery] PromotionListReq promotionListReq)
         {
             return Ok(_promotionService.GetPagedList(promotionListReq));
@@ -47,6 +48,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Promotion")]
+        [PermissionKey("Admin.Promotion.Create")]
         public IActionResult Create([FromBody] Promotion promotion)
         {
             if (_promotionService.ExistsName(promotion))
@@ -58,6 +60,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Promotion")]
+        [PermissionKey("Admin.Promotion.Update")]
         public IActionResult Update([FromBody] Promotion promotion)
         {
             if (_promotionService.ExistsName(promotion))
@@ -69,6 +72,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{promotionId}")]
         [DisplayName("Delete Promotion")]
+        [PermissionKey("Admin.Promotion.Delete")]
         public IActionResult Delete(int promotionId)
         {
             _promotionService.Delete(promotionId);

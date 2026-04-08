@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Holidays")]
+        [PermissionKey("Admin.Holiday.List")]
         public IActionResult List()
         {
             return Ok(_holidayService.GetList());
@@ -51,6 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Holiday")]
+        [PermissionKey("Admin.Holiday.Create")]
         public IActionResult Create([FromBody] Holiday holiday)
         {
             if (_holidayService.NameExists(holiday))
@@ -62,6 +64,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Holiday")]
+        [PermissionKey("Admin.Holiday.Update")]
         public IActionResult Update([FromBody] Holiday holiday)
         {
             if (_holidayService.NameExists(holiday))
@@ -73,6 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Holiday")]
+        [PermissionKey("Admin.Holiday.Delete")]
         public IActionResult Delete(int id)
         {
             _holidayService.Delete(id);

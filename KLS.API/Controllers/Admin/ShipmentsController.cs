@@ -32,6 +32,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Shipments")]
+        [PermissionKey("Vendor.Shipment.List")]
         public IActionResult List([FromQuery] ShipmentListReq shipmentListReq)
         {
             return Ok(_shipmentService.GetPagedList(shipmentListReq));
@@ -54,6 +55,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Shipment")]
+        [PermissionKey("Vendor.Shipment.Create")]
         public IActionResult Create([FromBody] Shipment shipment)
         {
             if (_shipmentService.Exists(shipment))
@@ -65,6 +67,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Shipment")]
+        [PermissionKey("Vendor.Shipment.Update")]
         public IActionResult Update([FromBody] Shipment shipment)
         {
             if (_shipmentService.Exists(shipment))
@@ -85,6 +88,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{shipmentId}")]
         [DisplayName("Delete Shipment")]
+        [PermissionKey("Vendor.Shipment.Delete")]
         public IActionResult Delete(int shipmentId)
         {
             _shipmentService.Delete(shipmentId);
@@ -95,6 +99,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("Reopen/{shipmentId}")]
         [DisplayName("Reopen Shipment")]
+        [PermissionKey("Vendor.Shipment.Reopen")]
         public IActionResult Reopen(int shipmentId)
         {
             return Ok(_shipmentService.Reopen(shipmentId));
@@ -103,6 +108,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("GenerateBill/{shipmentId}")]
         [DisplayName("Generate Bill")]
+        [PermissionKey("Vendor.Shipment.GenerateBill")]
         public IActionResult GenerateBill(int shipmentId)
         {
             return Ok(_shipmentService.GenerateBill(shipmentId));
@@ -111,6 +117,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("UnAllocation/{shipmentPurchaseId}")]
         [DisplayName("UnAllocation Shipment")]
+        [PermissionKey("Vendor.Shipment.UnAllocation")]
         public IActionResult UnAllocation(int shipmentPurchaseId)
         {
             _shipmentService.UnAllocation(shipmentPurchaseId);

@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Transactions")]
+        [PermissionKey("Accounting.Transaction.List")]
         public IActionResult List([FromQuery] TxReq txReq)
         {
             return Ok(_transactionService.GetPagedList(txReq));

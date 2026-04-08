@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Vendor Payments")]
+        [PermissionKey("Vendor.VendorPayment.List")]
         public IActionResult List([FromQuery] VendorPaymentReq vendorPaymentReq)
         {
             return Ok(_vendorPaymentService.GetPagedVendorPayments(vendorPaymentReq));
@@ -46,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Save")]
         [DisplayName("Create/Update Vendor Payment")]
+        [PermissionKey("Vendor.VendorPayment.Save")]
         public IActionResult Save([FromBody] VendorPayment vendorPayment)
         {
             return Ok(_vendorPaymentService.Save(vendorPayment));
@@ -54,6 +56,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{paymentId}")]
         [DisplayName("Delete Vendor Payment")]
+        [PermissionKey("Vendor.VendorPayment.Delete")]
         public IActionResult Delete(int paymentId)
         {
             _vendorPaymentService.Delete(paymentId);
@@ -63,6 +66,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("VoidCheck/{paymentId}")]
         [DisplayName("Void Check")]
+        [PermissionKey("Vendor.VendorPayment.VoidCheck")]
         public IActionResult VoidCheck(int paymentId)
         {
             _vendorPaymentService.VoidCheck(paymentId);
@@ -72,6 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("UnVoidCheck/{paymentId}")]
         [DisplayName("UnVoid Check")]
+        [PermissionKey("Vendor.VendorPayment.UnVoidCheck")]
         public IActionResult UnVoidCheck(int paymentId)
         {
             _vendorPaymentService.UnVoidCheck(paymentId);
@@ -81,6 +86,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Return")]
         [DisplayName("Create Return Vendor Payment")]
+        [PermissionKey("Vendor.VendorPayment.Return")]
         public IActionResult Return([FromBody] VendorPaymentReturnReq checkReq)
         {
             _vendorPaymentService.Return(checkReq);
@@ -90,6 +96,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("DeleteReturn/{paymentId}")]
         [DisplayName("Delete Return Vendor Payment")]
+        [PermissionKey("Vendor.VendorPayment.DeleteReturn")]
         public IActionResult DeleteReturn(int paymentId)
         {
             _vendorPaymentService.DeleteReturn(paymentId);
@@ -106,6 +113,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("SavePayNow")]
         [DisplayName("Create/Update Pay NOW")]
+        [PermissionKey("Vendor.VendorPayment.SavePayNow")]
         public IActionResult SavePayNow([FromBody] PayNowReq payNowReq)
         {
             return Ok(_vendorPaymentService.SavePayNow(payNowReq));
@@ -114,6 +122,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("ImportPayNow")]
         [DisplayName("Import Pay NOW")]
+        [PermissionKey("Vendor.VendorPayment.ImportPayNow")]
         public IActionResult ImportPayNow([FromForm] ImportPayNow importPayNow)
         {
             var result = _vendorPaymentService.ImportPayNow(importPayNow);
@@ -137,6 +146,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("ApplyAdvance")]
         [DisplayName("Apply Advance Payment")]
+        [PermissionKey("Vendor.VendorPayment.ApplyAdvance")]
         public IActionResult ApplyAdvance([FromBody] AdvanceApplyReq req)
         {
             return Ok(_vendorPaymentService.ApplyAdvance(req));
@@ -145,6 +155,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("UnapplyAdvance/{paymentId}")]
         [DisplayName("Unapply Advance Payment")]
+        [PermissionKey("Vendor.VendorPayment.UnapplyAdvance")]
         public IActionResult UnapplyAdvance(int paymentId)
         {
             return Ok(_vendorPaymentService.UnapplyAdvance(paymentId));

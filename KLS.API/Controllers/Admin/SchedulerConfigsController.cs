@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Scheduler Configs")]
+        [PermissionKey("Admin.SchedulerConfig.List")]
         public IActionResult List()
         {
             return Ok(_schedulerConfigService.GetList());
@@ -49,6 +50,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Scheduler Config")]
+        [PermissionKey("Admin.SchedulerConfig.Update")]
         public IActionResult Update([FromBody] SchedulerConfig schedulerConfig)
         {
             return Ok(_schedulerConfigService.Update(schedulerConfig));

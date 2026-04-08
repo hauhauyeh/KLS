@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Document Templates")]
+        [PermissionKey("Admin.DocumentTemplate.List")]
         public IActionResult List()
         {
             return Ok(_documentTemplateService.GetList());
@@ -51,6 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Document Template")]
+        [PermissionKey("Admin.DocumentTemplate.Create")]
         public IActionResult Create([FromBody] DocumentTemplate documentTemplate)
         {
             if (_documentTemplateService.Exists(documentTemplate))
@@ -62,6 +64,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Document Template ")]
+        [PermissionKey("Admin.DocumentTemplate.Update")]
         public IActionResult Update([FromBody] DocumentTemplate documentTemplate)
         {
             if (_documentTemplateService.Exists(documentTemplate))
@@ -73,6 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Document Template")]
+        [PermissionKey("Admin.DocumentTemplate.Delete")]
         public IActionResult Delete(int id)
         {
             _documentTemplateService.Delete(id);

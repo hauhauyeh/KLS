@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Transfer Funds")]
+        [PermissionKey("Accounting.TransferFund.List")]
         public IActionResult List([FromQuery] TFReq tFReq)
         {
             return Ok(_transferFundService.GetPagedTransferFunds(tFReq));
@@ -51,6 +52,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Save")]
         [DisplayName("Create/Update Transfer Fund")]
+        [PermissionKey("Accounting.TransferFund.Save")]
         public IActionResult Save([FromBody] TransferFund transferFund)
         {
             return Ok(_transferFundService.SaveTransferFund(transferFund));
@@ -59,6 +61,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Transfer Fund")]
+        [PermissionKey("Accounting.TransferFund.Delete")]
         public IActionResult Delete(int id)
         {
             _transferFundService.DeleteTransferFund(id);
