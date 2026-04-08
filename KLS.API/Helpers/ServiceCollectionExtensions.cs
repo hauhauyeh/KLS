@@ -105,6 +105,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IRest365DetailService, Rest365DetailService>();
             services.AddScoped<ISchedulerConfigService, SchedulerConfigService>();
             services.AddScoped<IHomeService, HomeService>();
+            services.AddScoped<IContactService, ContactService>();
 
             return services;
         }
