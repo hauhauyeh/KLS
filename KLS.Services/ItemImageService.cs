@@ -1,16 +1,15 @@
-﻿using KLS.Contract.Interfaces;
+using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace KLS.Services
 {
@@ -18,45 +17,219 @@ namespace KLS.Services
     {
         private readonly IWebHostEnvironment _env;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly AppSettings _appSettings;
 
-        public ItemImageService(IUnitOfWork uow, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor) : base(uow)
+        private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg", ".jpeg", ".png", ".webp"
+        };
+
+        public ItemImageService(
+            IUnitOfWork uow,
+            IWebHostEnvironment env,
+            IHttpContextAccessor httpContextAccessor,
+            IOptions<AppSettings> appSettings) : base(uow)
         {
             _env = env;
             _httpContextAccessor = httpContextAccessor;
+            _appSettings = appSettings.Value;
         }
+
+        #region --- Helpers ---
+
+        private string GetItemFolder(int itemId)
+        {
+            var folder = Path.Combine(_env.WebRootPath, "Images", "items", itemId.ToString());
+            Directory.CreateDirectory(folder);
+            return folder;
+        }
+
+        private string GetScriptPath(string scriptName)
+        {
+            return Path.Combine(_env.ContentRootPath, "Python", scriptName);
+        }
+
+        private string GetBaseUrl()
+        {
+            var request = _httpContextAccessor.HttpContext?.Request;
+            if (request == null) return "";
+            return $"{request.Scheme}://{request.Host}";
+        }
+
+        private static ItemImageList BuildImageDto(ItemImage entity, string baseUrl, int imageCount)
+        {
+            var itemId = entity.ItemId;
+            var idx = entity.ImageIndex;
+            var folderUrl = $"{baseUrl}/Images/items/{itemId}";
+
+            var dto = new ItemImageList
+            {
+                ImageId = entity.ImageId,
+                ItemId = itemId,
+                ImageIndex = idx,
+                SortOrder = entity.SortOrder,
+                IsPrimary = entity.IsPrimary,
+                IsProcessed = entity.IsProcessed,
+                ImageCount = imageCount,
+            };
+
+            // URLs populated only when the actual file exists (flag-based, no inference)
+            if (entity.Has300) dto.ThumbnailUrl = $"{folderUrl}/{idx}-300.png";
+            if (entity.Has1200) dto.Url1200 = $"{folderUrl}/{idx}-1200.png";
+            if (entity.Has2000) dto.Url2000 = $"{folderUrl}/{idx}-2000.png";
+            if (entity.HasNoBg300) dto.NoBgThumbnailUrl = $"{folderUrl}/{idx}-300-nobg.png";
+            if (entity.HasNoBg1200) dto.NoBg1200Url = $"{folderUrl}/{idx}-1200-nobg.png";
+            if (!string.IsNullOrEmpty(entity.OriginalExtension))
+                dto.OriginalUrl = $"{folderUrl}/{idx}-org{entity.OriginalExtension}";
+
+            return dto;
+        }
+
+        private static void SaveResized(Image source, string outputPath, int targetSize)
+        {
+            // Clone and resize with transparent padding on square canvas.
+            // Must convert to Rgba32 first — JPEG sources are Rgb24 (no alpha),
+            // and ResizeMode.Pad with Color.Transparent would produce black padding without alpha channel.
+            using var rgba = source.CloneAs<SixLabors.ImageSharp.PixelFormats.Rgba32>();
+            rgba.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Mode = ResizeMode.Pad,
+                Size = new SixLabors.ImageSharp.Size(targetSize, targetSize),
+                PadColor = SixLabors.ImageSharp.Color.Transparent
+            }));
+            rgba.Save(outputPath, new PngEncoder());
+        }
+
+        private void AcquireProcessingLock(int imageId)
+        {
+            var entity = Uow.ItemImages.GetById(imageId);
+            if (entity == null) throw new Exception("Image not found.");
+            if (entity.IsProcessing) throw new Exception("Image is already being processed.");
+            entity.IsProcessing = true;
+            Uow.ItemImages.Update(entity);
+            Uow.Commit();
+        }
+
+        private void ReleaseProcessingLock(int imageId)
+        {
+            try
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                if (entity != null)
+                {
+                    entity.IsProcessing = false;
+                    Uow.ItemImages.Update(entity);
+                    Uow.Commit();
+                }
+            }
+            catch { /* best effort */ }
+        }
+
+        private async Task<(string stdout, string stderr)> RunPythonAsync(string scriptPath, string[] args, int timeoutMs = 300000)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = _appSettings.PythonPath ?? "python",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = Path.GetDirectoryName(scriptPath)
+            };
+
+            // IIS-safe environment for Python cache
+            var appData = Path.Combine(_env.ContentRootPath, "App_Data");
+            Directory.CreateDirectory(appData);
+            var pyCache = Path.Combine(appData, "python_cache");
+            Directory.CreateDirectory(pyCache);
+
+            // Only override temp dirs. Don't override HOME/USERPROFILE in dev —
+            // rembg caches its model in ~/.u2net/ and needs to find it.
+            // For IIS deployment, uncomment HOME/USERPROFILE and pre-cache the model.
+            psi.Environment["TEMP"] = pyCache;
+            psi.Environment["TMP"] = pyCache;
+            // psi.Environment["USERPROFILE"] = pyCache;  // IIS only
+            // psi.Environment["HOME"] = pyCache;          // IIS only
+            psi.Environment["XDG_CACHE_HOME"] = pyCache;
+
+            psi.ArgumentList.Add(scriptPath);
+            foreach (var arg in args)
+                psi.ArgumentList.Add(arg);
+
+            var stdOutSb = new StringBuilder();
+            var stdErrSb = new StringBuilder();
+
+            using var process = new Process { StartInfo = psi };
+
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (e.Data != null) stdOutSb.AppendLine(e.Data);
+            };
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data != null) stdErrSb.AppendLine(e.Data);
+            };
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            if (!process.WaitForExit(timeoutMs))
+            {
+                try { process.Kill(true); } catch { }
+                throw new Exception("Image processing timed out.");
+            }
+
+            // Flush async pipes
+            await process.WaitForExitAsync();
+
+            var stdout = stdOutSb.ToString();
+            var stderr = stdErrSb.ToString();
+
+            if (process.ExitCode != 0)
+            {
+                throw new Exception(
+                    $"Python script failed (exit code {process.ExitCode}).\n" +
+                    $"STDERR:\n{stderr}\nSTDOUT:\n{stdout}");
+            }
+
+            return (stdout, stderr);
+        }
+
+        private static void TryDeleteFile(string path)
+        {
+            try { if (File.Exists(path)) File.Delete(path); } catch { }
+        }
+
+        private static void CleanupTempFiles(string itemFolder, int imageIndex)
+        {
+            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-temp-python.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-temp-api.png"));
+        }
+
+        #endregion
+
+        #region --- Public Methods ---
 
         public IEnumerable<ItemImageList>? GetList(int itemId)
         {
-            var request = _httpContextAccessor.HttpContext?.Request;
+            var baseUrl = GetBaseUrl();
 
-            string baseUrl = "";
-            if (request != null)
-                baseUrl = $"{request.Scheme}://{request.Host}";
-
-            var images = Uow.ItemImages
+            var records = Uow.ItemImages
                 .Find(c => c.ItemId == itemId)
                 .OrderBy(c => c.SortOrder)
-                .Select(c => new ItemImageList
-                {
-                    ImageId = c.ImageId,
-                    ItemId = c.ItemId,
-                    RelativeUrl = string.IsNullOrEmpty(c.RelativePath)
-                        ? null
-                        : baseUrl + c.RelativePath,
-                    ThumbnailUrl = string.IsNullOrEmpty(c.ThumbnailPath)
-                        ? null
-                        : baseUrl + c.ThumbnailPath,
-                    SortOrder = c.SortOrder,
-                    IsPrimary = c.IsPrimary
-                })
                 .ToList();
 
-            return images;
+            if (!records.Any()) return new List<ItemImageList>();
+
+            var imageCount = records.Count;
+
+            return records.Select(c => BuildImageDto(c, baseUrl, imageCount)).ToList();
         }
 
         public ItemImageList? GetPrimary(int itemId)
         {
-            return GetList(itemId)?.Where(c => c.IsPrimary).FirstOrDefault();
+            return GetList(itemId)?.FirstOrDefault(c => c.IsPrimary);
         }
 
         public ItemImage GetById(int imageId)
@@ -66,13 +239,9 @@ namespace KLS.Services
 
         public void Upload(ImageUploadReq uploadReq)
         {
-            var imagesFolder = Path.Combine(_env.WebRootPath, "Images", "items");
-            var thumbsFolder = Path.Combine(_env.WebRootPath, "Images", "items", "thumbnails");
+            var itemFolder = GetItemFolder(uploadReq.ItemId);
 
-            Directory.CreateDirectory(imagesFolder);
-            Directory.CreateDirectory(thumbsFolder);
-
-            // Load current DB images for item (after any immediate deletes)
+            // Load current DB images for this item
             var dbImages = Uow.ItemImages
                 .Find(x => x.ItemId == uploadReq.ItemId)
                 .ToList();
@@ -80,11 +249,10 @@ namespace KLS.Services
             var order = uploadReq.Order ?? new List<int>();
             var files = uploadReq.files ?? new List<IFormFile>();
 
-            // If UI didn’t send order, fallback: keep DB order + append new at end
+            // If UI didn't send order, fallback: keep DB order + append new at end
             if (order.Count == 0)
             {
                 order = dbImages.OrderBy(x => x.SortOrder).Select(x => x.ImageId).ToList();
-                // append zeros for all new files
                 for (int i = 0; i < files.Count; i++) order.Add(0);
             }
 
@@ -92,7 +260,7 @@ namespace KLS.Services
             if (zeroCount != files.Count)
                 throw new Exception("Order placeholders (0) count must match uploaded files count.");
 
-            // Validate all ids in order belong to this item
+            // Validate all IDs belong to this item
             var validIds = dbImages.Select(x => x.ImageId).ToHashSet();
             if (order.Any(id => id > 0 && !validIds.Contains(id)))
                 throw new Exception("Invalid image id found in order list for this item.");
@@ -107,7 +275,6 @@ namespace KLS.Services
             }
             else
             {
-                // If not provided: keep existing primary if still present; otherwise first item is primary
                 var existingPrimary = dbImages.FirstOrDefault(x => x.IsPrimary);
                 if (existingPrimary != null)
                 {
@@ -120,7 +287,7 @@ namespace KLS.Services
                 }
             }
 
-            // Clear primary for all existing DB images (primary will be set by final state)
+            // Clear primary for all existing images
             foreach (var img in dbImages.Where(x => x.IsPrimary))
             {
                 img.IsPrimary = false;
@@ -128,9 +295,11 @@ namespace KLS.Services
             }
             Uow.Commit();
 
+            // Determine next ImageIndex for new files
+            int nextImageIndex = dbImages.Any() ? dbImages.Max(x => x.ImageIndex) + 1 : 1;
+
             int fileCursor = 0;
 
-            // Apply final order (existing + new) in one pass
             for (int i = 0; i < order.Count; i++)
             {
                 int sort = i + 1;
@@ -138,130 +307,302 @@ namespace KLS.Services
 
                 if (order[i] > 0)
                 {
-                    // Existing DB image
+                    // Existing image — update sort/primary only
                     int id = order[i];
                     var entity = dbImages.First(x => x.ImageId == id);
 
                     bool changed = false;
-
-                    if (entity.SortOrder != sort)
-                    {
-                        entity.SortOrder = sort;
-                        changed = true;
-                    }
-
-                    if (entity.IsPrimary != isPrimary)
-                    {
-                        entity.IsPrimary = isPrimary;
-                        changed = true;
-                    }
-
-                    if (changed)
-                        Uow.ItemImages.Update(entity);
+                    if (entity.SortOrder != sort) { entity.SortOrder = sort; changed = true; }
+                    if (entity.IsPrimary != isPrimary) { entity.IsPrimary = isPrimary; changed = true; }
+                    if (changed) Uow.ItemImages.Update(entity);
 
                     continue;
                 }
 
-                // New file placeholder -> insert + save file
+                // New file
                 var file = files[fileCursor++];
+
+                // Extension validation
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext))
+                    throw new Exception($"Unsupported file format '{ext}'. Allowed: {string.Join(", ", AllowedExtensions)}");
+
+                int imageIndex = nextImageIndex++;
+
                 var entityNew = new ItemImage
                 {
                     ItemId = uploadReq.ItemId,
+                    ImageIndex = imageIndex,
+                    OriginalExtension = ext,
                     SortOrder = sort,
                     IsPrimary = isPrimary,
-                    FileName = null,
-                    RelativePath = null,
-                    ThumbnailPath = null
+                    IsProcessed = false,
+                    IsProcessing = false,
                 };
 
                 Uow.ItemImages.Add(entityNew);
-                Uow.Commit(); // generate ImageId for filename
-
-                var fileName = $"{entityNew.ImageId}.webp";
-                var imageFullPath = Path.Combine(imagesFolder, fileName);
+                Uow.Commit(); // generate ImageId
 
                 try
                 {
-                    using (var image = Image.Load(file.OpenReadStream()))
+                    // Save original
+                    var orgPath = Path.Combine(itemFolder, $"{imageIndex}-org{ext}");
+                    using (var stream = new FileStream(orgPath, FileMode.Create))
                     {
-                        image.Save(imageFullPath, new WebpEncoder { Quality = 75 });
+                        file.CopyTo(stream);
                     }
 
-                    var thumbFileName = $"thumb_{entityNew.ImageId}.webp";
-                    var thumbFullPath = Path.Combine(thumbsFolder, thumbFileName);
-
-                    using (var thumbImage = Image.Load(imageFullPath))
+                    // Generate with-bg sizes using ImageSharp
+                    using (var image = Image.Load(orgPath))
                     {
-                        thumbImage.Mutate(x => x.Resize(new ResizeOptions
-                        {
-                            Mode = ResizeMode.Max,
-                            Size = new Size(300, 300)
-                        }));
-
-                        thumbImage.Save(thumbFullPath, new WebpEncoder { Quality = 75 });
+                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
+                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-1200.png"), 1200);
+                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-2000.png"), 2000);
                     }
 
-                    entityNew.FileName = fileName;
-                    entityNew.RelativePath = $"/Images/items/{fileName}";
-                    entityNew.ThumbnailPath = $"/Images/items/thumbnails/{thumbFileName}";
-
+                    // Set version flags based on actual files created
+                    entityNew.Has300 = true;
+                    entityNew.Has1200 = true;
+                    entityNew.Has2000 = true;
                     Uow.ItemImages.Update(entityNew);
-                    Uow.Commit();
                 }
                 catch
                 {
+                    // Cleanup on failure
                     Uow.ItemImages.Remove(entityNew);
                     Uow.Commit();
 
-                    if (File.Exists(imageFullPath)) File.Delete(imageFullPath);
-
-                    var maybeThumb = Path.Combine(thumbsFolder, $"thumb_{entityNew.ImageId}.webp");
-                    if (File.Exists(maybeThumb)) File.Delete(maybeThumb);
+                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-org{ext}"));
+                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-300.png"));
+                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-1200.png"));
+                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-2000.png"));
 
                     throw;
                 }
             }
 
-            // Final commit for any pending updates to existing images
             Uow.Commit();
         }
 
         public void Delete(int imageId)
         {
             var image = GetById(imageId);
+            if (image == null) return;
 
-            // 1️ Delete physical image
-            if (!string.IsNullOrEmpty(image.RelativePath))
-            {
-                var imagePath = Path.Combine(_env.WebRootPath, image.RelativePath.TrimStart('/'));
-                if (File.Exists(imagePath))
-                    File.Delete(imagePath);
-            }
+            var itemId = image.ItemId;
+            var idx = image.ImageIndex;
+            var ext = image.OriginalExtension ?? ".png";
+            var itemFolder = Path.Combine(_env.WebRootPath, "Images", "items", itemId.ToString());
 
-            // 2️ Delete thumbnail
-            if (!string.IsNullOrEmpty(image.ThumbnailPath))
-            {
-                var thumbPath = Path.Combine(_env.WebRootPath, image.ThumbnailPath.TrimStart('/'));
-                if (File.Exists(thumbPath))
-                    File.Delete(thumbPath);
-            }
+            // Delete all files for this image (tolerant — ignore missing)
+            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-org{ext}"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-300.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-1200.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-2000.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-300-nobg.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-1200-nobg.png"));
+            CleanupTempFiles(itemFolder, idx);
 
-            // 3️ Remove from DB
+            // Remove DB record
             Uow.ItemImages.Remove(image);
 
-            // 4️ If deleted image was primary → assign new primary
+            // Reassign primary if deleted was primary
             if (image.IsPrimary)
             {
-                var nextImage = Uow.ItemImages.Find(c => c.ImageId != imageId).OrderBy(c => c.SortOrder).FirstOrDefault();
+                var next = Uow.ItemImages
+                    .Find(c => c.ItemId == itemId && c.ImageId != imageId)
+                    .OrderBy(c => c.SortOrder)
+                    .FirstOrDefault();
 
-                if (nextImage != null)
+                if (next != null)
                 {
-                    nextImage.IsPrimary = true;
-                    Uow.ItemImages.Update(nextImage);
+                    next.IsPrimary = true;
+                    Uow.ItemImages.Update(next);
                 }
             }
 
             Uow.Commit();
+
+            // Remove folder if empty
+            if (Directory.Exists(itemFolder) && !Directory.EnumerateFileSystemEntries(itemFolder).Any())
+            {
+                try { Directory.Delete(itemFolder); } catch { }
+            }
+        }
+
+        public async Task<ImageProcessResult> ProcessBgLocal(int imageId)
+        {
+            AcquireProcessingLock(imageId);
+
+            try
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                var itemFolder = GetItemFolder(entity.ItemId);
+                var idx = entity.ImageIndex;
+                var ext = entity.OriginalExtension ?? ".png";
+
+                var orgPath = Path.Combine(itemFolder, $"{idx}-org{ext}");
+                if (!File.Exists(orgPath))
+                    throw new FileNotFoundException($"Original image not found: {idx}-org{ext}");
+
+                var tempOutput = Path.Combine(itemFolder, $"{idx}-temp-python.png");
+
+                await RunPythonAsync(
+                    GetScriptPath("remove_bg_local.py"),
+                    new[] { orgPath, tempOutput }
+                );
+
+                if (!File.Exists(tempOutput))
+                    throw new Exception("Python background removal did not produce an output file.");
+
+                var baseUrl = GetBaseUrl();
+                var folderUrl = $"{baseUrl}/Images/items/{entity.ItemId}";
+
+                return new ImageProcessResult
+                {
+                    ImageId = imageId,
+                    ItemId = entity.ItemId,
+                    ImageIndex = idx,
+                    OriginalUrl = $"{folderUrl}/{idx}-org{ext}",
+                    PythonProcessedUrl = $"{folderUrl}/{idx}-temp-python.png"
+                };
+            }
+            catch
+            {
+                // Clean up temp on failure
+                var entity = Uow.ItemImages.GetById(imageId);
+                if (entity != null)
+                {
+                    var folder = Path.Combine(_env.WebRootPath, "Images", "items", entity.ItemId.ToString());
+                    TryDeleteFile(Path.Combine(folder, $"{entity.ImageIndex}-temp-python.png"));
+                }
+                throw;
+            }
+            finally
+            {
+                ReleaseProcessingLock(imageId);
+            }
+        }
+
+        public async Task<ImageProcessResult> ProcessBgApi(int imageId)
+        {
+            AcquireProcessingLock(imageId);
+
+            try
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                var itemFolder = GetItemFolder(entity.ItemId);
+                var idx = entity.ImageIndex;
+                var ext = entity.OriginalExtension ?? ".png";
+
+                var orgPath = Path.Combine(itemFolder, $"{idx}-org{ext}");
+                if (!File.Exists(orgPath))
+                    throw new FileNotFoundException($"Original image not found: {idx}-org{ext}");
+
+                var tempOutput = Path.Combine(itemFolder, $"{idx}-temp-api.png");
+
+                var apiKey = _appSettings.RemoveBgApiKey
+                    ?? throw new Exception("RemoveBgApiKey not configured in appsettings.");
+
+                await RunPythonAsync(
+                    GetScriptPath("remove_bg_api.py"),
+                    new[] { orgPath, tempOutput, apiKey }
+                );
+
+                if (!File.Exists(tempOutput))
+                    throw new Exception("API background removal did not produce an output file.");
+
+                var baseUrl = GetBaseUrl();
+                var folderUrl = $"{baseUrl}/Images/items/{entity.ItemId}";
+
+                return new ImageProcessResult
+                {
+                    ImageId = imageId,
+                    ItemId = entity.ItemId,
+                    ImageIndex = idx,
+                    OriginalUrl = $"{folderUrl}/{idx}-org{ext}",
+                    ApiProcessedUrl = $"{folderUrl}/{idx}-temp-api.png"
+                };
+            }
+            catch
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                if (entity != null)
+                {
+                    var folder = Path.Combine(_env.WebRootPath, "Images", "items", entity.ItemId.ToString());
+                    TryDeleteFile(Path.Combine(folder, $"{entity.ImageIndex}-temp-api.png"));
+                }
+                throw;
+            }
+            finally
+            {
+                ReleaseProcessingLock(imageId);
+            }
+        }
+
+        public async Task Finalize(ImageFinalizeReq req)
+        {
+            AcquireProcessingLock(req.ImageId);
+
+            try
+            {
+                var entity = Uow.ItemImages.GetById(req.ImageId);
+                if (entity == null) throw new Exception("Image not found.");
+
+                var itemFolder = GetItemFolder(entity.ItemId);
+                var idx = entity.ImageIndex;
+
+                if (req.SelectedVersion == 1)
+                {
+                    // User chose Original — no BG removal, no no-bg files
+                    entity.IsProcessed = false;
+                    Uow.ItemImages.Update(entity);
+                    Uow.Commit();
+                    return;
+                }
+
+                // Determine no-bg source
+                string nobgSource = req.SelectedVersion switch
+                {
+                    2 => Path.Combine(itemFolder, $"{idx}-temp-python.png"),
+                    3 => Path.Combine(itemFolder, $"{idx}-temp-api.png"),
+                    _ => throw new Exception($"Invalid SelectedVersion: {req.SelectedVersion}")
+                };
+
+                if (!File.Exists(nobgSource))
+                    throw new FileNotFoundException($"Selected BG-removed source not found.");
+
+                // Run create_sizes.py for no-bg versions
+                await RunPythonAsync(
+                    GetScriptPath("create_sizes.py"),
+                    new[] { nobgSource, itemFolder, idx.ToString() }
+                );
+
+                // Verify outputs
+                var nobg300 = Path.Combine(itemFolder, $"{idx}-300-nobg.png");
+                var nobg1200 = Path.Combine(itemFolder, $"{idx}-1200-nobg.png");
+
+                if (!File.Exists(nobg300) || !File.Exists(nobg1200))
+                    throw new Exception("create_sizes.py did not produce expected no-bg output files.");
+
+                entity.IsProcessed = true;
+                entity.HasNoBg300 = true;
+                entity.HasNoBg1200 = true;
+                Uow.ItemImages.Update(entity);
+                Uow.Commit();
+            }
+            finally
+            {
+                // Always clean up temp files
+                var entity = Uow.ItemImages.GetById(req.ImageId);
+                if (entity != null)
+                {
+                    var folder = Path.Combine(_env.WebRootPath, "Images", "items", entity.ItemId.ToString());
+                    CleanupTempFiles(folder, entity.ImageIndex);
+                }
+
+                ReleaseProcessingLock(req.ImageId);
+            }
         }
 
         public void UpdateSort(ItemImageSortReq req)
@@ -269,20 +610,16 @@ namespace KLS.Services
             if (req.OrderedImageIds == null || req.OrderedImageIds.Count == 0)
                 return;
 
-            // Load all images for this item
             var images = Uow.ItemImages
                 .Find(x => x.ItemId == req.ItemId)
                 .ToList();
 
-            if (images.Count == 0)
-                return;
+            if (images.Count == 0) return;
 
-            // Validate: all ids must belong to this item
             var validIds = images.Select(x => x.ImageId).ToHashSet();
             if (req.OrderedImageIds.Any(id => !validIds.Contains(id)))
                 throw new Exception("Invalid image id found for this item.");
 
-            // Update SortOrder based on incoming order
             for (int i = 0; i < req.OrderedImageIds.Count; i++)
             {
                 int id = req.OrderedImageIds[i];
@@ -297,15 +634,12 @@ namespace KLS.Services
         public void SetPrimary(int imageId)
         {
             var selected = Uow.ItemImages.GetById(imageId);
-            if (selected == null)
-                throw new Exception("Image not found.");
+            if (selected == null) throw new Exception("Image not found.");
 
-            // Get all images for the same item
             var images = Uow.ItemImages
                 .Find(x => x.ItemId == selected.ItemId)
                 .ToList();
 
-            // Set all false
             foreach (var img in images)
             {
                 bool shouldBePrimary = img.ImageId == imageId;
@@ -318,5 +652,353 @@ namespace KLS.Services
 
             Uow.Commit();
         }
+
+        #endregion
+
+        #region --- Migration ---
+
+        /// <summary>
+        /// One-time import of legacy images from a source folder into per-item folder structure.
+        /// Supports dry-run (scan only), batch limit (staged rollout), and image-level idempotency.
+        /// </summary>
+        public MigrationResult MigrateLegacyImages(string sourceFolder, bool dryRun = false, int limit = 0)
+        {
+            var result = new MigrationResult { DryRun = dryRun };
+
+            if (!Directory.Exists(sourceFolder))
+                throw new DirectoryNotFoundException($"Source folder not found: {sourceFolder}");
+
+            var allFiles = Directory.GetFiles(sourceFolder);
+
+            // Group files by ItemId + sub-index
+            var grouped = new Dictionary<int, Dictionary<int, List<(string filePath, string fileType)>>>();
+
+            foreach (var filePath in allFiles)
+            {
+                var fileName = Path.GetFileNameWithoutExtension(filePath);
+                var ext = Path.GetExtension(filePath).ToLowerInvariant();
+
+                if (fileName.Contains("Temp", StringComparison.OrdinalIgnoreCase))
+                {
+                    result.Skipped++;
+                    continue;
+                }
+
+                if (!AllowedExtensions.Contains(ext))
+                {
+                    result.Skipped++;
+                    continue;
+                }
+
+                if (!TryParseLegacyFileName(fileName, out int itemId, out int subIndex, out string fileType))
+                {
+                    result.Skipped++;
+                    continue;
+                }
+
+                if (!grouped.ContainsKey(itemId))
+                    grouped[itemId] = new Dictionary<int, List<(string, string)>>();
+
+                if (!grouped[itemId].ContainsKey(subIndex))
+                    grouped[itemId][subIndex] = new List<(string, string)>();
+
+                grouped[itemId][subIndex].Add((filePath, fileType));
+            }
+
+            result.TotalItemsFound = grouped.Count;
+
+            // Process each item (respect limit)
+            int itemsProcessedThisBatch = 0;
+
+            // Pre-load valid ItemIds for orphan checking (one query, covers both dry-run and real run)
+            var validItemIds = Uow.Items.Find(_ => true).Select(x => x.ItemId).ToHashSet();
+
+            foreach (var (itemId, subGroups) in grouped.OrderBy(x => x.Key))
+            {
+                if (limit > 0 && itemsProcessedThisBatch >= limit) break;
+
+                // Skip orphan images — ItemId doesn't exist in Item table
+                if (!validItemIds.Contains(itemId))
+                {
+                    result.Warnings.Add($"ItemId {itemId}: not found in Item table, skipping (orphan)");
+                    result.Skipped++;
+                    continue;
+                }
+
+                try
+                {
+                    MigrateOneItem(itemId, subGroups, dryRun, result);
+                }
+                catch (Exception ex)
+                {
+                    result.Failures++;
+                    result.Warnings.Add($"ItemId {itemId}: FAILED — {ex.Message}");
+                }
+
+                itemsProcessedThisBatch++;
+                result.ItemsProcessed++;
+            }
+
+            result.Success = (result.Failures == 0);
+            return result;
+        }
+
+        private void MigrateOneItem(int itemId, Dictionary<int, List<(string filePath, string fileType)>> subGroups, bool dryRun, MigrationResult result)
+        {
+            // Image-level idempotency
+            var existingIndexes = Uow.ItemImages
+                .Find(x => x.ItemId == itemId)
+                .Select(x => x.ImageIndex)
+                .ToHashSet();
+
+            int maxSortOrder = existingIndexes.Any()
+                ? Uow.ItemImages.Find(x => x.ItemId == itemId).Max(x => x.SortOrder)
+                : 0;
+
+            bool anyNewForItem = false;
+
+            foreach (var (subIndex, files) in subGroups.OrderBy(x => x.Key))
+            {
+                int imageIndex = subIndex == 0 ? 1 : subIndex + 1;
+
+                if (existingIndexes.Contains(imageIndex))
+                {
+                    result.AlreadyMigrated++;
+                    continue;
+                }
+
+                if (dryRun)
+                {
+                    bool hasOrgDry = files.Any(f => f.fileType == "org");
+                    bool hasMainDry = files.Any(f => f.fileType == "main");
+                    result.Details.Add($"ItemId {itemId} idx {imageIndex}: main={hasMainDry}, org={hasOrgDry}, files={files.Count}");
+                    result.Imported++;
+                    continue;
+                }
+
+                var itemFolder = GetItemFolder(itemId);
+                maxSortOrder++;
+                string? orgExt = null;
+                bool hasOrg = false;
+                bool has300 = false;
+
+                // Handle duplicate originals — prefer largest file
+                var orgFiles = files.Where(f => f.fileType == "org").ToList();
+                string? chosenOrgPath = null;
+                if (orgFiles.Count > 1)
+                {
+                    chosenOrgPath = orgFiles
+                        .OrderByDescending(f => new FileInfo(f.filePath).Length)
+                        .First().filePath;
+                    result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: {orgFiles.Count} originals, chose largest");
+                }
+                else if (orgFiles.Count == 1)
+                {
+                    chosenOrgPath = orgFiles[0].filePath;
+                }
+
+                // Copy original as-is (preserve format)
+                if (chosenOrgPath != null)
+                {
+                    orgExt = Path.GetExtension(chosenOrgPath).ToLowerInvariant();
+                    File.Copy(chosenOrgPath, Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"), overwrite: true);
+                    hasOrg = true;
+                }
+
+                // Convert main/display file to PNG
+                var mainFile = files.FirstOrDefault(f => f.fileType == "main");
+                if (mainFile.filePath != null)
+                {
+                    try
+                    {
+                        using var image = Image.Load(mainFile.filePath);
+                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
+                        has300 = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: main decode failed: {ex.Message}");
+                    }
+                }
+
+                // Copy 900 as reference
+                var file900 = files.FirstOrDefault(f => f.fileType == "900");
+                if (file900.filePath != null)
+                {
+                    var srcExt = Path.GetExtension(file900.filePath).ToLowerInvariant();
+                    File.Copy(file900.filePath, Path.Combine(itemFolder, $"{imageIndex}-900{srcExt}"), overwrite: true);
+                }
+
+                // If original exists but no main, generate 300 from original
+                if (hasOrg && !has300)
+                {
+                    try
+                    {
+                        using var image = Image.Load(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
+                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
+                        has300 = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: org decode failed: {ex.Message}");
+                    }
+                }
+
+                // Skip DB record if no 300px was produced — clean up orphaned files
+                if (!has300)
+                {
+                    if (hasOrg) TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
+                    if (file900.filePath != null)
+                    {
+                        var ext900 = Path.GetExtension(file900.filePath).ToLowerInvariant();
+                        TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-900{ext900}"));
+                    }
+                    result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: no 300px produced, skipped + cleaned up");
+                    result.Skipped++;
+                    continue;
+                }
+
+                // Generate 1200 + 2000 ONLY if original exists
+                bool has1200 = false, has2000 = false;
+                if (hasOrg)
+                {
+                    try
+                    {
+                        var path1200 = Path.Combine(itemFolder, $"{imageIndex}-1200.png");
+                        var path2000 = Path.Combine(itemFolder, $"{imageIndex}-2000.png");
+                        using var image = Image.Load(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
+                        SaveResized(image, path1200, 1200);
+                        SaveResized(image, path2000, 2000);
+                        has1200 = File.Exists(path1200);
+                        has2000 = File.Exists(path2000);
+                    }
+                    catch { /* 1200/2000 are non-critical */ }
+                }
+
+                var entity = new ItemImage
+                {
+                    ItemId = itemId,
+                    ImageIndex = imageIndex,
+                    OriginalExtension = hasOrg ? orgExt : null,
+                    SortOrder = maxSortOrder,
+                    IsPrimary = (maxSortOrder == 1 && !existingIndexes.Any()),
+                    IsProcessed = false,
+                    IsProcessing = false,
+                    Has300 = true,
+                    Has1200 = has1200,
+                    Has2000 = has2000,
+                };
+
+                Uow.ItemImages.Add(entity);
+                result.Imported++;
+                anyNewForItem = true;
+            }
+
+            if (anyNewForItem)
+                Uow.Commit();
+        }
+
+        /// <summary>
+        /// File-based backfill: scans item folders on disk and sets Has* flags
+        /// based on actual file existence. No inference.
+        /// </summary>
+        public MigrationResult BackfillVersionFlags()
+        {
+            var result = new MigrationResult();
+            var itemsRoot = Path.Combine(_env.WebRootPath, "Images", "items");
+
+            if (!Directory.Exists(itemsRoot))
+            {
+                result.Warnings.Add("Items image root not found.");
+                return result;
+            }
+
+            var allRecords = Uow.ItemImages.Find(_ => true).ToList();
+            int updated = 0;
+
+            foreach (var entity in allRecords)
+            {
+                var itemFolder = Path.Combine(itemsRoot, entity.ItemId.ToString());
+                var idx = entity.ImageIndex;
+                var ext = entity.OriginalExtension ?? ".png";
+
+                bool h300 = File.Exists(Path.Combine(itemFolder, $"{idx}-300.png"));
+                bool h1200 = File.Exists(Path.Combine(itemFolder, $"{idx}-1200.png"));
+                bool h2000 = File.Exists(Path.Combine(itemFolder, $"{idx}-2000.png"));
+                bool hNb300 = File.Exists(Path.Combine(itemFolder, $"{idx}-300-nobg.png"));
+                bool hNb1200 = File.Exists(Path.Combine(itemFolder, $"{idx}-1200-nobg.png"));
+
+                bool changed = false;
+                if (entity.Has300 != h300) { entity.Has300 = h300; changed = true; }
+                if (entity.Has1200 != h1200) { entity.Has1200 = h1200; changed = true; }
+                if (entity.Has2000 != h2000) { entity.Has2000 = h2000; changed = true; }
+                if (entity.HasNoBg300 != hNb300) { entity.HasNoBg300 = hNb300; changed = true; }
+                if (entity.HasNoBg1200 != hNb1200) { entity.HasNoBg1200 = hNb1200; changed = true; }
+
+                if (changed)
+                {
+                    Uow.ItemImages.Update(entity);
+                    updated++;
+                }
+
+                result.ItemsProcessed++;
+            }
+
+            if (updated > 0) Uow.Commit();
+
+            result.Imported = updated;
+            result.Success = true;
+            result.Details.Add($"Scanned {allRecords.Count} records, updated {updated} flags.");
+            return result;
+        }
+
+        private static bool TryParseLegacyFileName(string fileName, out int itemId, out int subIndex, out string fileType)
+        {
+            itemId = 0;
+            subIndex = 0;
+            fileType = "main";
+
+            // Remove known suffixes to find base
+            var name = fileName;
+
+            // Check for -Org suffix (case-insensitive)
+            if (name.EndsWith("-Org", StringComparison.OrdinalIgnoreCase) ||
+                name.EndsWith("-org", StringComparison.OrdinalIgnoreCase))
+            {
+                fileType = "org";
+                name = name[..^4]; // strip "-Org"
+            }
+            else if (name.EndsWith("-900"))
+            {
+                fileType = "900";
+                name = name[..^4]; // strip "-900"
+            }
+
+            // Now name should be "{ItemId}" or "{ItemId}-{subIndex}"
+            var parts = name.Split('-');
+
+            if (parts.Length == 1)
+            {
+                // Just ItemId
+                return int.TryParse(parts[0], out itemId);
+            }
+            else if (parts.Length == 2)
+            {
+                // ItemId-subIndex (e.g. "421-1") OR ItemId-Org already stripped
+                if (!int.TryParse(parts[0], out itemId)) return false;
+
+                if (int.TryParse(parts[1], out subIndex))
+                    return true;
+
+                // parts[1] might be a non-numeric suffix we didn't handle — skip
+                return false;
+            }
+
+            // More complex patterns (e.g. GUID-named files) — skip
+            return false;
+        }
+
+        #endregion
     }
+
 }

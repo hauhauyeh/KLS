@@ -30,7 +30,9 @@ BEGIN
         i.ItemId,
         i.ItemCode,
         i.ItemName,
-        img.ThumbnailPath AS ImagePath,
+        CASE WHEN img.ImageId IS NOT NULL AND img.Has300 = 1
+            THEN '/Images/items/' + CAST(i.ItemId AS VARCHAR(10)) + '/' + CAST(img.ImageIndex AS VARCHAR(10)) + '-300.png'
+            ELSE NULL END AS ImagePath,
         iu.ItemUnitId,
         iu.Unit,
         iu.IsBaseUnit,
@@ -45,7 +47,7 @@ BEGIN
     INNER JOIN Item i ON i.ItemId = CAST(ss.value AS INT)
     INNER JOIN ItemUnit iu ON iu.ItemId = i.ItemId
     OUTER APPLY (
-        SELECT TOP 1 ThumbnailPath
+        SELECT TOP 1 ImageId, ImageIndex, Has300
         FROM ItemImage
         WHERE ItemId = i.ItemId AND IsPrimary = 1
     ) img

@@ -1,9 +1,4 @@
-﻿using KLS.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using KLS.Models;
 
 namespace KLS.Contract.Services
 {
@@ -16,5 +11,15 @@ namespace KLS.Contract.Services
         void Upload(ImageUploadReq uploadReq);
 
         void Delete(int imageId);
+
+        Task<ImageProcessResult> ProcessBgLocal(int imageId);
+
+        Task<ImageProcessResult> ProcessBgApi(int imageId);
+
+        Task Finalize(ImageFinalizeReq req);
+
+        MigrationResult MigrateLegacyImages(string sourceFolder, bool dryRun = false, int limit = 0);
+
+        MigrationResult BackfillVersionFlags();
     }
 }

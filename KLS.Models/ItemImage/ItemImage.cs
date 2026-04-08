@@ -21,15 +21,24 @@ namespace KLS.Models
 
         public int ItemId { get; set; }
 
-        public string? FileName { get; set; }
-
-        public string? RelativePath { get; set; }
-
-        public string? ThumbnailPath { get; set; }
-
         public int SortOrder { get; set; }
 
         public bool IsPrimary { get; set; }
+
+        public int ImageIndex { get; set; }
+
+        public string? OriginalExtension { get; set; }
+
+        public bool IsProcessed { get; set; }
+
+        public bool IsProcessing { get; set; }
+
+        // Per-version file existence flags
+        public bool Has300 { get; set; }
+        public bool Has1200 { get; set; }
+        public bool Has2000 { get; set; }
+        public bool HasNoBg300 { get; set; }
+        public bool HasNoBg1200 { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

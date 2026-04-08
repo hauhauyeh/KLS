@@ -13,5 +13,9 @@ namespace KLS.Common
         public double TokenValidity { get; set; }
 
         public int RefreshTokenValidity { get; set; }
+
+        public string? PythonPath { get; set; }
+
+        public string? RemoveBgApiKey { get; set; }
     }
 }
