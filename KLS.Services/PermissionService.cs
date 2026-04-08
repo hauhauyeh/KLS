@@ -59,7 +59,7 @@ namespace KLS.Services
                         PermissionKey = p.PermissionKey,
                         DisplayName = p.DisplayName,
                         PermissionType = p.PermissionType,
-                        ParentKey = p.ParentKey,
+                        ParentPermissionId = p.ParentPermissionId,
                         SortOrder = p.SortOrder,
                         IsGranted = grantedIds.Contains(p.PermissionId)
                     }).ToList()
