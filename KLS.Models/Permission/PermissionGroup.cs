@@ -12,7 +12,7 @@ namespace KLS.Models
         public string PermissionKey { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
         public string PermissionType { get; set; } = string.Empty;
-        public string? ParentKey { get; set; }
+        public int? ParentPermissionId { get; set; }
         public int SortOrder { get; set; }
         public bool IsGranted { get; set; }
     }
