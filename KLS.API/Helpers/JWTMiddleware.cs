@@ -30,7 +30,7 @@ namespace KLS.API.Helpers
                     context.Items["RefreshToken"] = jwtClaim.RefreshToken;
                     UserContext.EmpId = jwtClaim.PayeeId;
                     UserContext.SystemUserId = jwtClaim.UserId;
-                    UserContext.IsAdmin = jwtClaim.IsAdmin;
+                    //UserContext.IsAdmin = jwtClaim.IsAdmin;
 
                     bool? isAdmin = null;
                     int roleId = 0;
@@ -44,6 +44,7 @@ namespace KLS.API.Helpers
                         {
                             isAdmin = role.IsAdmin;
                             roleId = role.SystemRoleId;
+                            UserContext.IsSalesRole = role.IsSalesRole;
 
                             // New permission system: load permission keys from cache
                             if (!role.IsAdmin)
@@ -75,7 +76,7 @@ namespace KLS.API.Helpers
 
                     context.Items["IsAdmin"] = isAdmin;
                     context.Items["RoleId"] = roleId.ToString();
-
+                    
                     /* [DEPRECATED-PERMISSION] Old AccessPermission for Admin portal — commented out.
                     if (accessPermission != null)
                     {

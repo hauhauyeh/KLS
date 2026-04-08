@@ -44,7 +44,7 @@ namespace KLS.Data.Repositories
 
             var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
 
-            var EmpIdParam = new SqlParameter("@EmpId", UserContext.IsAdmin ? 0 : UserContext.EmpId);
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.IsSalesRole ? UserContext.EmpId : 0);
 
             var IsSearchSalesParam = new SqlParameter("@IsSearchSales", searchReq.IsSearchSales);
 

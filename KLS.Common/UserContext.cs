@@ -9,7 +9,7 @@ namespace KLS.Common
     public static class UserContext
     {
         private static readonly AsyncLocal<int> _empId = new();
-        private static readonly AsyncLocal<bool> _isAdmin = new();
+        private static readonly AsyncLocal<bool> _isSalesRole = new();
         private static readonly AsyncLocal<int> _systemUserId = new();
         private static readonly AsyncLocal<string> _userTimezone = new();
 
@@ -19,10 +19,10 @@ namespace KLS.Common
             set => _empId.Value = value;
         }
 
-        public static bool IsAdmin
+        public static bool IsSalesRole
         {
-            get => _isAdmin.Value;
-            set => _isAdmin.Value = value;
+            get => _isSalesRole.Value;
+            set => _isSalesRole.Value = value;
         }
 
         public static int SystemUserId

@@ -257,6 +257,8 @@ namespace KLS.Services
 
         public void Logout()
         {
+            if (UserContext.SystemUserId == 0) return;
+
             var user = GetById(UserContext.SystemUserId);
 
             if (user != null)
