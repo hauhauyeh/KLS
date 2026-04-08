@@ -34,6 +34,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Bills")]
+        [PermissionKey("Vendor.Purchase.List")]
         public IActionResult List([FromQuery] PurchaseListReq purchaseListReq)
         {
             return Ok(_purchaseService.GetPagedList(purchaseListReq));
@@ -63,6 +64,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateDocNumber")]
         [DisplayName("Update Doc Number")]
+        [PermissionKey("Vendor.Purchase.UpdateDocNumber")]
         public IActionResult UpdateDocNumber([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdateDocNumber(updateReq.PurchaseId, updateReq.VendorDocNumber);
@@ -73,6 +75,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateInvoiceDate")]
         [DisplayName("Update Invoice Date")]
+        [PermissionKey("Vendor.Purchase.UpdateInvoiceDate")]
         public IActionResult UpdateInvoiceDate([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdateInvoiceDate(updateReq.PurchaseId, updateReq.InvoiceDate);
@@ -83,6 +86,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateCommission")]
         [DisplayName("Update Commission")]
+        [PermissionKey("Vendor.Purchase.UpdateCommission")]
         public IActionResult UpdateCommission([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdateCommission(updateReq.PurchaseId, updateReq.ImportCommission);
@@ -93,6 +97,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdatePallet")]
         [DisplayName("Update Pallet")]
+        [PermissionKey("Vendor.Purchase.UpdatePallet")]
         public IActionResult UpdatePallet([FromBody] PurchaseUpdateReq updateReq)
         {
             _purchaseService.UpdatePallet(updateReq.PurchaseId, updateReq.PalletCount);
@@ -110,6 +115,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateContainer")]
         [DisplayName("Update Container")]
+        [PermissionKey("Vendor.Purchase.UpdateContainer")]
         public IActionResult UpdateContainer([FromBody] PurchaseUpdateReq updateReq)
         {
             return Ok(_purchaseService.UpdateContainerNumber(updateReq.PurchaseId, updateReq.ContainerNumber));
@@ -118,6 +124,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Checkout")]
         [DisplayName("Create Bill")]
+        [PermissionKey("Vendor.Purchase.Create")]
         public IActionResult Checkout([FromBody] PurchaseCheckoutReq checkoutReq)
         {
             return Ok(_purchaseService.Checkout(checkoutReq));
@@ -126,6 +133,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdatePartially/{purchaseId}")]
         [DisplayName("Update Bill")]
+        [PermissionKey("Vendor.Purchase.Update")]
         public IActionResult UpdatePartially(int purchaseId)
         {
             return Ok(_purchaseService.UpdatePartially(purchaseId));
@@ -134,6 +142,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{purchaseId}")]
         [DisplayName("Delete Bill")]
+        [PermissionKey("Vendor.Purchase.Delete")]
         public IActionResult Delete(int purchaseId)
         {
             _purchaseService.Delete(purchaseId);
@@ -152,6 +161,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("UploadBillPDF")]
         [DisplayName("Upload Bill Pdf")]
+        [PermissionKey("Vendor.Purchase.UploadBillPDF")]
         public IActionResult UploadBillPDF([FromForm] PDFUploadReq pdfUploadReq)
         {
             _purchaseService.UploadBillPDF(pdfUploadReq);
@@ -162,6 +172,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SeePDF/{purchaseNumber}")]
         [DisplayName("See PDF Image")]
+        [PermissionKey("Vendor.Purchase.SeePdf")]
         public IActionResult SeePdf(int purchaseNumber)
         {
             var filePath = Path.Combine(_env.WebRootPath, "BillPdf", purchaseNumber + ".pdf");
@@ -191,6 +202,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("AssignShipment")]
         [DisplayName("Assign Shipment")]
+        [PermissionKey("Vendor.Purchase.AssignShipment")]
         public IActionResult AssignShipment([FromBody] POCopyToBillReq copyToBillReq)
         {
             _purchaseService.AssignShipment(copyToBillReq);

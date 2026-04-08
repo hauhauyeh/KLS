@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Check Register")]
+        [PermissionKey("Accounting.CheckRegister.List")]
         public IActionResult List([FromQuery] CheckRegisterReq checkRegisterReq)
         {
             return Ok(_vendorPmtService.GetPagedCheckRegister(checkRegisterReq));
@@ -39,6 +40,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("Update")]
         [DisplayName("Update Check Register")]
+        [PermissionKey("Accounting.CheckRegister.Update")]
         public IActionResult Update([FromBody] CheckRegister checkRegister)
         {
             _vendorPmtService.UpdateBankDate(checkRegister);

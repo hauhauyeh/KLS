@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List AR")]
+        [PermissionKey("Customer.AR.List")]
         public IActionResult List([FromQuery] ARCustomerListReq arListReq)
         {
             return Ok(_payeeService.GetARCustomers(arListReq));
@@ -41,6 +42,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("ChargePayment")]
         [DisplayName("Charge Payment")]
+        [PermissionKey("Customer.AR.ChargePayment")]
         public IActionResult ChargePayment([FromBody] PaymentChargeReq chargeReq)
         {
             return Ok(_customerPaymentService.ChargePayment(chargeReq));

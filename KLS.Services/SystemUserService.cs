@@ -23,6 +23,7 @@ namespace KLS.Services
         private readonly IEmailService _emailService;
         private readonly IUserLogService _userLogService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IPermissionService _permissionService;
 
         public SystemUserService(
             IUnitOfWork uow,
@@ -33,7 +34,8 @@ namespace KLS.Services
             IEmailSettingService emailSettingService,
             IEmailService emailService,
             IUserLogService userLogService,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            IPermissionService permissionService
             ) : base(uow)
         {
             _jWTService = jWTService;
@@ -44,6 +46,7 @@ namespace KLS.Services
             _emailService = emailService;
             _userLogService = userLogService;
             _httpContextAccessor = httpContextAccessor;
+            _permissionService = permissionService;
         }
 
         public SystemUser? CheckEmpUsername(LoginReq loginReq)
@@ -151,7 +154,8 @@ namespace KLS.Services
                 EmpId = user.PayeeId,
                 EmpSortName = string.IsNullOrEmpty(emp.FirstName) || string.IsNullOrEmpty(emp.LastName)
                     ? ""
-                    : emp.FirstName[0].ToString() + emp.LastName[0].ToString()
+                    : emp.FirstName[0].ToString() + emp.LastName[0].ToString(),
+                Permissions = role.IsAdmin ? null : _permissionService.GetPermissionKeys(role.SystemRoleId).ToList()
             };
         }
 
@@ -188,7 +192,8 @@ namespace KLS.Services
                 IsAdmin = role.IsAdmin,
                 IsSalesRole = role?.IsSalesRole ?? false,
                 EmpId = jwtClaim.PayeeId,
-                EmpSortName = sortName
+                EmpSortName = sortName,
+                Permissions = role.IsAdmin ? null : _permissionService.GetPermissionKeys(role.SystemRoleId).ToList()
             };
         }
 

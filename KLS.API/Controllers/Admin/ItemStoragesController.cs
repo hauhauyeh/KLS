@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Storages")]
+        [PermissionKey("Product.ItemStorage.List")]
         public IActionResult List()
         {
             return Ok(_itemStorageService.GetList());
@@ -46,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Storage")]
+        [PermissionKey("Product.ItemStorage.Create")]
         public IActionResult Create([FromBody] ItemStorage itemStorage)
         {
             if (_itemStorageService.NameExists(itemStorage))
@@ -57,6 +59,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Storage")]
+        [PermissionKey("Product.ItemStorage.Update")]
         public IActionResult Update([FromBody] ItemStorage itemStorage)
         {
             if (_itemStorageService.NameExists(itemStorage))
@@ -68,6 +71,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Storage")]
+        [PermissionKey("Product.ItemStorage.Delete")]
         public IActionResult Delete(int id)
         {
             _itemStorageService.Delete(id);

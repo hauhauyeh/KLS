@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Advance Payments")]
+        [PermissionKey("Employee.EmpAdvance.List")]
         public IActionResult List([FromQuery] EmpAdvanceReq empAdvanceReq)
         {
             return Ok(_empAdvanceService.GetPagedList(empAdvanceReq));
@@ -46,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Save")]
         [DisplayName("Create/Update Advance Payment")]
+        [PermissionKey("Employee.EmpAdvance.Save")]
         public IActionResult Save([FromBody] EmpAdvance empAdvance)
         {
             return Ok(_empAdvanceService.Save(empAdvance));
@@ -54,6 +56,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Advance Payment")]
+        [PermissionKey("Employee.EmpAdvance.Delete")]
         public IActionResult Delete(int id)
         {
             _empAdvanceService.Delete(id);

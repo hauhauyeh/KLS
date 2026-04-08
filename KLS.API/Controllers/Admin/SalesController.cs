@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Orders")]
+        [PermissionKey("Customer.Sale.List")]
         public IActionResult List([FromQuery] SalesListReq salesListReq)
         {
             return Ok(_salesService.GetPagedList(salesListReq));
@@ -53,6 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateRoute")]
         [DisplayName("Update Route")]
+        [PermissionKey("Customer.Sale.UpdateRoute")]
         public IActionResult UpdateRoute([FromBody] SalesUpdateReq updateReq)
         {
             return Ok(_salesService.UpdateShipRoute(updateReq.SalesId, updateReq.ShipRoute));
@@ -61,6 +63,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateStage")]
         [DisplayName("Update Stage")]
+        [PermissionKey("Customer.Sale.UpdateStage")]
         public IActionResult UpdateStage([FromBody] SalesUpdateReq updateReq)
         {
             return Ok(_salesService.UpdateStage(updateReq.SalesId, updateReq.StageId.Value));
@@ -69,6 +72,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateInstruction")]
         [DisplayName("Update Instruction")]
+        [PermissionKey("Customer.Sale.UpdateInstruction")]
         public IActionResult UpdateInstruction([FromBody] SalesUpdateReq updateReq)
         {
             _salesService.UpdateInstruction(updateReq.SalesId, updateReq.Instruction);
@@ -78,6 +82,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdatePO")]
         [DisplayName("Update PO")]
+        [PermissionKey("Customer.Sale.UpdatePO")]
         public IActionResult UpdatePO([FromBody] SalesUpdateReq updateReq)
         {
             _salesService.UpdatePO(updateReq.SalesId, updateReq.CustPONumber);
@@ -87,6 +92,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateLoadSeparate/{salesId}")]
         [DisplayName("Update Load Separate")]
+        [PermissionKey("Customer.Sale.UpdateLoadSeparate")]
         public IActionResult UpdateLoadSeparate(int salesId)
         {
             _salesService.UpdateLoadSeparate(salesId);
@@ -96,6 +102,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateCarrier")]
         [DisplayName("Update Carrier")]
+        [PermissionKey("Customer.Sale.UpdateCarrier")]
         public IActionResult UpdateCarrier([FromBody] SalesUpdateReq updateReq)
         {
             return Ok(_salesService.UpdateCarrier(updateReq.SalesId, updateReq.ShippingCarrierId));
@@ -104,6 +111,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{salesId}")]
         [DisplayName("Delete Order")]
+        [PermissionKey("Customer.Sale.Delete")]
         public IActionResult Delete(int salesId)
         {
             _salesService.Delete(salesId);
@@ -127,6 +135,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SeePdf/{salesNumber}")]
         [DisplayName("See Pdf Image")]
+        [PermissionKey("Customer.Sale.SeePdf")]
         public IActionResult SeePdf(int salesNumber)
         {
             var filePath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
@@ -141,6 +150,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("EmailPdf/{salesId}")]
         [DisplayName("Email Pdf Image")]
+        [PermissionKey("Customer.Sale.EmailPdf")]
         public IActionResult EmailPdf(int salesId)
         {
             _salesService.EmailPdf(salesId);
@@ -158,6 +168,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Checkout")]
         [DisplayName("Create Order")]
+        [PermissionKey("Customer.Sale.Create")]
         public IActionResult Checkout([FromBody] SalesCheckoutReq checkoutReq)
         {
             return Ok(_salesService.Checkout(checkoutReq));
@@ -166,6 +177,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdatePartially/{salesId}")]
         [DisplayName("Update Order")]
+        [PermissionKey("Customer.Sale.Update")]
         public IActionResult UpdatePartially(int salesId)
         {
             return Ok(_salesService.UpdatePartially(salesId));
@@ -181,6 +193,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("ShippingCharge")]
         [DisplayName("Add Shipping Charge")]
+        [PermissionKey("Customer.Sale.ShippingCharge")]
         public IActionResult ShippingCharge([FromBody] SalesUpdateReq updateReq)
         {
             return Ok(_salesService.InsertShippingCharge(updateReq));
@@ -189,6 +202,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("MergeOrder")]
         [DisplayName("Merge Order")]
+        [PermissionKey("Customer.Sale.MergeOrder")]
         public IActionResult MergeOrder([FromBody] SalesMergeReq mergeReq)
         {
             return Ok(_salesService.MergeOrder(mergeReq));
@@ -197,6 +211,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("MergePdf")]
         [DisplayName("Merge Pdf")]
+        [PermissionKey("Customer.Sale.MergePdf")]
         public IActionResult MergePdf([FromQuery] string salesNumbers)
         {
             try
@@ -215,6 +230,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SeePayment/{salesId}")]
         [DisplayName("See Payment")]
+        [PermissionKey("Customer.Sale.SeePayment")]
         public IActionResult SeePayment(int salesId)
         {
             return Ok(_salesService.SeePayment(salesId));

@@ -25,5 +25,7 @@ namespace KLS.Models
         public bool IsPriceShow { get; set; }
 
         public bool IsEditGuide { get; set; }
+
+        public ICollection<string>? Permissions { get; set; }
     }
 }

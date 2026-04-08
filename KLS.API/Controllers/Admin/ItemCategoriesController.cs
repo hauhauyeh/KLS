@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Categories")]
+        [PermissionKey("Product.ItemCategory.List")]
         public IActionResult List()
         {
             return Ok(_itemCategoryService.GetTree());
@@ -55,6 +56,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Category")]
+        [PermissionKey("Product.ItemCategory.Create")]
         public IActionResult Create([FromForm] ItemCategory itemCategory)
         {
             if (_itemCategoryService.NameExists(itemCategory))
@@ -70,6 +72,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Category")]
+        [PermissionKey("Product.ItemCategory.Update")]
         public IActionResult Update([FromForm] ItemCategory itemCategory)
         {
             if (_itemCategoryService.NameExists(itemCategory))
@@ -85,6 +88,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Category")]
+        [PermissionKey("Product.ItemCategory.Delete")]
         public IActionResult Delete(int id)
         {
             _itemCategoryService.Delete(id);
@@ -95,6 +99,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Reorder")]
         [DisplayName("Reorder Category")]
+        [PermissionKey("Product.ItemCategory.Reorder")]
         public IActionResult ReorderNode(ItemCategoryReorderReq dto)
         {
             try

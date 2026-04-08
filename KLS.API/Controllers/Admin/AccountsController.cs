@@ -34,6 +34,7 @@ namespace KLS.API.Controllers.Admin
         //[HttpGet("RecursiveTree")]
         [HttpGet]
         [DisplayName("List Accounts")]
+        [PermissionKey("Accounting.Account.List")]
         public IActionResult List()
         {
             return Ok(_accountCategoryService.GetRecursiveTree());
@@ -56,6 +57,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Account")]
+        [PermissionKey("Accounting.Account.Create")]
         public IActionResult Create([FromBody] Account account)
         {
             //add @ sign if not exist
@@ -74,6 +76,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Account")]
+        [PermissionKey("Accounting.Account.Update")]
         public IActionResult Update([FromBody] Account account)
         {
             //add @ sign if not exist
@@ -92,6 +95,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Account")]
+        [PermissionKey("Accounting.Account.Delete")]
         public IActionResult Delete(int id)
         {
             _accountService.Delete(id);

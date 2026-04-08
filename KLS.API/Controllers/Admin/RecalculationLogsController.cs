@@ -30,6 +30,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Logs")]
+        [PermissionKey("Admin.RecalcLog.List")]
         public IActionResult List()
         {
             return Ok(_recalculationLogService.GetList());

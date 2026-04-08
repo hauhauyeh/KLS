@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Employees")]
+        [PermissionKey("Employee.Employee.List")]
         public IActionResult List([FromQuery] EmpReq empReq)
         {
             return Ok(_employeeService.GetPagedList(empReq));
@@ -67,6 +68,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Employee")]
+        [PermissionKey("Employee.Employee.Create")]
         public IActionResult Create([FromBody] EmployeeDTO employeeDTO)
         {
             if (_employeeService.NameExists(employeeDTO))
@@ -83,6 +85,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Employee")]
+        [PermissionKey("Employee.Employee.Update")]
         public IActionResult Update([FromBody] EmployeeDTO employeeDTO)
         {
             if (_employeeService.NameExists(employeeDTO))
@@ -99,6 +102,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Employee")]
+        [PermissionKey("Employee.Employee.Delete")]
         public IActionResult Delete(int id)
         {
             _employeeService.Delete(id);

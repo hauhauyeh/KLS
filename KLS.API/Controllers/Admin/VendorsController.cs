@@ -34,6 +34,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Vendors")]
+        [PermissionKey("Vendor.Vendor.List")]
         public IActionResult List([FromQuery] VendorListReq vendorReq)
         {
             return Ok(_vendorService.GetPagedList(vendorReq));
@@ -49,6 +50,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Vendor")]
+        [PermissionKey("Vendor.Vendor.Create")]
         public IActionResult Create([FromBody] VendorDTO vendorDTO)
         {
             if (_vendorService.VendorExists(vendorDTO))
@@ -62,6 +64,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Vendor")]
+        [PermissionKey("Vendor.Vendor.Update")]
         public IActionResult Update([FromBody] VendorDTO vendorDTO)
         {
             if (_vendorService.VendorExists(vendorDTO))
@@ -75,6 +78,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Vendor")]
+        [PermissionKey("Vendor.Vendor.Delete")]
         public IActionResult Delete(int id)
         {
             _vendorService.Delete(id);
@@ -85,6 +89,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("OpenClose/{id}")]
         [DisplayName("Open/Close Vendor")]
+        [PermissionKey("Vendor.Vendor.OpenClose")]
         public IActionResult OpenClose(int id)
         {
             _payeeService.OpenClose(id);

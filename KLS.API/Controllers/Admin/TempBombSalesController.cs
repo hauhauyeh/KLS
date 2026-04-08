@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Bomb")]
+        [PermissionKey("Customer.BombSale.List")]
         public IActionResult List(bool checkAgain)
         {
             return Ok(_tempBombSalesService.GetList(checkAgain));
@@ -39,6 +40,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Detail")]
+        [PermissionKey("Customer.BombSale.Update")]
         public IActionResult Update([FromBody] BombSalesItem bombItem)
         {
             return Ok(_tempBombSalesService.Update(bombItem));
@@ -69,6 +71,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Save Bomb")]
+        [PermissionKey("Customer.BombSale.Save")]
         public IActionResult SaveBomb()
         {
             _tempBombSalesService.SaveBomb();

@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Item Tags")]
+        [PermissionKey("Admin.ItemTag.List")]
         public IActionResult List()
         {
             return Ok(_itemTagService.GetList());
@@ -46,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Item Tag")]
+        [PermissionKey("Admin.ItemTag.Create")]
         public IActionResult Create([FromBody] ItemTag itemTag)
         {
             if (_itemTagService.NameExists(itemTag))
@@ -57,6 +59,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Item Tag")]
+        [PermissionKey("Admin.ItemTag.Update")]
         public IActionResult Update([FromBody] ItemTag itemTag)
         {
             if (_itemTagService.NameExists(itemTag))
@@ -68,6 +71,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Item Tag")]
+        [PermissionKey("Admin.ItemTag.Delete")]
         public IActionResult Delete(int id)
         {
             _itemTagService.Delete(id);

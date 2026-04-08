@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("{itemId}")]
         [DisplayName("List Images")]
+        [PermissionKey("Product.ItemImage.List")]
         public IActionResult List(int itemId)
         {
             return Ok(_itemImageService.GetList(itemId));
@@ -39,6 +40,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Upload Image")]
+        [PermissionKey("Product.ItemImage.Upload")]
         public IActionResult Upload([FromForm] ImageUploadReq uploadReq)
         {
             _itemImageService.Upload(uploadReq);
@@ -48,6 +50,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{imageId}")]
         [DisplayName("Delete Image")]
+        [PermissionKey("Product.ItemImage.Delete")]
         public IActionResult Delete(int imageId)
         {
             _itemImageService.Delete(imageId);

@@ -33,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Customers")]
+        [PermissionKey("Customer.Customer.List")]
         public IActionResult List([FromQuery] CustomerListReq customerListReq)
         {
             return Ok(_customerService.GetPagedList(customerListReq));
@@ -48,6 +49,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Customer")]
+        [PermissionKey("Customer.Customer.Create")]
         public IActionResult Create([FromBody] CustomerDto customerDto)
         {
             if (_customerService.NameExists(customerDto.PayeeName, customerDto.PayeeId))
@@ -59,6 +61,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Customer")]
+        [PermissionKey("Customer.Customer.Update")]
         public IActionResult Update([FromBody] CustomerDto customerDto)
         {
             if (_customerService.NameExists(customerDto.PayeeName, customerDto.PayeeId))
@@ -70,6 +73,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Customer")]
+        [PermissionKey("Customer.Customer.Delete")]
         public IActionResult Delete(int id)
         {
             _customerService.Delete(id);
@@ -80,6 +84,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("OpenClose/{id}")]
         [DisplayName("Open/Close Customer")]
+        [PermissionKey("Customer.Customer.OpenClose")]
         public IActionResult OpenClose(int id)
         {
             _payeeService.OpenClose(id);
@@ -97,6 +102,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("EmailPricesheet/{payeeId}")]
         [DisplayName("Email Pricesheet")]
+        [PermissionKey("Customer.Customer.EmailPricesheet")]
         public IActionResult EmailPricesheet(int payeeId)
         {
             _customerService.EmailPricesheet(payeeId);
@@ -106,6 +112,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("EmailStatement/{payeeId}")]
         [DisplayName("Email Statement")]
+        [PermissionKey("Customer.Customer.EmailStatement")]
         public IActionResult EmailStatement(int payeeId)
         {
             _customerService.EmailStatement(payeeId);

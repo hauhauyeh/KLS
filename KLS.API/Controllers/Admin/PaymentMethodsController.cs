@@ -38,6 +38,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Method")]
+        [PermissionKey("Customer.PaymentMethod.Create")]
         public IActionResult Create([FromBody] PaymentMethod method)
         {
             if (_paymentMethodService.Exists(method))
@@ -50,6 +51,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{paymentmethodId}")]
         [DisplayName("Delete Method")]
+        [PermissionKey("Customer.PaymentMethod.Delete")]
         public IActionResult Delete(int paymentmethodId)
         {
             _paymentMethodService.Delete(paymentmethodId);

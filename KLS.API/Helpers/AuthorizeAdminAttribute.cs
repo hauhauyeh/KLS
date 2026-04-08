@@ -44,46 +44,75 @@ namespace KLS.API.Helpers
             if (isAdmin)
                 return;
 
-            var routeValues = context.RouteData.Values;
+            // Check if this action uses the NEW permission system
+            var actionDescriptor = (ControllerActionDescriptor)context.ActionDescriptor;
+            var permKeyAttr = actionDescriptor.MethodInfo.GetCustomAttribute<PermissionKeyAttribute>();
 
-            string? controllerName = "";
-            string? actionName = "";
-
-            if (routeValues.ContainsKey("controller"))
-                controllerName = (string?)routeValues["controller"];
-
-            if (routeValues.ContainsKey("action"))
-                actionName = (string?)routeValues["action"];
-
-            string actionId = $"{controllerName}-{actionName}";
-
-            string? accessPermission = context.HttpContext.Items["AccessPermission"]?.ToString();
-
-            if (string.IsNullOrEmpty(accessPermission))
+            // NEW PATH: HashSet lookup (fast, cached)
+            if (permKeyAttr != null)
             {
-                context.Result = new UnprocessableEntityResult();
+                var permKeys = context.HttpContext.Items["PermissionKeys"] as HashSet<string>;
+                if (permKeys == null || !permKeys.Contains(permKeyAttr.Key))
+                {
+                    context.Result = new StatusCodeResult(403);
+                    return;
+                }
+            }
+            else
+            {
+                // All actions should now have [PermissionKey]. Deny if missing.
+                context.Result = new StatusCodeResult(403);
                 return;
             }
 
-            var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(accessPermission);
+            /* [DEPRECATED-PERMISSION] Old JSON deserialization path — commented out, not deleted.
+               Uncomment this else block (and remove the deny-all else above) to rollback.
 
-            if (permissions == null)
+            else
             {
-                context.Result = new UnprocessableEntityResult();
-                return;
-            }
+                // OLD PATH: JSON deserialization (existing logic for unmigrated actions)
+                var routeValues = context.RouteData.Values;
 
-            var isAllow = permissions
-                .SelectMany(g => g.Controllers
-                    .SelectMany(c => c.Actions
-                        .Where(a => a.Id.ToLower() == actionId.ToLower())))
-                .Any();
+                string? controllerName = "";
+                string? actionName = "";
 
-            if (!isAllow)
-            {
-                context.Result = new UnprocessableEntityResult();
-                return;
+                if (routeValues.ContainsKey("controller"))
+                    controllerName = (string?)routeValues["controller"];
+
+                if (routeValues.ContainsKey("action"))
+                    actionName = (string?)routeValues["action"];
+
+                string actionId = $"{controllerName}-{actionName}";
+
+                string? accessPermission = context.HttpContext.Items["AccessPermission"]?.ToString();
+
+                if (string.IsNullOrEmpty(accessPermission))
+                {
+                    context.Result = new StatusCodeResult(403);
+                    return;
+                }
+
+                var permissions = JsonConvert.DeserializeObject<List<ControllerGroup>>(accessPermission);
+
+                if (permissions == null)
+                {
+                    context.Result = new StatusCodeResult(403);
+                    return;
+                }
+
+                var isAllow = permissions
+                    .SelectMany(g => g.Controllers
+                        .SelectMany(c => c.Actions
+                            .Where(a => a.Id.ToLower() == actionId.ToLower())))
+                    .Any();
+
+                if (!isAllow)
+                {
+                    context.Result = new StatusCodeResult(403);
+                    return;
+                }
             }
+            */
         }
 
         public bool IsProtectedAction(AuthorizationFilterContext context)
@@ -98,6 +127,10 @@ namespace KLS.API.Helpers
             var AnonymousAttribute = actionMethodInfo.GetCustomAttribute<AllowAnonymousAttribute>();
             if (AnonymousAttribute != null)
                 return false;
+
+            var permKeyAttribute = actionMethodInfo.GetCustomAttribute<PermissionKeyAttribute>();
+            if (permKeyAttribute != null)
+                return true;
 
             var displayAttribute = actionMethodInfo.GetCustomAttribute<DisplayNameAttribute>();
             if (displayAttribute == null)

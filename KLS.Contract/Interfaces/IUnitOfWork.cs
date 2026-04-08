@@ -196,6 +196,10 @@ namespace KLS.Contract.Interfaces
 
         ISchedulerConfigRepository SchedulerConfigs { get; }
 
+        IPermissionRepository Permissions { get; }
+
+        IRolePermissionRepository RolePermissions { get; }
+
         void Commit();
     }
 }

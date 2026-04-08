@@ -35,6 +35,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("BalanceSheet/{endDate}")]
         [DisplayName("PL -> Balance Sheet")]
+        [PermissionKey("Report.PL.BalanceSheet")]
         public IActionResult BalanceSheet(DateOnly? endDate)
         {
             return Ok(_reportService.BalanceSheet(endDate));
@@ -43,6 +44,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("ProfitLoss")]
         [DisplayName("PL -> Profit Loss")]
+        [PermissionKey("Report.PL.ProfitLoss")]
         public IActionResult ProfitLoss([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.ProfitLoss(reportReq));
@@ -54,6 +56,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesDaily")]
         [DisplayName("Sales -> Sales Daily")]
+        [PermissionKey("Report.Sales.SalesDaily")]
         public IActionResult SalesDaily([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesDaily(reportReq));
@@ -62,6 +65,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesTax")]
         [DisplayName("Sales -> Sales Tax")]
+        [PermissionKey("Report.Sales.SalesTax")]
         public IActionResult SalesTax([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesTax(reportReq));
@@ -70,6 +74,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Responsible")]
         [DisplayName("Sales -> Responsible")]
+        [PermissionKey("Report.Sales.Responsible")]
         public IActionResult Responsible([FromQuery] DateOnly? ShipDate)
         {
             var result = _reportService.Responsible(ShipDate);
@@ -79,6 +84,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("DailySummary")]
         [DisplayName("Sales -> DailySummary")]
+        [PermissionKey("Report.Sales.DailySummary")]
         public IActionResult DailySummary([FromQuery] DateOnly? ShipDate)
         {
             var result = _reportService.DailySummary(ShipDate);
@@ -89,6 +95,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("DescDollar")]
         [DisplayName("Customer -> Descending Dollar")]
+        [PermissionKey("Report.Customer.DescDollar")]
         public IActionResult DescDollar([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.DescDollar(reportReq));
@@ -97,6 +104,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("PaymentHistory/{PayeeId}")]
         [DisplayName("Customer -> Payment History")]
+        [PermissionKey("Report.Customer.PaymentHistory")]
         public IActionResult PaymentHistory(int PayeeId)
         {
             return Ok(_reportService.PaymentHistory(PayeeId));
@@ -104,6 +112,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Ledger")]
         [DisplayName("PL -> Ledger")]
+        [PermissionKey("Report.PL.Ledger")]
         public IActionResult Ledger([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.Ledger(reportReq));
@@ -112,6 +121,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("LedgerByPayee")]
         [DisplayName("PL -> Ledger By Payee")]
+        [PermissionKey("Report.PL.LedgerByPayee")]
         public IActionResult LedgerByPayee([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.LedgerByPayee(reportReq));
@@ -120,6 +130,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("BankRecon/{BankReconId}")]
         [DisplayName("Banking -> Bank Reconciliation")]
+        [PermissionKey("Report.Banking.BankRecon")]
         public IActionResult BankRecon(int BankReconId)
         {
             return Ok(_reportService.BankRecon(BankReconId));
@@ -129,6 +140,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("CustStmt/{PayeeId}")]
         [DisplayName("Customer -> Statement")]
+        [PermissionKey("Report.Customer.Statement")]
         public IActionResult CustStmt(int PayeeId)
         {
             return Ok(_reportService.CustStmt(PayeeId));
@@ -136,6 +148,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("AccountHistory/{PayeeId}")]
         [DisplayName("Customer -> Account History")]
+        [PermissionKey("Report.Customer.AccountHistory")]
         public IActionResult AccountHistory(int PayeeId)
         {
             return Ok(_reportService.AccountHistory(PayeeId));
@@ -143,6 +156,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Pricesheet/{PayeeId}")]
         [DisplayName("Customer -> Pricesheet")]
+        [PermissionKey("Report.Customer.Pricesheet")]
         public IActionResult Pricesheet(int PayeeId)
         {
             return Ok(_reportService.Pricesheet(PayeeId));
@@ -150,6 +164,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("OrderGuide/{PayeeId}")]
         [DisplayName("Customer -> Order Guide")]
+        [PermissionKey("Report.Customer.OrderGuide")]
         public IActionResult OrderGuide(int PayeeId)
         {
             return Ok(_reportService.OrderGuide(PayeeId));
@@ -157,6 +172,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("CustItemVolume/{PayeeId}")]
         [DisplayName("Customer -> Item Volume History")]
+        [PermissionKey("Report.Customer.ItemVolume")]
         public IActionResult CustItemVolume(int PayeeId)
         {
             return Ok(_reportService.CustItemVolume(PayeeId));
@@ -164,6 +180,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("CustSalesByItem")]
         [DisplayName("Customer -> Sales By Item")]
+        [PermissionKey("Report.Customer.SalesByItem")]
         public IActionResult CustSalesByItem([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.CustSalesByItem(reportReq));
@@ -171,6 +188,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesHistory")]
         [DisplayName("Customer -> Sales History")]
+        [PermissionKey("Report.Customer.SalesHistory")]
         public IActionResult SalesHistory([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesHistory(reportReq));
@@ -178,6 +196,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("CustPayment")]
         [DisplayName("Customer -> Customer Payment")]
+        [PermissionKey("Report.Customer.CustPayment")]
         public IActionResult CustPayment([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.CustPayment(reportReq));
@@ -185,6 +204,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("CreditMemo")]
         [DisplayName("Sales -> Credit Memo")]
+        [PermissionKey("Report.Sales.CreditMemo")]
         public IActionResult CreditMemo([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.CreditMemo(reportReq));
@@ -192,6 +212,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("PmtReceipt/{CustomerPaymentId}")]
         [DisplayName("Banking -> Payment Receipt")]
+        [PermissionKey("Report.Banking.PmtReceipt")]
         public IActionResult PmtReceipt(int CustomerPaymentId)
         {
             return Ok(_customerPaymentService.GetByIdWithInclude(CustomerPaymentId));
@@ -203,6 +224,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("APCheck")]
         [DisplayName("AP -> AP Check")]
+        [PermissionKey("Report.AP.APCheck")]
         public IActionResult APCheck([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.APCheck(reportReq));
@@ -211,6 +233,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("CheckToBePrinted/{PmtMethod?}")]
         [DisplayName("AP -> Check To Be Printed")]
+        [PermissionKey("Report.AP.CheckToBePrinted")]
         public IActionResult CheckToBePrinted(string? PmtMethod)
         {
             return Ok(_reportService.CheckToBePrinted(PmtMethod));
@@ -219,6 +242,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("APInvoice")]
         [DisplayName("AP -> AP From Invoice")]
+        [PermissionKey("Report.AP.APInvoice")]
         public IActionResult APInvoice([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.APInvoice(reportReq));
@@ -230,6 +254,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Timesheet")]
         [DisplayName("Timesheet -> Timesheet")]
+        [PermissionKey("Report.Timesheet.Timesheet")]
         public IActionResult Timesheet([FromQuery] TimesheetReq timesheetReq)
         {
             return Ok(_timesheetService.GetWeeklyTimesheets(timesheetReq));
@@ -238,6 +263,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("JobSummary")]
         [DisplayName("Timesheet -> Job Summary")]
+        [PermissionKey("Report.Timesheet.JobSummary")]
         public IActionResult JobSummary([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.JobSummary(reportReq));
@@ -249,6 +275,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Payroll")]
         [DisplayName("Payroll -> Payroll")]
+        [PermissionKey("Report.Payroll.Payroll")]
         public IActionResult Payroll([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.Payroll(reportReq));
@@ -257,6 +284,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("EmpLoanLedger")]
         [DisplayName("Payroll -> Employee Loan Ledger")]
+        [PermissionKey("Report.Payroll.EmpLoanLedger")]
         public IActionResult EmpLoanLedger([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.EmpLoanLedger(reportReq));
@@ -268,6 +296,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesByItem")]
         [DisplayName("Sales -> Sales By Item")]
+        [PermissionKey("Report.Sales.SalesByItem")]
         public IActionResult SalesByItem([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.CustSalesByItem(reportReq));
@@ -276,6 +305,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesDetail")]
         [DisplayName("Sales -> Sales Detail")]
+        [PermissionKey("Report.Sales.SalesDetail")]
         public IActionResult SalesDetail([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesDetail(reportReq));
@@ -287,6 +317,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesDaily2")]
         [DisplayName("Sales -> Sales Daily 2")]
+        [PermissionKey("Report.Sales.SalesDaily2")]
         public IActionResult SalesDaily2([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesDaily2(reportReq));
@@ -295,6 +326,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesYearly")]
         [DisplayName("Sales -> Sales Yearly")]
+        [PermissionKey("Report.Sales.SalesYearly")]
         public IActionResult SalesYearly()
         {
             return Ok(_reportService.SalesYearly());
@@ -306,6 +338,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesCommission")]
         [DisplayName("Sales -> Sales Commission")]
+        [PermissionKey("Report.Sales.SalesCommission")]
         public IActionResult SalesCommission([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesCommission(reportReq));
@@ -314,6 +347,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesCommission2")]
         [DisplayName("Sales -> Sales Commission 2")]
+        [PermissionKey("Report.Sales.SalesCommission2")]
         public IActionResult SalesCommission2([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesCommission2(reportReq));
@@ -325,6 +359,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("ARInvoice")]
         [DisplayName("AR -> AR From Invoice")]
+        [PermissionKey("Report.AR.ARInvoice")]
         public IActionResult ARInvoice([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.ARInvoice(reportReq));
@@ -333,6 +368,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("ARMonth")]
         [DisplayName("AR -> AR Month")]
+        [PermissionKey("Report.AR.ARMonth")]
         public IActionResult ARMonth([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.ARMonth(reportReq));
@@ -344,6 +380,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("InventoryStatus")]
         [DisplayName("Inventory -> Inventory Status")]
+        [PermissionKey("Report.Inventory.InventoryStatus")]
         public IActionResult InventoryStatus([FromQuery] InventoryReportRequest req)
         {
             return Ok(_reportService.InventoryStatus(req));
@@ -352,6 +389,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("Reorder")]
         [DisplayName("Inventory -> Reorder")]
+        [PermissionKey("Report.Inventory.Reorder")]
         public IActionResult Reorder([FromQuery] InventoryReportRequest req)
         {
             return Ok(_reportService.Reorder(req));
@@ -360,6 +398,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("InventoryValuation")]
         [DisplayName("Inventory -> Inventory Valuation")]
+        [PermissionKey("Report.Inventory.InventoryValuation")]
         public IActionResult InventoryValuation([FromQuery] InventoryReportRequest req)
         {
             return Ok(_reportService.InventoryValuation(req));
@@ -368,6 +407,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("InventoryMovement")]
         [DisplayName("Inventory -> Inventory Movement")]
+        [PermissionKey("Report.Inventory.InventoryMovement")]
         public IActionResult InventoryMovement([FromQuery] InventoryReportRequest req)
         {
             return Ok(_reportService.InventoryMovement(req));
@@ -376,6 +416,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("InventoryIncoming")]
         [DisplayName("Inventory -> Incoming Purchases")]
+        [PermissionKey("Report.Inventory.InventoryIncoming")]
         public IActionResult InventoryIncoming()
         {
             return Ok(_reportService.InventoryIncoming());

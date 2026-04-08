@@ -1,4 +1,4 @@
-﻿using KLS.API.Helpers;
+using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -15,14 +15,16 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly ISystemRoleService _roleService;
+        private readonly IPermissionService _permissionService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public RolesController(ISystemRoleService roleService)
+        public RolesController(ISystemRoleService roleService, IPermissionService permissionService)
         {
             _roleService = roleService;
+            _permissionService = permissionService;
         }
 
         #endregion
@@ -31,6 +33,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Roles")]
+        [PermissionKey("Admin.Role.List")]
         public IActionResult List()
         {
             return Ok(_roleService.GetList());
@@ -51,6 +54,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Role")]
+        [PermissionKey("Admin.Role.Create")]
         public IActionResult Create([FromBody] SystemRole role)
         {
             if (_roleService.NameExists(role))
@@ -64,6 +68,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Role")]
+        [PermissionKey("Admin.Role.Update")]
         public IActionResult Update([FromBody] SystemRole role)
         {
             if (_roleService.NameExists(role))
@@ -77,6 +82,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{roleId}")]
         [DisplayName("Delete Role")]
+        [PermissionKey("Admin.Role.Delete")]
         public IActionResult Delete(int roleId)
         {
             var existing = _roleService.GetById(roleId);
@@ -92,6 +98,35 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpGet("GetPermissions/{roleId}")]
+        [DisplayName("View Permission")]
+        [PermissionKey("Admin.Role.ViewPermission")]
+        public IActionResult GetPermissions(int roleId)
+        {
+            return Ok(_permissionService.GetGroupedByRole(roleId));
+        }
+
+
+        [HttpPost("SavePermissions/{roleId}")]
+        [DisplayName("Save Permission")]
+        [PermissionKey("Admin.Role.SavePermission")]
+        public IActionResult SavePermissions(int roleId, [FromBody] List<int> permissionIds)
+        {
+            var userId = Convert.ToInt32(HttpContext.Items["RoleId"]);
+
+            _permissionService.SaveRolePermissions(roleId, permissionIds, userId);
+
+            return Ok();
+        }
+
+        #endregion
+
+        #region --- Deprecated ---
+
+        /* [DEPRECATED-PERMISSION] Old HTTP-based permission check endpoints.
+           Frontend now checks permissions locally from login response.
+           Uncomment to rollback.
 
         [HttpGet("CheckPermission/{endPoint}")]
         public IActionResult CheckPermission(string endPoint)
@@ -118,6 +153,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("GetControllers/{roleId}")]
         [DisplayName("Permission Setup")]
+        [PermissionKey("Admin.Role.PermissionSetup")]
         public IActionResult GetControllers(int roleId)
         {
             return Ok(_roleService.GetControllers(roleId));
@@ -126,12 +162,14 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("SavePermission")]
         [DisplayName("Save Permission")]
+        [PermissionKey("Admin.Role.SavePermission")]
         public IActionResult SavePermission([FromBody] RolePermissionReq permissionReq)
         {
             _roleService.SavePermission(permissionReq);
 
             return Ok();
         }
+        */
 
         #endregion
     }

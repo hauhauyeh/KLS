@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Reconciliations")]
+        [PermissionKey("Accounting.BankRecon.List")]
         public IActionResult List()
         {
             return Ok(_bankReconService.GetList());
@@ -46,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create Reconciliation")]
+        [PermissionKey("Accounting.BankRecon.Create")]
         public IActionResult Create([FromBody] BankRecon bankRecon)
         {
             if (_bankReconService.Exists(bankRecon))
@@ -57,6 +59,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut]
         [DisplayName("Update Reconciliation")]
+        [PermissionKey("Accounting.BankRecon.Update")]
         public IActionResult Update([FromBody] BankRecon bankRecon)
         {
             if (_bankReconService.Exists(bankRecon))
@@ -77,6 +80,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Reconciliation")]
+        [PermissionKey("Accounting.BankRecon.Delete")]
         public IActionResult Delete(int id)
         {
             _bankReconService.Delete(id);

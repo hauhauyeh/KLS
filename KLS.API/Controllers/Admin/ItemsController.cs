@@ -36,6 +36,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Products")]
+        [PermissionKey("Product.Item.List")]
         public IActionResult List([FromQuery] ItemListReq itemListReq)
         {
             return Ok(_itemService.GetPagedList(itemListReq));
@@ -77,6 +78,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{itemId}")]
         [DisplayName("Delete Product")]
+        [PermissionKey("Product.Item.Delete")]
         public IActionResult Delete(int itemId)
         {
             _itemService.Delete(itemId);
@@ -94,6 +96,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create/Update Product")]
+        [PermissionKey("Product.Item.Save")]
         public IActionResult Save([FromBody] Item item)
         {
             if (_itemService.ItemCodeExists(item))
@@ -122,6 +125,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateBaseP1")]
         [DisplayName("Edit P1")]
+        [PermissionKey("Product.Item.UpdateBaseP1")]
         public IActionResult UpdateBaseP1([FromBody] ItemUpdateReq updateReq)
         {
             _itemService.UpdateBaseP1(updateReq);
@@ -131,6 +135,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateInventorySettings")]
         [DisplayName("Edit Inventory Settings")]
+        [PermissionKey("Product.Item.UpdateInventorySettings")]
         public IActionResult UpdateInventorySettings([FromBody] ItemInventorySettingsReq req)
         {
             _itemService.UpdateInventorySettings(req);
@@ -171,6 +176,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPut("UpdateItemUnit")]
         [DisplayName("Edit Item Unit")]
+        [PermissionKey("Product.Item.UpdateItemUnit")]
         public IActionResult UpdateItemUnit([FromBody] ItemUnitUpdateReq req)
         {
             _itemUnitService.UpdateUnit(req);
@@ -180,6 +186,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("CreateItemUnit/{itemId}")]
         [DisplayName("Create Item Unit")]
+        [PermissionKey("Product.Item.CreateItemUnit")]
         public IActionResult CreateItemUnit(int itemId)
         {
             var unit = _itemUnitService.CreateUnit(itemId);
@@ -189,6 +196,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("DeleteItemUnit/{itemUnitId}")]
         [DisplayName("Delete Item Unit")]
+        [PermissionKey("Product.Item.DeleteItemUnit")]
         public IActionResult DeleteItemUnit(int itemUnitId)
         {
             _itemUnitService.DeleteUnit(itemUnitId);

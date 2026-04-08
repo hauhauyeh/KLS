@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Deposits")]
+        [PermissionKey("Customer.Deposit.List")]
         public IActionResult List([FromQuery] DepositReq depositReq)
         {
             return Ok(_transferFundService.GetPagedDeposits(depositReq));
@@ -46,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create/Update Deposit")]
+        [PermissionKey("Customer.Deposit.Save")]
         public IActionResult Save([FromBody] TransferFund transferFund)
         {
             return Ok(_transferFundService.SaveDeposit(transferFund));
@@ -54,6 +56,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{tfId}")]
         [DisplayName("Delete Deposit")]
+        [PermissionKey("Customer.Deposit.Delete")]
         public IActionResult Delete(int tfId)
         {
             _transferFundService.DeleteTransferFund(tfId);

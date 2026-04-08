@@ -31,6 +31,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet]
         [DisplayName("List Customer Payments")]
+        [PermissionKey("Customer.CustomerPayment.List")]
         public IActionResult List([FromQuery] CustomerPaymentReq customerPaymentReq)
         {
             return Ok(_customerPaymentService.GetPagedList(customerPaymentReq));
@@ -46,6 +47,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Payment")]
+        [PermissionKey("Customer.CustomerPayment.Delete")]
         public IActionResult Delete(int id)
         {
             _customerPaymentService.Delete(id);
@@ -65,6 +67,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost]
         [DisplayName("Create/Update Customer Payment")]
+        [PermissionKey("Customer.CustomerPayment.Save")]
         public IActionResult Save([FromBody] CustomerPaymentSaveReq paymentSaveReq)
         {
             return Ok(_customerPaymentService.Save(paymentSaveReq));
@@ -80,6 +83,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Return")]
         [DisplayName("Return Payment")]
+        [PermissionKey("Customer.CustomerPayment.SaveReturn")]
         public IActionResult SaveReturn([FromBody] CustomerPaymentReturnReq returnReq)
         {
             _customerPaymentService.SaveReturn(returnReq);
@@ -90,6 +94,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("DeleteReturn/{id}")]
         [DisplayName("Delete Return Payment")]
+        [PermissionKey("Customer.CustomerPayment.DeleteReturn")]
         public IActionResult DeleteReturn(int id)
         {
             _customerPaymentService.DeleteReturn(id);
