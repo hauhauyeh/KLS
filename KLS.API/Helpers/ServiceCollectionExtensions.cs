@@ -107,6 +107,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IHomeService, HomeService>();
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddMemoryCache();
+            services.AddScoped<IContactService, ContactService>();
 
             return services;
         }
