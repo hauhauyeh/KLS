@@ -15,6 +15,8 @@ namespace KLS.Contract.Interfaces
 
         int Save(CustomerPaymentSaveReq paymentSaveReq);
 
+        void Delete(int customerPaymentId);
+
         void SaveReturn(CustomerPaymentReturnReq returnReq);
 
         void DeleteReturn(int customerPaymentId);

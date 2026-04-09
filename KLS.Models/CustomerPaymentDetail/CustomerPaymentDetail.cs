@@ -31,6 +31,8 @@ namespace KLS.Models
 
         public bool IsCCFee { get; set; }
 
+        public int? SourcePaymentNumber { get; set; }
+
 
         [ForeignKey("SalesId")]
         public virtual Sales? Sales { get; set; }

@@ -83,7 +83,7 @@ namespace KLS.Services
 
             if (payment != null && !payment.IsLocked)
             {
-                Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).ExecuteDelete();
+                Uow.CustomerPayments.Delete(customerPaymentId);
 
                 string docType = EnumHelper.DocType.CustomerPayment.ToString();
 
@@ -460,5 +460,6 @@ namespace KLS.Services
                 ?? TryGet("referenceId")
                 ?? "";
         }
+
     }
 }
