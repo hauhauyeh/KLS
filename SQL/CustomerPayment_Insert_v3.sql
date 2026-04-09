@@ -50,6 +50,12 @@ BEGIN
     DECLARE @AsCredit BIT = 0;
     DECLARE @AsIncome BIT = 0;
     DECLARE @ExtraAmount DECIMAL(18,2) = 0;
+    DECLARE @SourceUseAsIncome DECIMAL(18,2) = 0;
+
+    CREATE TABLE #AffectedSourcePayment
+    (
+        PaymentNumber INT PRIMARY KEY
+    );
 
     DECLARE @AcctTable AS TABLE(
         Id INT IDENTITY(1,1),
@@ -71,16 +77,24 @@ BEGIN
 
     IF @CustomerPaymentId > 0
     BEGIN
-        UPDATE cp
-        SET cp.UnappliedAmount = cp.UnappliedAmount + x.RestoreAmount
-        FROM dbo.CustomerPayment cp
-        INNER JOIN (
-            SELECT SourcePaymentNumber, SUM(ISNULL(PaymentApplied, 0)) AS RestoreAmount
-            FROM dbo.CustomerPaymentDetail
-            WHERE CustomerPaymentId = @CustomerPaymentId
-              AND SourcePaymentNumber IS NOT NULL
-            GROUP BY SourcePaymentNumber
-        ) x ON x.SourcePaymentNumber = cp.PaymentNumber;
+        INSERT INTO #AffectedSourcePayment(PaymentNumber)
+        SELECT DISTINCT SourcePaymentNumber
+        FROM dbo.CustomerPaymentDetail
+        WHERE CustomerPaymentId = @CustomerPaymentId
+          AND SourcePaymentNumber IS NOT NULL;
+
+        INSERT INTO #AffectedSourcePayment(PaymentNumber)
+        SELECT DISTINCT su.SourcePaymentNumber
+        FROM dbo.CustomerPaymentSourceUse su
+        WHERE su.CustomerPaymentId = @CustomerPaymentId
+          AND NOT EXISTS (
+                SELECT 1
+                FROM #AffectedSourcePayment a
+                WHERE a.PaymentNumber = su.SourcePaymentNumber
+          );
+
+        DELETE FROM dbo.CustomerPaymentSourceUse
+        WHERE CustomerPaymentId = @CustomerPaymentId;
 
         DELETE FROM dbo.TempCustomerPayment
         WHERE SalesId IN (
@@ -363,6 +377,53 @@ BEGIN
         SET @TargetRowId += 1;
     END;
 
+    IF @AsIncome = 1 AND @ExtraAmount > 0
+    BEGIN
+        DECLARE @IncomeRemaining DECIMAL(18,2) = @ExtraAmount;
+        DECLARE @IncomePoolRowId INT = 1;
+        DECLARE @IncomePoolMax INT;
+        DECLARE @IncomeSourcePmtNum INT;
+        DECLARE @IncomeSourceRemaining DECIMAL(18,2);
+        DECLARE @IncomeApply DECIMAL(18,2);
+
+        SELECT @IncomePoolMax = COUNT(*) FROM #UnappliedPool;
+
+        WHILE @IncomePoolRowId <= ISNULL(@IncomePoolMax, 0) AND @IncomeRemaining > 0
+        BEGIN
+            SELECT
+                @IncomeSourcePmtNum = SourcePaymentNumber,
+                @IncomeSourceRemaining = RemainingAmount
+            FROM #UnappliedPool
+            WHERE RowId = @IncomePoolRowId;
+
+            IF ISNULL(@IncomeSourceRemaining, 0) > 0
+            BEGIN
+                SET @IncomeApply =
+                    CASE
+                        WHEN @IncomeSourceRemaining < @IncomeRemaining THEN @IncomeSourceRemaining
+                        ELSE @IncomeRemaining
+                    END;
+
+                INSERT INTO dbo.CustomerPaymentSourceUse
+                (
+                    CustomerPaymentId, SourcePaymentNumber, UseType, Amount
+                )
+                VALUES
+                (
+                    @CustomerPaymentId, @IncomeSourcePmtNum, 'AsIncome', @IncomeApply
+                );
+
+                UPDATE #UnappliedPool
+                SET RemainingAmount = RemainingAmount - @IncomeApply
+                WHERE RowId = @IncomePoolRowId;
+
+                SET @IncomeRemaining = @IncomeRemaining - @IncomeApply;
+            END;
+
+            SET @IncomePoolRowId += 1;
+        END;
+    END;
+
     UPDATE cp
     SET cp.UnappliedAmount = cp.UnappliedAmount - x.UsedAmount
     FROM dbo.CustomerPayment cp
@@ -373,6 +434,27 @@ BEGIN
           AND SourcePaymentNumber IS NOT NULL
         GROUP BY SourcePaymentNumber
     ) x ON x.SourcePaymentNumber = cp.PaymentNumber;
+
+    INSERT INTO #AffectedSourcePayment(PaymentNumber)
+    SELECT DISTINCT pd.SourcePaymentNumber
+    FROM dbo.CustomerPaymentDetail pd
+    WHERE pd.CustomerPaymentId = @CustomerPaymentId
+      AND pd.SourcePaymentNumber IS NOT NULL
+      AND NOT EXISTS (
+            SELECT 1
+            FROM #AffectedSourcePayment a
+            WHERE a.PaymentNumber = pd.SourcePaymentNumber
+      );
+
+    INSERT INTO #AffectedSourcePayment(PaymentNumber)
+    SELECT DISTINCT su.SourcePaymentNumber
+    FROM dbo.CustomerPaymentSourceUse su
+    WHERE su.CustomerPaymentId = @CustomerPaymentId
+      AND NOT EXISTS (
+            SELECT 1
+            FROM #AffectedSourcePayment a
+            WHERE a.PaymentNumber = su.SourcePaymentNumber
+      );
 
     EXEC dbo.CustomerPayment_UpdateSales @CustomerPaymentId, 0;
 
@@ -558,6 +640,11 @@ BEGIN
     WHERE pd.SourcePaymentNumber = @PaymentNumber
       AND pd.CustomerPaymentId != @CustomerPaymentId;
 
+    SELECT @SourceUseAsIncome = ISNULL(SUM(ISNULL(su.Amount, 0)), 0)
+    FROM dbo.CustomerPaymentSourceUse su
+    WHERE su.CustomerPaymentId = @CustomerPaymentId
+      AND su.UseType = 'AsIncome';
+
     UPDATE dbo.CustomerPayment
     SET
         PaymentApplied = (
@@ -573,8 +660,56 @@ BEGIN
             WHERE CustomerPaymentId = @CustomerPaymentId
               AND IsCreditMemo = 0
               AND SourcePaymentNumber IS NULL
-        ) + @CreditMemoUsed - ISNULL(AsIncome, 0) - @ConsumedByOthers
+        ) + @CreditMemoUsed - (ISNULL(AsIncome, 0) - @SourceUseAsIncome) - @ConsumedByOthers
     WHERE CustomerPaymentId = @CustomerPaymentId;
+
+    ;WITH SourceHeader AS
+    (
+        SELECT
+            cp.CustomerPaymentId,
+            cp.PaymentAmount,
+            ISNULL(cp.AsIncome, 0) AS AsIncome,
+            SourceUseAsIncome = ISNULL((
+                SELECT SUM(ISNULL(su.Amount, 0))
+                FROM dbo.CustomerPaymentSourceUse su
+                WHERE su.CustomerPaymentId = cp.CustomerPaymentId
+                  AND su.UseType = 'AsIncome'
+            ), 0),
+            OwnCashApplied = ISNULL((
+                SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+                  AND pd.IsCreditMemo = 0
+                  AND pd.SourcePaymentNumber IS NULL
+            ), 0),
+            CreditMemoUsed = ISNULL((
+                SELECT SUM(CASE WHEN pd.PaymentApplied < 0 THEN ISNULL(pd.PaymentApplied, 0) * -1 ELSE 0 END)
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+                  AND pd.IsCreditMemo = 1
+            ), 0),
+            ConsumedByOthers = ISNULL((
+                SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.SourcePaymentNumber = cp.PaymentNumber
+                  AND pd.CustomerPaymentId != cp.CustomerPaymentId
+            ), 0) + ISNULL((
+                SELECT SUM(ISNULL(su.Amount, 0))
+                FROM dbo.CustomerPaymentSourceUse su
+                WHERE su.SourcePaymentNumber = cp.PaymentNumber
+                  AND su.CustomerPaymentId != cp.CustomerPaymentId
+            ), 0)
+        FROM dbo.CustomerPayment cp
+        INNER JOIN #AffectedSourcePayment a
+            ON a.PaymentNumber = cp.PaymentNumber
+    )
+    UPDATE cp
+    SET
+        PaymentApplied = sh.OwnCashApplied - sh.CreditMemoUsed,
+        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.ConsumedByOthers
+    FROM dbo.CustomerPayment cp
+    INNER JOIN SourceHeader sh
+        ON sh.CustomerPaymentId = cp.CustomerPaymentId;
 
     SET @NewPaymentId = @CustomerPaymentId;
 END

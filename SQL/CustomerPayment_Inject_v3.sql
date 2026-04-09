@@ -5,7 +5,8 @@
 IF OBJECT_ID('dbo.CustomerPayment_Inject_prev', 'P') IS NOT NULL
     DROP PROCEDURE dbo.CustomerPayment_Inject_prev;
 
-EXEC sp_rename 'dbo.CustomerPayment_Inject', 'CustomerPayment_Inject_prev';
+IF OBJECT_ID('dbo.CustomerPayment_Inject', 'P') IS NOT NULL
+    EXEC sp_rename 'dbo.CustomerPayment_Inject', 'CustomerPayment_Inject_prev';
 GO
 
 SET ANSI_NULLS ON;
@@ -185,8 +186,8 @@ BEGIN
             @PayeeId,
             @CustomerPaymentId,
             0,
-            (ISNULL(cp.UnappliedAmount, 0) + SUM(pd.PaymentApplied)) * -1,
-            SUM(pd.PaymentApplied) * -1,
+            (ISNULL(cp.UnappliedAmount, 0) + SUM(src.TotalConsumed)) * -1,
+            SUM(src.TotalConsumed) * -1,
             0,
             0,
             0,
@@ -201,17 +202,29 @@ BEGIN
             ISNULL(p.PayeeName, CONCAT('Payment #', cp.PaymentNumber, ' unapplied')),
             NULL,
             cp.PaymentAmount,
-            (ISNULL(cp.UnappliedAmount, 0) + SUM(pd.PaymentApplied)) * -1,
+            (ISNULL(cp.UnappliedAmount, 0) + SUM(src.TotalConsumed)) * -1,
             NULL,
             0,
             0,
             NULL,
             0
-        FROM dbo.CustomerPaymentDetail pd
-        INNER JOIN dbo.CustomerPayment cp ON cp.PaymentNumber = pd.SourcePaymentNumber
+        FROM
+        (
+            SELECT pd.SourcePaymentNumber, SUM(ISNULL(pd.PaymentApplied, 0)) AS TotalConsumed
+            FROM dbo.CustomerPaymentDetail pd
+            WHERE pd.CustomerPaymentId = @CustomerPaymentId
+              AND pd.SourcePaymentNumber IS NOT NULL
+            GROUP BY pd.SourcePaymentNumber
+
+            UNION ALL
+
+            SELECT su.SourcePaymentNumber, SUM(ISNULL(su.Amount, 0)) AS TotalConsumed
+            FROM dbo.CustomerPaymentSourceUse su
+            WHERE su.CustomerPaymentId = @CustomerPaymentId
+            GROUP BY su.SourcePaymentNumber
+        ) src
+        INNER JOIN dbo.CustomerPayment cp ON cp.PaymentNumber = src.SourcePaymentNumber
         LEFT JOIN dbo.Payee p ON p.PayeeId = cp.PayeeId
-        WHERE pd.CustomerPaymentId = @CustomerPaymentId
-          AND pd.SourcePaymentNumber IS NOT NULL
         GROUP BY
             cp.CustomerPaymentId,
             cp.UnappliedAmount,
@@ -220,7 +233,7 @@ BEGIN
             cp.PaymentAmount,
             p.PayeeName;
 
-        -- ConsumedCredit: inject one row per consuming payment that used this payment's extra
+        -- ConsumedCredit: inject one merged row per consuming payment that used this payment's extra
         INSERT INTO dbo.TempCustomerPayment
         (
             EmpId, PayeeId, CustomerPaymentId, SalesId,
@@ -233,20 +246,33 @@ BEGIN
         )
         SELECT
             @EmpId, @PayeeId, @CustomerPaymentId, 0,
-            0, SUM(pd.PaymentApplied) * -1, 0, 0, 0,
+            0, SUM(cs.TotalConsumed) * -1, 0, 0, 0,
             0, 0, 1,
             'ConsumedCredit', cp2.PaymentNumber, 1,
             CAST(cp2.PaymentNumber AS NVARCHAR(30)),
             cp2.PaymentDate,
             'Used by Pmt #' + CAST(cp2.PaymentNumber AS NVARCHAR(20)),
             NULL,
-            0, SUM(pd.PaymentApplied) * -1,
+            0, SUM(cs.TotalConsumed) * -1,
             NULL, 0, 0, NULL, 0
-        FROM dbo.CustomerPaymentDetail pd
-        INNER JOIN dbo.CustomerPayment cp2 ON cp2.CustomerPaymentId = pd.CustomerPaymentId
-        WHERE pd.SourcePaymentNumber = @PaymentNumber
-          AND pd.CustomerPaymentId != @CustomerPaymentId
-        GROUP BY pd.CustomerPaymentId, cp2.PaymentNumber, cp2.PaymentDate;
+        FROM
+        (
+            SELECT pd.CustomerPaymentId, SUM(pd.PaymentApplied) AS TotalConsumed
+            FROM dbo.CustomerPaymentDetail pd
+            WHERE pd.SourcePaymentNumber = @PaymentNumber
+              AND pd.CustomerPaymentId != @CustomerPaymentId
+            GROUP BY pd.CustomerPaymentId
+
+            UNION ALL
+
+            SELECT su.CustomerPaymentId, SUM(su.Amount) AS TotalConsumed
+            FROM dbo.CustomerPaymentSourceUse su
+            WHERE su.SourcePaymentNumber = @PaymentNumber
+              AND su.CustomerPaymentId != @CustomerPaymentId
+            GROUP BY su.CustomerPaymentId
+        ) cs
+        INNER JOIN dbo.CustomerPayment cp2 ON cp2.CustomerPaymentId = cs.CustomerPaymentId
+        GROUP BY cs.CustomerPaymentId, cp2.PaymentNumber, cp2.PaymentDate;
     END;
 
     ;WITH AllDiscount AS
