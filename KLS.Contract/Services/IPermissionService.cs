@@ -8,9 +8,9 @@ namespace KLS.Contract.Services
 
         HashSet<string> GetPermissionKeys(int roleId);
 
-        ICollection<PermissionGroup> GetGroupedByRole(int roleId);
+        ICollection<PermissionModuleDTO> GetGroupedByRole(int roleId);
 
-        void SaveRolePermissions(int roleId, List<int> permissionIds);
+        void SaveRolePermissions(int roleId, List<string> permissionTokens);
 
         void InvalidateCache(int roleId);
     }
