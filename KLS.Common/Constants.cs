@@ -13,5 +13,7 @@ namespace KLS.Common
         public static string? PayrollPath = "Payroll";
 
         public static string? PurchaseImagePath = "BillPdf";
+
+        public static string? MarketplaceEncryptionKey { get; set; }
     }
 }
