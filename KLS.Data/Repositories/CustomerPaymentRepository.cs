@@ -109,6 +109,13 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(NewPaymentId.Value);
         }
 
+        public void Delete(int customerPaymentId)
+        {
+            var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", customerPaymentId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_Delete] @CustomerPaymentId", CustomerPaymentIdParam);
+        }
+
         public void SaveReturn(CustomerPaymentReturnReq returnReq)
         {
             var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", returnReq.CustomerPaymentId);

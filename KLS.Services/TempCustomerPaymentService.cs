@@ -73,9 +73,11 @@ namespace KLS.Services
             if (tempCustomerPmt != null)
             {
                 tempCustomerPmt.IsApplied = tempCustomerPayment.IsApplied;
+                tempCustomerPmt.IsSelected = tempCustomerPayment.IsSelected;
                 tempCustomerPmt.PaymentApplied = tempCustomerPayment.PaymentApplied;
                 tempCustomerPmt.PaymentDiscount = tempCustomerPayment.PaymentDiscount;
                 tempCustomerPmt.ShortDiscount = tempCustomerPayment.ShortDiscount;
+                tempCustomerPmt.OtherDiscount = tempCustomerPayment.OtherDiscount;
 
                 Uow.TempCustomerPayments.Update(tempCustomerPmt);
                 Uow.Commit();
