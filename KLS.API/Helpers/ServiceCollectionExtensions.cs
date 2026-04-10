@@ -1,5 +1,7 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Services;
+using KLS.Services.Marketplace.Amazon;
+using KLS.Services.Marketplace.Common;
 using KLS.Data.Repositories;
 using KLS.Contract.Services;
 
@@ -108,6 +110,30 @@ namespace KLS.API.Helpers
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddMemoryCache();
             services.AddScoped<IContactService, ContactService>();
+
+            // Marketplace Services
+            services.AddScoped<IMarketAccountService, MarketAccountService>();
+            services.AddScoped<IMarketItemMapService, MarketItemMapService>();
+            services.AddScoped<IMarketSyncLogService, MarketSyncLogService>();
+
+            // HttpClient factories
+            services.AddHttpClient("AmazonLWA", c => { c.Timeout = TimeSpan.FromSeconds(30); });
+            services.AddHttpClient("AmazonSPAPI", c => { c.Timeout = TimeSpan.FromSeconds(60); });
+
+            // Marketplace CRUD Services
+            services.AddScoped<IMarketOrderService, MarketOrderService>();
+
+            // Marketplace Factory
+            services.AddScoped<IMarketplaceServiceFactory, MarketplaceServiceFactory>();
+
+            // Amazon services
+            services.AddScoped<IAmazonTokenService, AmazonTokenService>();
+            services.AddScoped<IAmazonSpApiClient, AmazonSpApiClient>();
+            services.AddScoped<IAmazonCatalogService, AmazonCatalogService>();
+            services.AddScoped<AmazonListingService>();
+            services.AddScoped<AmazonPricingService>();
+            services.AddScoped<AmazonInventoryService>();
+            services.AddScoped<AmazonOrderService>();
 
             return services;
         }

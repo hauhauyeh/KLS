@@ -20,6 +20,34 @@ namespace KLS.Models
 
         public int SalesId { get; set; }
 
+        public string? SourceType { get; set; }
+
+        public int? SourceId { get; set; }
+
+        public bool IsSelected { get; set; }
+
+        public string? DocNumber { get; set; }
+
+        public DateOnly? DocDate { get; set; }
+
+        public string? Description { get; set; }
+
+        public string? BillName { get; set; }
+
+        public decimal? OriginalAmount { get; set; }
+
+        public decimal? OpenBalanceBefore { get; set; }
+
+        public string? TermName { get; set; }
+
+        public decimal? DiscountPercent { get; set; }
+
+        public decimal? DiscountAlreadyTaken { get; set; }
+
+        public DateOnly? DiscountDate { get; set; }
+
+        public int? DueDays { get; set; }
+
         public decimal? AmountDue { get; set; }
 
         public decimal? PaymentApplied { get; set; }

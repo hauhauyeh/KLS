@@ -200,6 +200,13 @@ namespace KLS.Contract.Interfaces
 
         IRolePermissionRepository RolePermissions { get; }
 
+        // Marketplace
+        IMarketAccountRepository MarketAccounts { get; }
+        IMarketItemMapRepository MarketItemMaps { get; }
+        IMarketOrderRepository MarketOrders { get; }
+        IMarketOrderItemRepository MarketOrderItems { get; }
+        IMarketSyncLogRepository MarketSyncLogs { get; }
+
         void Commit();
     }
 }

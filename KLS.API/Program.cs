@@ -9,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Set global connection string
 Constants.ConnectionString = builder.Configuration.GetValue<string>("ConnectionStrings:Default");
 
+// Marketplace encryption key
+Constants.MarketplaceEncryptionKey = builder.Configuration["Marketplace:EncryptionKey"]
+    ?? throw new InvalidOperationException("Marketplace:EncryptionKey not configured in appsettings.json");
+
 // Configure strongly typed settings
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 

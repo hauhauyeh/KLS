@@ -136,6 +136,13 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankReconBalance>().HasNoKey();
             modelBuilder.Entity<BankTx>().HasNoKey();
             modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
+
+            // Marketplace tables
+            modelBuilder.Entity<MarketAccount>().ToTable("MarketAccount");
+            modelBuilder.Entity<MarketItemMap>().ToTable("MarketItemMap");
+            modelBuilder.Entity<MarketOrder>().ToTable("MarketOrder");
+            modelBuilder.Entity<MarketOrderItem>().ToTable("MarketOrderItem");
+            modelBuilder.Entity<MarketSyncLog>().ToTable("MarketSyncLog");
         }
 
         #region ---DBSET---
@@ -325,6 +332,13 @@ namespace KLS.Data.DataContext
         public DbSet<Permission> Permissions { get; set; }
 
         public DbSet<RolePermission> RolePermissions { get; set; }
+
+        // Marketplace
+        public DbSet<MarketAccount> MarketAccounts { get; set; }
+        public DbSet<MarketItemMap> MarketItemMaps { get; set; }
+        public DbSet<MarketOrder> MarketOrders { get; set; }
+        public DbSet<MarketOrderItem> MarketOrderItems { get; set; }
+        public DbSet<MarketSyncLog> MarketSyncLogs { get; set; }
 
         #endregion
 

@@ -85,7 +85,6 @@ namespace KLS.Models
 
         public DateTime? UpdatedAt { get; set; }
 
-
         [ForeignKey("PayeeId")]
         public virtual Payee? Payee { get; set; }
 

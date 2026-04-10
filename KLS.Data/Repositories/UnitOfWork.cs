@@ -225,5 +225,12 @@ namespace KLS.Data.Repositories
         public IPermissionRepository Permissions { get { return new PermissionRepository(DbContext); } }
 
         public IRolePermissionRepository RolePermissions { get { return new RolePermissionRepository(DbContext); } }
+
+        // Marketplace
+        public IMarketAccountRepository MarketAccounts { get { return new MarketAccountRepository(DbContext); } }
+        public IMarketItemMapRepository MarketItemMaps { get { return new MarketItemMapRepository(DbContext); } }
+        public IMarketOrderRepository MarketOrders { get { return new MarketOrderRepository(DbContext); } }
+        public IMarketOrderItemRepository MarketOrderItems { get { return new MarketOrderItemRepository(DbContext); } }
+        public IMarketSyncLogRepository MarketSyncLogs { get { return new MarketSyncLogRepository(DbContext); } }
     }
 }
