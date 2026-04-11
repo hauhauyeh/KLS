@@ -4,6 +4,10 @@
 @{
     var itemsize = 14;
     var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails.Count, itemsize);
+    var isCreditMemo = Model.Invoice?.DocType == "CM";
+    var docLabel = isCreditMemo ? "Credit Memo" : "Sales Order";
+    var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Sales Order #";
+    var docDateLabel = isCreditMemo ? "Credit Memo Date" : "Order Date";
 
     if (totalpage == 0)
         totalpage = 1;
@@ -524,22 +528,22 @@
                 </div>
                 <div class="inv-info-grid">
                     <div class="d-flex justify-content-between">
-                        <div class="invoice-label">@(Model.Invoice.SalesTotal < 0 ? "Credit Memo" : "Sales Order")</div>
+                        <div class="invoice-label">@docLabel</div>
                         <div class="invoice-barcode">
                             *@Model.Invoice.SalesNumber*
                         </div>
                     </div>
                     <table>
                         <colgroup>
-                            <col style="width: 40%;">
-                            <col style="width: 60%;">
+                        <col style="width: 40%;">
+                        <col style="width: 60%;">
                         </colgroup>
                         <tr>
-                            <td class="invoice-info-label">Invoice #</td>
+                            <td class="invoice-info-label">@docNumberLabel</td>
                             <td class="invoice-info">@Model.Invoice.SalesNumber</td>
                         </tr>
                         <tr>
-                            <td class="invoice-info-label">Invoice Date</td>
+                            <td class="invoice-info-label">@docDateLabel</td>
                             <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
                         </tr>
                         <tr>

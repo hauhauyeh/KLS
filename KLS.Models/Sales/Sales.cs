@@ -19,6 +19,8 @@ namespace KLS.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SalesId { get; set; }
         public int SalesNumber { get; set; }
+        public int? ParentSalesNumber { get; set; }
+        public string? DocType { get; set; }
 
         public int? StageId { get; set; }
         public DateTime? SalesDate { get; set; }

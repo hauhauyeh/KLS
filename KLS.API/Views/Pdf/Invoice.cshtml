@@ -3,6 +3,10 @@
 @model RptInvoice
 @{
     var colSpan = 4;
+    var isCreditMemo = Model.Invoice?.DocType == "CM";
+    var docLabel = isCreditMemo ? "CREDIT MEMO" : "INVOICE";
+    var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Invoice #";
+    var docDateLabel = isCreditMemo ? "Credit Memo Date" : "Invoice Date";
 
     if (Model.HasDiscount)
         colSpan = 7;
@@ -528,7 +532,7 @@
             </div>
             <div class="inv-info-grid">
                 <div class="invoice-label">
-                    <span>INVOICE</span>
+                    <span>@docLabel</span>
                 </div>
                 <table>
                     <colgroup>
@@ -536,11 +540,11 @@
                         <col style="width: 60%;">
                     </colgroup>
                     <tr>
-                        <td class="invoice-info-label">Invoice #</td>
+                        <td class="invoice-info-label">@docNumberLabel</td>
                         <td class="invoice-info">@Model.Invoice.SalesNumber</td>
                     </tr>
                     <tr>
-                        <td class="invoice-info-label">Invoice Date</td>
+                        <td class="invoice-info-label">@docDateLabel</td>
                         <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
                     </tr>
                     <tr>
