@@ -10,6 +10,13 @@
         cp.CustomerPaymentId,
         cp.PaymentAmount,
         ISNULL(cp.AsIncome, 0) AS AsIncome,
+        SourceUseRefundSelf = ISNULL((
+            SELECT SUM(ISNULL(su.Amount, 0))
+            FROM dbo.CustomerPaymentSourceUse su
+            WHERE su.CustomerPaymentId = cp.CustomerPaymentId
+              AND su.SourcePaymentNumber = cp.PaymentNumber
+              AND su.UseType = 'Refund'
+        ), 0),
         SourceUseAsIncome = ISNULL((
             SELECT SUM(ISNULL(su.Amount, 0))
             FROM dbo.CustomerPaymentSourceUse su
@@ -40,7 +47,7 @@
 UPDATE cp
 SET
     PaymentApplied = hs.OwnCashApplied - hs.CreditMemoUsed,
-    UnappliedAmount = hs.PaymentAmount - hs.OwnCashApplied + hs.CreditMemoUsed - (hs.AsIncome - hs.SourceUseAsIncome) - hs.ConsumedByOthers
+    UnappliedAmount = hs.PaymentAmount - hs.OwnCashApplied + hs.CreditMemoUsed - (hs.AsIncome - hs.SourceUseAsIncome) - hs.SourceUseRefundSelf - hs.ConsumedByOthers
 FROM dbo.CustomerPayment cp
 INNER JOIN HeaderSource hs
     ON hs.CustomerPaymentId = cp.CustomerPaymentId;

@@ -10,6 +10,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using static KLS.Common.EnumHelper;
 
 namespace KLS.Services
@@ -59,12 +60,16 @@ namespace KLS.Services
 
         public CustomerPayment? GetById(int customerPaymentId)
         {
-            return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.PaymentDetails).FirstOrDefault();
+            var payment = Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.PaymentDetails).FirstOrDefault();
+            NormalizePayment(payment);
+            return payment;
         }
 
         public CustomerPayment? GetByIdWithInclude(int customerPaymentId)
         {
-            return Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId)?.Include(c => c.Payee)?.Include(c => c.PaymentDetails!)?.ThenInclude(s => s.Sales).FirstOrDefault();
+            var payment = Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId)?.Include(c => c.Payee)?.Include(c => c.PaymentDetails!)?.ThenInclude(s => s.Sales).FirstOrDefault();
+            NormalizePayment(payment);
+            return payment;
         }
 
         public CustomerPaymentList? GetListById(int customerPaymentId)
@@ -141,6 +146,122 @@ namespace KLS.Services
         public IEnumerable<CustomerPaymentStatement>? Statement(int payeeId)
         {
             return Uow.CustomerPayments.Statement(payeeId);
+        }
+
+        public IEnumerable<RefundQueueRow> GetRefundQueue()
+        {
+            var payments = Uow.CustomerPayments.GetAll();
+            var payees = Uow.Payees.GetAll();
+
+            return Uow.CustomerPaymentSourceUses.GetAll()
+                .Where(su => su.UseType == "Refund" && su.RefundPaymentId == null)
+                .Join(payments,
+                    su => su.CustomerPaymentId,
+                    cp => cp.CustomerPaymentId,
+                    (su, cp) => new { su, cp })
+                .Join(payees,
+                    x => x.cp.PayeeId,
+                    p => p.PayeeId,
+                    (x, p) => new RefundQueueRow
+                    {
+                        CustomerPaymentSourceUseId = x.su.CustomerPaymentSourceUseId,
+                        CustomerPaymentId = x.cp.CustomerPaymentId,
+                        PayeeId = x.cp.PayeeId,
+                        PayeeName = p.PayeeName,
+                        SourcePaymentNumber = x.cp.PaymentNumber,
+                        PaymentDate = x.cp.PaymentDate,
+                        ReservedAmount = x.su.Amount,
+                        ReferenceId = x.cp.ReferenceId,
+                        Notes = x.cp.Notes
+                    })
+                .OrderByDescending(x => x.PaymentDate)
+                .ThenByDescending(x => x.SourcePaymentNumber)
+                .ToList();
+        }
+
+        public CustomerPaymentList IssueRefund(IssueRefundReq issueRefundReq)
+        {
+            if (issueRefundReq.CustomerPaymentSourceUseId <= 0)
+                throw new ValidationException("Refund source is required.");
+
+            if (!issueRefundReq.PaymentDate.HasValue)
+                throw new ValidationException("Refund date is required.");
+
+            if (string.IsNullOrWhiteSpace(issueRefundReq.PaymentMethod))
+                throw new ValidationException("Refund method is required.");
+
+            if (!issueRefundReq.FromAccountId.HasValue || issueRefundReq.FromAccountId <= 0)
+                throw new ValidationException("From account is required.");
+
+            var refundSource = Uow.CustomerPaymentSourceUses.Find(x => x.CustomerPaymentSourceUseId == issueRefundReq.CustomerPaymentSourceUseId)
+                .FirstOrDefault();
+
+            if (refundSource == null || refundSource.UseType != "Refund")
+                throw new ValidationException("Refund source was not found.");
+
+            if (refundSource.RefundPaymentId.HasValue)
+                throw new ValidationException("This refund was already issued.");
+
+            if (refundSource.Amount <= 0)
+                throw new ValidationException("Refund amount must be greater than 0.");
+
+            var sourcePayment = Uow.CustomerPayments.Find(x => x.CustomerPaymentId == refundSource.CustomerPaymentId)
+                .FirstOrDefault();
+
+            if (sourcePayment == null)
+                throw new ValidationException("Source payment was not found.");
+
+            var customerRefundReq = new CustomerPaymentSaveReq
+            {
+                CustomerPaymentId = 0,
+                PaymentType = "Customer Refund",
+                PayeeId = sourcePayment.PayeeId,
+                PaymentDate = issueRefundReq.PaymentDate,
+                PaymentMethod = issueRefundReq.PaymentMethod?.Trim(),
+                FromAccountId = issueRefundReq.FromAccountId,
+                ReferenceId = issueRefundReq.ReferenceId,
+                PaymentAmount = refundSource.Amount,
+                Notes = issueRefundReq.Notes,
+                CCFee = 0
+            };
+
+            var vendorPayment = new VendorPayment
+            {
+                VendorPaymentId = 0,
+                PayeeId = sourcePayment.PayeeId,
+                PaymentDate = issueRefundReq.PaymentDate,
+                PaymentType = "Customer Refund",
+                PaymentMethod = issueRefundReq.PaymentMethod?.Trim(),
+                FromAccountId = issueRefundReq.FromAccountId,
+                ReferenceId = issueRefundReq.ReferenceId,
+                PaymentAmount = refundSource.Amount,
+                Notes = issueRefundReq.Notes
+            };
+
+            int refundPaymentId;
+            int vendorPaymentId;
+
+            using (var scope = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
+            {
+                refundPaymentId = Uow.CustomerPayments.Save(customerRefundReq);
+                vendorPaymentId = Uow.VendorPayments.Save(vendorPayment);
+
+                Uow.CustomerPayments.Find(x => x.CustomerPaymentId == refundPaymentId)
+                    .ExecuteUpdate(setters => setters
+                        .SetProperty(x => x.VendorPaymentId, x => vendorPaymentId)
+                        .SetProperty(x => x.PaymentApplied, x => refundSource.Amount)
+                        .SetProperty(x => x.UnappliedAmount, x => 0)
+                        .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+
+                Uow.CustomerPaymentSourceUses.Find(x => x.CustomerPaymentSourceUseId == issueRefundReq.CustomerPaymentSourceUseId)
+                    .ExecuteUpdate(setters => setters
+                        .SetProperty(x => x.RefundPaymentId, x => refundPaymentId)
+                        .SetProperty(x => x.RefundedAt, x => DateTime.UtcNow));
+
+                scope.Complete();
+            }
+
+            return GetListById(refundPaymentId);
         }
 
         private void EmailReceipt(int customerPaymentId)
@@ -425,6 +546,47 @@ namespace KLS.Services
                     SalesNumber = d.Sales?.SalesNumber ?? 0
                 }).ToList()
             };
+        }
+
+        private static void NormalizePaymentType(CustomerPayment? payment)
+        {
+            if (payment?.PaymentType == "Bad Debit")
+            {
+                payment.PaymentType = "Bad Debt";
+            }
+        }
+
+        private void NormalizePayment(CustomerPayment? payment)
+        {
+            NormalizePaymentType(payment);
+
+            if (payment == null) return;
+
+            var refundAmount = Uow.CustomerPaymentSourceUses.Find(su =>
+                    su.CustomerPaymentId == payment.CustomerPaymentId
+                    && su.SourcePaymentNumber == payment.PaymentNumber
+                    && su.UseType == "Refund")
+                .Sum(su => (decimal?)su.Amount) ?? 0m;
+
+            if (refundAmount > 0)
+            {
+                payment.ExtraDisposition = "Refund";
+                payment.ExtraDispositionAmount = refundAmount;
+                return;
+            }
+
+            if ((payment.AsIncome ?? 0) > 0)
+            {
+                payment.ExtraDisposition = "Income";
+                payment.ExtraDispositionAmount = payment.AsIncome;
+                return;
+            }
+
+            if ((payment.UnappliedAmount ?? 0) > 0)
+            {
+                payment.ExtraDisposition = "Credit";
+                payment.ExtraDispositionAmount = payment.UnappliedAmount;
+            }
         }
 
 

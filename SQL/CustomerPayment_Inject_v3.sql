@@ -24,6 +24,7 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @BillId INT;
+    DECLARE @IsCorporatePayment BIT = CASE WHEN @PaymentType = 'Corporate Payment' THEN 1 ELSE 0 END;
 
     SELECT TOP (1)
         @BillId = c.BillId
@@ -221,6 +222,7 @@ BEGIN
             SELECT su.SourcePaymentNumber, SUM(ISNULL(su.Amount, 0)) AS TotalConsumed
             FROM dbo.CustomerPaymentSourceUse su
             WHERE su.CustomerPaymentId = @CustomerPaymentId
+              AND NOT (su.UseType = 'Refund' AND su.SourcePaymentNumber = @PaymentNumber)
             GROUP BY su.SourcePaymentNumber
         ) src
         INNER JOIN dbo.CustomerPayment cp ON cp.PaymentNumber = src.SourcePaymentNumber
@@ -349,8 +351,14 @@ BEGIN
          OR (@PaymentType <> 'Customer Refund' AND s.AmountDue <> 0)
           )
       AND (
-            (@BillId IS NOT NULL AND s.BillId = @BillId)
-         OR (@BillId IS NULL AND s.ShipId = @PayeeId)
+            (@IsCorporatePayment = 1 AND s.BillId = @PayeeId)
+         OR (
+                @IsCorporatePayment = 0
+            AND (
+                    (@BillId IS NOT NULL AND s.BillId = @BillId)
+                 OR (@BillId IS NULL AND s.ShipId = @PayeeId)
+                )
+            )
           )
       AND (
             @CustomerPaymentId = 0
@@ -425,6 +433,7 @@ BEGIN
     LEFT JOIN dbo.Payee p ON p.PayeeId = cp.PayeeId
     WHERE cp.PayeeId = @PayeeId
       AND ISNULL(cp.UnappliedAmount, 0) > 0
+      AND ISNULL(cp.PaymentType, '') <> 'Customer Refund'
       AND cp.CustomerPaymentId != @CustomerPaymentId
       AND (
             @CustomerPaymentId = 0

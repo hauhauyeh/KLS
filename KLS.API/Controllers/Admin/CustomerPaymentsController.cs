@@ -109,6 +109,22 @@ namespace KLS.API.Controllers.Admin
             return Ok(_customerPaymentService.Statement(payeeId));
         }
 
+        [HttpGet("RefundQueue")]
+        [DisplayName("List Refund Queue")]
+        [PermissionKey("Customer.CustomerPayment.List")]
+        public IActionResult RefundQueue()
+        {
+            return Ok(_customerPaymentService.GetRefundQueue());
+        }
+
+        [HttpPost("IssueRefund")]
+        [DisplayName("Issue Refund")]
+        [PermissionKey("Customer.CustomerPayment.Save")]
+        public IActionResult IssueRefund([FromBody] IssueRefundReq issueRefundReq)
+        {
+            return Ok(_customerPaymentService.IssueRefund(issueRefundReq));
+        }
+
 
         #endregion
     }
