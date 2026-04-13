@@ -3,6 +3,7 @@ using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Models.Reports;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -345,6 +346,11 @@ namespace KLS.Services
                 SortField = "ShipDate",
                 SortOrder = "Asc"
             });
+        }
+
+        public IEnumerable<CustBoughtItemPanelRow> CustBoughtItemsPanel(int payeeId)
+        {
+            return Uow.Reports.CustBoughtItemsPanel(payeeId).ToList();
         }
 
         public byte[] Export(SalesExportReq exportReq)

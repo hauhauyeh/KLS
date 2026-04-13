@@ -516,6 +516,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptCustItemVolume> RptCustItemVolume { get; set; }
 
+        public virtual DbSet<CustBoughtItemPanelRow> CustBoughtItemPanelRows { get; set; }
+
         public virtual DbSet<RptCustSalesByItem> RptCustSalesByItem { get; set; }
 
         public virtual DbSet<RptSalesHistoryRow> RptSalesHistoryRow { get; set; }

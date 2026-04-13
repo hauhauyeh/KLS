@@ -58,7 +58,18 @@ BEGIN
             1, @CCFee, 'CreditCardFee', 1
         );
 
-        EXEC dbo.Sales_Insert 0, @PayeeId, @PaymentDate, NULL, 'CreditCardFee', 4, @EmpId, @SalesId OUTPUT;
+        EXEC dbo.Sales_Insert
+            @SalesId = 0,
+            @PayeeId = @PayeeId,
+            @ShipDate = @PaymentDate,
+            @ShipRoute = NULL,
+            @Instruction = 'CreditCardFee',
+            @StageId = 4,
+            @EmpId = @EmpId,
+            @NewSalesId = @SalesId OUTPUT,
+            @DocType = 'SO',
+            @ParentSalesNumber = NULL,
+            @AllowNoParentOverride = 0;
 
         INSERT INTO dbo.TempCustomerPayment
         (

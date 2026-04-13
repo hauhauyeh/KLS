@@ -197,6 +197,13 @@ namespace KLS.Data.Repositories
             return DbContext.RptCustItemVolume.FromSqlRaw("[dbo].[Report_CustItemVolume] @PayeeId", PayeeIdParam);
         }
 
+        public IQueryable<CustBoughtItemPanelRow> CustBoughtItemsPanel(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.CustBoughtItemPanelRows.FromSqlRaw("[dbo].[CustBoughtItems_GetPanel] @PayeeId", PayeeIdParam);
+        }
+
         public IQueryable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq)
         {
             var SearchParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", reportReq.Search);

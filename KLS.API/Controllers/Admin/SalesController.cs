@@ -250,6 +250,12 @@ namespace KLS.API.Controllers.Admin
             return Ok(_salesService.PastDueInvoices(payeeId));
         }
 
+        [HttpGet("CustBoughtItemsPanel/{payeeId}")]
+        public IActionResult CustBoughtItemsPanel(int payeeId)
+        {
+            return Ok(_salesService.CustBoughtItemsPanel(payeeId));
+        }
+
         #endregion
     }
 }

@@ -1,5 +1,6 @@
 ﻿using KLS.Models;
 using System;
+using KLS.Models.Reports;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,6 +61,8 @@ namespace KLS.Contract.Services
         IEnumerable<SalesList>? OpenInvoices(int payeeId);
 
         IEnumerable<SalesList>? PastDueInvoices(int payeeId);
+
+        IEnumerable<CustBoughtItemPanelRow> CustBoughtItemsPanel(int payeeId);
 
         byte[] Export(SalesExportReq exportReq);
 
