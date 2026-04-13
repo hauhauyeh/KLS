@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Square;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +16,30 @@ namespace KLS.Services
 {
     public class CustomerPaymentService : BaseService, ICustomerPaymentService
     {
+        private static readonly string[] CustomerReturnReasonOptions =
+        {
+            "NSF Check",
+            "ACH Return",
+            "E-Check Return",
+            "Card Dispute",
+            "Stop Payment",
+            "Bank Error"
+        };
+
+        private static readonly HashSet<string> AcceptedCustomerReturnReasons = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "NSF Check",
+            "ACH Return",
+            "E-Check Return",
+            "Card Dispute",
+            "Stop Payment",
+            "Bank Error",
+            "NSF",
+            "STOP",
+            "DISPUTE",
+            "BANK ERROR"
+        };
+
         private readonly IDeleteLogService _deleteLogService;
         private readonly IPDFService _pdfService;
         private readonly IEmailService _emailService;
@@ -118,23 +141,31 @@ namespace KLS.Services
 
         public List<string> GetReturnTypes()
         {
-            var types = new List<string>();
-
-            foreach (var enumValue in Enum.GetValues<EnumHelper.ReturnTypes>())
-            {
-                var field = enumValue.GetType().GetField(enumValue.ToString());
-
-                if (Attribute.GetCustomAttribute(field, typeof(DisplayAttribute)) is DisplayAttribute attribute)
-                {
-                    types.Add(attribute.Name);
-                }
-            }
-
-            return types;
+            return CustomerReturnReasonOptions.ToList();
         }
 
         public void SaveReturn(CustomerPaymentReturnReq returnReq)
         {
+            var payment = Uow.CustomerPayments.GetById(returnReq.CustomerPaymentId);
+            if (payment == null)
+                throw new Exception("Customer payment not found.");
+
+            var method = payment.PaymentMethod?.Trim().Replace("-", "_").Replace(" ", "_").ToUpperInvariant();
+            var allowed = new[]
+            {
+                EnumPaymentMethod.CHECK.ToString(),
+                EnumPaymentMethod.HANDWRITE_CHECK.ToString(),
+                EnumPaymentMethod.ACH.ToString(),
+                EnumPaymentMethod.E_CHECK.ToString(),
+                EnumPaymentMethod.CREDIT_CARD.ToString()
+            };
+
+            if (string.IsNullOrWhiteSpace(method) || !allowed.Contains(method))
+                throw new Exception($"Payment method {payment.PaymentMethod ?? "(blank)"} can not be marked as returned.");
+
+            if (string.IsNullOrWhiteSpace(returnReq.ReturnType) || !AcceptedCustomerReturnReasons.Contains(returnReq.ReturnType.Trim()))
+                throw new Exception($"Return reason {returnReq.ReturnType ?? "(blank)"} is not supported.");
+
             Uow.CustomerPayments.SaveReturn(returnReq);
         }
 
