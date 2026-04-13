@@ -31,6 +31,29 @@ namespace KLS.Services
             return maps;
         }
 
+        public IEnumerable<MarketItemMap> GetByItemIds(IEnumerable<int> itemIds)
+        {
+            var idList = itemIds.ToList();
+            var maps = Uow.MarketItemMaps.Find(m => idList.Contains(m.ItemId) && m.IsActive).ToList();
+
+            var distinctItemIds = maps.Select(m => m.ItemId).Distinct().ToList();
+            var items = Uow.Items.Find(i => distinctItemIds.Contains(i.ItemId))
+                .Select(i => new { i.ItemId, i.ItemCode, i.ItemName }).ToList();
+
+            var accountIds = maps.Select(m => m.MarketAccountId).Distinct().ToList();
+            var accounts = Uow.MarketAccounts.Find(a => accountIds.Contains(a.MarketAccountId))
+                .Select(a => new { a.MarketAccountId, a.AccountName, a.MarketType }).ToList();
+
+            foreach (var map in maps)
+            {
+                var item = items.FirstOrDefault(i => i.ItemId == map.ItemId);
+                if (item != null) { map.ItemCode = item.ItemCode; map.ItemName = item.ItemName; }
+                var account = accounts.FirstOrDefault(a => a.MarketAccountId == map.MarketAccountId);
+                if (account != null) { map.AccountName = account.AccountName; map.MarketType = account.MarketType; }
+            }
+            return maps;
+        }
+
         public MarketItemMap? GetById(int id)
         {
             return Uow.MarketItemMaps.GetById(id);

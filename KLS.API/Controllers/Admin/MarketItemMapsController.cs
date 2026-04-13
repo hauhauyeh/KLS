@@ -27,6 +27,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_service.GetByAccount(marketAccountId));
         }
 
+        [HttpPost("ByItemIds")]
+        [DisplayName("List Mappings By Items")]
+        [PermissionKey("Marketplace.ItemMap.List")]
+        public IActionResult GetByItemIds([FromBody] int[] itemIds)
+        {
+            if (itemIds == null || itemIds.Length == 0) return Ok(Array.Empty<MarketItemMap>());
+            return Ok(_service.GetByItemIds(itemIds));
+        }
+
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {

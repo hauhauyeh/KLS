@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         IEnumerable<MarketItemMap> GetByAccount(int marketAccountId);
 
+        IEnumerable<MarketItemMap> GetByItemIds(IEnumerable<int> itemIds);
+
         MarketItemMap? GetById(int id);
 
         MarketItemMap? GetBySku(int marketAccountId, string externalSku);

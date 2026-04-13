@@ -64,5 +64,6 @@ namespace KLS.Models
         [NotMapped] public string? ItemCode { get; set; }
         [NotMapped] public string? ItemName { get; set; }
         [NotMapped] public string? AccountName { get; set; }
+        [NotMapped] public string? MarketType { get; set; }
     }
 }
