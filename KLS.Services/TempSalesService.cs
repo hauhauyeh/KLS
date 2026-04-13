@@ -123,6 +123,21 @@ namespace KLS.Services
             return tempItem;
         }
 
+        public TempSalesItem? UpdateParentSalesNumber(TempSalesParentUpdateReq req)
+        {
+            var existing = GetById(req.TempSalesId);
+
+            if (existing == null)
+                return null;
+
+            existing.ParentSalesNumber = req.ParentSalesNumber;
+
+            Uow.TempSales.Update(existing);
+            Uow.Commit();
+
+            return GetListById(existing);
+        }
+
         private void SyncPromoAfterUpdate(TempSales existing)
         {
             // Only MAIN rows trigger promo sync — prevents reward lines from causing recursive logic

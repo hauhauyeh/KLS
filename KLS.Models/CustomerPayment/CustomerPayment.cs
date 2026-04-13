@@ -45,6 +45,14 @@ namespace KLS.Models
 
         public decimal? AsIncome { get; set; }
 
+        public int? VendorPaymentId { get; set; }
+
+        [NotMapped]
+        public decimal? ExtraDispositionAmount { get; set; }
+
+        [NotMapped]
+        public string? ExtraDisposition { get; set; }
+
         public bool IsBadDebt { get; set; }
 
         public string? CardType { get; set; }

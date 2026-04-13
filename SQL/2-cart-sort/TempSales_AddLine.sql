@@ -75,8 +75,8 @@ BEGIN
 
         SET @NewTempSalesId = SCOPE_IDENTITY();
 
-        -- Return (matches TempSales_GetList account UNION branch)
-        SELECT t.*, a.AccountName AS ItemName, a.AccountCode AS ItemCode, NULL AS CaseWeight, NULL AS PackSize
+        -- Return shape must match TempSalesItem.
+        SELECT t.*, CAST(NULL AS DATETIME) AS ParentShipDate, a.AccountName AS ItemName, a.AccountCode AS ItemCode, NULL AS CaseWeight, NULL AS PackSize
         FROM TempSales t
         INNER JOIN Account a ON t.AccountId = a.AccountId
         WHERE t.TempSalesId = @NewTempSalesId;
@@ -207,7 +207,8 @@ BEGIN
 
         SET @NewTempSalesId = SCOPE_IDENTITY();
 
-        SELECT t.*, i.ItemName, i.ItemCode, i.CaseWeight, i.PackSize
+        -- Return shape must match TempSalesItem.
+        SELECT t.*, CAST(NULL AS DATETIME) AS ParentShipDate, i.ItemName, i.ItemCode, i.CaseWeight, i.PackSize
         FROM TempSales t
         INNER JOIN Item i ON t.ItemId = i.ItemId
         WHERE t.TempSalesId = @NewTempSalesId;

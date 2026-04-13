@@ -52,6 +52,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateParentSalesNumber")]
+        public IActionResult UpdateParentSalesNumber([FromBody] TempSalesParentUpdateReq req)
+        {
+            return Ok(_tempSalesService.UpdateParentSalesNumber(req));
+        }
+
+
         [HttpPut("UpdateUnit")]
         public IActionResult UpdateUnit([FromBody] TempSalesItem tempItem)
         {

@@ -23,6 +23,8 @@ namespace KLS.Contract.Services
 
         LoginResult LoginEmployee(LoginReq loginReq);
 
+        bool VerifyEmployeePermission(LoginReq loginReq, string permissionKey);
+
         LoginResult RefreshToken(RefreshTokenReq tokenReq);
 
         string ForgetPassword(string email, string url);

@@ -50,7 +50,7 @@ namespace KLS.Services
             var template = "~/Views/Pdf/SalesOrder.cshtml";
             var html = _pdfService.RenderTemplate(template, invoice);
 
-            var fileName = (invoice.Invoice.SalesTotal < 0 ? "CreditMemo-" : "SalesOrder-") + invoice.Invoice.SalesNumber + ".pdf";
+            var fileName = (invoice.Invoice.DocType == "CM" ? "CreditMemo-" : "SalesOrder-") + invoice.Invoice.SalesNumber + ".pdf";
             string filePath = Path.Combine(_env.WebRootPath, "Pdf", fileName);
 
             using (var pdf = _pdfService.HtmlToPDF(html))
@@ -148,9 +148,12 @@ namespace KLS.Services
                 //only for view 
                 using var merged = PdfDocument.Merge(pdfs);
 
+                var singleDocPrefix = req.SalesId.HasValue && req.SalesId.Value > 0
+                    ? (_reportService.Invoice(req.SalesId.Value).Invoice?.DocType == "CM" ? "CreditMemo" : "Invoice")
+                    : "Invoice";
                 var suffix = req.SalesId.HasValue ? req.SalesNumber.ToString()
                     : $"{req.ShipDate:MMddyyyy}-{req.ShipRoute}";
-                var fileName = $"Invoice-{suffix}.pdf";
+                var fileName = $"{singleDocPrefix}-{suffix}.pdf";
                 var filePath = Path.Combine(_env.WebRootPath, "Pdf", fileName);
 
                 //_pdfService.AddPageFooter(merged);
@@ -477,7 +480,8 @@ namespace KLS.Services
                 }
 
                 var salesNumber = invoice.Invoice.SalesNumber;
-                var fileName = $"Invoice-{salesNumber}.pdf";
+                var filePrefix = invoice.Invoice.DocType == "CM" ? "CreditMemo" : "Invoice";
+                var fileName = $"{filePrefix}-{salesNumber}.pdf";
                 var relativePath = Path.Combine("Pdf", fileName); // store this in DB
                 var fullPath = Path.Combine(_env.WebRootPath, relativePath);
 
