@@ -29,6 +29,10 @@ namespace KLS.Contract.Services
 
         IEnumerable<CustomerPaymentStatement>? Statement(int payeeId);
 
+        IEnumerable<RefundQueueRow> GetRefundQueue();
+
+        CustomerPaymentList IssueRefund(IssueRefundReq issueRefundReq);
+
         CustomerPayment ChargePayment(PaymentChargeReq chargeReq);
 
         decimal GetDueTotal(string salesIds);

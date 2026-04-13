@@ -19,5 +19,11 @@ namespace KLS.Models
         public string? Instruction { get; set; }
 
         public int? StageId { get; set; }
+
+        public string? DocType { get; set; }
+
+        public int? ParentSalesNumber { get; set; }
+
+        public bool AllowNoParentOverride { get; set; }
     }
 }

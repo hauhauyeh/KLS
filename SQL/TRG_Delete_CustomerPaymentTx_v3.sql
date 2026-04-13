@@ -132,12 +132,27 @@ BEGIN
     INNER JOIN deleted d
         ON d.CustomerPaymentId = su.CustomerPaymentId;
 
+    UPDATE su
+    SET
+        RefundPaymentId = NULL,
+        RefundedAt = NULL
+    FROM dbo.CustomerPaymentSourceUse su
+    INNER JOIN deleted d
+        ON su.RefundPaymentId = d.CustomerPaymentId;
+
     ;WITH SourceHeader AS
     (
         SELECT
             cp.CustomerPaymentId,
             cp.PaymentAmount,
             ISNULL(cp.AsIncome, 0) AS AsIncome,
+            SourceUseRefundSelf = ISNULL((
+                SELECT SUM(ISNULL(su.Amount, 0))
+                FROM dbo.CustomerPaymentSourceUse su
+                WHERE su.CustomerPaymentId = cp.CustomerPaymentId
+                  AND su.SourcePaymentNumber = cp.PaymentNumber
+                  AND su.UseType = 'Refund'
+            ), 0),
             SourceUseAsIncome = ISNULL((
                 SELECT SUM(ISNULL(su.Amount, 0))
                 FROM dbo.CustomerPaymentSourceUse su
@@ -175,7 +190,7 @@ BEGIN
     UPDATE cp
     SET
         PaymentApplied = sh.OwnCashApplied - sh.CreditMemoUsed,
-        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.ConsumedByOthers
+        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.SourceUseRefundSelf - sh.ConsumedByOthers
     FROM dbo.CustomerPayment cp
     INNER JOIN SourceHeader sh
         ON sh.CustomerPaymentId = cp.CustomerPaymentId;

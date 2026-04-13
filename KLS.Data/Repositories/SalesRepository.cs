@@ -109,7 +109,17 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
-            DbContext.Database.ExecuteSqlRaw("[Sales_Insert] @SalesId,@PayeeId,@ShipDate,@ShipRoute,@Instruction,@StageId,@EmpId,@NewSalesId OUTPUT", SalesIdParam, PayeeIdParam, ShipDateParam, ShipRouteParam, InstructionParam, StageIdParam, EmpIdParam, NewSalesId);
+            var DocTypeParam = new SqlParameter("@DocType", string.IsNullOrEmpty(checkoutReq.DocType) ? "SO" : checkoutReq.DocType);
+
+            var ParentSalesNumberParam = checkoutReq.ParentSalesNumber.HasValue
+                ? new SqlParameter("@ParentSalesNumber", checkoutReq.ParentSalesNumber.Value)
+                : new SqlParameter("@ParentSalesNumber", DBNull.Value);
+
+            var AllowNoParentOverrideParam = new SqlParameter("@AllowNoParentOverride", checkoutReq.AllowNoParentOverride);
+
+            DbContext.Database.ExecuteSqlRaw("[Sales_Insert] @SalesId,@PayeeId,@ShipDate,@ShipRoute,@Instruction,@StageId,@EmpId,@NewSalesId OUTPUT,@DocType,@ParentSalesNumber,@AllowNoParentOverride",
+                SalesIdParam, PayeeIdParam, ShipDateParam, ShipRouteParam, InstructionParam, StageIdParam, EmpIdParam, NewSalesId,
+                DocTypeParam, ParentSalesNumberParam, AllowNoParentOverrideParam);
 
             return Convert.ToInt32(NewSalesId.Value);
         }

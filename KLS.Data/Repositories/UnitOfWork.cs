@@ -160,6 +160,8 @@ namespace KLS.Data.Repositories
 
         public ICustomerPaymentDetailRepository CustomerPaymentDetails { get { return new CustomerPaymentDetailRepository(DbContext); } }
 
+        public ICustomerPaymentSourceUseRepository CustomerPaymentSourceUses { get { return new CustomerPaymentSourceUseRepository(DbContext); } }
+
         public ITempCustomerPaymentRepository TempCustomerPayments { get { return new TempCustomerPaymentRepository(DbContext); } }
 
         public ITempExtraPaymentRepository TempExtraPayments { get { return new TempExtraPaymentRepository(DbContext); } }

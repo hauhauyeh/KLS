@@ -159,6 +159,29 @@ namespace KLS.Services
             };
         }
 
+        public bool VerifyEmployeePermission(LoginReq loginReq, string permissionKey)
+        {
+            var user = CheckEmpUsername(loginReq);
+
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+                return false;
+
+            if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
+                return false;
+
+            var role = _roleService.GetById(user.SystemRoleId);
+            if (role == null)
+                return false;
+
+            if (role.IsAdmin)
+                return true;
+
+            if (string.IsNullOrWhiteSpace(permissionKey))
+                return false;
+
+            return _permissionService.GetPermissionKeys(role.SystemRoleId).Contains(permissionKey);
+        }
+
         public LoginResult RefreshToken(RefreshTokenReq tokenReq)
         {
             var jwtClaim = _jWTService.ValidateExpiredToken(tokenReq.AccessToken);

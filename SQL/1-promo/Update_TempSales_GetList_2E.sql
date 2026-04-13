@@ -22,22 +22,26 @@ BEGIN
     SELECT *
     FROM (
         SELECT t.*,
+               ps.ShipDate AS ParentShipDate,
                i.ItemName,
                i.ItemCode,
                i.CaseWeight,
                i.PackSize
         FROM TempSales t
         INNER JOIN Item i ON t.ItemId = i.ItemId
+        LEFT JOIN Sales ps ON t.ParentSalesNumber = ps.SalesNumber
 
         UNION ALL
 
         SELECT t.*,
+               ps.ShipDate AS ParentShipDate,
                a.AccountName,
                a.AccountCode,
                NULL,
                NULL
         FROM TempSales t
         INNER JOIN Account a ON t.AccountId = a.AccountId
+        LEFT JOIN Sales ps ON t.ParentSalesNumber = ps.SalesNumber
     ) x
     WHERE x.EmpId = ' + CONVERT(VARCHAR,@EmpId) + '
       AND x.SalesId = ' + CONVERT(VARCHAR,@SalesId) + '

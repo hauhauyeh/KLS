@@ -37,6 +37,18 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("VerifyPermission")]
+        public IActionResult VerifyPermission([FromBody] PermissionVerifyReq req)
+        {
+            var allowed = _userService.VerifyEmployeePermission(req, req.PermissionKey ?? string.Empty);
+
+            if (!allowed)
+                return Unauthorized("Manager approval failed.");
+
+            return Ok(new { Success = true });
+        }
+
+
         [HttpPost("RefreshToken")]
         public IActionResult RefreshToken([FromBody] RefreshTokenReq tokenReq)
         {

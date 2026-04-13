@@ -26,6 +26,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    -- Normalize legacy bad-debt label before any downstream logic runs.
+    IF @PaymentType = 'Bad Debit'
+        SET @PaymentType = 'Bad Debt';
+
     DECLARE @TxId BIGINT;
     DECLARE @CrDeAmount DECIMAL(18,2) = 0;
     DECLARE @AccountId INT;
@@ -49,8 +53,12 @@ BEGIN
 
     DECLARE @AsCredit BIT = 0;
     DECLARE @AsIncome BIT = 0;
+    DECLARE @AsRefund BIT = 0;
     DECLARE @ExtraAmount DECIMAL(18,2) = 0;
     DECLARE @SourceUseAsIncome DECIMAL(18,2) = 0;
+    DECLARE @SourceUseRefundSelf DECIMAL(18,2) = 0;
+    DECLARE @PrevAsIncome DECIMAL(18,2) = 0;
+    DECLARE @PrevRefund DECIMAL(18,2) = 0;
 
     CREATE TABLE #AffectedSourcePayment
     (
@@ -128,6 +136,7 @@ BEGIN
     SELECT
         @AsCredit = AsCredit,
         @AsIncome = AsIncome,
+        @AsRefund = AsRefund,
         @ExtraAmount = ExtraAmount
     FROM dbo.TempExtraPayment
     WHERE PayeeId = @PayeeId
@@ -153,9 +162,27 @@ BEGIN
 
         SELECT
             @PaymentNumber = PaymentNumber,
-            @CreatedAt = CreatedAt
+            @CreatedAt = CreatedAt,
+            @PrevAsIncome = ISNULL(AsIncome, 0)
         FROM dbo.CustomerPayment
         WHERE CustomerPaymentId = @CustomerPaymentId;
+
+        SELECT @PrevRefund = ISNULL(SUM(ISNULL(su.Amount, 0)), 0)
+        FROM dbo.CustomerPaymentSourceUse su
+        WHERE su.CustomerPaymentId = @CustomerPaymentId
+          AND su.SourcePaymentNumber = @PaymentNumber
+          AND su.UseType = 'Refund';
+
+        IF @ExtraAmount = 0
+           AND @AsIncome = 0
+           AND @AsRefund = 0
+           AND (@PrevAsIncome > 0 OR @PrevRefund > 0)
+        BEGIN
+            SET @ExtraAmount = CASE WHEN @PrevRefund > 0 THEN @PrevRefund ELSE @PrevAsIncome END;
+            SET @AsRefund = CASE WHEN @PrevRefund > 0 THEN 1 ELSE 0 END;
+            SET @AsIncome = CASE WHEN @PrevRefund > 0 THEN 0 ELSE 1 END;
+            SET @AsCredit = 0;
+        END;
 
         DELETE FROM dbo.CustomerPayment WHERE CustomerPaymentId = @CustomerPaymentId;
     END
@@ -221,6 +248,44 @@ BEGIN
          OR ISNULL(ShortDiscount, 0) <> 0
          OR ISNULL(OtherDiscount, 0) <> 0
       );
+
+    IF @PaymentType = 'Corporate Payment'
+    BEGIN
+        IF NOT EXISTS
+        (
+            SELECT 1
+            FROM dbo.Customer c
+            WHERE c.PayeeId = @PayeeId
+              AND c.BillId = @PayeeId
+              AND EXISTS (
+                    SELECT 1
+                    FROM dbo.Customer c2
+                    WHERE c2.BillId = c.BillId
+                      AND c2.PayeeId <> c.PayeeId
+              )
+        )
+            THROW 50001, 'Corporate Payment requires a valid corporate billing account.', 1;
+
+        IF EXISTS
+        (
+            SELECT 1
+            FROM #SelectedTemp st
+            INNER JOIN dbo.Sales s ON s.SalesId = st.SalesId
+            WHERE st.SourceType IN ('Invoice', 'DebitMemo', 'CreditMemo', 'CCFee')
+              AND ISNULL(s.BillId, 0) <> @PayeeId
+        )
+            THROW 50002, 'Corporate Payment can only apply documents from the selected bill family.', 1;
+
+        IF EXISTS
+        (
+            SELECT 1
+            FROM #SelectedTemp st
+            INNER JOIN dbo.CustomerPayment cp ON cp.CustomerPaymentId = st.SourceId
+            WHERE st.SourceType = 'UnappliedPayment'
+              AND ISNULL(cp.PayeeId, 0) <> @PayeeId
+        )
+            THROW 50003, 'Corporate Payment can only use unapplied payments from the selected corporate account.', 1;
+    END;
 
     SELECT @PriorUnappliedUsed = ISNULL(SUM(ABS(PaymentApplied)), 0)
     FROM #SelectedTemp
@@ -422,6 +487,19 @@ BEGIN
 
             SET @IncomePoolRowId += 1;
         END;
+    END;
+
+    IF @AsRefund = 1 AND @ExtraAmount > 0
+    BEGIN
+        -- Reserve this extra amount for later refund issuance.
+        INSERT INTO dbo.CustomerPaymentSourceUse
+        (
+            CustomerPaymentId, SourcePaymentNumber, UseType, Amount
+        )
+        VALUES
+        (
+            @CustomerPaymentId, @PaymentNumber, 'Refund', @ExtraAmount
+        );
     END;
 
     UPDATE cp
@@ -645,6 +723,12 @@ BEGIN
     WHERE su.CustomerPaymentId = @CustomerPaymentId
       AND su.UseType = 'AsIncome';
 
+    SELECT @SourceUseRefundSelf = ISNULL(SUM(ISNULL(su.Amount, 0)), 0)
+    FROM dbo.CustomerPaymentSourceUse su
+    WHERE su.CustomerPaymentId = @CustomerPaymentId
+      AND su.SourcePaymentNumber = @PaymentNumber
+      AND su.UseType = 'Refund';
+
     UPDATE dbo.CustomerPayment
     SET
         PaymentApplied = (
@@ -660,7 +744,7 @@ BEGIN
             WHERE CustomerPaymentId = @CustomerPaymentId
               AND IsCreditMemo = 0
               AND SourcePaymentNumber IS NULL
-        ) + @CreditMemoUsed - (ISNULL(AsIncome, 0) - @SourceUseAsIncome) - @ConsumedByOthers
+        ) + @CreditMemoUsed - (ISNULL(AsIncome, 0) - @SourceUseAsIncome) - @SourceUseRefundSelf - @ConsumedByOthers
     WHERE CustomerPaymentId = @CustomerPaymentId;
 
     ;WITH SourceHeader AS
@@ -669,6 +753,13 @@ BEGIN
             cp.CustomerPaymentId,
             cp.PaymentAmount,
             ISNULL(cp.AsIncome, 0) AS AsIncome,
+            SourceUseRefundSelf = ISNULL((
+                SELECT SUM(ISNULL(su.Amount, 0))
+                FROM dbo.CustomerPaymentSourceUse su
+                WHERE su.CustomerPaymentId = cp.CustomerPaymentId
+                  AND su.SourcePaymentNumber = cp.PaymentNumber
+                  AND su.UseType = 'Refund'
+            ), 0),
             SourceUseAsIncome = ISNULL((
                 SELECT SUM(ISNULL(su.Amount, 0))
                 FROM dbo.CustomerPaymentSourceUse su
@@ -706,7 +797,7 @@ BEGIN
     UPDATE cp
     SET
         PaymentApplied = sh.OwnCashApplied - sh.CreditMemoUsed,
-        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.ConsumedByOthers
+        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.SourceUseRefundSelf - sh.ConsumedByOthers
     FROM dbo.CustomerPayment cp
     INNER JOIN SourceHeader sh
         ON sh.CustomerPaymentId = cp.CustomerPaymentId;

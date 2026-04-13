@@ -49,6 +49,9 @@ namespace KLS.Models
 
         public int? SourceTempSalesId { get; set; }
 
+        public int? ParentSalesNumber { get; set; }
+        public DateTime? ParentShipDate { get; set; }
+
         public bool IsStrike { get; set; }
 
         public int? ParentTempSalesId { get; set; }

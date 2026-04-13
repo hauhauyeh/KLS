@@ -25,6 +25,8 @@ namespace KLS.Models
 
         public bool AsIncome { get; set; }
 
+        public bool AsRefund { get; set; }
+
         public bool AsCCMemo { get; set; }
 
         [NotMapped]
