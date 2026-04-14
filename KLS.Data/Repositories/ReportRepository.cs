@@ -241,8 +241,9 @@ namespace KLS.Data.Repositories
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
             var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
 
-            return DbContext.RptCreditMemo.FromSqlRaw("[dbo].[Report_CreditMemo] @StartDate,@EndDate", StartDateParam, EndDateParam);
+            return DbContext.RptCreditMemo.FromSqlRaw("[dbo].[Report_CreditMemo] @StartDate,@EndDate,@SalesRep", StartDateParam, EndDateParam, SalesRepParam);
         }
 
         public IQueryable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
@@ -393,9 +394,10 @@ namespace KLS.Data.Repositories
             var TermParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Term", DBNull.Value) : new SqlParameter("@Term", reportReq.Search);
             var SortbyParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@Sortby", DBNull.Value) : new SqlParameter("@Sortby", reportReq.SortField);
             var FilterbyParam = string.IsNullOrEmpty(reportReq.SortOrder) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", reportReq.SortOrder);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
 
-            return DbContext.RptARInvoiceRow.FromSqlRaw("[dbo].[Report_ARFromInvoice] @Term,@Sortby,@Filterby",
-                TermParam, SortbyParam, FilterbyParam);
+            return DbContext.RptARInvoiceRow.FromSqlRaw("[dbo].[Report_ARFromInvoice] @Term,@Sortby,@Filterby,@SalesRep",
+                TermParam, SortbyParam, FilterbyParam, SalesRepParam);
         }
 
         public IQueryable<RptARMonthRow> ARMonth(ReportRequest reportReq)
