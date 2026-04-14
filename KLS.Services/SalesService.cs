@@ -145,6 +145,24 @@ namespace KLS.Services
             return Uow.Sales.UpdateStage(salesId, stageId);
         }
 
+        public SalesStage EnterEditMode(int salesId)
+        {
+            var sales = GetById(salesId);
+
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
+
+            if ((sales.StageId ?? 0) >= 4)
+                throw new InvalidOperationException("Cannot edit delivered orders.");
+
+            return Uow.Sales.EnterEditMode(salesId);
+        }
+
+        public SalesStage RestoreStage(int salesId, int stageId)
+        {
+            return Uow.Sales.RestoreStage(salesId, stageId);
+        }
+
         public void Delete(int salesId)
         {
             var sales = Uow.Sales.GetById(salesId);

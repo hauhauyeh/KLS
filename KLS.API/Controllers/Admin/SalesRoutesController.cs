@@ -66,6 +66,14 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("SyncByDate/{shipDate}")]
+        public IActionResult SyncByDate(DateOnly shipDate)
+        {
+            _salesRouteService.SyncByDate(shipDate);
+            return Ok();
+        }
+
+
         [HttpPost("CheckZeroPrice")]
         public IActionResult CheckZeroPrice([FromBody] PrintInvoiceReq printInvoiceReq)
         {

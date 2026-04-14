@@ -28,6 +28,10 @@ namespace KLS.Contract.Services
 
         SalesStage UpdateStage(int salesId, int stageId);
 
+        SalesStage EnterEditMode(int salesId);
+
+        SalesStage RestoreStage(int salesId, int stageId);
+
         void Delete(int salesId);
 
         ICollection<string?> GetShipRoutes(DateOnly shipDate);

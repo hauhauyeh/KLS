@@ -12,6 +12,8 @@ namespace KLS.Models
 
         public ICollection<SalesRoute>? Routes { get; set; }
 
+        public int? DriverId { get; set; }
+
         public string? DriverName { get; set; }
 
         public string? RouteNames

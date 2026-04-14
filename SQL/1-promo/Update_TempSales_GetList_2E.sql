@@ -3,6 +3,11 @@
 --   1. Two-level sort: owner groups DESC by LineId, then MAIN before PROMO_REWARD within each group
 --      This ensures newest items appear first and reward lines appear directly after their owner
 
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 ALTER PROCEDURE [dbo].[TempSales_GetList] --[TempSales_GetList] 100001,200002,0,null,null,null
 	@EmpId INT,
 	@PayeeId INT,
@@ -26,9 +31,12 @@ BEGIN
                i.ItemName,
                i.ItemCode,
                i.CaseWeight,
-               i.PackSize
+               i.PackSize,
+               i.LCloseQty,
+               bu.Unit AS BaseUnit
         FROM TempSales t
         INNER JOIN Item i ON t.ItemId = i.ItemId
+        LEFT JOIN ItemUnit bu ON i.ItemId = bu.ItemId AND bu.IsBaseUnit = 1 AND bu.Inactive = 0
         LEFT JOIN Sales ps ON t.ParentSalesNumber = ps.SalesNumber
 
         UNION ALL
@@ -37,6 +45,8 @@ BEGIN
                ps.ShipDate AS ParentShipDate,
                a.AccountName,
                a.AccountCode,
+               NULL,
+               NULL,
                NULL,
                NULL
         FROM TempSales t

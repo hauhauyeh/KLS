@@ -3,21 +3,12 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF OBJECT_ID('dbo.Sales_MergeOrder_prev', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.Sales_MergeOrder_prev;
-GO
-
-EXEC sp_rename 'dbo.Sales_MergeOrder', 'Sales_MergeOrder_prev';
-GO
-
-CREATE PROCEDURE [dbo].[Sales_MergeOrder]
+CREATE OR ALTER PROCEDURE [dbo].[Sales_MergeOrder]
     @SalesIds NVARCHAR(MAX),
     @Destination NVARCHAR(10),
     @EmpId INT
 AS
 BEGIN
-    -- SET NOCOUNT ON added to prevent extra result sets from
-    -- interfering with SELECT statements.
     SET NOCOUNT ON;
 
     DECLARE @SalesNumber INT;
@@ -294,7 +285,6 @@ BEGIN
       AND ts.PayeeId = @PayeeId
       AND sd.ParentSalesDetailId IS NOT NULL;
 
-    -- Refresh DisplaySort on PROMO_REWARD rows to match owner's current LineId
     UPDATE ts
     SET ts.DisplaySort = owner.LineId
     FROM TempSales ts
@@ -329,6 +319,7 @@ BEGIN
 
         UPDATE Sales
         SET
+            StageId = @StageId,
             SalesDate = @SalesDate,
             ShipDate = @ShipDate,
             ShipRoute = @ShipRoute,
@@ -352,15 +343,6 @@ BEGIN
             UpdatedAt = GETUTCDATE()
         WHERE SalesId = @NewSalesId;
 
-        DECLARE @StageResult TABLE
-        (
-            StageId INT,
-            StageName NVARCHAR(100)
-        );
-
-        INSERT INTO @StageResult (StageId, StageName)
-        EXEC [Sales_UpdateStage] @SalesId = @NewSalesId, @StageId = @StageId;
-
         COMMIT;
     END TRY
     BEGIN CATCH
@@ -371,7 +353,6 @@ BEGIN
         DECLARE @ErrNum INT = ERROR_NUMBER();
         DECLARE @ErrLine INT = ERROR_LINE();
 
-        -- Bubble up meaningful error
         RAISERROR('Sales_MergeOrder failed. %s (Err %d, Line %d)', 16, 1, @ErrMsg, @ErrNum, @ErrLine);
         RETURN;
     END CATCH

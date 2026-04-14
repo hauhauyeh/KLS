@@ -13,6 +13,10 @@ namespace KLS.Models
         public SalesRouteDetail()
         {
             CreatedAt = DateTime.UtcNow;
+            FactorToBase = 1;
+            BaseQty = 0;
+            ReturnType = "UNTRACKED";
+            ResolutionStatus = "PENDING";
         }
 
         [Key]
@@ -28,11 +32,29 @@ namespace KLS.Models
 
         public decimal? Qty { get; set; }
 
+        public decimal? FactorToBase { get; set; }
+
+        public decimal? BaseQty { get; set; }
+
         public bool IsMatch { get; set; }
 
         public int? Fault { get; set; }
 
         public string? Notes { get; set; }
+
+        public string? ReturnType { get; set; }
+
+        public string? ResolutionStatus { get; set; }
+
+        public DateTime? ResolvedAt { get; set; }
+
+        public int? ResolvedBy { get; set; }
+
+        public int? InventoryAdjId { get; set; }
+
+        public int? InventoryAdjDetailId { get; set; }
+
+        public int? CreditMemoSalesId { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
@@ -45,5 +67,11 @@ namespace KLS.Models
 
         [NotMapped]
         public string? PackSize { get; set; }
+
+        [NotMapped]
+        public DateOnly ShipDate { get; set; }
+
+        [NotMapped]
+        public string? ShipRoute { get; set; }
     }
 }

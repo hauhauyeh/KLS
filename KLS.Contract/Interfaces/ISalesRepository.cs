@@ -31,6 +31,10 @@ namespace KLS.Contract.Interfaces
 
         SalesStage UpdateStage(int salesId, int stageId);
 
+        SalesStage EnterEditMode(int salesId);
+
+        SalesStage RestoreStage(int salesId, int stageId);
+
         void BatchAllocation(DateOnly shipDate);
 
         void SingleAllocation(int salesId);
