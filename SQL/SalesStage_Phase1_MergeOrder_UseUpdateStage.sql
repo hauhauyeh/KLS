@@ -29,7 +29,6 @@ BEGIN
     DECLARE @ExternalId NVARCHAR(50);
     DECLARE @IsLoadSeparate BIT;
     DECLARE @LoadOrder INT;
-    DECLARE @LoadRoute NVARCHAR(10);
     DECLARE @IsLocked BIT;
     DECLARE @IsStatementAttached BIT;
     DECLARE @Deliverby INT;
@@ -120,7 +119,6 @@ BEGIN
             @ExternalId = ExternalId,
             @IsLoadSeparate = IsLoadSeparate,
             @LoadOrder = LoadOrder,
-            @LoadRoute = LoadRoute,
             @IsLocked = IsLocked,
             @IsStatementAttached = IsStatementAttached,
             @Deliverby = Deliverby,
@@ -150,7 +148,6 @@ BEGIN
             @ExternalId = ExternalId,
             @IsLoadSeparate = IsLoadSeparate,
             @LoadOrder = LoadOrder,
-            @LoadRoute = LoadRoute,
             @IsLocked = IsLocked,
             @IsStatementAttached = IsStatementAttached,
             @Deliverby = Deliverby,
@@ -332,7 +329,7 @@ BEGIN
             ExternalId = @ExternalId,
             IsLoadSeparate = @IsLoadSeparate,
             LoadOrder = @LoadOrder,
-            LoadRoute = @LoadRoute,
+            LoadRoute = dbo.Fn_Calc_EffectiveLoadRoute(@ShipRoute, @RouteOrder, @IsLoadSeparate),
             IsLocked = @IsLocked,
             IsStatementAttached = @IsStatementAttached,
             Deliverby = @Deliverby,
