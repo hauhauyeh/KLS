@@ -161,8 +161,7 @@ namespace KLS.Services
 
                 //_pdfService.AddPageFooter(merged);
 
-                if (req.ShipDate.HasValue)
-                    merged.SaveAs(filePath);
+                merged.SaveAs(filePath);
 
                 return filePath;
             }
