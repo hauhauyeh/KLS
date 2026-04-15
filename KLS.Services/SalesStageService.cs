@@ -20,5 +20,15 @@ namespace KLS.Services
         {
             return Uow.SalesStages.GetAll();
         }
+
+        public SalesStage MarkInvoicePrinted(int salesId)
+        {
+            return Uow.Sales.UpdateStage(salesId, 3);
+        }
+
+        public SalesStage MarkPickTicketPrinted(int salesId)
+        {
+            return Uow.Sales.UpdateStage(salesId, 2);
+        }
     }
 }

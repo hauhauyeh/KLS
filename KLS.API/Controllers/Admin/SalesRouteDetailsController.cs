@@ -34,6 +34,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_salesRouteDetailService.GetList(salesRouteId));
         }
 
+        [HttpGet("UntrackedPending")]
+        [PermissionKey("Customer.Sale.List")]
+        public IActionResult UntrackedPending()
+        {
+            return Ok(_salesRouteDetailService.GetPendingUntracked());
+        }
+
 
         [HttpPost]
         public IActionResult Create([FromBody] SalesRouteDetail routeDetail)
@@ -53,6 +60,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult UpdateUnit([FromBody] SalesRouteDetail routeDetail)
         {
             return Ok(_salesRouteDetailService.UpdateUnit(routeDetail));
+        }
+
+
+        [HttpPost("Restock/{detailId}")]
+        [PermissionKey("Product.InventoryAdj.Save")]
+        public IActionResult Restock(int detailId)
+        {
+            return Ok(_salesRouteDetailService.Restock(detailId));
         }
 
 

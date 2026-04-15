@@ -66,7 +66,31 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.Sale.UpdateStage")]
         public IActionResult UpdateStage([FromBody] SalesUpdateReq updateReq)
         {
+            if (!updateReq.StageId.HasValue)
+                return BadRequest("StageId is required.");
+
             return Ok(_salesService.UpdateStage(updateReq.SalesId, updateReq.StageId.Value));
+        }
+
+
+        [HttpPut("EnterEditMode")]
+        [DisplayName("Enter Edit Mode")]
+        [PermissionKey("Customer.Sale.Update")]
+        public IActionResult EnterEditMode([FromBody] SalesStageTransitionReq transitionReq)
+        {
+            return Ok(_salesService.EnterEditMode(transitionReq.SalesId));
+        }
+
+
+        [HttpPut("RestoreStage")]
+        [DisplayName("Restore Stage")]
+        [PermissionKey("Customer.Sale.Update")]
+        public IActionResult RestoreStage([FromBody] SalesStageTransitionReq transitionReq)
+        {
+            if (!transitionReq.StageId.HasValue)
+                return BadRequest("StageId is required.");
+
+            return Ok(_salesService.RestoreStage(transitionReq.SalesId, transitionReq.StageId.Value));
         }
 
 
@@ -248,6 +272,12 @@ namespace KLS.API.Controllers.Admin
         public IActionResult PastDueInvoices(int payeeId)
         {
             return Ok(_salesService.PastDueInvoices(payeeId));
+        }
+
+        [HttpGet("CustBoughtItemsPanel/{payeeId}")]
+        public IActionResult CustBoughtItemsPanel(int payeeId)
+        {
+            return Ok(_salesService.CustBoughtItemsPanel(payeeId));
         }
 
         #endregion

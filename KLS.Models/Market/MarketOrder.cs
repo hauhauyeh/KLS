@@ -1,3 +1,4 @@
+using KLS.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -13,7 +14,7 @@ namespace KLS.Models
         public MarketOrder()
         {
             this.CreatedAt = DateTime.UtcNow;
-            this.OrderStatus = "pending";
+            this.OrderStatus = MarketInternalOrderStatus.Pending.ToValue();
             this.ImportedToErp = false;
         }
 
@@ -37,7 +38,7 @@ namespace KLS.Models
 
         [Required]
         [StringLength(50)]
-        public string OrderStatus { get; set; } = "pending";
+        public string OrderStatus { get; set; } = MarketInternalOrderStatus.Pending.ToValue();
 
         [StringLength(200)]
         public string? CustomerName { get; set; }

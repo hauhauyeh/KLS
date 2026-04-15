@@ -1,3 +1,8 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 -- =============================================
 -- TempSales_AddLine
 -- Consolidated SP: item/account lookup + unit resolve + pricing + INSERT + return
@@ -76,7 +81,8 @@ BEGIN
         SET @NewTempSalesId = SCOPE_IDENTITY();
 
         -- Return shape must match TempSalesItem.
-        SELECT t.*, CAST(NULL AS DATETIME) AS ParentShipDate, a.AccountName AS ItemName, a.AccountCode AS ItemCode, NULL AS CaseWeight, NULL AS PackSize
+        SELECT t.*, CAST(NULL AS DATETIME) AS ParentShipDate, a.AccountName AS ItemName, a.AccountCode AS ItemCode,
+               NULL AS CaseWeight, NULL AS PackSize, NULL AS LCloseQty, NULL AS BaseUnit
         FROM TempSales t
         INNER JOIN Account a ON t.AccountId = a.AccountId
         WHERE t.TempSalesId = @NewTempSalesId;
@@ -208,9 +214,11 @@ BEGIN
         SET @NewTempSalesId = SCOPE_IDENTITY();
 
         -- Return shape must match TempSalesItem.
-        SELECT t.*, CAST(NULL AS DATETIME) AS ParentShipDate, i.ItemName, i.ItemCode, i.CaseWeight, i.PackSize
+        SELECT t.*, CAST(NULL AS DATETIME) AS ParentShipDate, i.ItemName, i.ItemCode, i.CaseWeight, i.PackSize,
+               i.LCloseQty, bu.Unit AS BaseUnit
         FROM TempSales t
         INNER JOIN Item i ON t.ItemId = i.ItemId
+        LEFT JOIN ItemUnit bu ON i.ItemId = bu.ItemId AND bu.IsBaseUnit = 1 AND bu.Inactive = 0
         WHERE t.TempSalesId = @NewTempSalesId;
     END
 END

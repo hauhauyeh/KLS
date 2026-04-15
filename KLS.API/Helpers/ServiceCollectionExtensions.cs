@@ -2,6 +2,9 @@
 using KLS.Services;
 using KLS.Services.Marketplace.Amazon;
 using KLS.Services.Marketplace.Common;
+using KLS.Services.Marketplace.Ebay;
+using KLS.Services.Marketplace.ShipStation;
+using KLS.Services.Marketplace.Walmart;
 using KLS.Data.Repositories;
 using KLS.Contract.Services;
 
@@ -115,25 +118,52 @@ namespace KLS.API.Helpers
             services.AddScoped<IMarketAccountService, MarketAccountService>();
             services.AddScoped<IMarketItemMapService, MarketItemMapService>();
             services.AddScoped<IMarketSyncLogService, MarketSyncLogService>();
+            services.AddScoped<IMarketOrderService, MarketOrderService>();
 
             // HttpClient factories
             services.AddHttpClient("AmazonLWA", c => { c.Timeout = TimeSpan.FromSeconds(30); });
             services.AddHttpClient("AmazonSPAPI", c => { c.Timeout = TimeSpan.FromSeconds(60); });
-
-            // Marketplace CRUD Services
-            services.AddScoped<IMarketOrderService, MarketOrderService>();
+            services.AddHttpClient("WalmartAuth", c => { c.Timeout = TimeSpan.FromSeconds(30); });
+            services.AddHttpClient("WalmartAPI", c => { c.Timeout = TimeSpan.FromSeconds(60); });
+            services.AddHttpClient("EbayAuth", c => { c.Timeout = TimeSpan.FromSeconds(30); });
+            services.AddHttpClient("EbayAPI", c => { c.Timeout = TimeSpan.FromSeconds(60); });
+            services.AddHttpClient("ShipStation", c => { c.Timeout = TimeSpan.FromSeconds(60); });
 
             // Marketplace Factory
             services.AddScoped<IMarketplaceServiceFactory, MarketplaceServiceFactory>();
 
             // Amazon services
-            services.AddScoped<IAmazonTokenService, AmazonTokenService>();
-            services.AddScoped<IAmazonSpApiClient, AmazonSpApiClient>();
-            services.AddScoped<IAmazonCatalogService, AmazonCatalogService>();
+            services.AddScoped<KLS.Contract.Services.Marketplace.Amazon.IAmazonTokenService, AmazonTokenService>();
+            services.AddScoped<KLS.Contract.Services.Marketplace.Amazon.IAmazonSpApiClient, AmazonSpApiClient>();
+            services.AddScoped<KLS.Contract.Services.Marketplace.Amazon.IAmazonCatalogService, AmazonCatalogService>();
+            services.AddScoped<AmazonConnectionService>();
             services.AddScoped<AmazonListingService>();
             services.AddScoped<AmazonPricingService>();
             services.AddScoped<AmazonInventoryService>();
             services.AddScoped<AmazonOrderService>();
+
+            // Walmart services
+            services.AddScoped<KLS.Contract.Services.Marketplace.Walmart.IWalmartTokenService, WalmartTokenService>();
+            services.AddScoped<KLS.Contract.Services.Marketplace.Walmart.IWalmartApiClient, WalmartApiClient>();
+            services.AddScoped<WalmartConnectionService>();
+            services.AddScoped<WalmartListingService>();
+            services.AddScoped<WalmartPricingService>();
+            services.AddScoped<WalmartInventoryService>();
+            services.AddScoped<WalmartOrderService>();
+
+            // eBay services
+            services.AddScoped<KLS.Contract.Services.Marketplace.Ebay.IEbayTokenService, EbayTokenService>();
+            services.AddScoped<KLS.Contract.Services.Marketplace.Ebay.IEbayApiClient, EbayApiClient>();
+            services.AddScoped<EbayConnectionService>();
+            services.AddScoped<EbayListingService>();
+            services.AddScoped<EbayPricingService>();
+            services.AddScoped<EbayInventoryService>();
+            services.AddScoped<EbayOrderService>();
+
+            // ShipStation services
+            services.AddScoped<KLS.Contract.Services.Marketplace.ShipStation.IShipStationApiClient, ShipStationApiClient>();
+            services.AddScoped<ShipStationConnectionService>();
+            services.AddScoped<ShipStationOrderService>();
 
             return services;
         }

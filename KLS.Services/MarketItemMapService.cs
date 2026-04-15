@@ -1,3 +1,4 @@
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
@@ -98,11 +99,11 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        public void UpdateSyncStatus(int id, string status, string? error = null)
+        public void UpdateSyncStatus(int id, MarketSyncStatus status, string? error = null)
         {
             var map = Uow.MarketItemMaps.GetById(id);
             if (map == null) return;
-            map.LastSyncStatus = status;
+            map.LastSyncStatus = status.ToValue();
             map.LastSyncAt = DateTime.UtcNow;
             map.LastError = error;
             map.UpdatedAt = DateTime.UtcNow;

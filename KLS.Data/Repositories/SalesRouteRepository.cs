@@ -18,6 +18,13 @@ namespace KLS.Data.Repositories
         {
         }
 
+        public void SyncByDate(DateOnly shipDate)
+        {
+            var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[SalesRoute_SyncByDate] @ShipDate", ShipDateParam);
+        }
+
         public bool CheckZeroPrice(PrintInvoiceReq printInvoiceReq)
         {
             var ShipDateParam = printInvoiceReq.ShipDate.HasValue ? new SqlParameter("@ShipDate", printInvoiceReq.ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);

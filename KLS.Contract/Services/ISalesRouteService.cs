@@ -21,6 +21,8 @@ namespace KLS.Contract.Services
 
         void SaveAssignTrucks(List<AssignTruck> assignTrucks);
 
+        void SyncByDate(DateOnly shipDate);
+
         bool CheckZeroPrice(PrintInvoiceReq printInvoiceReq);
     }
 }

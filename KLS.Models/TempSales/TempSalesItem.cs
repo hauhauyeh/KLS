@@ -71,6 +71,11 @@ namespace KLS.Models
 
         public decimal? CaseWeight { get; set; }
 
+        [Column(TypeName = "decimal(18,6)")]
+        public decimal? LCloseQty { get; set; }
+
+        public string? BaseUnit { get; set; }
+
         public decimal? CaseTotal
         {
             get

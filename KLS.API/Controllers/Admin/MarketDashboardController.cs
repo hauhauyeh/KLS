@@ -1,4 +1,5 @@
 using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -47,16 +48,16 @@ namespace KLS.API.Controllers.Admin
                 ListingSummary = new
                 {
                     TotalMapped = maps.Count,
-                    Active = maps.Count(m => m.IsActive && m.MappingStatus == "mapped"),
-                    Error = maps.Count(m => m.LastSyncStatus == "failed"),
-                    Inactive = maps.Count(m => !m.IsActive || m.MappingStatus == "inactive")
+                    Active = maps.Count(m => m.IsActive && m.MappingStatus.Is(MarketMappingStatus.Mapped)),
+                    Error = maps.Count(m => m.LastSyncStatus.Is(MarketSyncStatus.Failed)),
+                    Inactive = maps.Count(m => !m.IsActive || m.MappingStatus.Is(MarketMappingStatus.Inactive))
                 },
 
                 OrderSummary = new
                 {
                     TotalOrders = orders.Count,
                     TodayOrders = orders.Count(o => o.OrderDate?.Date == today),
-                    Pending = orders.Count(o => o.OrderStatus == "pending"),
+                    Pending = orders.Count(o => o.OrderStatus.Is(MarketInternalOrderStatus.Pending)),
                     NotImported = orders.Count(o => !o.ImportedToErp)
                 },
 

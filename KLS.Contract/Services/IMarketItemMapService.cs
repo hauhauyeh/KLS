@@ -1,3 +1,4 @@
+using KLS.Common;
 using KLS.Models;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,6 @@ namespace KLS.Contract.Services
 
         void Delete(int id);
 
-        void UpdateSyncStatus(int id, string status, string? error = null);
+        void UpdateSyncStatus(int id, MarketSyncStatus status, string? error = null);
     }
 }

@@ -1,4 +1,5 @@
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services.Marketplace.Amazon;
 using KLS.Models;
 using System;
 using System.Collections.Generic;
@@ -11,12 +12,6 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Marketplace.Amazon
 {
-    public interface IAmazonTokenService
-    {
-        Task<string> GetAccessTokenAsync(int marketAccountId);
-        Task<bool> TestConnectionAsync(int marketAccountId);
-    }
-
     public class AmazonTokenService : BaseService, IAmazonTokenService
     {
         private readonly IHttpClientFactory _httpClientFactory;

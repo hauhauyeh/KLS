@@ -55,7 +55,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TransactionDetail>().ToTable("TransactionJournalDetail");
             modelBuilder.Entity<SourceDocType>().ToTable("SourceDocType");
             modelBuilder.Entity<ItemStorage>().ToTable("ItemStorage");
-            modelBuilder.Entity<Sales>().ToTable("Sales");
+            modelBuilder.Entity<Sales>().ToTable("Sales", tb => tb.HasTrigger("TRG_Update_Sales"));
             modelBuilder.Entity<DeleteLog>().ToTable("DeleteLog");
             modelBuilder.Entity<Company>().ToTable("Company");
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
@@ -515,6 +515,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptOrderGuideItem> RptOrderGuideItem { get; set; }
 
         public virtual DbSet<RptCustItemVolume> RptCustItemVolume { get; set; }
+
+        public virtual DbSet<CustBoughtItemPanelRow> CustBoughtItemPanelRows { get; set; }
 
         public virtual DbSet<RptCustSalesByItem> RptCustSalesByItem { get; set; }
 

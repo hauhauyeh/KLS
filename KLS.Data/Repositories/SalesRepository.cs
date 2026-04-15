@@ -199,6 +199,16 @@ namespace KLS.Data.Repositories
             return DbContext.SalesStages.FromSqlRaw("[Sales_UpdateStage] @SalesId,@StageId", SalesIdParam, StageIdParam).AsEnumerable().FirstOrDefault();
         }
 
+        public SalesStage EnterEditMode(int salesId)
+        {
+            return UpdateStage(salesId, 0);
+        }
+
+        public SalesStage RestoreStage(int salesId, int stageId)
+        {
+            return UpdateStage(salesId, stageId);
+        }
+
         public void BatchAllocation(DateOnly shipDate)
         {
             var ShipDateParam = new SqlParameter("@ShipDate", shipDate);

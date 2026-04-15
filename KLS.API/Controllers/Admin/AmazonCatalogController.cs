@@ -1,5 +1,5 @@
 using KLS.API.Helpers;
-using KLS.Services.Marketplace.Amazon;
+using KLS.Contract.Services.Marketplace.Amazon;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;

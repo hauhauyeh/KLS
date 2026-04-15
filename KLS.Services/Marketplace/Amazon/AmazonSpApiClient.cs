@@ -1,4 +1,5 @@
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services.Marketplace.Amazon;
 using KLS.Models;
 using System;
 using System.Collections.Concurrent;
@@ -12,15 +13,6 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Marketplace.Amazon
 {
-    public interface IAmazonSpApiClient
-    {
-        Task<T?> GetAsync<T>(int marketAccountId, string endpoint) where T : class;
-        Task<T?> PostAsync<T>(int marketAccountId, string endpoint, object body) where T : class;
-        Task<T?> PutAsync<T>(int marketAccountId, string endpoint, object body) where T : class;
-        Task<T?> PatchAsync<T>(int marketAccountId, string endpoint, object body) where T : class;
-        Task DeleteAsync(int marketAccountId, string endpoint);
-    }
-
     public class AmazonSpApiClient : IAmazonSpApiClient
     {
         private readonly IAmazonTokenService _tokenService;
