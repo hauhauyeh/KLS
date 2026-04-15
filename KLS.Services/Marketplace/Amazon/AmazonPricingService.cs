@@ -1,6 +1,8 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using KLS.Contract.Services.Marketplace.Amazon;
 using KLS.Contract.Services.Marketplace;
+using KLS.Common;
 using KLS.Models;
 using System;
 using System.Collections.Generic;
@@ -56,15 +58,33 @@ namespace KLS.Services.Marketplace.Amazon
                 }
             };
 
-            var result = await _client.PatchAsync<AmazonListingSubmissionResult>(map.MarketAccountId, endpoint, payload);
+            try
+            {
+                var result = await _client.PatchAsync<AmazonListingSubmissionResult>(map.MarketAccountId, endpoint, payload);
 
-            map.LastPriceSyncStatus = result?.Status == "ACCEPTED" ? "success" : "failed";
-            map.LastPriceSyncAt = DateTime.UtcNow;
-            map.UpdatedAt = DateTime.UtcNow;
-            Uow.MarketItemMaps.Update(map);
-            Uow.Commit();
+                map.LastPriceSyncStatus = result?.Status == "ACCEPTED"
+                    ? MarketSyncStatus.Success.ToValue()
+                    : MarketSyncStatus.Failed.ToValue();
+                map.LastPriceSyncAt = DateTime.UtcNow;
+                map.LastError = result?.Issues?.Any() == true
+                    ? string.Join("; ", result.Issues.Select(i => i.Message))
+                    : null;
+                map.UpdatedAt = DateTime.UtcNow;
+                Uow.MarketItemMaps.Update(map);
+                Uow.Commit();
 
-            return new ListingResult { Sku = result?.Sku, Status = result?.Status };
+                return new ListingResult { Sku = result?.Sku, Status = map.LastPriceSyncStatus };
+            }
+            catch (Exception ex)
+            {
+                map.LastPriceSyncStatus = MarketSyncStatus.Failed.ToValue();
+                map.LastPriceSyncAt = DateTime.UtcNow;
+                map.LastError = ex.Message;
+                map.UpdatedAt = DateTime.UtcNow;
+                Uow.MarketItemMaps.Update(map);
+                Uow.Commit();
+                throw;
+            }
         }
 
         public async Task<int> PushAllPricesAsync(int marketAccountId)

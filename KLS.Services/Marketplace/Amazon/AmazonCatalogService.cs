@@ -1,4 +1,5 @@
 using KLS.Contract.Interfaces;
+using KLS.Contract.Services.Marketplace.Amazon;
 using KLS.Models;
 using System;
 using System.Collections.Generic;
@@ -8,12 +9,6 @@ using System.Threading.Tasks;
 
 namespace KLS.Services.Marketplace.Amazon
 {
-    public interface IAmazonCatalogService
-    {
-        Task<AmazonCatalogSearchResult> SearchAsync(int marketAccountId, string keywords);
-        Task<AmazonCatalogItem?> GetByAsinAsync(int marketAccountId, string asin);
-    }
-
     public class AmazonCatalogService : IAmazonCatalogService
     {
         private readonly IAmazonSpApiClient _client;

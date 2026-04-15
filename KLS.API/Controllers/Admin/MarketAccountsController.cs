@@ -2,7 +2,7 @@ using KLS.API.Helpers;
 using KLS.Common;
 using KLS.Contract.Dtos;
 using KLS.Contract.Services;
-using KLS.Services.Marketplace.Amazon;
+using KLS.Services.Marketplace.Common;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -15,12 +15,12 @@ namespace KLS.API.Controllers.Admin
     public class MarketAccountsController : BaseController
     {
         private readonly IMarketAccountService _service;
-        private readonly IAmazonTokenService _tokenService;
+        private readonly IMarketplaceServiceFactory _marketplaceFactory;
 
-        public MarketAccountsController(IMarketAccountService service, IAmazonTokenService tokenService)
+        public MarketAccountsController(IMarketAccountService service, IMarketplaceServiceFactory marketplaceFactory)
         {
             _service = service;
-            _tokenService = tokenService;
+            _marketplaceFactory = marketplaceFactory;
         }
 
         [HttpGet]
@@ -80,7 +80,8 @@ namespace KLS.API.Controllers.Admin
         {
             var account = _service.GetById(id);
             if (account == null) return NotFound();
-            var result = await _tokenService.TestConnectionAsync(id);
+            var service = _marketplaceFactory.GetConnectionService(account.MarketType);
+            var result = await service.TestConnectionAsync(id);
             return Ok(new { Connected = result });
         }
     }

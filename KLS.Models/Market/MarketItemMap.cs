@@ -1,3 +1,4 @@
+using KLS.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,7 +15,7 @@ namespace KLS.Models
         {
             this.CreatedAt = DateTime.UtcNow;
             this.IsActive = true;
-            this.MappingStatus = "mapped";
+            this.MappingStatus = MarketMappingStatus.Mapped.ToValue();
         }
 
         [Key]
@@ -31,15 +32,21 @@ namespace KLS.Models
         [StringLength(200)]
         public string? ExternalListingId { get; set; }
 
+        [StringLength(100)]
+        public string? ExternalOfferId { get; set; }
+
         [StringLength(200)]
         public string? ExternalVariantId { get; set; }
+
+        [StringLength(200)]
+        public string? LastSubmissionId { get; set; }
 
         [StringLength(500)]
         public string? ExternalItemName { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string MappingStatus { get; set; } = "mapped";
+        public string MappingStatus { get; set; } = MarketMappingStatus.Mapped.ToValue();
 
         public bool IsActive { get; set; }
         public DateTime? LastSyncAt { get; set; }

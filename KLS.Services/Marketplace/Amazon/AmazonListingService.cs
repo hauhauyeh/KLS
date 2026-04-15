@@ -1,6 +1,8 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using KLS.Contract.Services.Marketplace.Amazon;
 using KLS.Contract.Services.Marketplace;
+using KLS.Common;
 using KLS.Models;
 using System;
 using System.Collections.Generic;
@@ -45,10 +47,16 @@ namespace KLS.Services.Marketplace.Amazon
         {
             var map = Uow.MarketItemMaps.GetById(marketItemMapId);
             if (map == null) throw new Exception("Item mapping not found");
+            if (string.IsNullOrWhiteSpace(map.ExternalSku))
+                throw new Exception("External SKU is required before pushing an Amazon listing");
 
             var account = Uow.MarketAccounts.GetById(map.MarketAccountId)
                 ?? throw new Exception("Market account not found");
             var settings = AmazonSettings.FromEncrypted(account.SettingsJson);
+            if (string.IsNullOrWhiteSpace(settings.SellerId))
+                throw new Exception("Amazon SellerId is not configured");
+            if (string.IsNullOrWhiteSpace(settings.MarketplaceId))
+                throw new Exception("Amazon MarketplaceId is not configured");
             var item = Uow.Items.GetById(map.ItemId);
             if (item == null) throw new Exception("ERP Item not found");
 
@@ -59,8 +67,10 @@ namespace KLS.Services.Marketplace.Amazon
 
                 var apiResult = await _client.PutAsync<AmazonListingSubmissionResult>(map.MarketAccountId, endpoint, payload);
 
-                map.LastSyncStatus = apiResult?.Status == "ACCEPTED" ? "success" : "failed";
-                map.ExternalListingId = apiResult?.SubmissionId;
+                map.LastSyncStatus = apiResult?.Status == "ACCEPTED"
+                    ? MarketSyncStatus.Success.ToValue()
+                    : MarketSyncStatus.Failed.ToValue();
+                map.LastSubmissionId = apiResult?.SubmissionId;
                 map.LastSyncAt = DateTime.UtcNow;
                 map.LastError = apiResult?.Issues?.Any() == true
                     ? string.Join("; ", apiResult.Issues.Select(i => i.Message)) : null;
@@ -71,7 +81,7 @@ namespace KLS.Services.Marketplace.Amazon
                 return new ListingResult
                 {
                     Sku = apiResult?.Sku,
-                    Status = apiResult?.Status,
+                    Status = map.LastSyncStatus,
                     SubmissionId = apiResult?.SubmissionId,
                     Issues = apiResult?.Issues?.Select(i => new ListingIssue
                     {
@@ -83,7 +93,7 @@ namespace KLS.Services.Marketplace.Amazon
             }
             catch (Exception ex)
             {
-                map.LastSyncStatus = "failed";
+                map.LastSyncStatus = MarketSyncStatus.Failed.ToValue();
                 map.LastError = ex.Message;
                 map.LastSyncAt = DateTime.UtcNow;
                 map.UpdatedAt = DateTime.UtcNow;
@@ -101,6 +111,8 @@ namespace KLS.Services.Marketplace.Amazon
             var account = Uow.MarketAccounts.GetById(map.MarketAccountId)
                 ?? throw new Exception("Market account not found");
             var settings = AmazonSettings.FromEncrypted(account.SettingsJson);
+            if (string.IsNullOrWhiteSpace(map.ExternalSku))
+                throw new Exception("External SKU is required before refreshing Amazon listing status");
 
             var endpoint = $"/listings/2021-08-01/items/{settings.SellerId}/{map.ExternalSku}?marketplaceIds={settings.MarketplaceId}&includedData=summaries,issues";
             var result = await _client.GetAsync<AmazonListingStatus>(map.MarketAccountId, endpoint);
@@ -108,7 +120,9 @@ namespace KLS.Services.Marketplace.Amazon
             if (result != null)
             {
                 map.ExternalItemName = result.Summaries?.FirstOrDefault()?.ItemName;
-                map.LastSyncStatus = result.Issues?.Any(i => i.Severity == "ERROR") == true ? "failed" : "success";
+                map.LastSyncStatus = result.Issues?.Any(i => i.Severity == "ERROR") == true
+                    ? MarketSyncStatus.Failed.ToValue()
+                    : MarketSyncStatus.Success.ToValue();
                 map.LastSyncAt = DateTime.UtcNow;
                 map.LastError = result.Issues?.Any() == true
                     ? string.Join("; ", result.Issues.Select(i => i.Message)) : null;
@@ -126,12 +140,14 @@ namespace KLS.Services.Marketplace.Amazon
             var account = Uow.MarketAccounts.GetById(map.MarketAccountId)
                 ?? throw new Exception("Market account not found");
             var settings = AmazonSettings.FromEncrypted(account.SettingsJson);
+            if (string.IsNullOrWhiteSpace(map.ExternalSku))
+                throw new Exception("External SKU is required before deleting an Amazon listing");
 
             var endpoint = $"/listings/2021-08-01/items/{settings.SellerId}/{map.ExternalSku}?marketplaceIds={settings.MarketplaceId}";
             await _client.DeleteAsync(map.MarketAccountId, endpoint);
 
-            map.MappingStatus = "inactive";
-            map.LastSyncStatus = "success";
+            map.MappingStatus = MarketMappingStatus.Inactive.ToValue();
+            map.LastSyncStatus = MarketSyncStatus.Success.ToValue();
             map.LastSyncAt = DateTime.UtcNow;
             map.UpdatedAt = DateTime.UtcNow;
             Uow.MarketItemMaps.Update(map);
