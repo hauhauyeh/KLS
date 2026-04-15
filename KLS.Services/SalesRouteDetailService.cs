@@ -89,6 +89,12 @@ namespace KLS.Services
             var items = _itemService.GetByIds(itemIds);
             var itemMap = items.ToDictionary(x => x.ItemId);
 
+            // Resolve Fault PayeeId → FaultName
+            var faultIds = returnItems.Where(d => d.Fault.HasValue).Select(d => d.Fault!.Value).Distinct().ToList();
+            var faultMap = faultIds.Count > 0
+                ? Uow.Payees.Find(p => faultIds.Contains(p.PayeeId)).ToDictionary(p => p.PayeeId, p => p.PayeeName)
+                : new Dictionary<int, string>();
+
             foreach (var returnItem in returnItems)
             {
                 if (itemMap.TryGetValue(returnItem.ItemId, out var item))
@@ -96,6 +102,11 @@ namespace KLS.Services
                     returnItem.ItemCode = item.ItemCode;
                     returnItem.ItemName = item.ItemName;
                     returnItem.PackSize = item.PackSize;
+                }
+
+                if (returnItem.Fault.HasValue && faultMap.TryGetValue(returnItem.Fault.Value, out var faultName))
+                {
+                    returnItem.FaultName = faultName;
                 }
             }
 
