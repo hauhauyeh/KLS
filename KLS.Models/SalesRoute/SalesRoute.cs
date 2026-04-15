@@ -25,6 +25,9 @@ namespace KLS.Models
 
         public string? Driver { get; set; }
 
+        [NotMapped]
+        public int? DriverId { get; set; }
+
         public string? Loader { get; set; }
 
         public string? Checker { get; set; }

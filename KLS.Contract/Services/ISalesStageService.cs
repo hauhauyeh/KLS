@@ -10,5 +10,9 @@ namespace KLS.Contract.Services
     public interface ISalesStageService
     {
         IEnumerable<SalesStage> GetList();
+
+        SalesStage MarkInvoicePrinted(int salesId);
+
+        SalesStage MarkPickTicketPrinted(int salesId);
     }
 }

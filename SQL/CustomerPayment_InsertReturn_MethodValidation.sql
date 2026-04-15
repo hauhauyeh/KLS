@@ -189,7 +189,18 @@ BEGIN
            ,'NSFFee'
 		   ,1)
 
-		EXEC [Sales_Insert] 0,@PayeeId,@ReturnDate,null,'NSFFee',3,@EmpId,@SalesId OUTPUT
+		EXEC [Sales_Insert]
+			@SalesId = 0,
+			@PayeeId = @PayeeId,
+			@ShipDate = @ReturnDate,
+			@ShipRoute = NULL,
+			@Instruction = 'NSFFee',
+			@StageId = 3,
+			@EmpId = @EmpId,
+			@NewSalesId = @SalesId OUTPUT,
+			@DocType = 'SO',
+			@ParentSalesNumber = NULL,
+			@AllowNoParentOverride = 0
 
 		UPDATE CustomerPayment SET ReturnSalesId=@SalesId WHERE CustomerPaymentId=@CustomerPaymentId
 	END

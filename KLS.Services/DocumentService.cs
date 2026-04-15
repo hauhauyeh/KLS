@@ -23,6 +23,7 @@ namespace KLS.Services
         private readonly IPDFService _pdfService;
         private readonly IPrintLogService _printLogService;
         private readonly IReportService _reportService;
+        private readonly ISalesStageService _salesStageService;
         private readonly ISystemSettingService _systemSettingService;
         private readonly IWebHostEnvironment _env;
 
@@ -30,12 +31,14 @@ namespace KLS.Services
             IPDFService pdfService,
             IPrintLogService printLogService,
             IReportService reportService,
+            ISalesStageService salesStageService,
             ISystemSettingService systemSettingService,
             IWebHostEnvironment env) : base(uow)
         {
             _pdfService = pdfService;
             _printLogService = printLogService;
             _reportService = reportService;
+            _salesStageService = salesStageService;
             _systemSettingService = systemSettingService;
             _env = env;
         }
@@ -158,8 +161,7 @@ namespace KLS.Services
 
                 //_pdfService.AddPageFooter(merged);
 
-                if (req.ShipDate.HasValue)
-                    merged.SaveAs(filePath);
+                merged.SaveAs(filePath);
 
                 return filePath;
             }
@@ -438,7 +440,7 @@ namespace KLS.Services
 
         private int GetDropCount(DateOnly shipDate, string shipRoute)
         {
-            return Uow.Sales.Find(c => c.ShipDate == shipDate && ((c.ShipRoute == shipRoute) || c.LoadRoute != null && c.LoadRoute == shipRoute)).Count();
+            return Uow.Sales.Find(c => c.ShipDate == shipDate && c.ShipRoute == shipRoute).Count();
         }
 
         private List<SalesRoute> GetAssignedRoutes(DateOnly shipDate)
@@ -454,7 +456,7 @@ namespace KLS.Services
             try
             {
                 if (isPrint)
-                    Uow.Sales.UpdateStage(salesId, 3);
+                    _salesStageService.MarkInvoicePrinted(salesId);
 
                 var invoice = _reportService.Invoice(salesId);
 
@@ -514,7 +516,7 @@ namespace KLS.Services
             try
             {
                 if (isPrint)
-                    Uow.Sales.UpdateStage(salesId, 2);
+                    _salesStageService.MarkPickTicketPrinted(salesId);
 
                 var invoice = _reportService.Invoice(salesId);
 

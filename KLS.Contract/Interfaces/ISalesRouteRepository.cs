@@ -9,6 +9,8 @@ namespace KLS.Contract.Interfaces
 {
     public interface ISalesRouteRepository : IRepository<SalesRoute>
     {
+        void SyncByDate(DateOnly shipDate);
+
         bool CheckZeroPrice(PrintInvoiceReq printInvoiceReq);
     }
 }

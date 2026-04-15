@@ -100,7 +100,17 @@ namespace KLS.Services
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
                 return new LoginResult { Success = false, ErrorMessage = "Username or password is incorrect" };
 
-            if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
+            string? decryptedPassword;
+            try
+            {
+                decryptedPassword = Utilities.Decrypt(user.PasswordHash);
+            }
+            catch
+            {
+                return new LoginResult { Success = false, ErrorMessage = "Username or password is incorrect" };
+            }
+
+            if (decryptedPassword != loginReq.Password)
                 return new LoginResult { Success = false, ErrorMessage = "Password is incorrect" };
 
             var emp = _employeeService.GetById(user.PayeeId);
@@ -166,7 +176,17 @@ namespace KLS.Services
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
                 return false;
 
-            if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
+            string? decryptedPassword;
+            try
+            {
+                decryptedPassword = Utilities.Decrypt(user.PasswordHash);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (decryptedPassword != loginReq.Password)
                 return false;
 
             var role = _roleService.GetById(user.SystemRoleId);
@@ -260,7 +280,7 @@ namespace KLS.Services
 
         public bool ResetPassword(ResetPassword resetPassword)
         {
-            string? token = HttpUtility.UrlDecode(resetPassword.Token);
+            string? token = Uri.UnescapeDataString(resetPassword.Token ?? "");
 
             var user = Uow.SystemUsers.Find(u => u.ResetTokenHash == token && u.ResetTokenExpire > DateTime.UtcNow).FirstOrDefault();
 

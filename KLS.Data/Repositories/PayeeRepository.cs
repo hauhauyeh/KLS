@@ -1,5 +1,6 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
+using KLS.Common;
 using KLS.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildARCustomerParam(aRCustomerListReq);
 
-            return DbContext.ARCustomerList.FromSqlRaw("[dbo].[Payee_ARList] @Pageno,@Pagesize,@Search,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ARCustomerList.FromSqlRaw("[dbo].[Payee_ARList] @Pageno,@Pagesize,@Search,@Filterby,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int CountAllARCustomer(ARCustomerListReq aRCustomerListReq)
@@ -38,9 +39,9 @@ namespace KLS.Data.Repositories
             aRCustomerListReq.IsCount = true;
             var param = BuildARCustomerParam(aRCustomerListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Payee_ARList] @Pageno,@Pagesize,@Search,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payee_ARList] @Pageno,@Pagesize,@Search,@Filterby,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[7] as SqlParameter;
+            var output = param[8] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -61,6 +62,8 @@ namespace KLS.Data.Repositories
                 string.IsNullOrEmpty(aRCustomerListReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", aRCustomerListReq.Search),
 
                 string.IsNullOrEmpty(aRCustomerListReq.Filterby) ? new SqlParameter("@Filterby", DBNull.Value) : new SqlParameter("@Filterby", aRCustomerListReq.Filterby),
+
+                new SqlParameter("@EmpId", UserContext.IsSalesRole ? UserContext.EmpId : 0),
 
                 string.IsNullOrEmpty(aRCustomerListReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", aRCustomerListReq.SortField),
 

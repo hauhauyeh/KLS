@@ -3,6 +3,7 @@ using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Models.Reports;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -142,6 +143,24 @@ namespace KLS.Services
         public SalesStage UpdateStage(int salesId, int stageId)
         {
             return Uow.Sales.UpdateStage(salesId, stageId);
+        }
+
+        public SalesStage EnterEditMode(int salesId)
+        {
+            var sales = GetById(salesId);
+
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
+
+            if ((sales.StageId ?? 0) >= 4)
+                throw new InvalidOperationException("Cannot edit delivered orders.");
+
+            return Uow.Sales.EnterEditMode(salesId);
+        }
+
+        public SalesStage RestoreStage(int salesId, int stageId)
+        {
+            return Uow.Sales.RestoreStage(salesId, stageId);
         }
 
         public void Delete(int salesId)
@@ -345,6 +364,11 @@ namespace KLS.Services
                 SortField = "ShipDate",
                 SortOrder = "Asc"
             });
+        }
+
+        public IEnumerable<CustBoughtItemPanelRow> CustBoughtItemsPanel(int payeeId)
+        {
+            return Uow.Reports.CustBoughtItemsPanel(payeeId).ToList();
         }
 
         public byte[] Export(SalesExportReq exportReq)

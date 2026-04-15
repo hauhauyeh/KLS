@@ -364,6 +364,11 @@ namespace KLS.Services
 
         public IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             return Uow.Reports.CreditMemo(reportReq);
         }
 
@@ -469,11 +474,21 @@ namespace KLS.Services
 
         public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             return Uow.Reports.SalesDetail(reportReq);
         }
 
         public IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             return Uow.Reports.SalesDaily2(reportReq);
         }
 
@@ -531,16 +546,31 @@ namespace KLS.Services
 
         public IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             return Uow.Reports.SalesCommission(reportReq);
         }
 
         public IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             return Uow.Reports.SalesCommission2(reportReq);
         }
 
         public RptARInvoice ARInvoice(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             var data = Uow.Reports.ARInvoice(reportReq).AsEnumerable().ToList();
 
             var terms = data
@@ -577,6 +607,11 @@ namespace KLS.Services
 
         public RptARMonth ARMonth(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             var data = Uow.Reports.ARMonth(reportReq).AsEnumerable().ToList();
 
             var regions = data
@@ -598,6 +633,11 @@ namespace KLS.Services
 
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
             return Uow.Reports.SalesDaily(reportReq);
         }
 

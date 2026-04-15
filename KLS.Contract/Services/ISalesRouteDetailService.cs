@@ -13,6 +13,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<SalesRouteDetail>? GetList(DateOnly shipDate, string? shipRoute);
 
+        IEnumerable<SalesRouteDetail>? GetPendingUntracked();
+
         SalesRouteDetail GetById(int detailId);
 
         SalesRouteDetail Create(SalesRouteDetail routeDetail);
@@ -20,6 +22,8 @@ namespace KLS.Contract.Services
         SalesRouteDetail Update(SalesRouteDetail routeDetail);
 
         SalesRouteDetail UpdateUnit(SalesRouteDetail routeDetail);
+
+        SalesRouteDetail Restock(int detailId);
 
         void Delete(int detailId);
     }
