@@ -1,0 +1,662 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- PurchaseOrder_Insert codex candidate
+-- Baseline: live dbo.PurchaseOrder_Insert from KLS_Latest
+--
+-- Summary:
+--   Goal: preserve baseline PO insert/update behavior, while making temp-cart-owned
+--   LineId explicit and keeping the narrowed Purchase_CalcTotalAndPercent split safe.
+--
+-- Improvements:
+--   1. XACT_ABORT + TRY/CATCH transaction wrapper
+--   2. Applock to reject concurrent/double-submit PO updates/checkouts
+--   3. Fail-fast guards for missing payee, temp rows, or missing existing PO
+--   4. TempPurchase.LineId is trusted directly as the canonical cart order
+--   5. Core totals/base quantities stay inline before post-commit helper work
+
+CREATE OR ALTER PROCEDURE [dbo].[PurchaseOrder_Insert]  
+
+	
+
+    @PurchaseId INT,
+
+	@PayeeId INT,
+
+	@PurchaseDate DATE,
+
+    @ArrivalDate DATE,
+
+	@Notes NVARCHAR(255),
+
+	@EmpId INT,
+
+	@NewPurchaseId INT OUTPUT
+
+AS
+
+BEGIN
+	-- Section 1: initialize procedure state and working variables.
+
+	-- SET NOCOUNT ON added to prevent extra result sets from
+
+	-- interfering with SELECT statements.
+
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
+
+
+
+    DECLARE @OldPurchaseId INT = @PurchaseId;
+
+    DECLARE @PurchaseNumber INT = 0;
+
+    DECLARE @StageId INT=1
+
+    DECLARE @TermId INT
+
+	DECLARE @CreatedAt DATETIME = GETUTCDATE()
+	DECLARE @LockResult INT
+	DECLARE @LockResource NVARCHAR(200)
+
+
+
+    DECLARE @FinalTotal DECIMAL(18,2)
+    DECLARE @BillTotal DECIMAL(18,2)
+
+
+
+    -- Section 2: validate payee and temp-cart existence for this PO checkout group.
+    SELECT @TermId=TermId FROM Payee WHERE PayeeId=@PayeeId
+
+	IF @TermId IS NULL
+	BEGIN
+		RAISERROR('Payee not found for PurchaseOrder_Insert.', 16, 1);
+		RETURN;
+	END
+
+	IF NOT EXISTS
+	(
+		SELECT 1
+		FROM TempPurchase
+		WHERE PayeeId = @PayeeId
+		  AND EmpId = @EmpId
+		  AND (
+				(@PurchaseId > 0 AND PurchaseId = @PurchaseId)
+				OR (@PurchaseId = 0 AND PurchaseId = 0)
+			  )
+	)
+	BEGIN
+		RAISERROR('No temp purchase rows found for this purchase order checkout group.', 16, 1);
+		RETURN;
+	END
+
+	IF @PurchaseId > 0
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM Purchase WHERE PurchaseId = @PurchaseId)
+		BEGIN
+			RAISERROR('Purchase order not found for PurchaseOrder_Insert.', 16, 1);
+			RETURN;
+		END
+
+		SET @LockResource = 'PurchaseOrder_Insert_' + CAST(@PurchaseId AS NVARCHAR(50));
+	END
+	ELSE
+	BEGIN
+		SET @LockResource =
+			'PurchaseOrder_Insert_'
+			+ CAST(@EmpId AS NVARCHAR(50)) + '_'
+			+ CAST(@PayeeId AS NVARCHAR(50));
+	END
+
+
+
+	BEGIN TRY
+		-- Section 3: start the protected PO checkout/update transaction.
+		BEGIN TRANSACTION;
+
+		EXEC @LockResult = sp_getapplock
+			@Resource = @LockResource,
+			@LockMode = 'Exclusive',
+			@LockOwner = 'Transaction',
+			@LockTimeout = 0;
+
+		IF @LockResult < 0
+		BEGIN
+			RAISERROR('This purchase order is already being updated.', 16, 1);
+			RETURN;
+		END
+
+	-- Section 4: update an existing PO or create a new PO from TempPurchase.
+	IF @PurchaseId > 0
+
+    BEGIN
+
+        -- Section 4a: existing PO path.
+        -- Apply deletes, updates, and inserts from TempPurchase into PurchaseDetail.
+        DELETE pd
+
+        FROM PurchaseDetail as pd inner join TempPurchase as t ON t.PurchaseDetailId=pd.PurchaseDetailId 
+
+        WHERE t.PayeeId = @PayeeId AND t.EmpId = @EmpId AND t.ChangeStatus = 'D';
+
+
+
+        UPDATE PurchaseDetail
+
+			SET  LineId            = t.LineId
+
+                ,[ItemUnitId]      = t.ItemUnitId
+
+                ,[Unit]            = t.Unit
+
+				,Notes             = t.Notes
+
+				,IsFree            = t.IsFree
+
+				,IsOut             = t.IsOut
+
+				,IsCRCG            = t.IsCRCG
+
+				,OrdQty0           = t.OrdQty0
+
+				,ShipQty           = t.ShipQty
+
+				,BillQty           = t.BillQty
+
+				,OrdQty1           = t.OrdQty1
+
+				,ReceiveQty        = t.ReceiveQty
+
+				,FinalQty          = t.FinalQty
+
+				,BillPrice         = t.BillPrice
+
+				,BillExtTotal      = t.BillExtTotal
+
+				,FinalPrice        = t.FinalPrice
+
+                ,ImportCommission  = t.ImportCommission
+
+				,FinalExtTotal     = t.FinalExtTotal
+
+				,FactorToBase	   = t.FactorToBase
+
+				,ExpiryDate        = t.ExpiryDate
+
+				,DiscountPercent   = t.DiscountPercent
+
+				,Discount          = t.Discount
+
+				,OrgPrice          = t.OrgPrice
+
+				,CustomDutyRate    = t.CustomDutyRate
+
+				,TariffPercent     = t.TariffPercent
+
+				,ItemVolume        = t.ItemVolume
+
+        FROM PurchaseDetail as pd inner join TempPurchase as t ON t.PurchaseDetailId=pd.PurchaseDetailId 
+
+        WHERE t.PayeeId = @PayeeId AND t.EmpId = @EmpId AND t.ChangeStatus = 'U';
+
+
+
+        INSERT INTO [dbo].[PurchaseDetail]
+
+               ([PurchaseId]
+
+               ,[LineId]
+
+               ,[LineType]
+
+               ,[ItemId]
+
+               ,[AccountId]
+
+               ,[ItemUnitId]
+
+               ,[Unit]
+
+               ,[Notes]
+
+			   ,[IsFree]
+
+			   ,[IsOut]
+
+			   ,[IsCRCG]
+
+               ,[OrdQty0]
+
+               ,[ShipQty]
+
+               ,[BillQty]
+
+               ,[OrdQty1]
+
+               ,[ReceiveQty]
+
+               ,[FinalQty]
+
+               ,[BillPrice]
+
+               ,[BillExtTotal]
+
+               ,[FinalPrice]
+
+               ,[ImportCommission]
+
+               ,[FinalExtTotal]
+
+			   ,[FactorToBase]
+
+               ,[ExpiryDate]
+
+               ,[DiscountPercent]
+
+               ,[Discount]
+
+               ,[OrgPrice]
+
+               ,[CustomDutyRate]
+
+			   ,[TariffPercent]
+
+               ,[ItemVolume])
+
+          SELECT @PurchaseId
+
+               ,[LineId]
+
+               ,[LineType]
+
+               ,[ItemId]
+
+               ,[AccountId]
+
+               ,[ItemUnitId]
+
+               ,[Unit]
+
+               ,[Notes]
+
+			   ,[IsFree]
+
+			   ,[IsOut]
+
+			   ,[IsCRCG]
+
+               ,[OrdQty0]
+
+               ,[ShipQty]
+
+               ,[BillQty]
+
+               ,[OrdQty1]
+
+               ,[ReceiveQty]
+
+               ,[FinalQty]
+
+               ,[BillPrice]
+
+               ,[BillExtTotal]
+
+               ,[FinalPrice]
+
+               ,[ImportCommission]
+
+               ,[FinalExtTotal]
+
+			   ,[FactorToBase]
+
+               ,[ExpiryDate]
+
+               ,[DiscountPercent]
+
+               ,[Discount]
+
+               ,[OrgPrice]
+
+               ,[CustomDutyRate]
+
+			   ,[TariffPercent]
+
+               ,[ItemVolume]
+
+           FROM TempPurchase 
+
+           WHERE PayeeId = @PayeeId AND EmpId = @EmpId AND ChangeStatus = 'I';
+
+    END
+
+    ELSE
+
+    BEGIN
+        -- Section 4b: new PO path.
+        -- Create the PO header, then insert PurchaseDetail in current temp-cart order.
+
+        SET @PurchaseNumber = NEXT VALUE FOR dbo.Seq_PurchaseNumber;
+
+
+
+        INSERT INTO [dbo].[Purchase]
+
+           ([PurchaseNumber]
+
+           ,[StageId]
+
+           ,[PayeeId]
+
+           ,[PurchaseDate]
+
+           ,[EnterDate]
+
+           ,[ArrivalDate]
+
+           ,[TermId]
+
+           ,[Notes]
+
+           ,[IsLocked]
+
+           ,[IsStartFromPO]
+
+           ,[CreatedAt])
+
+        VALUES
+
+           (@PurchaseNumber
+
+           ,@StageId
+
+           ,@PayeeId
+
+           ,ISNULL(@PurchaseDate,GETDATE())
+
+           ,GETDATE()
+
+           ,@ArrivalDate
+
+           ,@TermId
+
+           ,@Notes
+
+           ,0
+
+           ,1
+
+           ,@CreatedAt)
+
+
+
+        SELECT @PurchaseId = SCOPE_IDENTITY();
+
+
+
+        INSERT INTO [dbo].[PurchaseDetail]
+
+               ([PurchaseId]
+
+               ,[LineId]
+
+               ,[LineType]
+
+               ,[ItemId]
+
+               ,[AccountId]
+
+               ,[ItemUnitId]
+
+               ,[Unit]
+
+               ,[Notes]
+
+			   ,[IsFree]
+
+			   ,[IsOut]
+
+			   ,[IsCRCG]
+
+               ,[OrdQty0]
+
+               ,[ShipQty]
+
+               ,[BillQty]
+
+               ,[OrdQty1]
+
+               ,[ReceiveQty]
+
+               ,[FinalQty]
+
+               ,[BillPrice]
+
+               ,[BillExtTotal]
+
+               ,[FinalPrice]
+
+               ,[ImportCommission]
+
+               ,[FinalExtTotal]
+
+			   ,[FactorToBase]
+
+               ,[ExpiryDate]
+
+               ,[DiscountPercent]
+
+               ,[Discount]
+
+               ,[OrgPrice]
+
+               ,[CustomDutyRate]
+
+			   ,[TariffPercent]
+
+               ,[ItemVolume])
+
+        SELECT
+
+			    @PurchaseId
+
+               ,[LineId]
+
+               ,[LineType]
+
+               ,[ItemId]
+
+               ,[AccountId]
+
+               ,[ItemUnitId]
+
+               ,[Unit]
+
+               ,[Notes]
+
+			   ,[IsFree]
+
+			   ,[IsOut]
+
+			   ,[IsCRCG]
+
+               ,[OrdQty0]
+
+               ,[ShipQty]
+
+               ,[BillQty]
+
+               ,[OrdQty1]
+
+               ,[ReceiveQty]
+
+               ,[FinalQty]
+
+               ,[BillPrice]
+
+               ,[BillExtTotal]
+
+               ,[FinalPrice]
+
+               ,[ImportCommission]
+
+               ,[FinalExtTotal]
+
+			   ,[FactorToBase]
+
+               ,[ExpiryDate]
+
+               ,[DiscountPercent]
+
+               ,[Discount]
+
+               ,[OrgPrice]
+
+               ,[CustomDutyRate]
+
+			   ,[TariffPercent]
+
+               ,[ItemVolume]
+
+	    FROM TempPurchase WHERE EmpId=@EmpId and PayeeId=@PayeeId AND PurchaseId = 0
+
+	    ORDER BY LineId
+
+
+
+        -- Section 5: create the minimal journal shell for a new PO.
+        -- Purchase orders only seed TransactionJournal plus a zeroed @AP row here.
+        -- Full bill-side journal detail is created later when converting PO to bill.
+
+        DECLARE @AccountId INT
+
+        DECLARE @TxId BIGINT;
+
+        DECLARE @DocOrder INT;
+
+        DECLARE @DocType NVARCHAR(100) = 'Purchase';
+
+        EXEC [Get_SourceDocOrder] @DocType, @DocOrder OUTPUT;
+
+
+
+        INSERT INTO [dbo].[TransactionJournal]
+
+			([TxDate]
+
+			,[TxTime]
+
+			,[SourceDocOrder]
+
+			,[SourceDocType]
+
+			,[SourceDocNumber])
+
+		VALUES
+
+			(@PurchaseDate
+
+			,GETUTCDATE()
+
+			,@DocOrder
+
+			,@DocType
+
+			,@PurchaseNumber)
+
+
+
+	    SELECT @TxId = SCOPE_IDENTITY();
+
+
+
+        SELECT @AccountId=AccountId FROM Account WHERE AccountCode='@AP'
+
+
+
+	    INSERT INTO TransactionJournalDetail
+
+			    ([TxId]
+
+			    ,[AccountId]
+
+			    ,[PayeeId]	
+
+			    ,[Amount]
+
+			    ,[CrDeAmount])
+
+		    VALUES
+
+			    (@TxId
+
+			    ,@AccountId
+
+			    ,@PayeeId
+
+			    ,0
+
+			    ,0)
+
+    END
+
+
+
+	-- Section 6: keep the helper-owned split safe by refreshing the core totals
+	-- and base quantities inline before post-commit helper work.
+	-- Purchase_CalcTotalAndPercent is now narrowed for post-commit follow-up.
+	-- Preserve the original core ownership here so PurchaseOrder_Insert still
+	-- refreshes header totals and base quantities after writing PurchaseDetail.
+	-- TempPurchase.LineId is now the canonical cart order. The TempPurchase
+	-- triggers keep it correct, so PurchaseOrder_Insert should trust that
+	-- order instead of rebuilding LineId here.
+	SELECT
+		@BillTotal = ISNULL(SUM(ROUND(BillQty * BillPrice, 2)), 0),
+		@FinalTotal = ISNULL(SUM(ROUND(FinalQty * FinalPrice, 2)), 0)
+	FROM PurchaseDetail
+	WHERE PurchaseId = @PurchaseId
+
+	UPDATE PurchaseDetail
+	SET
+		BaseReceiveQty = ROUND(ReceiveQty / FactorToBase, 6),
+		BaseFinalQty = ROUND(FinalQty / FactorToBase, 6)
+	WHERE PurchaseId = @PurchaseId;
+
+	UPDATE Purchase
+	SET
+		VendorTotal = @BillTotal,
+		PurchaseTotal = @FinalTotal,
+		UpdatedAt = GETUTCDATE()
+	WHERE PurchaseId = @PurchaseId
+
+		COMMIT TRANSACTION;
+	END TRY
+	BEGIN CATCH
+		IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+		THROW;
+	END CATCH
+
+	-- Section 7: run broader/non-core follow-up after commit.
+	EXEC [Purchase_CalcTotalAndPercent] @PurchaseId,@FinalTotal OUTPUT
+
+
+
+    SET @NewPurchaseId=@PurchaseId
+
+
+	-- Section 8: clear temp-cart rows only after the PO write succeeds.
+    DELETE FROM TempPurchase WHERE PayeeId=@PayeeId AND EmpId=@EmpId
+
+	-- End Summary:
+	--   1. TempPurchase.LineId is the canonical cart order and is persisted directly.
+	--   2. Existing PO path applies TempPurchase deletes/updates/inserts to PurchaseDetail.
+	--   3. New PO path creates only the PO header/detail plus a minimal journal shell.
+	--   4. Purchase_CalcTotalAndPercent remains post-commit follow-up for non-core work.
+
+END
+
+
+
+
