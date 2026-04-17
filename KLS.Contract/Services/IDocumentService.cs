@@ -17,6 +17,10 @@ namespace KLS.Contract.Services
 
         string? PackingList(DocumentReq documentReq);
 
+        // TotalList intentionally reuses the LoadingList packing-section builder so the
+        // standalone output matches the bundled LoadingList packing pages exactly.
+        string? TotalList(DocumentReq documentReq);
+
         string? LoadingList(DocumentReq documentReq);
 
         string? PackingLabel(DocumentReq req);

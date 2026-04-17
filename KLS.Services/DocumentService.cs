@@ -210,6 +210,62 @@ namespace KLS.Services
             return fullPath;
         }
 
+        public string? TotalList(DocumentReq req)
+        {
+            List<PdfDocument> pdfs = [];
+
+            try
+            {
+                // TotalList intentionally reuses the same route-packing builder as the
+                // LoadingList packing section so both documents stay identical.
+                var shipDate = req.ShipDate ?? Uow.Companies.GetNextWorkDate();
+                req.ShipDate = shipDate;
+
+                var assignedRoutes = GetAssignedRoutes(shipDate);
+                var packingItems = Uow.Reports.PackingList(req).ToList();
+
+                AppendRoutePackingListPdfs(
+                    pdfs,
+                    packingItems,
+                    assignedRoutes,
+                    shipDate,
+                    req.ShipRoute);
+
+                if (pdfs.Count == 0)
+                    return null;
+
+                var suffix = string.IsNullOrWhiteSpace(req.ShipRoute)
+                    ? shipDate.ToString("MMddyyyy")
+                    : $"{shipDate:MMddyyyy}-{req.ShipRoute}";
+                var fileName = $"TotalList-{suffix}.pdf";
+                var relativePath = Path.Combine("Pdf", fileName);
+                var fullPath = Path.Combine(_env.WebRootPath, relativePath);
+
+                using var merged = PdfDocument.Merge(pdfs);
+
+                _pdfService.AddPageFooter(merged);
+                merged.SaveAs(fullPath);
+
+                if (req.IsPrint && merged.PageCount > 0)
+                {
+                    _printLogService.Create(new PrintLog
+                    {
+                        DocType = "TotalList",
+                        PrintMode = string.IsNullOrWhiteSpace(req.ShipRoute) ? "B" : "S",
+                        DocPath = relativePath,
+                        PageCount = merged.PageCount,
+                    });
+                }
+
+                return fullPath;
+            }
+            finally
+            {
+                foreach (var p in pdfs)
+                    p?.Dispose();
+            }
+        }
+
         public string? LoadingList(DocumentReq req)
         {
             List<PdfDocument> pdfs = [];
@@ -262,43 +318,13 @@ namespace KLS.Services
                     //2-Packinglist
                     var packingItems = Uow.Reports.PackingList(req).ToList();
 
-                    foreach (var route in assignedRoutes)
-                    {
-                        var grpLoadRoute = packingItems.Where(c => c.ShipRoute == route.ShipRoute).GroupBy(c => c.LoadRoute).ToList();
-
-                        foreach (var loadRoute in grpLoadRoute)
-                        {
-                            var routeData = loadRoute.ToList();
-
-                            if (routeData.Count > 0)
-                            {
-                                var packingStorage = routeData.GroupBy(c => c.StorageName).Select(g => new PackingListStorage
-                                {
-                                    StorageName = g.Key,
-                                    WeightTotal = g.Sum(c => c.ItemWeight),
-                                    Products = g.GroupBy(c => new { c.ItemName, c.Comment }).Select(p => new PackingListProduct
-                                    {
-                                        ItemName = p.Key.ItemName,
-                                        Comment = p.Key.Comment,
-                                        Items = p.ToList()
-                                    }).ToList()
-                                }).ToList();
-
-                                var packingList = new RptPackingList
-                                {
-                                    Storages = packingStorage,
-                                    TruckNumber = route.TruckNumber,
-                                    ShipDate = shipDate,
-                                    ShipRoute = loadRoute.Key,
-                                    DropCount = GetDropCount(shipDate, route.ShipRoute)
-                                };
-
-                                var packingtemplate = "~/Views/Pdf/PackingList.cshtml";
-                                var packinghtml = _pdfService.RenderTemplate(packingtemplate, packingList);
-                                pdfs.Add(_pdfService.HtmlToPDF(packinghtml));
-                            }
-                        }
-                    }
+                    // Keep LoadingList packing pages on the same shared builder used by
+                    // standalone TotalList so the two outputs cannot drift again.
+                    AppendRoutePackingListPdfs(
+                        pdfs,
+                        packingItems,
+                        assignedRoutes,
+                        shipDate);
 
                     //3-Harvills
                     var harvills = Uow.Reports.Harvills(shipDate).ToList();
@@ -441,6 +467,76 @@ namespace KLS.Services
         private int GetDropCount(DateOnly shipDate, string shipRoute)
         {
             return Uow.Sales.Find(c => c.ShipDate == shipDate && c.ShipRoute == shipRoute).Count();
+        }
+
+        // This shared builder is the single source of truth for the route packing pages
+        // shown inside LoadingList and the new standalone TotalList.
+        private void AppendRoutePackingListPdfs(
+            List<PdfDocument> pdfs,
+            List<RptPackingItem> packingItems,
+            List<SalesRoute> assignedRoutes,
+            DateOnly shipDate,
+            string? shipRouteFilter = null)
+        {
+            var routesToRender = string.IsNullOrWhiteSpace(shipRouteFilter)
+                ? assignedRoutes
+                : assignedRoutes.Where(r => r.ShipRoute == shipRouteFilter).ToList();
+
+            foreach (var route in routesToRender)
+            {
+                var grpLoadRoute = packingItems
+                    .Where(c => c.ShipRoute == route.ShipRoute)
+                    .GroupBy(c => c.LoadRoute)
+                    .ToList();
+
+                foreach (var loadRoute in grpLoadRoute)
+                {
+                    var routeData = loadRoute.ToList();
+
+                    if (routeData.Count == 0)
+                        continue;
+
+                    var packingList = BuildRoutePackingList(routeData, route, shipDate, loadRoute.Key);
+                    var packingtemplate = "~/Views/Pdf/PackingList.cshtml";
+                    var packinghtml = _pdfService.RenderTemplate(packingtemplate, packingList);
+                    pdfs.Add(_pdfService.HtmlToPDF(packinghtml));
+                }
+            }
+        }
+
+        // This mirrors the historical LoadingList packing grouping exactly:
+        // storage -> product box by ItemName + Comment -> raw item rows inside the box.
+        private RptPackingList BuildRoutePackingList(
+            List<RptPackingItem> routeData,
+            SalesRoute route,
+            DateOnly shipDate,
+            string? loadRouteKey)
+        {
+            var packingStorage = routeData
+                .GroupBy(c => c.StorageName)
+                .Select(g => new PackingListStorage
+                {
+                    StorageName = g.Key,
+                    WeightTotal = g.Sum(c => c.ItemWeight),
+                    Products = g.GroupBy(c => new { c.ItemName, c.Comment })
+                        .Select(p => new PackingListProduct
+                        {
+                            ItemName = p.Key.ItemName,
+                            Comment = p.Key.Comment,
+                            Items = p.ToList()
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            return new RptPackingList
+            {
+                Storages = packingStorage,
+                TruckNumber = route.TruckNumber,
+                ShipDate = shipDate,
+                ShipRoute = loadRouteKey,
+                DropCount = GetDropCount(shipDate, route.ShipRoute)
+            };
         }
 
         private List<SalesRoute> GetAssignedRoutes(DateOnly shipDate)

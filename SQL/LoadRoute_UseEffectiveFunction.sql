@@ -108,6 +108,10 @@ BEGIN
         Id           INT IDENTITY(1,1),
         StorageId    INT,
         StorageName  NVARCHAR(100),
+        -- Carry source sale/customer only so lbs rows can split into separate
+        -- visual boxes when identical-looking rows come from different orders.
+        SalesNumber  NVARCHAR(50),
+        PayeeName    NVARCHAR(255),
         ItemId       INT,
         ItemName     NVARCHAR(255),
         ItemName2    NVARCHAR(255),
@@ -117,14 +121,22 @@ BEGIN
         Comment      NVARCHAR(255),
         ShipRoute    NVARCHAR(10),
         LoadRoute    NVARCHAR(50),
-        Sort         INT
+        Sort         INT,
+        -- Report-only tie breaker inside one storage group.
+        -- Used to push reclassified cooler lbs rows to the end of Cooler.
+        TailSort     INT
     );
 
-    /* Base unit items */
+    /* Base unit items
+       Aggregate only within the same sales document. This preserves the old
+       base-unit combine behavior per sale, but prevents identical rows from
+       different SalesNumber values from collapsing into one packing row. */
     INSERT INTO #MyItem
     (
         StorageId,
         StorageName,
+        SalesNumber,
+        PayeeName,
         ItemId,
         ItemName,
         ItemName2,
@@ -134,11 +146,21 @@ BEGIN
         Comment,
         ShipRoute,
         LoadRoute,
-        Sort
+        Sort,
+        TailSort
     )
     SELECT
         i.StorageId,
-        st.Zone,
+        -- Packing list only: cooler lbs items should stay under the Cooler
+        -- section, but print after the normal cooler rows instead of under
+        -- Prepack.
+        CASE
+            WHEN st.Zone = 'Prepack' AND sd.Unit = 'lbs' THEN 'Cooler'
+            ELSE st.Zone
+        END,
+        -- Only lbs rows need the source order/customer carried through.
+        CASE WHEN sd.Unit = 'lbs' THEN s.SalesNumber ELSE NULL END,
+        CASE WHEN sd.Unit = 'lbs' THEN p.PayeeName ELSE NULL END,
         sd.ItemId,
         i.ItemName,
         i.ItemName2,
@@ -148,10 +170,16 @@ BEGIN
         sd.Notes,
         s.ShipRoute,
         dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate),
-        1
+        1,
+        -- TailSort=1 means "same Cooler section, but print after normal rows".
+        CASE
+            WHEN st.Zone = 'Prepack' AND sd.Unit = 'lbs' THEN 1
+            ELSE 0
+        END
     FROM Sales AS s
     INNER JOIN SalesDetail AS sd ON s.SalesId = sd.SalesId
     INNER JOIN Item AS i ON i.ItemId = sd.ItemId
+    INNER JOIN Payee AS p ON p.PayeeId = s.ShipId
     LEFT JOIN ItemStorage AS st ON st.StorageId = i.StorageId
     WHERE sd.FactorToBase = 1
       AND s.ShipDate = CASE WHEN @ShipDate IS NOT NULL THEN @ShipDate ELSE s.ShipDate END
@@ -160,6 +188,11 @@ BEGIN
     GROUP BY
         i.StorageId,
         st.Zone,
+        -- Only lbs rows should stay separate by SalesNumber. Other base-unit
+        -- rows keep the original combine behavior.
+        CASE WHEN sd.Unit = 'lbs' THEN s.SalesNumber ELSE NULL END,
+        -- Keep the lbs-only customer label aligned with the same split rule.
+        CASE WHEN sd.Unit = 'lbs' THEN p.PayeeName ELSE NULL END,
         sd.ItemId,
         i.ItemName,
         i.ItemName2,
@@ -169,11 +202,15 @@ BEGIN
         s.RouteOrder,
         s.IsLoadSeparate;
 
-    /* Non-base unit items */
+    /* Non-base unit items
+       These rows were already kept one-per-detail-row. Apply only the same
+       Cooler display reclassification here; do not add new aggregation. */
     INSERT INTO #MyItem
     (
         StorageId,
         StorageName,
+        SalesNumber,
+        PayeeName,
         ItemId,
         ItemName,
         ItemName2,
@@ -183,11 +220,22 @@ BEGIN
         Comment,
         ShipRoute,
         LoadRoute,
-        Sort
+        Sort,
+        TailSort
     )
     SELECT
         i.StorageId,
-        st.Zone,
+        -- Packing list only: cooler lbs items should stay under the Cooler
+        -- section, but print after the normal cooler rows instead of under
+        -- Prepack.
+        CASE
+            WHEN st.Zone = 'Prepack' AND sd.Unit = 'lbs' THEN 'Cooler'
+            ELSE st.Zone
+        END,
+        -- Non-base lbs rows already stay one-per-detail-row; carry source
+        -- sale/customer only so the report can split the box if needed.
+        CASE WHEN sd.Unit = 'lbs' THEN s.SalesNumber ELSE NULL END,
+        CASE WHEN sd.Unit = 'lbs' THEN p.PayeeName ELSE NULL END,
         sd.ItemId,
         i.ItemName,
         i.ItemName2,
@@ -197,33 +245,47 @@ BEGIN
         sd.Notes,
         s.ShipRoute,
         dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate),
-        2
+        2,
+        -- TailSort=1 means "same Cooler section, but print after normal rows".
+        CASE
+            WHEN st.Zone = 'Prepack' AND sd.Unit = 'lbs' THEN 1
+            ELSE 0
+        END
     FROM Sales AS s
     INNER JOIN SalesDetail AS sd ON s.SalesId = sd.SalesId
     INNER JOIN Item AS i ON i.ItemId = sd.ItemId
+    INNER JOIN Payee AS p ON p.PayeeId = s.ShipId
     LEFT JOIN ItemStorage AS st ON st.StorageId = i.StorageId
     WHERE sd.FactorToBase <> 1
       AND s.ShipDate = CASE WHEN @ShipDate IS NOT NULL THEN @ShipDate ELSE s.ShipDate END
       AND s.ShipRoute = CASE WHEN @ShipRoute IS NOT NULL THEN @ShipRoute ELSE s.ShipRoute END
       AND s.SalesId = CASE WHEN @SalesId IS NOT NULL THEN @SalesId ELSE s.SalesId END;
 
-    /* Customer line */
+    /* Customer line
+       Keep the customer marker last as before, and give it TailSort=0 because
+       the Cooler lbs display rule does not apply to customer header rows. */
     IF @SalesId IS NULL
     BEGIN
         INSERT INTO #MyItem
         (
             StorageName,
+            SalesNumber,
+            PayeeName,
             ItemName,
             ShipRoute,
             LoadRoute,
-            Sort
+            Sort,
+            TailSort
         )
         SELECT
             'Customer',
+            NULL,
+            NULL,
             p.PayeeName,
             s.ShipRoute,
             dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate),
-            3
+            3,
+            0
         FROM Sales AS s
         INNER JOIN Payee AS p ON s.ShipId = p.PayeeId
         WHERE s.ShipDate = CASE WHEN @ShipDate IS NOT NULL THEN @ShipDate ELSE s.ShipDate END
@@ -247,6 +309,8 @@ BEGIN
         END,
         TRY_CAST(REPLACE(LoadRoute, ShipRoute, '') AS INT) DESC,
         s.SortOrder,
+        -- Reclassified cooler lbs rows print at the end of the Cooler group.
+        m.TailSort,
         m.ItemName;
 
     DROP TABLE #MyItem;

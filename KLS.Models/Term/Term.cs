@@ -32,6 +32,8 @@ namespace KLS.Models
         // No strict rule? keep simple
         public string? TermType { get; set; }
 
+        public string? TermGroup { get; set; }
+
         public int? DueDays { get; set; }
 
         // Must not be negative => backing field
@@ -72,6 +74,7 @@ namespace KLS.Models
 
             TermName = source.TermName;
             TermType = source.TermType;
+            TermGroup = source.TermGroup;
             DueDays = source.DueDays;
             Discount = source.Discount;
             Inactive = source.Inactive;
