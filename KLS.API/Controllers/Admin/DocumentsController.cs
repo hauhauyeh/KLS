@@ -91,6 +91,42 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("TotalSplitList")]
+        public IActionResult TotalSplitList([FromBody] DocumentReq documentReq)
+        {
+            var filePath = _documentService.TotalSplitList(documentReq);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
+        [HttpPost("HarvillsList")]
+        public IActionResult HarvillsList([FromBody] DocumentReq documentReq)
+        {
+            var filePath = _documentService.HarvillsList(documentReq);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
+        [HttpPost("StoreTotalList")]
+        public IActionResult StoreTotalList([FromBody] DocumentReq documentReq)
+        {
+            var filePath = _documentService.StoreTotalList(documentReq);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
 
         [HttpPost("LoadingList")]
         public IActionResult LoadingList([FromBody] DocumentReq documentReq)

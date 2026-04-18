@@ -72,19 +72,87 @@ namespace KLS.Services
         public RptPackingList PackingList(DocumentReq req)
         {
             var packingItems = Uow.Reports.PackingList(req).ToList();
+            return BuildStandalonePackingReport(packingItems, req);
+        }
 
-            var packingStorage = packingItems.GroupBy(c => c.StorageName).Select(g => new PackingListStorage
-            {
-                StorageName = g.Key,
-                WeightTotal = g.Sum(c => c.ItemWeight),
-                Products = g.GroupBy(c => new { c.ItemName, c.Comment }).Select(p => new PackingListProduct
+        public RptPackingList TotalSplitPacking(DocumentReq req)
+        {
+            // TotalSplit reuses the same raw packing rows as standalone PackingList.
+            // With the newer zone split, Prepack gets nested customer detail while
+            // Cooler can still use the lbs-only outer split rule.
+            var packingItems = Uow.Reports.PackingList(req).ToList();
+
+            return BuildStandalonePackingReport(
+                packingItems,
+                req,
+                reportTitle: "Total Split",
+                useLbsOuterSplit: true);
+        }
+
+        public RptPackingList HarvillsPacking(DateOnly shipDate)
+        {
+            // Harvills keeps only the cooler subset, but now renders through the same
+            // packing-style layout as standalone PackingList.
+            var packingItems = Uow.Reports.Harvills(shipDate).ToList()
+                // Service-side filter keeps the standalone Harvills report aligned with
+                // the requested section exclusions without changing the legacy SQL yet.
+                .Where(x => !string.Equals(x.Section, "Asian", StringComparison.OrdinalIgnoreCase))
+                .Select(x => new RptPackingItem
                 {
-                    ItemName = p.Key.ItemName,
-                    Comment = p.Key.Comment,
-                    Items = p.ToList()
-                }).ToList()
-            }).ToList();
+                    Id = x.Id,
+                    StorageName = x.Section,
+                    ItemName = x.ItemName,
+                    ShipQty = x.ShipQty,
+                    Unit = x.Unit
+                })
+                .ToList();
 
+            return BuildPackingListReport(
+                packingItems,
+                shipDate,
+                shipRoute: null,
+                salesId: null,
+                payeeName: null,
+                truckNumber: null,
+                reportTitle: "Harvills");
+        }
+
+        public RptPackingList StoreTotalPacking(DateOnly shipDate)
+        {
+            // Store Total is also rendered as a filtered packing-style report now.
+            // Service-side filter keeps standalone Store Total away from lbs rows
+            // without changing the legacy SQL source yet.
+            var packingItems = Uow.Reports.StoreTotal(shipDate).ToList()
+                .Where(x => !string.Equals(x.Unit, "lbs", StringComparison.OrdinalIgnoreCase))
+                .Select(x => new RptPackingItem
+                {
+                    Id = x.Id,
+                    StorageName = x.Section,
+                    ItemName = x.ItemName,
+                    ShipQty = x.ShipQty,
+                    Unit = x.Unit
+                })
+                .ToList();
+
+            return BuildPackingListReport(
+                packingItems,
+                shipDate,
+                shipRoute: null,
+                salesId: null,
+                payeeName: null,
+                truckNumber: null,
+                reportTitle: "Store Total");
+        }
+
+        // Standalone packing-style reports share the same header and inside-box qty
+        // aggregation. The only variable here is whether lbs rows can split the
+        // outer product box by source sale.
+        private RptPackingList BuildStandalonePackingReport(
+            List<RptPackingItem> packingItems,
+            DocumentReq req,
+            string? reportTitle = null,
+            bool useLbsOuterSplit = false)
+        {
             var payeeName = "";
 
             if (req.SalesId.HasValue)
@@ -95,16 +163,242 @@ namespace KLS.Services
                 req.ShipRoute = sales.ShipRoute;
             }
 
+            return BuildPackingListReport(
+                packingItems,
+                req.ShipDate,
+                req.ShipRoute,
+                req.SalesId,
+                payeeName,
+                _salesRouteService.GetByDateRoute(req.ShipDate, req.ShipRoute)?.TruckNumber,
+                reportTitle,
+                useLbsOuterSplit);
+        }
+
+        // PackingList.cshtml renders one visible line from Qty + Unit + AisleBay.
+        // Aggregate to that same display shape so the standalone PackingList totals
+        // inside-box qty lines again without changing the outer box split behavior.
+        private static List<RptPackingItem> AggregatePackingProductItems(
+            IEnumerable<RptPackingItem> productItems)
+        {
+            var itemList = productItems.ToList();
+
+            // Customer marker rows do not represent measurable qty/unit lines.
+            // Keep them untouched so no fake "0" row is introduced.
+            if (itemList.All(x => x.ShipQty == null && string.IsNullOrWhiteSpace(x.Unit)))
+            {
+                return itemList;
+            }
+
+            return itemList
+                .GroupBy(x => new
+                {
+                    x.Unit,
+                    x.Aisle,
+                    x.Bay
+                })
+                .Select(g =>
+                {
+                    var first = g.First();
+                    return new RptPackingItem
+                    {
+                        Id = first.Id,
+                        StorageName = first.StorageName,
+                        ItemName = first.ItemName,
+                        ItemName2 = first.ItemName2,
+                        Unit = first.Unit,
+                        ShipQty = g.Sum(x => x.ShipQty) ?? 0,
+                        Comment = first.Comment,
+                        ShipRoute = first.ShipRoute,
+                        LoadRoute = first.LoadRoute,
+                        SalesNumber = first.SalesNumber,
+                        PayeeName = first.PayeeName,
+                        ItemWeight = g.Sum(x => x.ItemWeight) ?? 0,
+                        Aisle = first.Aisle,
+                        Bay = first.Bay
+                    };
+                })
+                .ToList();
+        }
+
+        // Prepack keeps one outer item box per item/comment. Inside that box,
+        // combine by unit first (cs first, then other units). For the secondary
+        // non-cs/non-lbs unit total, show indented customer split detail when
+        // multiple source sales contribute to that same unit line.
+        private static List<PackingListUnitLine> BuildPrepackUnitLines(
+            IEnumerable<RptPackingItem> productItems)
+        {
+            return productItems
+                .Where(x => x.ShipQty != null && !string.IsNullOrWhiteSpace(x.Unit))
+                .GroupBy(x => x.Unit)
+                .OrderBy(g => string.Equals(g.Key, "cs", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(g => g.Key)
+                .SelectMany(g =>
+                {
+                    var lines = new List<PackingListUnitLine>
+                    {
+                        new PackingListUnitLine
+                        {
+                            ShipQty = g.Sum(x => x.ShipQty) ?? 0,
+                            Unit = g.Key,
+                            IsSplitDetail = false
+                        }
+                    };
+
+                    // Prepack contains non-cs/non-lbs units. Keep one combined unit
+                    // line first, then show customer split detail only when more than
+                    // one source sale contributes to that same unit total.
+                    if (!string.Equals(g.Key, "cs", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(g.Key, "lbs", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var salesSplits = g
+                            .GroupBy(x => new { x.SalesNumber, x.PayeeName })
+                            .Where(x => !string.IsNullOrWhiteSpace(x.Key.SalesNumber))
+                            .OrderBy(x => x.Key.PayeeName)
+                            .ThenBy(x => x.Key.SalesNumber)
+                            .ToList();
+
+                        if (salesSplits.Count > 1)
+                        {
+                            lines.AddRange(salesSplits.Select(x => new PackingListUnitLine
+                            {
+                                ShipQty = x.Sum(y => y.ShipQty) ?? 0,
+                                Unit = g.Key,
+                                IsSplitDetail = true,
+                                Subtitle = x.Key.PayeeName
+                            }));
+                        }
+                    }
+
+                    return lines;
+                })
+                .ToList();
+        }
+
+        private static List<PackingListProduct> BuildPackingProducts(
+            IGrouping<string?, RptPackingItem> storageGroup,
+            bool useLbsOuterSplit)
+        {
+            if (string.Equals(storageGroup.Key, "Prepack", StringComparison.OrdinalIgnoreCase))
+            {
+                return storageGroup
+                    .GroupBy(c => new { c.ItemName, c.Comment })
+                    .Select(p => new PackingListProduct
+                    {
+                        ItemName = p.Key.ItemName,
+                        Comment = p.Key.Comment,
+                        UnitLines = BuildPrepackUnitLines(p)
+                    })
+                    .ToList();
+            }
+
+            return storageGroup
+                .GroupBy(c => ResolvePackingProductGroupKey(c, storageGroup, useLbsOuterSplit))
+                .Select(p => new PackingListProduct
+                {
+                    ItemName = p.Key.ItemName,
+                    Comment = p.Key.Comment,
+                    Subtitle = p.Key.Subtitle,
+                    Items = AggregatePackingProductItems(p)
+                })
+                .ToList();
+        }
+
+        private static int GetPackingStorageSortOrder(string? storageName)
+        {
+            if (string.Equals(storageName, "Cooler", StringComparison.OrdinalIgnoreCase))
+                return 0;
+
+            if (string.Equals(storageName, "Prepack", StringComparison.OrdinalIgnoreCase))
+                return 1;
+
+            return 2;
+        }
+
+        // Shared packing-style report model builder. Standalone PackingList remains the
+        // source of truth, and filtered reports such as Harvills / Store Total now reuse
+        // the same storage/product/qty layout instead of their own legacy templates.
+        private RptPackingList BuildPackingListReport(
+            IEnumerable<RptPackingItem> packingItems,
+            DateOnly? shipDate,
+            string? shipRoute,
+            int? salesId,
+            string? payeeName,
+            string? truckNumber,
+            string? reportTitle = null,
+            bool useLbsOuterSplit = false)
+        {
+            var itemList = packingItems.ToList();
+
+            var packingStorage = itemList
+                .GroupBy(c => c.StorageName)
+                .OrderBy(g => GetPackingStorageSortOrder(g.Key))
+                .ThenBy(g => g.Key)
+                .Select(g => new PackingListStorage
+                {
+                    StorageName = g.Key,
+                    WeightTotal = g.Sum(c => c.ItemWeight),
+                    Products = BuildPackingProducts(g, useLbsOuterSplit)
+                })
+                .ToList();
+
             return new RptPackingList
             {
-                ShipDate = req.ShipDate,
-                ShipRoute = req.ShipRoute,
-                SalesId = req.SalesId,
+                ReportTitle = reportTitle,
+                ShipDate = shipDate,
+                ShipRoute = shipRoute,
+                SalesId = salesId,
                 PayeeName = payeeName,
-                TruckNumber = _salesRouteService.GetByDateRoute(req.ShipDate, req.ShipRoute)?.TruckNumber,
+                TruckNumber = truckNumber,
                 Storages = packingStorage
             };
         }
+
+        // Default standalone grouping is ItemName + Comment only.
+        // When TotalSplit mode is enabled, Cooler lbs rows that would look identical
+        // on the page (same item/comment/qty after normalizing comment text) but
+        // come from different sales split into separate outer boxes.
+        //
+        // Use SalesNumber as the actual split key so two different orders for the
+        // same customer still separate correctly. Keep PayeeName as the visual
+        // subtitle so the printed box still shows a readable customer marker.
+        private static PackingProductGroupKey ResolvePackingProductGroupKey(
+            RptPackingItem item,
+            IGrouping<string?, RptPackingItem> storageGroup,
+            bool useLbsOuterSplit)
+        {
+            if (!useLbsOuterSplit
+                || !string.Equals(storageGroup.Key, "Cooler", StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(item.Unit, "lbs", StringComparison.OrdinalIgnoreCase))
+            {
+                return new PackingProductGroupKey(item.ItemName, item.Comment, null, null);
+            }
+
+            var normalizedComment = NormalizePackingComment(item.Comment);
+            var hasVisualCollisionAcrossSales = storageGroup.Any(x =>
+                string.Equals(x.Unit, "lbs", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(x.ItemName, item.ItemName, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(NormalizePackingComment(x.Comment), normalizedComment, StringComparison.OrdinalIgnoreCase)
+                && x.ShipQty == item.ShipQty
+                && !string.Equals(x.SalesNumber, item.SalesNumber, StringComparison.OrdinalIgnoreCase));
+
+            if (!hasVisualCollisionAcrossSales)
+            {
+                return new PackingProductGroupKey(item.ItemName, item.Comment, null, null);
+            }
+
+            return new PackingProductGroupKey(item.ItemName, item.Comment, item.SalesNumber, item.PayeeName);
+        }
+
+        // Trim + collapse case/spacing noise so "1 cs " and "1 CS" still count as the
+        // same visible comment for TotalSplit collision detection.
+        private static string NormalizePackingComment(string? comment)
+            => string.IsNullOrWhiteSpace(comment) ? string.Empty : comment.Trim();
+
+        private sealed record PackingProductGroupKey(
+            string? ItemName,
+            string? Comment,
+            string? SplitKey,
+            string? Subtitle);
 
         public IEnumerable<RptBalanceSheet>? BalanceSheet(DateOnly? endDate)
         {
