@@ -6,6 +6,8 @@ using KLS.Models;
 using KLS.Models.Reports;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Square;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +24,10 @@ namespace KLS.Services
         private readonly IEmailService _emailService;
         private readonly IExportService _exportService;
         private readonly ITwilioService _twilioService;
+        private readonly IPortalModeService _portalModeService;
+        private readonly ISquareService _squareService;
+        private readonly IMxMerchantService _mxMerchantService;
+        private readonly IMemoryCache _memoryCache;
 
         public SalesService(IUnitOfWork uow,
             IWebHostEnvironment env,
@@ -29,7 +35,11 @@ namespace KLS.Services
             IEmailSettingService emailSettingService,
             IEmailService emailService,
             IExportService exportService,
-            ITwilioService twilioService) : base(uow)
+            ITwilioService twilioService,
+            IPortalModeService portalModeService,
+            ISquareService squareService,
+            IMxMerchantService mxMerchantService,
+            IMemoryCache memoryCache) : base(uow)
         {
             _env = env;
             _documentService = documentService;
@@ -37,6 +47,10 @@ namespace KLS.Services
             _emailService = emailService;
             _exportService = exportService;
             _twilioService = twilioService;
+            _portalModeService = portalModeService;
+            _squareService = squareService;
+            _mxMerchantService = mxMerchantService;
+            _memoryCache = memoryCache;
         }
 
         public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
@@ -498,6 +512,226 @@ namespace KLS.Services
             EmailOrderDetail(salesId);
 
             return sales.SalesId;
+        }
+
+        public int WebCheckoutB2C(SalesB2cCheckoutReq webCheckoutReq)
+        {
+            if (!_portalModeService.IsB2C())
+                throw new InvalidOperationException("B2C checkout is only available in B2C mode.");
+
+            if (string.IsNullOrWhiteSpace(webCheckoutReq.ClientRequestKey))
+                throw new InvalidOperationException("Client request key is required.");
+
+            var cacheKey = $"b2c-checkout:{UserContext.EmpId}:{webCheckoutReq.ClientRequestKey}";
+
+            if (_memoryCache.TryGetValue<int>(cacheKey, out var existingSalesId) && existingSalesId > 0)
+                return existingSalesId;
+
+            var cartItems = Uow.TempSales.GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 })?.ToList() ?? [];
+            if (cartItems.Count == 0)
+                throw new InvalidOperationException("Cart is empty.");
+
+            var dueTotal = cartItems.Sum(x => x.ExtTotal ?? 0m);
+            if (dueTotal <= 0)
+                throw new InvalidOperationException("Cart total must be greater than zero.");
+
+            var payment = ChargeB2CPayment(webCheckoutReq, dueTotal);
+
+            var checkoutReq = new SalesCheckoutReq
+            {
+                PayeeId = UserContext.EmpId,
+                StageId = 0,
+                Instruction = "Web " + webCheckoutReq.Instruction,
+                ShipDate = webCheckoutReq.ShipDate,
+                ShipRoute = webCheckoutReq.ShipRoute
+            };
+
+            if (webCheckoutReq.IsPickUp)
+                checkoutReq.ShipRoute = "P";
+
+            var salesIdCreated = Uow.Sales.Checkout(checkoutReq);
+            SaveGatewayPaymentForSales(payment, salesIdCreated, UserContext.EmpId);
+            UpdateB2CCheckoutContact(webCheckoutReq);
+            Uow.Commit();
+
+            var sales = GetById(salesIdCreated);
+            var customer = Uow.Customers.GetById(UserContext.EmpId);
+            var toPhone = customer?.TextOrderConfirm;
+
+            if (!string.IsNullOrEmpty(toPhone))
+            {
+                var payee = Uow.Payees.GetById(UserContext.EmpId);
+                string msgbody = "Dear " + payee.PayeeName + "! We've received your order. Your order number " + sales.SalesNumber + " will be ship on " + sales.ShipDate?.ToString("MM/dd/yyyy") + ".";
+
+                _twilioService.SendMessage(toPhone, msgbody);
+            }
+
+            EmailOrderDetail(salesIdCreated);
+            _memoryCache.Set(cacheKey, salesIdCreated, TimeSpan.FromMinutes(30));
+
+            return salesIdCreated;
+        }
+
+        private void UpdateB2CCheckoutContact(SalesB2cCheckoutReq webCheckoutReq)
+        {
+            var payee = Uow.Payees.GetById(UserContext.EmpId);
+            if (payee != null && payee.Email != webCheckoutReq.Email)
+            {
+                payee.Email = webCheckoutReq.Email;
+                payee.UpdatedAt = DateTime.UtcNow;
+                Uow.Payees.Update(payee);
+            }
+
+            var customer = Uow.Customers.GetById(UserContext.EmpId);
+            if (customer != null && customer.TextOrderConfirm != webCheckoutReq.Phone)
+            {
+                customer.TextOrderConfirm = webCheckoutReq.Phone;
+                Uow.Customers.Update(customer);
+            }
+        }
+
+        private void SaveGatewayPaymentForSales(B2CPaymentResult payment, int salesId, int payeeId)
+        {
+            var paymentReq = new CreateGatewayPaymentReq
+            {
+                PayeeId = payeeId,
+                PaymentMethod = payment.PaymentMethod,
+                ReferenceId = payment.ReferenceId,
+                PaymentAmount = payment.PaymentAmount,
+                SalesIds = salesId.ToString(),
+                Gateway = payment.Gateway,
+                CCFee = payment.CCFee,
+                CardType = payment.CardType,
+                Last4 = payment.Last4
+            };
+
+            Uow.CustomerPayments.SaveGatewayPayment(paymentReq);
+        }
+
+        private B2CPaymentResult ChargeB2CPayment(SalesB2cCheckoutReq webCheckoutReq, decimal dueTotal)
+        {
+            if (webCheckoutReq.PaymentMethodId.HasValue)
+            {
+                var method = Uow.PaymentMethods.GetById(webCheckoutReq.PaymentMethodId.Value);
+                if (method == null)
+                    throw new InvalidOperationException("Payment method not found.");
+
+                if (method.IsACH)
+                {
+                    var mxResp = _mxMerchantService
+                        .ChargeAsync(method, dueTotal, true)
+                        .GetAwaiter()
+                        .GetResult();
+
+                    return new B2CPaymentResult
+                    {
+                        Gateway = "MX Merchant",
+                        PaymentMethod = "ACH",
+                        PaymentAmount = dueTotal,
+                        ReferenceId = ExtractMxReferenceId(mxResp),
+                        Last4 = method.Last4
+                    };
+                }
+
+                var ccFee = Utilities.Rounding((webCheckoutReq.CCFeePercent ?? 0m) * dueTotal, 2) ?? 0m;
+                var paymentAmount = dueTotal + ccFee;
+                var paymentAmountCent = Convert.ToInt64(paymentAmount * 100m);
+                var paymentResponse = _squareService
+                    .ChargePayment(UserContext.EmpId, method.SQCustId, method.SQCardId, paymentAmountCent, webCheckoutReq.ClientRequestKey)
+                    .GetAwaiter()
+                    .GetResult();
+
+                ValidateSquareResponse(paymentResponse);
+
+                return new B2CPaymentResult
+                {
+                    Gateway = "Square Payment",
+                    PaymentMethod = "CREDIT CARD",
+                    PaymentAmount = paymentAmount,
+                    ReferenceId = paymentResponse.Payment?.Id,
+                    CCFee = ccFee,
+                    CardType = Convert.ToString(paymentResponse.Payment?.CardDetails?.Card?.CardBrand),
+                    Last4 = Convert.ToString(paymentResponse.Payment?.CardDetails?.Card?.Last4)
+                };
+            }
+
+            if (webCheckoutReq.PaymentMethod == null)
+                throw new InvalidOperationException("Payment method is required.");
+
+            if (webCheckoutReq.PaymentMethod.IsACH)
+            {
+                var mxResp = _mxMerchantService
+                    .ChargeAsync(webCheckoutReq.PaymentMethod, dueTotal, false)
+                    .GetAwaiter()
+                    .GetResult();
+
+                return new B2CPaymentResult
+                {
+                    Gateway = "MX Merchant",
+                    PaymentMethod = "ACH",
+                    PaymentAmount = dueTotal,
+                    ReferenceId = ExtractMxReferenceId(mxResp),
+                    Last4 = Utilities.GetLast4(webCheckoutReq.PaymentMethod.AccountNumber)
+                };
+            }
+
+            var ccFeeDirect = Utilities.Rounding((webCheckoutReq.CCFeePercent ?? 0m) * dueTotal, 2) ?? 0m;
+            var paymentAmountDirect = dueTotal + ccFeeDirect;
+            var directMxResp = _mxMerchantService
+                .ChargeAsync(webCheckoutReq.PaymentMethod, paymentAmountDirect, false)
+                .GetAwaiter()
+                .GetResult();
+
+            return new B2CPaymentResult
+            {
+                Gateway = "MX Merchant",
+                PaymentMethod = "CREDIT CARD",
+                PaymentAmount = paymentAmountDirect,
+                ReferenceId = ExtractMxReferenceId(directMxResp),
+                CCFee = ccFeeDirect,
+                CardType = webCheckoutReq.PaymentMethod.AccountType,
+                Last4 = Utilities.GetLast4(webCheckoutReq.PaymentMethod.AccountNumber)
+            };
+        }
+
+        private static void ValidateSquareResponse(CreatePaymentResponse paymentResponse)
+        {
+            if (paymentResponse?.Payment == null)
+                throw new Exception("Payment gateway returned an empty response.");
+
+            if (!string.Equals(paymentResponse.Payment.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
+            {
+                var errorMsg = paymentResponse.Errors != null && paymentResponse.Errors.Any()
+                    ? string.Join(" | ", paymentResponse.Errors.Select(e => $"{e.Code}: {e.Detail}"))
+                    : $"Payment was not completed. Status: {paymentResponse.Payment.Status}";
+
+                throw new Exception(errorMsg);
+            }
+        }
+
+        private static string ExtractMxReferenceId(MxCreatePaymentResponse mxResp)
+        {
+            if (mxResp == null) return "";
+
+            string? TryGet(string key)
+                => mxResp.Extra.TryGetValue(key, out var v) ? v?.ToString() : null;
+
+            return TryGet("id")
+                ?? TryGet("paymentId")
+                ?? TryGet("transactionId")
+                ?? TryGet("referenceId")
+                ?? "";
+        }
+
+        private sealed class B2CPaymentResult
+        {
+            public string Gateway { get; set; } = string.Empty;
+            public string PaymentMethod { get; set; } = string.Empty;
+            public string? ReferenceId { get; set; }
+            public decimal PaymentAmount { get; set; }
+            public decimal CCFee { get; set; }
+            public string? CardType { get; set; }
+            public string? Last4 { get; set; }
         }
 
         private void EmailOrderDetail(int salesId)

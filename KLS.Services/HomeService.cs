@@ -12,32 +12,98 @@ namespace KLS.Services
 {
     public class HomeService : BaseService, IHomeService
     {
+        private const int FeaturedCategoryLimit = 8;
+        private const int NewArrivalsLimit = 10;
+        private const int TopSellingLimit = 10;
+        private const int TopCategoryGroupCount = 5;
+        private const int ProductsPerGroup = 10;
+
         public HomeService(IUnitOfWork uow) : base(uow)
         {
         }
 
         public HomePageData GetHomePageData(string baseUrl)
         {
+            var rollup = BuildCategoryRollup();
+
+            var featuredCategories = GetFeaturedCategories(baseUrl, rollup);
+            var topSelling = GetTopSellingProducts(baseUrl);
+            var newArrivals = GetNewArrivals(baseUrl);
+            var topCategoryGroups = GetTopCategoryGroups(baseUrl, featuredCategories, rollup);
+
             return new HomePageData
             {
-                Categories = GetCategories(baseUrl),
-                Products = GetProducts(baseUrl)
+                FeaturedCategories = featuredCategories,
+                NewArrivals = newArrivals,
+                TopSellingProducts = topSelling,
+                TopCategoryGroups = topCategoryGroups,
+
+                // Legacy fields — populated for backward compatibility with B2C and any
+                // existing consumers. Remove in Phase 2 after B2C migrates.
+                Categories = featuredCategories,
+                Products = topSelling
             };
         }
 
-        private IEnumerable<HomeCategory> GetCategories(string baseUrl)
+        // Precomputed once per request. Item counts on top-level categories must include
+        // items in descendant sub-categories, otherwise top-level groups like "Meat" show
+        // zero products when all SKUs live under children like "Beef" / "Pork".
+        private CategoryRollup BuildCategoryRollup()
         {
-            var itemCounts = Uow.Items.Find(i => !i.Inactive)
+            var directCounts = Uow.Items.Find(i => !i.Inactive)
                 .Where(i => i.CategoryId != null)
                 .GroupBy(i => i.CategoryId!.Value)
                 .Select(g => new { CategoryId = g.Key, Count = g.Count() })
                 .ToDictionary(x => x.CategoryId, x => x.Count);
 
+            var allCategories = Uow.ItemCategories.Find(c => !c.Inactive)
+                .AsNoTracking()
+                .Select(c => new CategoryNode { CategoryId = c.CategoryId, ParentId = c.ParentId })
+                .ToList();
+
+            var childrenByParent = allCategories
+                .Where(c => c.ParentId.HasValue)
+                .GroupBy(c => c.ParentId!.Value)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.CategoryId).ToList());
+
+            var descendantIds = new Dictionary<int, List<int>>();
+            foreach (var cat in allCategories)
+            {
+                var collected = new List<int>();
+                var stack = new Stack<int>();
+                stack.Push(cat.CategoryId);
+                while (stack.Count > 0)
+                {
+                    var id = stack.Pop();
+                    collected.Add(id);
+                    if (childrenByParent.TryGetValue(id, out var kids))
+                    {
+                        foreach (var k in kids) stack.Push(k);
+                    }
+                }
+                descendantIds[cat.CategoryId] = collected;
+            }
+
+            var rolledUpCounts = allCategories.ToDictionary(
+                c => c.CategoryId,
+                c => descendantIds[c.CategoryId].Sum(id => directCounts.GetValueOrDefault(id))
+            );
+
+            return new CategoryRollup
+            {
+                RolledUpCounts = rolledUpCounts,
+                DescendantIds = descendantIds
+            };
+        }
+
+        private List<HomeCategory> GetFeaturedCategories(string baseUrl, CategoryRollup rollup)
+        {
             return Uow.ItemCategories
                 .Find(c => c.ParentId == null && !c.Inactive)
                 .OrderBy(c => c.SortOrder)
                 .ThenBy(c => c.CategoryName)
                 .AsNoTracking()
+                .Take(FeaturedCategoryLimit)
                 .ToList()
                 .Select(c => new HomeCategory
                 {
@@ -45,39 +111,173 @@ namespace KLS.Services
                     CategoryName = c.CategoryName,
                     DisplayName = c.DisplayName,
                     ImageUrl = string.IsNullOrEmpty(c.ImageUrl) ? null : baseUrl + c.ImageUrl,
-                    ItemCount = itemCounts.GetValueOrDefault(c.CategoryId)
-                });
+                    ItemCount = rollup.RolledUpCounts.GetValueOrDefault(c.CategoryId)
+                })
+                .ToList();
         }
 
-        private IEnumerable<HomeProduct> GetProducts(string baseUrl)
+        private List<HomeProduct> GetNewArrivals(string baseUrl)
         {
-            var items = Uow.Items.Find(i => !i.Inactive && i.Last3M > 0)
-                .OrderByDescending(i => i.Last3M)
-                .Take(10)
+            var items = Uow.Items
+                .Find(i => !i.Inactive)
+                .OrderByDescending(i => i.CreatedAt)
+                .ThenByDescending(i => i.ItemId)
+                .Take(NewArrivalsLimit)
                 .AsNoTracking()
                 .ToList();
 
+            var imageMap = BuildImageMap(items, baseUrl);
+            var categoryNameMap = BuildCategoryNameMap(items);
+
+            return items
+                .Select(i => MapToHomeProduct(i, imageMap, categoryNameMap, baseUrl, "New"))
+                .ToList();
+        }
+
+        private List<HomeProduct> GetTopSellingProducts(string baseUrl)
+        {
+            var items = Uow.Items
+                .Find(i => !i.Inactive && i.Last3M > 0)
+                .OrderByDescending(i => i.Last3M)
+                .Take(TopSellingLimit)
+                .AsNoTracking()
+                .ToList();
+
+            var imageMap = BuildImageMap(items, baseUrl);
+            var categoryNameMap = BuildCategoryNameMap(items);
+
+            return items
+                .Select(i => MapToHomeProduct(i, imageMap, categoryNameMap, baseUrl))
+                .ToList();
+        }
+
+        private List<HomeCategoryProductGroup> GetTopCategoryGroups(string baseUrl, List<HomeCategory> featuredCategories, CategoryRollup rollup)
+        {
+            // Skip featured categories that have no items anywhere in their subtree.
+            var groupCategories = featuredCategories
+                .Where(c => c.ItemCount > 0)
+                .Take(TopCategoryGroupCount)
+                .ToList();
+
+            if (groupCategories.Count == 0) return new List<HomeCategoryProductGroup>();
+
+            // Reverse map: any descendant CategoryId -> its featured-category root.
+            // Built only for the seeds we actually need.
+            var descendantToRoot = new Dictionary<int, int>();
+            foreach (var cat in groupCategories)
+            {
+                if (!rollup.DescendantIds.TryGetValue(cat.CategoryId, out var descendants)) continue;
+                foreach (var id in descendants)
+                {
+                    descendantToRoot[id] = cat.CategoryId;
+                }
+            }
+
+            var descendantIdList = descendantToRoot.Keys.ToList();
+            if (descendantIdList.Count == 0) return new List<HomeCategoryProductGroup>();
+
+            // Single products query across all 5 subtrees.
+            var allProducts = Uow.Items
+                .Find(i => !i.Inactive && i.Last3M > 0 && i.CategoryId.HasValue && descendantIdList.Contains(i.CategoryId.Value))
+                .OrderByDescending(i => i.Last3M)
+                .AsNoTracking()
+                .ToList();
+
+            // Single batched image query for all items across all groups.
+            var imageMap = BuildImageMap(allProducts, baseUrl);
+
+            var productsByRoot = allProducts
+                .Where(i => i.CategoryId.HasValue && descendantToRoot.ContainsKey(i.CategoryId.Value))
+                .GroupBy(i => descendantToRoot[i.CategoryId!.Value])
+                .ToDictionary(g => g.Key, g => g.Take(ProductsPerGroup).ToList());
+
+            return groupCategories
+                .Select(cat =>
+                {
+                    productsByRoot.TryGetValue(cat.CategoryId, out var groupItems);
+                    groupItems ??= new List<Item>();
+
+                    return new HomeCategoryProductGroup
+                    {
+                        CategoryId = cat.CategoryId,
+                        CategoryName = cat.CategoryName,
+                        DisplayName = cat.DisplayName,
+                        ImageUrl = cat.ImageUrl,
+                        ItemCount = cat.ItemCount,
+                        Products = groupItems.Select(i => MapToHomeProduct(i, imageMap, null, baseUrl)).ToList()
+                    };
+                })
+                .ToList();
+        }
+
+        private Dictionary<int, string> BuildImageMap(IReadOnlyCollection<Item> items, string baseUrl)
+        {
+            if (items.Count == 0) return new Dictionary<int, string>();
+
             var itemIds = items.Select(i => i.ItemId).ToList();
 
-            var primaryImages = Uow.ItemImages
+            return Uow.ItemImages
                 .Find(img => itemIds.Contains(img.ItemId) && img.IsPrimary && img.Has300)
                 .AsNoTracking()
                 .ToDictionary(img => img.ItemId, img => $"/Images/items/{img.ItemId}/{img.ImageIndex}-300.png");
+        }
 
-            return items.Select(i =>
+        private Dictionary<int, string?> BuildCategoryNameMap(IReadOnlyCollection<Item> items)
+        {
+            if (items.Count == 0) return new Dictionary<int, string?>();
+
+            var categoryIds = items
+                .Where(i => i.CategoryId.HasValue)
+                .Select(i => i.CategoryId!.Value)
+                .Distinct()
+                .ToList();
+
+            if (categoryIds.Count == 0) return new Dictionary<int, string?>();
+
+            return Uow.ItemCategories
+                .Find(c => categoryIds.Contains(c.CategoryId))
+                .AsNoTracking()
+                .ToDictionary(c => c.CategoryId, c => c.DisplayName ?? c.CategoryName);
+        }
+
+        private static HomeProduct MapToHomeProduct(
+            Item item,
+            Dictionary<int, string> imageMap,
+            Dictionary<int, string?>? categoryNameMap,
+            string baseUrl,
+            string? badgeText = null)
+        {
+            imageMap.TryGetValue(item.ItemId, out var imagePath);
+            string? categoryName = null;
+            if (categoryNameMap != null && item.CategoryId.HasValue)
             {
-                primaryImages.TryGetValue(i.ItemId, out var imagePath);
+                categoryNameMap.TryGetValue(item.CategoryId.Value, out categoryName);
+            }
 
-                return new HomeProduct
-                {
-                    ItemId = i.ItemId,
-                    ItemName = i.ItemName,
-                    ItemName2 = i.ItemName2,
-                    SetPacking = i.SetPacking,
-                    PackSize = i.PackSize,
-                    PrimaryImageUrl = string.IsNullOrEmpty(imagePath) ? null : baseUrl + imagePath
-                };
-            });
+            return new HomeProduct
+            {
+                ItemId = item.ItemId,
+                ItemName = item.ItemName,
+                ItemName2 = item.ItemName2,
+                SetPacking = item.SetPacking,
+                PackSize = item.PackSize,
+                PrimaryImageUrl = string.IsNullOrEmpty(imagePath) ? null : baseUrl + imagePath,
+                CategoryId = item.CategoryId,
+                CategoryName = categoryName,
+                BadgeText = badgeText
+            };
+        }
+
+        private class CategoryNode
+        {
+            public int CategoryId { get; set; }
+            public int? ParentId { get; set; }
+        }
+
+        private class CategoryRollup
+        {
+            public Dictionary<int, int> RolledUpCounts { get; set; } = new();
+            public Dictionary<int, List<int>> DescendantIds { get; set; } = new();
         }
     }
 }

@@ -24,6 +24,7 @@ namespace KLS.Services
         private readonly IEmailService _emailService;
         private readonly IEmailSettingService _emailSettingService;
         private readonly IExportService _exportService;
+        private readonly IPortalModeService _portalModeService;
 
         public CustomerService(IUnitOfWork uow,
             ISystemSettingService systemSettingService,
@@ -33,7 +34,8 @@ namespace KLS.Services
             IPDFService pdfService,
             IEmailService emailService,
             IEmailSettingService emailSettingService,
-            IExportService exportService) : base(uow)
+            IExportService exportService,
+            IPortalModeService portalModeService) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _companyService = companyService;
@@ -43,6 +45,7 @@ namespace KLS.Services
             _emailService = emailService;
             _emailSettingService = emailSettingService;
             _exportService = exportService;
+            _portalModeService = portalModeService;
         }
 
         public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
@@ -112,6 +115,9 @@ namespace KLS.Services
 
         public bool NameExists(string? payeeName, int payeeId)
         {
+            if (string.IsNullOrWhiteSpace(payeeName))
+                return false;
+
             return Uow.Payees.Exists(p => p.PayeeName.ToLower() == payeeName.ToLower() && p.PayeeId != payeeId && p.PayeeType == EnumHelper.PayeeType.C.ToString());
         }
 
@@ -475,9 +481,29 @@ namespace KLS.Services
         //---web method
         public void Register(RegisterReq registerReq, string url)
         {
+            var isB2C = _portalModeService.IsB2C();
+            var payeeName = string.IsNullOrWhiteSpace(registerReq.PayeeName)
+                ? registerReq.Username
+                : registerReq.PayeeName;
+
+            if (isB2C)
+            {
+                if (string.IsNullOrWhiteSpace(registerReq.Email))
+                    throw new Exception("Email is required.");
+                if (string.IsNullOrWhiteSpace(registerReq.Phone))
+                    throw new Exception("Phone is required.");
+                if (string.IsNullOrWhiteSpace(registerReq.Username))
+                    throw new Exception("Username is required.");
+                if (string.IsNullOrWhiteSpace(registerReq.Address)
+                    || string.IsNullOrWhiteSpace(registerReq.City)
+                    || string.IsNullOrWhiteSpace(registerReq.State)
+                    || string.IsNullOrWhiteSpace(registerReq.ZipCode))
+                    throw new Exception("Shipping address is required.");
+            }
+
             var customerDto = new CustomerDto
             {
-                PayeeName = registerReq.PayeeName,
+                PayeeName = payeeName,
                 EIN = registerReq.EIN,
                 StoreType = registerReq.StoreType,
                 Email = registerReq.Email,
@@ -498,7 +524,7 @@ namespace KLS.Services
                 IsPromotionEnabled = true,
                 IsStatementPrint = true,
                 SalesRepId = null,
-                IsApproved = false,
+                IsApproved = isB2C,
                 IsOnlineRegister = true
             };
 

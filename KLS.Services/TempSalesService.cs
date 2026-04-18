@@ -17,15 +17,16 @@ namespace KLS.Services
         private readonly IItemUnitService _itemUnitService;
         private readonly IAccountService _accountService;
         private readonly IItemImageService _itemImageService;
+        private readonly IPortalModeService _portalModeService;
 
-        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService, IItemImageService itemImageService) : base(uow)
+        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService, IItemImageService itemImageService, IPortalModeService portalModeService) : base(uow)
         {
             _itemService = itemService;
             _itemUnitService = itemUnitService;
             _accountService = accountService;
             _itemImageService = itemImageService;
+            _portalModeService = portalModeService;
         }
-
 
         public IEnumerable<TempSalesItem>? GetList(TempSalesReq tempReq)
         {
@@ -76,13 +77,13 @@ namespace KLS.Services
                         // If user didn't type a manual price, refresh from pricing for the NEW unit
                         if (!tempItem.UnitPrice.HasValue || tempItem.UnitPrice.Value == 0)
                         {
-                            var itemPriceForUnit = _itemUnitService.GetItemPriceByCustomer(
+                            var itemPrice = _itemUnitService.GetItemPriceByCustomer(
                                 tempItem.PayeeId,
                                 existing.ItemId ?? 0,
                                 resolvedUnit.ItemUnitId
                             );
 
-                            tempItem.UnitPrice = itemPriceForUnit.DefaultPrice;
+                            tempItem.UnitPrice = itemPrice?.DefaultPrice;
                         }
                     }
                 }
@@ -90,8 +91,13 @@ namespace KLS.Services
                 //set default price when click O button
                 if (tempItem.IsDefaultPrice && tempItem.LineType == EnumHelper.LineType.I.ToString())
                 {
-                    var itemPrice = _itemUnitService.GetItemPriceByCustomer(tempItem.PayeeId, existing.ItemId ?? 0, existing.ItemUnitId);
-                    tempItem.UnitPrice = itemPrice.DefaultPrice;
+                    var itemPrice = _itemUnitService.GetItemPriceByCustomer(
+                        tempItem.PayeeId,
+                        existing.ItemId ?? 0,
+                        existing.ItemUnitId
+                    );
+
+                    tempItem.UnitPrice = itemPrice?.DefaultPrice;
                 }
 
                 existing.ApplyEdits(tempItem.OrdQty, tempItem.IsFree, tempItem.IsOut, tempItem.IsCRCG, tempItem.UnitPrice, tempItem.Notes);
@@ -227,10 +233,10 @@ namespace KLS.Services
                     throw new InvalidOperationException("ItemId is required to update unit.");
 
                 var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId.Value, existing.Unit);
+
                 var itemPrice = _itemUnitService.GetItemPriceByCustomer(existing.PayeeId, existing.ItemId.Value, itemUnit.ItemUnitId);
 
                 existing.ApplyUnit(itemUnit.Unit, itemUnit.ItemUnitId, itemUnit.FactorToBase);
-
                 existing.UnitPrice = itemPrice.DefaultPrice;
 
                 if (existing.SalesDetailId.HasValue)
@@ -405,8 +411,7 @@ namespace KLS.Services
 
             var itemPrice = _itemUnitService.GetItemPriceByCustomer(tempItem.PayeeId, item.ItemId, resolvedUnit?.ItemUnitId);
 
-            decimal? custPrice = itemPrice.DefaultPrice;
-            var unitPrice = (tempItem.UnitPrice.HasValue && tempItem.UnitPrice.Value != 0) ? tempItem.UnitPrice : (custPrice ?? 0m);
+            var unitPrice = (tempItem.UnitPrice.HasValue && tempItem.UnitPrice.Value != 0) ? tempItem.UnitPrice : (itemPrice.DefaultPrice ?? 0m);
 
             tempSales.ApplyEdits(tempItem.OrdQty, tempItem.IsFree, tempItem.IsOut, tempItem.IsCRCG, unitPrice, tempItem.Notes);
 
@@ -449,6 +454,75 @@ namespace KLS.Services
         }
 
         //---Web
+        private ItemUnit? ResolveWebCartUnit(int itemId, int payeeId, int? itemUnitId, string? unit)
+        {
+            if (itemUnitId.HasValue)
+            {
+                var selected = Uow.ItemUnits.GetById(itemUnitId.Value);
+
+                if (selected != null && selected.ItemId == itemId && !selected.Inactive)
+                    return selected;
+            }
+
+            var resolvedUnit = _itemUnitService.ResolveKeyboxUnit(itemId, unit);
+
+            if (resolvedUnit != null)
+                return resolvedUnit;
+
+            var itemPrice = _itemUnitService.GetItemPriceByCustomer(payeeId, itemId, null);
+
+            return itemPrice.ItemUnitId > 0 ? Uow.ItemUnits.GetById(itemPrice.ItemUnitId) : null;
+        }
+
+        private decimal? ResolveWebCartPrice(int payeeId, int itemId, int? itemUnitId)
+        {
+            if (_portalModeService.IsB2C())
+            {
+                if (itemUnitId.HasValue)
+                    return Uow.ItemUnits.GetById(itemUnitId.Value)?.P1;
+
+                var itemPrice = _itemUnitService.GetItemPriceByCustomer(payeeId, itemId, null);
+
+                return itemPrice.ItemUnitId > 0
+                    ? Uow.ItemUnits.GetById(itemPrice.ItemUnitId)?.P1
+                    : itemPrice.DefaultPrice;
+            }
+
+            return _itemUnitService.GetItemPriceByCustomer(payeeId, itemId, itemUnitId).DefaultPrice;
+        }
+
+        private TempSales? GetWebCartEntity(int tempSalesId)
+        {
+            var existing = GetById(tempSalesId);
+
+            if (existing == null || existing.SalesId != 0 || existing.EmpId != UserContext.EmpId || existing.PayeeId != UserContext.EmpId)
+                return null;
+
+            return existing;
+        }
+
+        private WebCartItem? SaveWebCartRow(TempSales existing, decimal? ordQty, int? itemUnitId, string? unit, decimal? factorToBase, decimal? unitPrice, bool syncPromo)
+        {
+            var resolvedQty = ordQty ?? existing.OrdQty;
+            var resolvedPrice = unitPrice ?? existing.UnitPrice;
+
+            if (!string.IsNullOrWhiteSpace(unit))
+                existing.ApplyUnit(unit, itemUnitId, factorToBase);
+
+            existing.ApplyEdits(resolvedQty, existing.IsFree, existing.IsOut, existing.IsCRCG, resolvedPrice, existing.Notes);
+
+            if (existing.SalesDetailId.HasValue)
+                existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
+
+            Uow.TempSales.Update(existing);
+            Uow.Commit();
+
+            if (syncPromo)
+                SyncPromoAfterUpdate(existing);
+
+            return ToWebCartItem(GetListById(existing));
+        }
+
         private WebCartItem ToWebCartItem(TempSalesItem item) => new WebCartItem
         {
             TempSalesId = item.TempSalesId,
@@ -477,64 +551,75 @@ namespace KLS.Services
 
         public WebCartItem? AddCartItem(AddToCartReq req)
         {
+            var selectedUnit = ResolveWebCartUnit(req.ItemId, UserContext.EmpId, req.ItemUnitId, req.Unit);
             var cartItems = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
 
             var existing = cartItems?.FirstOrDefault(c =>
-                c.ItemId == req.ItemId && c.ItemUnitId == req.ItemUnitId);
-
-            TempSalesItem result;
+                c.ItemId == req.ItemId && c.ItemUnitId == selectedUnit?.ItemUnitId);
 
             if (existing != null)
             {
-                existing.OrdQty = (existing.OrdQty ?? 0) + req.Qty;
-                existing.BillQty = existing.OrdQty;
-                result = Update(existing);
-            }
-            else
-            {
-                var addReq = new AddLineRequest
-                {
-                    PayeeId = UserContext.EmpId,
-                    SalesId = 0,
-                    ItemId = req.ItemId,
-                    Qty = req.Qty,
-                    Unit = req.Unit
-                };
+                var existingRow = GetWebCartEntity(existing.TempSalesId);
 
-                result = AddLine(addReq);
-
-                if (result == null)
+                if (existingRow == null)
                     return null;
+
+                return SaveWebCartRow(existingRow, (existingRow.OrdQty ?? 0) + req.Qty, null, null, null, existingRow.UnitPrice, true);
             }
 
-            return ToWebCartItem(result);
+            var addReq = new AddLineRequest
+            {
+                PayeeId = UserContext.EmpId,
+                SalesId = 0,
+                ItemId = req.ItemId,
+                Qty = req.Qty,
+                Unit = selectedUnit?.Unit ?? req.Unit
+            };
+
+            var result = AddLine(addReq);
+
+            if (result == null)
+                return null;
+
+            var newRow = GetWebCartEntity(result.TempSalesId);
+
+            if (newRow == null)
+                return null;
+
+            var price = ResolveWebCartPrice(UserContext.EmpId, req.ItemId, selectedUnit?.ItemUnitId ?? newRow.ItemUnitId);
+
+            return SaveWebCartRow(
+                newRow,
+                newRow.OrdQty,
+                selectedUnit?.ItemUnitId ?? newRow.ItemUnitId,
+                selectedUnit?.Unit ?? newRow.Unit,
+                selectedUnit?.FactorToBase ?? newRow.FactorToBase,
+                price ?? newRow.UnitPrice,
+                true
+            );
         }
 
         public WebCartItem? UpdateCartQty(WebCartItem cartItem)
         {
-            var existing = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0, TempId = cartItem.TempSalesId })?.FirstOrDefault();
+            var existing = GetWebCartEntity(cartItem.TempSalesId);
 
             if (existing == null)
                 return null;
 
-            existing.OrdQty = cartItem.OrdQty;
-            existing.BillQty = existing.OrdQty;
-
-            var result = Update(existing);
-
-            return ToWebCartItem(result);
+            return SaveWebCartRow(existing, cartItem.OrdQty, null, null, null, existing.UnitPrice, true);
         }
 
         public WebCartItem? UpdateCartUnit(WebCartItem cartItem)
         {
-            var existing = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0, TempId = cartItem.TempSalesId })?.FirstOrDefault();
+            var existing = GetWebCartEntity(cartItem.TempSalesId);
 
-            if (existing == null)
+            if (existing == null || !existing.ItemId.HasValue)
                 return null;
 
-            var result = UpdateUnit(existing);
+            var nextUnit = _itemUnitService.GetNextUnit(existing.ItemId.Value, existing.Unit);
+            var price = ResolveWebCartPrice(existing.PayeeId, existing.ItemId.Value, nextUnit.ItemUnitId);
 
-            return ToWebCartItem(result);
+            return SaveWebCartRow(existing, existing.OrdQty, nextUnit.ItemUnitId, nextUnit.Unit, nextUnit.FactorToBase, price ?? existing.UnitPrice, true);
         }
 
         public void ClearCart()

@@ -10,6 +10,11 @@ namespace KLS.Models
     {
         public IEnumerable<HomeCategory>? Categories { get; set; }
         public IEnumerable<HomeProduct>? Products { get; set; }
+
+        public IEnumerable<HomeCategory>? FeaturedCategories { get; set; }
+        public IEnumerable<HomeProduct>? NewArrivals { get; set; }
+        public IEnumerable<HomeProduct>? TopSellingProducts { get; set; }
+        public IEnumerable<HomeCategoryProductGroup>? TopCategoryGroups { get; set; }
     }
 
     public class HomeCategory
@@ -29,5 +34,19 @@ namespace KLS.Models
         public string? SetPacking { get; set; }
         public string? PackSize { get; set; }
         public string? PrimaryImageUrl { get; set; }
+        public int? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
+        public string? BadgeText { get; set; }
+    }
+
+    public class HomeCategoryProductGroup
+    {
+        public int CategoryId { get; set; }
+        public string? CategoryName { get; set; }
+        public string? DisplayName { get; set; }
+        public string? ImageUrl { get; set; }
+        public int ItemCount { get; set; }
+        public string? Subtitle { get; set; }
+        public IEnumerable<HomeProduct>? Products { get; set; }
     }
 }

@@ -3,13 +3,11 @@ using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models.Cart;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
 {
     [AuthorizeWeb]
     [Route("api/web/[controller]")]
-    [Display(Name = "Cart", GroupName = "Web")]
     public class CartController : BaseController
     {
         #region --- Member(s) ---

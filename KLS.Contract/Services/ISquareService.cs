@@ -12,6 +12,6 @@ namespace KLS.Contract.Services
     {
         Task<CreateCardResponse> CreateCard(PaymentMethod paymentMethod);
 
-        Task<CreatePaymentResponse> ChargePayment(int payeeId, string squareCustomerId, string squareCardId, long amount);
+        Task<CreatePaymentResponse> ChargePayment(int payeeId, string squareCustomerId, string squareCardId, long amount, string? idempotencyKey = null);
     }
 }

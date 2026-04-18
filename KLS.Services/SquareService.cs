@@ -81,11 +81,12 @@ namespace KLS.Services
             }
         }
 
-        public async Task<CreatePaymentResponse> ChargePayment(int payeeId, string squareCustomerId, string squareCardId, long amount)
+        public async Task<CreatePaymentResponse> ChargePayment(int payeeId, string squareCustomerId, string squareCardId, long amount, string? idempotencyKey = null)
         {
             try
             {
                 var client = InitClient();
+                var resolvedKey = string.IsNullOrWhiteSpace(idempotencyKey) ? Guid.NewGuid().ToString() : idempotencyKey;
 
                 CreatePaymentRequest request;
                 var amountMoney = new Money
@@ -106,7 +107,7 @@ namespace KLS.Services
 
                     request = new CreatePaymentRequest
                     {
-                        IdempotencyKey = Guid.NewGuid().ToString(),
+                        IdempotencyKey = resolvedKey,
                         AmountMoney = amountMoney,
                         SourceId = cardResponse.Card.Id,
                         Autocomplete = true,
@@ -118,7 +119,7 @@ namespace KLS.Services
                 {
                     request = new CreatePaymentRequest
                     {
-                        IdempotencyKey = Guid.NewGuid().ToString(),
+                        IdempotencyKey = resolvedKey,
                         AmountMoney = amountMoney,
                         SourceId = squareCardId, //this is square nonce generated from sqaure form
                         Autocomplete = true,

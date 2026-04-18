@@ -112,6 +112,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IHomeService, HomeService>();
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddMemoryCache();
+            services.AddScoped<IPortalModeService, PortalModeService>();
             services.AddScoped<IContactService, ContactService>();
 
             // Marketplace Services
