@@ -357,6 +357,8 @@ namespace KLS.Services
 
                 req.ShipDate = shipDate;
 
+                EnsureAssignedRouteRequired(shipDate, req.ShipRoute, "Loading List");
+
                 var assignedRoutes = GetAssignedRoutes(shipDate);
 
                 var documentFormat = _systemSettingService.GetByKey<int>(GlobalKey.DOCUMENT_FORMAT);
@@ -495,6 +497,8 @@ namespace KLS.Services
 
                 req.ShipDate = shipDate;
 
+                EnsureAssignedRouteRequired(shipDate, req.ShipRoute, "Packing Label");
+
                 var assignedRoutes = GetAssignedRoutes(shipDate);
 
                 var packingLabels = Uow.Reports.PackingLabel(req).ToList();
@@ -551,6 +555,20 @@ namespace KLS.Services
         private int GetDropCount(DateOnly shipDate, string shipRoute)
         {
             return Uow.Sales.Find(c => c.ShipDate == shipDate && c.ShipRoute == shipRoute).Count();
+        }
+
+        // Loading List and Packing Label depend on formal SalesRoute assignment data.
+        // Keep a backend guard so direct API calls still get a clear message instead of
+        // silently producing empty output when Assign Truck has not been done yet.
+        private void EnsureAssignedRouteRequired(DateOnly shipDate, string? shipRoute, string documentName)
+        {
+            var assignedRoutes = GetAssignedRoutes(shipDate);
+            var hasAssignedRoute = string.IsNullOrWhiteSpace(shipRoute)
+                ? assignedRoutes.Count > 0
+                : assignedRoutes.Any(r => r.ShipRoute == shipRoute);
+
+            if (!hasAssignedRoute)
+                throw new InvalidOperationException($"{documentName} requires Assign Truck first for the selected date/route.");
         }
 
         // This shared builder is the single source of truth for the route packing pages
