@@ -15,16 +15,18 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly ITempSalesService _tempSalesService;
-        private readonly IPromotionEvaluationService _promoEvalService;
+        // Phase 2: unified promo service. Replaced IPromotionEvaluationService DI;
+        // EvaluateCart and TogglePromotion signatures are preserved via request overloads.
+        private readonly IPromoHelperService _promoService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public TempSalesController(ITempSalesService tempSalesService, IPromotionEvaluationService promoEvalService)
+        public TempSalesController(ITempSalesService tempSalesService, IPromoHelperService promoService)
         {
             _tempSalesService = tempSalesService;
-            _promoEvalService = promoEvalService;
+            _promoService = promoService;
         }
 
         #endregion
@@ -106,14 +108,14 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("EvaluatePromotions")]
         public IActionResult EvaluatePromotions([FromBody] PromotionEvalRequest request)
         {
-            return Ok(_promoEvalService.EvaluateCart(request));
+            return Ok(_promoService.EvaluateCart(request));
         }
 
 
         [HttpPost("TogglePromotion")]
         public IActionResult TogglePromotion([FromBody] PromoToggleRequest request)
         {
-            return Ok(_promoEvalService.TogglePromotion(request));
+            return Ok(_promoService.TogglePromotion(request));
         }
 
         #endregion
