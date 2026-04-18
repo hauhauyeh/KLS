@@ -64,7 +64,7 @@ namespace KLS.Services
             };
 
             if (Exists(newTempQuote))
-                throw new KeyNotFoundException("Product already exists");
+                throw new KeyNotFoundException("Product with this unit already exists");
 
             Uow.TempItemQuotes.Add(newTempQuote);
             Uow.Commit();
@@ -106,7 +106,11 @@ namespace KLS.Services
 
         public bool Exists(TempItemQuote tempQuote)
         {
-            return Uow.TempItemQuotes.Exists(c => c.ItemId == tempQuote.ItemId && c.PayeeId == tempQuote.PayeeId && c.EmpId == UserContext.EmpId);
+            return Uow.TempItemQuotes.Exists(c =>
+                c.ItemId == tempQuote.ItemId
+                && c.ItemUnitId == tempQuote.ItemUnitId
+                && c.PayeeId == tempQuote.PayeeId
+                && c.EmpId == UserContext.EmpId);
         }
 
         public void Delete(int tempId)
