@@ -23,7 +23,12 @@ namespace KLS.Services
     // See d:\KLS\AI-Development\plan\promo-centralization.md for the full contract.
     public class PromoHelperService : BaseService, IPromoHelperService
     {
-        public PromoHelperService(IUnitOfWork uow) : base(uow) { }
+        private readonly ICategoryRollupHelper _categoryRollup;
+
+        public PromoHelperService(IUnitOfWork uow, ICategoryRollupHelper categoryRollup) : base(uow)
+        {
+            _categoryRollup = categoryRollup;
+        }
 
 
         #region --- Public Entry Points ---
@@ -101,8 +106,8 @@ namespace KLS.Services
                     p.IsActive &&
                     (p.PromotionType == nameof(EnumHelper.PromotionType.DISCOUNT_ITEM_FLAT) ||
                      p.PromotionType == nameof(EnumHelper.PromotionType.DISCOUNT_ITEM_PERCENTAGE)) &&
-                    (p.StartDate == null && p.EndDate == null ||
-                     p.StartDate <= today && p.EndDate >= today))
+                    (p.StartDate == null || p.StartDate <= today) &&
+                    (p.EndDate == null || p.EndDate >= today))
                 .AsEnumerable()
                 .Where(p => IsPromoValidForSchedule(p, nowLocal))
                 .ToList();
@@ -165,6 +170,53 @@ namespace KLS.Services
                             (newVal == existingVal && info.PromotionId < existing.PromotionId))
                         {
                             result[itemId] = info;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public Dictionary<int, string> GetActiveItemOfferBadges()
+        {
+            var nowLocal = GetLocalNow();
+            var today = DateOnly.FromDateTime(nowLocal);
+
+            var candidates = Uow.Promotions.GetAll()
+                .Include(p => p.PromotionSchedules)
+                .Include(p => p.PromotionItems)
+                .Include(p => p.PromotionCategories)
+                .Include(p => p.PromotionBogos)
+                .Where(p =>
+                    p.IsActive &&
+                    p.PromotionType == nameof(EnumHelper.PromotionType.BOGO_ITEM_CATEGORY) &&
+                    (p.StartDate == null || p.StartDate <= today) &&
+                    (p.EndDate == null || p.EndDate >= today))
+                .AsEnumerable()
+                .Where(p => IsPromoValidForSchedule(p, nowLocal))
+                .OrderBy(p => p.PromotionId)
+                .ToList();
+
+            if (!candidates.Any()) return new Dictionary<int, string>();
+
+            var categoryItemMap = BuildCategoryItemIndex(candidates);
+            var result = new Dictionary<int, string>();
+
+            foreach (var promo in candidates)
+            {
+                if (promo.PromotionBogos == null || !promo.PromotionBogos.Any()) continue;
+
+                foreach (var rule in promo.PromotionBogos)
+                {
+                    var label = BuildCatalogBogoBadgeText(promo, rule);
+                    if (string.IsNullOrWhiteSpace(label)) continue;
+
+                    foreach (var itemId in ResolveConditionTargetItemIds(rule, categoryItemMap))
+                    {
+                        if (!result.ContainsKey(itemId))
+                        {
+                            result[itemId] = label;
                         }
                     }
                 }
@@ -425,31 +477,115 @@ namespace KLS.Services
                 .Include(p => p.PromotionBogos)
                 .Where(p =>
                     p.IsActive &&
-                    (p.StartDate == null && p.EndDate == null ||
-                     p.StartDate <= today && p.EndDate >= today) &&
+                    (p.StartDate == null || p.StartDate <= today) &&
+                    (p.EndDate == null || p.EndDate >= today) &&
                     (p.MinOrderAmount == null || subtotal >= p.MinOrderAmount))
                 .OrderByDescending(p => p.MinOrderAmount)
                 .ToList();
 
-        // Map { CategoryId -> [ItemIds] } restricted to categories referenced by the
-        // supplied candidates. One query, no per-promo N+1.
+        // Map { promo's CategoryId -> [ItemIds in the entire subtree] } for each
+        // category referenced by the candidate promos. Uses ICategoryRollupHelper
+        // so a promo targeting parent "Meat" cascades to items under "Beef", "Pork",
+        // etc. One query for items (covers the union of all descendant category IDs).
         private Dictionary<int, List<int>> BuildCategoryItemIndex(IEnumerable<Promotion> candidates)
         {
-            var categoryIds = candidates
+            var promoCategoryIds = candidates
                 .SelectMany(p => p.PromotionCategories ?? Enumerable.Empty<PromotionCategory>())
                 .Where(pc => pc.CategoryId.HasValue)
                 .Select(pc => pc.CategoryId!.Value)
                 .ToHashSet();
 
-            if (!categoryIds.Any()) return new Dictionary<int, List<int>>();
+            if (!promoCategoryIds.Any()) return new Dictionary<int, List<int>>();
 
-            return Uow.Items
-                .Find(i => i.CategoryId.HasValue && categoryIds.Contains(i.CategoryId.Value) && !i.Inactive)
+            // Expand each promo's target category to its descendant subtree.
+            var descendantMap = _categoryRollup.GetDescendantMap();
+
+            var allRelevantCategoryIds = new HashSet<int>();
+            foreach (var pid in promoCategoryIds)
+            {
+                if (descendantMap.TryGetValue(pid, out var descendants))
+                {
+                    foreach (var d in descendants) allRelevantCategoryIds.Add(d);
+                }
+                else
+                {
+                    // Unknown category (e.g., inactive) — at least include itself.
+                    allRelevantCategoryIds.Add(pid);
+                }
+            }
+
+            // Single query pulling every item whose CategoryId falls anywhere in
+            // the union of relevant subtrees.
+            var items = Uow.Items
+                .Find(i => i.CategoryId.HasValue && allRelevantCategoryIds.Contains(i.CategoryId.Value) && !i.Inactive)
                 .Select(i => new { i.ItemId, i.CategoryId })
                 .AsEnumerable()
-                .GroupBy(i => i.CategoryId!.Value)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.ItemId).ToList());
+                .ToList();
+
+            // Group results back by the ORIGINAL promo category (not the actual
+            // item's CategoryId), so callers see a flat "this promo targets these
+            // item ids" map.
+            var result = new Dictionary<int, List<int>>();
+            foreach (var pid in promoCategoryIds)
+            {
+                var subtree = descendantMap.TryGetValue(pid, out var d)
+                    ? new HashSet<int>(d)
+                    : new HashSet<int> { pid };
+
+                result[pid] = items
+                    .Where(i => i.CategoryId.HasValue && subtree.Contains(i.CategoryId.Value))
+                    .Select(i => i.ItemId)
+                    .ToList();
+            }
+
+            return result;
         }
+
+        private IEnumerable<int> ResolveConditionTargetItemIds(
+            PromotionBogo rule,
+            Dictionary<int, List<int>> categoryItemMap)
+        {
+            if (string.Equals(rule.ConditionType, nameof(EnumHelper.ConditionType.ITEM), StringComparison.OrdinalIgnoreCase) &&
+                rule.ConditionItemId.HasValue)
+            {
+                yield return rule.ConditionItemId.Value;
+                yield break;
+            }
+
+            if (string.Equals(rule.ConditionType, nameof(EnumHelper.ConditionType.CATEGORY), StringComparison.OrdinalIgnoreCase) &&
+                rule.ConditionCategoryId.HasValue &&
+                categoryItemMap.TryGetValue(rule.ConditionCategoryId.Value, out var itemIds))
+            {
+                foreach (var itemId in itemIds)
+                {
+                    yield return itemId;
+                }
+            }
+        }
+
+        private static string? BuildCatalogBogoBadgeText(Promotion promo, PromotionBogo rule)
+        {
+            if (!string.IsNullOrWhiteSpace(promo.DisplayName))
+                return promo.DisplayName;
+
+            var conditionQty = rule.ConditionQty;
+            var rewardQty = rule.RewardQty;
+
+            if (conditionQty is not > 0m || rewardQty is not > 0m)
+                return string.IsNullOrWhiteSpace(promo.Name) ? null : promo.Name;
+
+            var rewardText = string.Equals(rule.DiscountType, nameof(EnumHelper.DiscountType.FREE), StringComparison.OrdinalIgnoreCase)
+                ? "Free"
+                : "Offer";
+
+            var conditionText = FormatQtyForBadge(conditionQty.Value);
+            var rewardQtyText = FormatQtyForBadge(rewardQty.Value);
+
+            return $"Buy {conditionText} Get {rewardQtyText} {rewardText}";
+        }
+
+        private static string FormatQtyForBadge(decimal qty) =>
+            decimal.Truncate(qty) == qty ? decimal.Truncate(qty).ToString() : qty.ToString("0.##");
 
         // Reset any state left by a prior ApplyPromotion on the same cart. Removes
         // both legacy-marker rows (SourceTempSalesId) and new-shape rows
@@ -457,19 +593,31 @@ namespace KLS.Services
         // then restores owner prices from OrgPrice and drops TempSalesPromo links.
         private void ResetPriorAppliedState(int salesId, int payeeId, List<TempSales> paidRows)
         {
-            // Delete reward rows produced by either the legacy or new shape.
-            Uow.TempSales
+            // Capture reward-row IDs BEFORE deleting them so we can scrub their
+            // TempSalesPromo links first (FK_TempSalesPromo_Promo on PromoTempSalesId
+            // blocks the TempSales delete otherwise).
+            var rewardIds = Uow.TempSales
                 .Find(t => t.SalesId == salesId && t.PayeeId == payeeId &&
                            (t.SourceTempSalesId != null || t.CartLineType == "PROMO_REWARD"))
+                .Select(t => t.TempSalesId)
+                .ToList();
+
+            var paidIds = paidRows.Select(p => p.TempSalesId).ToList();
+
+            // Drop TempSalesPromo rows referencing either side — owner (paid row) or
+            // reward (row about to be deleted). Must run before the TempSales delete
+            // to clear the FK.
+            Uow.TempSalesPromos
+                .Find(l => paidIds.Contains(l.OwnerTempSalesId) || rewardIds.Contains(l.PromoTempSalesId))
                 .ExecuteDelete();
 
-            // Drop any TempSalesPromo rows that pointed at those reward rows. A safe
-            // best-effort cleanup — existing apply didn't maintain links, but if
-            // toggle-on set some we clear them here so a fresh apply starts clean.
-            var paidIds = paidRows.Select(p => p.TempSalesId).ToList();
-            Uow.TempSalesPromos
-                .Find(l => paidIds.Contains(l.OwnerTempSalesId))
-                .ExecuteDelete();
+            // Now it's safe to delete reward rows.
+            if (rewardIds.Count > 0)
+            {
+                Uow.TempSales
+                    .Find(t => rewardIds.Contains(t.TempSalesId))
+                    .ExecuteDelete();
+            }
 
             // Restore owner prices for any rows discounted in a previous apply or
             // toggle-on. OrgPrice captured the pre-discount price once.
@@ -493,13 +641,14 @@ namespace KLS.Services
             if (promo.PromotionSchedules == null || !promo.PromotionSchedules.Any())
                 return true;
 
-            // DB convention: 1=Mon … 7=Sun. .NET gives 0=Sun — remap.
-            var dow = (int)nowLocal.DayOfWeek == 0 ? 7 : (int)nowLocal.DayOfWeek;
+            // Admin/default schedules are created from .NET DayOfWeek
+            // (Sun=0..Sat=6). Be tolerant of any legacy Sunday rows stored as 7.
+            var dow = (int)nowLocal.DayOfWeek;
             var time = nowLocal.TimeOfDay;
 
             return promo.PromotionSchedules.Any(s =>
                 !s.IsClosed &&
-                s.DayOfWeek == dow &&
+                (s.DayOfWeek == dow || (dow == 0 && s.DayOfWeek == 7)) &&
                 (
                     (s.StartTime == null && s.EndTime == null) ||
                     (s.StartTime != null && s.EndTime != null &&
@@ -608,7 +757,7 @@ namespace KLS.Services
         // Row-level math shared between preview and apply paths.
         private static (decimal NewPrice, decimal RowDiscount) ComputeItemFlatRow(TempSales row, decimal discountValue)
         {
-            var orgPrice = row.OrgPrice ?? row.UnitPrice ?? 0m;
+            var orgPrice = (row.OrgPrice > 0 ? row.OrgPrice : null) ?? row.UnitPrice ?? 0m;
             var newPrice = Math.Max(0m, orgPrice - discountValue);
             var rowDiscount = (orgPrice - newPrice) * (row.BillQty ?? 0m);
             return (newPrice, rowDiscount);
@@ -616,7 +765,7 @@ namespace KLS.Services
 
         private static (decimal NewPrice, decimal RowDiscount) ComputeItemPercentageRow(TempSales row, decimal discountValue)
         {
-            var orgPrice = row.OrgPrice ?? row.UnitPrice ?? 0m;
+            var orgPrice = (row.OrgPrice > 0 ? row.OrgPrice : null) ?? row.UnitPrice ?? 0m;
             var newPrice = Math.Max(0m, orgPrice * (1 - discountValue / 100m));
             var rowDiscount = (orgPrice - newPrice) * (row.BillQty ?? 0m);
             return (newPrice, rowDiscount);
@@ -668,7 +817,9 @@ namespace KLS.Services
             foreach (var row in eligible)
             {
                 // Capture pre-discount price once so a second apply doesn't compound.
-                row.OrgPrice ??= row.UnitPrice;
+                // Treat OrgPrice <= 0 as uncaptured (SP may set it to 0 when no customer quote exists).
+                if (row.OrgPrice is null || row.OrgPrice <= 0)
+                    row.OrgPrice = row.UnitPrice;
 
                 var (newPrice, rowDiscount) = ComputeItemFlatRow(row, promo.DiscountValue.Value);
                 var orgPrice = row.OrgPrice ?? 0m;
@@ -699,7 +850,8 @@ namespace KLS.Services
 
             foreach (var row in eligible)
             {
-                row.OrgPrice ??= row.UnitPrice;
+                if (row.OrgPrice is null || row.OrgPrice <= 0)
+                    row.OrgPrice = row.UnitPrice;
 
                 var (newPrice, rowDiscount) = ComputeItemPercentageRow(row, promo.DiscountValue.Value);
 
@@ -1213,7 +1365,7 @@ namespace KLS.Services
             }
 
             // Capture OrgPrice once so toggle-off can restore it cleanly.
-            if (owner.OrgPrice == null)
+            if (owner.OrgPrice is null || owner.OrgPrice <= 0)
                 owner.OrgPrice = owner.UnitPrice;
 
             owner.UnitPrice = bogo.PromoPrice;
