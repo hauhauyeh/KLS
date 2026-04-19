@@ -35,11 +35,13 @@ namespace KLS.Contract.Services
 
         IEnumerable<WebCartItem>? GetCartItems();
 
-        WebCartItem? AddCartItem(AddToCartReq req);
+        int GetCartCount();
 
-        WebCartItem? UpdateCartQty(WebCartItem cartItem);
+        IEnumerable<WebCartItem>? AddCartItem(AddToCartReq req);
 
-        WebCartItem? UpdateCartUnit(WebCartItem cartItem);
+        IEnumerable<WebCartItem>? UpdateCartQty(WebCartItem cartItem);
+
+        IEnumerable<WebCartItem>? UpdateCartUnit(WebCartItem cartItem);
 
         void ClearCart();
     }

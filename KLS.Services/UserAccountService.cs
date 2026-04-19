@@ -119,7 +119,8 @@ namespace KLS.Services
                 Username = jwtClaim.Username,
                 IsAdmin = role.IsAdmin,
                 IsPriceShow = customer?.IsPriceShow ?? false,
-                IsEditGuide = customer?.IsEditGuide ?? false
+                IsEditGuide = customer?.IsEditGuide ?? false,
+                IsPromotionEnabled = customer?.IsPromotionEnabled ?? false
             };
         }
 
@@ -155,7 +156,8 @@ namespace KLS.Services
                 Username = user.Username,
                 IsAdmin = role.IsAdmin,
                 IsPriceShow = customer?.IsPriceShow ?? false,
-                IsEditGuide = customer?.IsEditGuide ?? false
+                IsEditGuide = customer?.IsEditGuide ?? false,
+                IsPromotionEnabled = customer?.IsPromotionEnabled ?? false
             };
         }
 

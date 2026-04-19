@@ -18,8 +18,11 @@ namespace KLS.Services
         private const int TopCategoryGroupCount = 5;
         private const int ProductsPerGroup = 10;
 
-        public HomeService(IUnitOfWork uow) : base(uow)
+        private readonly ICategoryRollupHelper _categoryRollup;
+
+        public HomeService(IUnitOfWork uow, ICategoryRollupHelper categoryRollup) : base(uow)
         {
+            _categoryRollup = categoryRollup;
         }
 
         public HomePageData GetHomePageData(string baseUrl)
@@ -47,7 +50,8 @@ namespace KLS.Services
 
         // Precomputed once per request. Item counts on top-level categories must include
         // items in descendant sub-categories, otherwise top-level groups like "Meat" show
-        // zero products when all SKUs live under children like "Beef" / "Pork".
+        // zero products when all SKUs live under children like "Beef" / "Pork". The tree
+        // walk is shared with PromoHelperService via ICategoryRollupHelper.
         private CategoryRollup BuildCategoryRollup()
         {
             var directCounts = Uow.Items.Find(i => !i.Inactive)
@@ -56,37 +60,11 @@ namespace KLS.Services
                 .Select(g => new { CategoryId = g.Key, Count = g.Count() })
                 .ToDictionary(x => x.CategoryId, x => x.Count);
 
-            var allCategories = Uow.ItemCategories.Find(c => !c.Inactive)
-                .AsNoTracking()
-                .Select(c => new CategoryNode { CategoryId = c.CategoryId, ParentId = c.ParentId })
-                .ToList();
+            var descendantIds = _categoryRollup.GetDescendantMap();
 
-            var childrenByParent = allCategories
-                .Where(c => c.ParentId.HasValue)
-                .GroupBy(c => c.ParentId!.Value)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.CategoryId).ToList());
-
-            var descendantIds = new Dictionary<int, List<int>>();
-            foreach (var cat in allCategories)
-            {
-                var collected = new List<int>();
-                var stack = new Stack<int>();
-                stack.Push(cat.CategoryId);
-                while (stack.Count > 0)
-                {
-                    var id = stack.Pop();
-                    collected.Add(id);
-                    if (childrenByParent.TryGetValue(id, out var kids))
-                    {
-                        foreach (var k in kids) stack.Push(k);
-                    }
-                }
-                descendantIds[cat.CategoryId] = collected;
-            }
-
-            var rolledUpCounts = allCategories.ToDictionary(
-                c => c.CategoryId,
-                c => descendantIds[c.CategoryId].Sum(id => directCounts.GetValueOrDefault(id))
+            var rolledUpCounts = descendantIds.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Sum(id => directCounts.GetValueOrDefault(id))
             );
 
             return new CategoryRollup
@@ -266,12 +244,6 @@ namespace KLS.Services
                 CategoryName = categoryName,
                 BadgeText = badgeText
             };
-        }
-
-        private class CategoryNode
-        {
-            public int CategoryId { get; set; }
-            public int? ParentId { get; set; }
         }
 
         private class CategoryRollup

@@ -1,4 +1,5 @@
-﻿using KLS.API.Helpers;
+using KLS.API.Decorators;
+using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -14,16 +15,22 @@ namespace KLS.API.Controllers.Web
         private readonly IItemService _itemService;
         private readonly IItemImageService _itemImageService;
         private readonly IItemCategoryService _itemCategoryService;
+        private readonly IPromoHelperService _promoHelper;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ItemsController(IItemService itemService, IItemImageService itemImageService, IItemCategoryService itemCategoryService)
+        public ItemsController(
+            IItemService itemService,
+            IItemImageService itemImageService,
+            IItemCategoryService itemCategoryService,
+            IPromoHelperService promoHelper)
         {
             _itemService = itemService;
             _itemImageService = itemImageService;
             _itemCategoryService = itemCategoryService;
+            _promoHelper = promoHelper;
         }
 
         #endregion
@@ -33,7 +40,13 @@ namespace KLS.API.Controllers.Web
         [HttpGet]
         public IActionResult List([FromQuery] ItemWebListReq webListReq)
         {
-            return Ok(_itemService.GetWebPagedList(webListReq));
+            var page = _itemService.GetWebPagedList(webListReq);
+            var discountMap = _promoHelper.GetActiveItemDiscounts();
+            var offerBadgeMap = _promoHelper.GetActiveItemOfferBadges();
+            // Decorate each ItemWebUnitList.Price/MarketPrice/Discount with any
+            // active item-level promos. Catalog-level (no customer context).
+            page.RowData.ApplyPromoDecoration(discountMap, offerBadgeMap);
+            return Ok(page);
         }
 
 

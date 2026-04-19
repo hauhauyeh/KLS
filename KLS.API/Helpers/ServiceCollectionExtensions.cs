@@ -106,6 +106,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IPromotionCategoryService, PromotionCategoryService>();
             services.AddScoped<IPromotionBogoService, PromotionBogoService>();
             services.AddScoped<IPromoHelperService, PromoHelperService>();
+            services.AddScoped<ICategoryRollupHelper, CategoryRollupHelper>();
             // Phase 2: IPromotionEvaluationService is retired — PromoHelperService
             // now handles EvaluateCart + TogglePromotion. File stays on disk as
             // reference (see promo-centralization.md).

@@ -30,6 +30,13 @@ namespace KLS.Contract.Services
         /// </summary>
         Dictionary<int, ItemPromoDiscount> GetActiveItemDiscounts();
 
+        /// <summary>
+        /// Catalog-visible item offer badges keyed by ItemId. Intended for promos
+        /// that should be advertised as an offer message instead of a direct price
+        /// markdown, such as BOGO item/category rules.
+        /// </summary>
+        Dictionary<int, string> GetActiveItemOfferBadges();
+
         /// <summary>Qualifying promos summary for a cart. Used by admin list-of-qualifying-promos UI.</summary>
         List<PromotionSummary> GetAvailablePromotions(int salesId, int payeeId);
 

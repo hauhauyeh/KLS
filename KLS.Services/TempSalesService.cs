@@ -18,14 +18,16 @@ namespace KLS.Services
         private readonly IAccountService _accountService;
         private readonly IItemImageService _itemImageService;
         private readonly IPortalModeService _portalModeService;
+        private readonly IPromoHelperService _promoHelper;
 
-        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService, IItemImageService itemImageService, IPortalModeService portalModeService) : base(uow)
+        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService, IItemImageService itemImageService, IPortalModeService portalModeService, IPromoHelperService promoHelper) : base(uow)
         {
             _itemService = itemService;
             _itemUnitService = itemUnitService;
             _accountService = accountService;
             _itemImageService = itemImageService;
             _portalModeService = portalModeService;
+            _promoHelper = promoHelper;
         }
 
         public IEnumerable<TempSalesItem>? GetList(TempSalesReq tempReq)
@@ -523,7 +525,7 @@ namespace KLS.Services
             return ToWebCartItem(GetListById(existing));
         }
 
-        private WebCartItem ToWebCartItem(TempSalesItem item) => new WebCartItem
+        private WebCartItem ToWebCartItem(TempSalesItem item, int? promotionId = null) => new WebCartItem
         {
             TempSalesId = item.TempSalesId,
             ItemId = item.ItemId,
@@ -539,17 +541,50 @@ namespace KLS.Services
                 : null,
             LCloseQty = item.ItemId.HasValue
                 ? Uow.Items.GetById(item.ItemId.Value)?.LCloseQty
-                : null
+                : null,
+            CartLineType = item.CartLineType,
+            IsSystemManaged = item.IsSystemManaged,
+            OrgPrice = item.OrgPrice,
+            ParentTempSalesId = item.ParentTempSalesId,
+            IsFree = item.IsFree,
+            Notes = item.Notes,
+            PromotionId = promotionId
         };
 
         public IEnumerable<WebCartItem>? GetCartItems()
         {
-            var items = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
+            var items = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 })?.ToList();
+            if (items == null) return null;
 
-            return items?.Select(ToWebCartItem);
+            var rewardIds = items
+                .Where(i => i.CartLineType == "PROMO_REWARD")
+                .Select(i => i.TempSalesId)
+                .ToList();
+
+            var promoMap = rewardIds.Count == 0
+                ? new Dictionary<int, int>()
+                : Uow.TempSalesPromos
+                    .Find(p => rewardIds.Contains(p.PromoTempSalesId))
+                    .ToDictionary(p => p.PromoTempSalesId, p => p.PromotionId);
+
+            return items.Select(i =>
+                ToWebCartItem(i, promoMap.TryGetValue(i.TempSalesId, out var pid) ? (int?)pid : null));
         }
 
-        public WebCartItem? AddCartItem(AddToCartReq req)
+        public int GetCartCount()
+        {
+            return GetCartItems()?.Count(i => (i.CartLineType ?? "MAIN") == "MAIN") ?? 0;
+        }
+
+        // Re-normalize promo state after any web-cart mutation. ApplyPromotion is
+        // idempotent (it resets prior reward rows first), so safe to call on every
+        // commit. No-op when the customer isn't eligible.
+        private void ReapplyPromosForWebCart()
+        {
+            _promoHelper.ApplyPromotion(salesId: 0, payeeId: UserContext.EmpId);
+        }
+
+        public IEnumerable<WebCartItem>? AddCartItem(AddToCartReq req)
         {
             var selectedUnit = ResolveWebCartUnit(req.ItemId, UserContext.EmpId, req.ItemUnitId, req.Unit);
             var cartItems = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
@@ -564,7 +599,9 @@ namespace KLS.Services
                 if (existingRow == null)
                     return null;
 
-                return SaveWebCartRow(existingRow, (existingRow.OrdQty ?? 0) + req.Qty, null, null, null, existingRow.UnitPrice, true);
+                SaveWebCartRow(existingRow, (existingRow.OrdQty ?? 0) + req.Qty, null, null, null, existingRow.UnitPrice, false);
+                ReapplyPromosForWebCart();
+                return GetCartItems();
             }
 
             var addReq = new AddLineRequest
@@ -588,28 +625,32 @@ namespace KLS.Services
 
             var price = ResolveWebCartPrice(UserContext.EmpId, req.ItemId, selectedUnit?.ItemUnitId ?? newRow.ItemUnitId);
 
-            return SaveWebCartRow(
+            SaveWebCartRow(
                 newRow,
                 newRow.OrdQty,
                 selectedUnit?.ItemUnitId ?? newRow.ItemUnitId,
                 selectedUnit?.Unit ?? newRow.Unit,
                 selectedUnit?.FactorToBase ?? newRow.FactorToBase,
                 price ?? newRow.UnitPrice,
-                true
+                false
             );
+            ReapplyPromosForWebCart();
+            return GetCartItems();
         }
 
-        public WebCartItem? UpdateCartQty(WebCartItem cartItem)
+        public IEnumerable<WebCartItem>? UpdateCartQty(WebCartItem cartItem)
         {
             var existing = GetWebCartEntity(cartItem.TempSalesId);
 
             if (existing == null)
                 return null;
 
-            return SaveWebCartRow(existing, cartItem.OrdQty, null, null, null, existing.UnitPrice, true);
+            SaveWebCartRow(existing, cartItem.OrdQty, null, null, null, existing.UnitPrice, false);
+            ReapplyPromosForWebCart();
+            return GetCartItems();
         }
 
-        public WebCartItem? UpdateCartUnit(WebCartItem cartItem)
+        public IEnumerable<WebCartItem>? UpdateCartUnit(WebCartItem cartItem)
         {
             var existing = GetWebCartEntity(cartItem.TempSalesId);
 
@@ -619,12 +660,15 @@ namespace KLS.Services
             var nextUnit = _itemUnitService.GetNextUnit(existing.ItemId.Value, existing.Unit);
             var price = ResolveWebCartPrice(existing.PayeeId, existing.ItemId.Value, nextUnit.ItemUnitId);
 
-            return SaveWebCartRow(existing, existing.OrdQty, nextUnit.ItemUnitId, nextUnit.Unit, nextUnit.FactorToBase, price ?? existing.UnitPrice, true);
+            SaveWebCartRow(existing, existing.OrdQty, nextUnit.ItemUnitId, nextUnit.Unit, nextUnit.FactorToBase, price ?? existing.UnitPrice, false);
+            ReapplyPromosForWebCart();
+            return GetCartItems();
         }
 
         public void ClearCart()
         {
             Clear(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
+            ReapplyPromosForWebCart();
         }
     }
 }
