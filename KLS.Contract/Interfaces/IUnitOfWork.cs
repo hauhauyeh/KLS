@@ -26,6 +26,8 @@ namespace KLS.Contract.Interfaces
 
         ICustomerRepository Customers { get; }
 
+        IDeliverScheduleRepository DeliverSchedules { get; }
+
         IVendorRepository Vendors { get; }
 
         IVendorPaymentRepository VendorPayments { get; }
@@ -210,5 +212,6 @@ namespace KLS.Contract.Interfaces
         IMarketSyncLogRepository MarketSyncLogs { get; }
 
         void Commit();
+        void ExecuteInTransaction(Action action);
     }
 }

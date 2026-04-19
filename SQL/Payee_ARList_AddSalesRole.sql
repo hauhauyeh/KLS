@@ -29,7 +29,7 @@ BEGIN
         SET @Qry='SELECT @RCount=COUNT(*)'
     ELSE
         SET @Qry='SELECT *'
-    SET @Qry+=' FROM View_Customer WHERE 1=1'
+    SET @Qry+=' FROM View_Customer vc WHERE 1=1'
     IF @Search IS NOT NULL
     BEGIN
         SET @Search = REPLACE(@Search,'''', '''''')
@@ -54,34 +54,17 @@ BEGIN
             SET @Qry += ' AND PayeePastDue>0 '
         ELSE IF @Filterby = 'credithold'
             SET @Qry += ' AND IsCreditHold=1 '
-        ELSE IF @Filterby = 'cod'
-            SET @Qry += ' AND TermName=''COD'' '
-        ELSE IF @Filterby = 'b2b'
-            SET @Qry += ' AND TermName=''B2B'' '
-        ELSE IF @Filterby = 'monthly'
-            SET @Qry += ' AND TermName=''Monthly'' '
-        ELSE IF @Filterby = 'semimonthly'
-            SET @Qry += ' AND TermName=''Semi-Monthly'' '
-        ELSE IF @Filterby = 'weekly'
-            SET @Qry += ' AND TermName=''Weekly'' '
-        ELSE IF @Filterby = 'net30'
-            SET @Qry += ' AND TermName LIKE ''NET30%'' '
-        ELSE IF @Filterby = 'net15'
-            SET @Qry += ' AND TermName LIKE ''NET15%'' '
-        ELSE IF @Filterby = 'net14'
-            SET @Qry += ' AND TermName=''NET14'' '
-        ELSE IF @Filterby = 'net21'
-            SET @Qry += ' AND TermName=''NET21'' '
-        ELSE IF @Filterby = 'net7'
-            SET @Qry += ' AND TermName LIKE ''NET7%'' '
-        ELSE IF @Filterby = 'prepaid'
-            SET @Qry += ' AND TermName=''PREPAID'' '
+        ELSE
+            SET @Qry += ' AND EXISTS (SELECT 1 FROM Term t2 WHERE t2.TermId = vc.TermId AND t2.TermGroup = @Filterby) '
     END
     IF @EmpId > 0
         SET @Qry += ' AND SalesRepId = ' + CONVERT(VARCHAR, @EmpId)
     IF @IsCount=1
     BEGIN
-        EXEC sp_executesql @Qry,N'@RCount int OUTPUT',@RCount=@TotalCount OUTPUT
+        EXEC sp_executesql @Qry,
+            N'@Filterby nvarchar(100), @RCount int OUTPUT',
+            @Filterby=@Filterby,
+            @RCount=@TotalCount OUTPUT
         RETURN
     END
     IF @SortField is not null
@@ -90,6 +73,8 @@ BEGIN
         SET @Qry += ' ORDER BY PayeePastDue DESC,PayeeName'
     SET @Qry += ' OFFSET '+ CONVERT(VARCHAR(100),(@PageSize * (@Pageno - 1))) +' ROWS
     FETCH NEXT '+ CONVERT(VARCHAR(100),@Pagesize) +' ROWS ONLY '
-    EXEC (@Qry)
+    EXEC sp_executesql @Qry,
+        N'@Filterby nvarchar(100)',
+        @Filterby=@Filterby
 END
 GO

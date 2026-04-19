@@ -37,6 +37,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Employee>().ToTable("Employee");
             modelBuilder.Entity<EmailSetting>().ToTable("EmailSetting");
             modelBuilder.Entity<Customer>().ToTable("Customer");
+            modelBuilder.Entity<DeliverSchedule>().ToTable("DeliverSchedule");
             modelBuilder.Entity<Vendor>().ToTable("Vendor");
             modelBuilder.Entity<Term>().ToTable("Term");
             modelBuilder.Entity<Truck>().ToTable("Truck");
@@ -161,6 +162,8 @@ namespace KLS.Data.DataContext
         public DbSet<Employee> Employees { get; set; }
 
         public DbSet<Customer> Customers { get; set; }
+
+        public DbSet<DeliverSchedule> DeliverSchedules { get; set; }
 
         public DbSet<Vendor> Vendors { get; set; }
 

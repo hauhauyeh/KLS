@@ -17,6 +17,19 @@ namespace KLS.Contract.Services
 
         string? PackingList(DocumentReq documentReq);
 
+        // TotalList intentionally reuses the LoadingList packing-section builder so the
+        // standalone output matches the bundled LoadingList packing pages exactly.
+        string? TotalList(DocumentReq documentReq);
+
+        // TotalSplitList is a new standalone route report that splits outside boxes
+        // for identical-looking lbs rows from different source sales.
+        string? TotalSplitList(DocumentReq documentReq);
+
+        // Standalone filtered packing-style reports that share PackingList.cshtml.
+        string? HarvillsList(DocumentReq documentReq);
+
+        string? StoreTotalList(DocumentReq documentReq);
+
         string? LoadingList(DocumentReq documentReq);
 
         string? PackingLabel(DocumentReq req);

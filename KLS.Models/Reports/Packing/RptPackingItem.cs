@@ -28,6 +28,13 @@ namespace KLS.Models.Reports
 
         public string? LoadRoute { get; set; }
 
+        // lbs-only source identity from Report_PackingList. Shared TotalList /
+        // LoadingList packing logic uses these fields only when identical-looking
+        // lbs rows need separate product boxes.
+        public string? SalesNumber { get; set; }
+
+        public string? PayeeName { get; set; }
+
         public decimal? ItemWeight { get; set; }
 
         public string? Aisle { get; set; }

@@ -18,6 +18,14 @@
         font-size: 16px;
     }
 
+    .item-subtitle {
+        font-family: "Calibri";
+        font-size: 11px;
+        color: #555;
+        margin-top: -2px;
+        margin-bottom: 2px;
+    }
+
     .itemqty {
         width: 55%;
         float: left;
@@ -124,6 +132,49 @@
         font-size: 11px;
     }
 
+    .split-row {
+        padding-left: 18px;
+        color: #444;
+    }
+
+    .split-detail-line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .split-detail-left {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .split-detail-right {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+
+    .split-detail-right .split-qty {
+        min-width: 44px;
+        text-align: right;
+        font-size: 16px;
+    }
+
+    .split-detail-right .split-unit {
+        min-width: 46px;
+        font-size: 15px;
+    }
+
+    .split-subtitle {
+        font-size: 11px;
+        font-style: italic;
+    }
+
         .single-row::after {
             content: "";
             clear: both;
@@ -156,7 +207,15 @@
         {
             <div class="rpt-name pack-header">
                 <div class="pack">
-                    @if (Model.ShipDate.HasValue)
+                    @if (!string.IsNullOrEmpty(Model.ReportTitle))
+                    {
+                        @Model.ReportTitle
+                        @if (Model.ShipDate.HasValue)
+                        {
+                            <span> - @string.Format("{0:d}", Model.ShipDate)</span>
+                        }
+                    }
+                    else if (Model.ShipDate.HasValue)
                     {
                         @string.Format("{0:d}", Model.ShipDate)
                     }
@@ -218,19 +277,63 @@
                                     <span class="comment">(@product.Comment)</span>
                                 }
                             </strong>
+                            @* Subtitle is shown only for lbs-only split boxes from the shared
+                               TotalList / LoadingList route-packing builder. *@
+                            @if (!string.IsNullOrEmpty(product.Subtitle))
+                            {
+                                <div class="item-subtitle">@product.Subtitle</div>
+                            }
                         }
 
-                        @foreach (var itm in product.Items)
+                        @* UnitLines are used when a report needs one item box with combined
+                           unit totals first, then indented customer split detail underneath
+                           the affected unit. Other packing reports stay on the older Items path. *@
+                        @if (product.UnitLines?.Count > 0)
                         {
-                            <div class="single-row" style="padding:2px 0 4px 0">
-                                <div class="itemqty">
-                                    <strong>@string.Format("{0:0.##}", itm.ShipQty)</strong>
+                            foreach (var unitLine in product.UnitLines)
+                            {
+                                @* Prepack split-detail rows keep customer first, then aligned qty/unit
+                                   on one line so the nested customer breakdown stays readable. *@
+                                if (unitLine.IsSplitDetail)
+                                {
+                                    <div class="single-row split-row" style="padding:2px 0 4px 0">
+                                        <div class="split-detail-line">
+                                            <span class="split-subtitle split-detail-left">@unitLine.Subtitle</span>
+                                            <span class="split-detail-right">
+                                                <strong class="split-qty">@string.Format("{0:0.##}", unitLine.ShipQty)</strong>
+                                                <span class="split-unit">@unitLine.Unit</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="single-row" style="padding:2px 0 4px 0">
+                                        <div class="itemqty">
+                                            <strong>@string.Format("{0:0.##}", unitLine.ShipQty)</strong>
+                                        </div>
+                                        <div class="itemunit d-flex justify-content-between">
+                                            <span>&nbsp;@unitLine.Unit&nbsp;</span>
+                                            <span>&nbsp;</span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+                        else if (product.Items?.Count > 0)
+                        {
+                            foreach (var itm in product.Items)
+                            {
+                                <div class="single-row" style="padding:2px 0 4px 0">
+                                    <div class="itemqty">
+                                        <strong>@string.Format("{0:0.##}", itm.ShipQty)</strong>
+                                    </div>
+                                    <div class="itemunit d-flex justify-content-between">
+                                        <span>&nbsp;@itm.Unit&nbsp;</span>
+                                        <strong>@itm.Aisle@itm.Bay</strong>
+                                    </div>
                                 </div>
-                                <div class="itemunit d-flex justify-content-between">
-                                    <span>&nbsp;@itm.Unit&nbsp;</span>
-                                    <strong>@itm.Aisle@itm.Bay</strong>
-                                </div>
-                            </div>
+                            }
                         }
                     </div>
                 }

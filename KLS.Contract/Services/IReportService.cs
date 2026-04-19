@@ -16,6 +16,16 @@ namespace KLS.Contract.Services
 
         RptPackingList PackingList(DocumentReq req);
 
+        // TotalSplit is a new standalone packing-style report that can split
+        // outer boxes for lbs rows coming from different source sales.
+        RptPackingList TotalSplitPacking(DocumentReq req);
+
+        // These filtered packing-style reports intentionally reuse the standalone
+        // PackingList layout instead of the legacy Harvills / Store Total layouts.
+        RptPackingList HarvillsPacking(DateOnly shipDate);
+
+        RptPackingList StoreTotalPacking(DateOnly shipDate);
+
         IEnumerable<RptBalanceSheet>? BalanceSheet(DateOnly? endDate);
 
         IEnumerable<RptProfitLoss>? ProfitLoss(ReportRequest reportReq);

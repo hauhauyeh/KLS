@@ -1,4 +1,21 @@
-CREATE OR ALTER PROCEDURE [dbo].[RecalcQAV] --EXEC [RecalcQAV] 419,'02/25/26'
+IF EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID('dbo.TransactionJournalDetail')
+      AND name = 'IX_TransactionJournalDetail_AccountId_ItemId_TxId'
+)
+BEGIN
+    DROP INDEX IX_TransactionJournalDetail_AccountId_ItemId_TxId
+    ON dbo.TransactionJournalDetail;
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER OFF
+GO
+
+CREATE   PROCEDURE [dbo].[RecalcQAV] --EXEC [RecalcQAV] 419,'02/25/26'
     @ItemId INT,
     @BeginDate DATE,
 	@LCloQty DECIMAL(18,6) OUTPUT,
@@ -212,7 +229,7 @@ BEGIN
 				SET @Amount = NULL; SET @CrDeAmt = NULL; --SET @DebitAmt = NULL; SET @CreditAmt = NULL;
 		END
 		--if SourceDocOrder is 500 then Sales
-		ELSE IF @MySourceDocOrder = 500
+		ELSE IF @MySourceDocOrder IN (500,505)
 		BEGIN
 				--SET @CloQty = @LCloQty - @Qty
 				--IF (@CloQty>0) AND (@CloQty-FLOOR(@CloQty))<(1/@RetailFactor/2)
@@ -593,3 +610,4 @@ BEGIN
 	END
 	DROP TABLE #QAVTable;
 END
+
