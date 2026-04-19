@@ -24,6 +24,8 @@ namespace KLS.Models
 
         public string? PrimaryImageUrl { get; set; }
 
+        public string? PromoBadgeText { get; set; }
+
         public ICollection<ItemWebUnitList>? ItemUnits { get; set; }
     }
 }

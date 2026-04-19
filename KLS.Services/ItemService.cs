@@ -366,8 +366,25 @@ namespace KLS.Services
         {
             webListReq.PayeeId = UserContext.EmpId;
 
+            return BuildWebPagedList(webListReq, false);
+        }
+
+        public PagingResponse<ItemWebList> GetPublicWebPagedList(ItemWebListReq webListReq)
+        {
+            webListReq.PayeeId = 0;
+
+            return BuildWebPagedList(webListReq, true);
+        }
+
+        private PagingResponse<ItemWebList> BuildWebPagedList(ItemWebListReq webListReq, bool forceBasePrice)
+        {
+
             var rows = Uow.Items.GetWebPagedList(webListReq).ToList();
             var totalRecords = Uow.Items.WebCount(webListReq);
+            var unitIds = rows.Where(x => x.ItemUnitId > 0).Select(x => x.ItemUnitId).Distinct().ToArray();
+            var basePrices = forceBasePrice
+                ? Uow.ItemUnits.Find(x => unitIds.Contains(x.ItemUnitId)).ToDictionary(x => x.ItemUnitId, x => x)
+                : new Dictionary<int, ItemUnit>();
 
             string baseUrl = GetbaseUrl();
 
@@ -410,7 +427,9 @@ namespace KLS.Services
                         IsDefaultSalesUnit = row.IsDefaultSalesUnit,
                         MSRP = row.MSRP,
                         MarketPrice = row.MarketPrice,
-                        Price = row.Price,
+                        Price = forceBasePrice && basePrices.TryGetValue(row.ItemUnitId, out var unit)
+                            ? unit.P1
+                            : row.Price,
                         Discount = row.Discount
                     });
                 }
@@ -423,6 +442,16 @@ namespace KLS.Services
         }
 
         public IEnumerable<ItemWebSearchList>? WebSearch(string searchTerm)
+        {
+            return BuildWebSearch(searchTerm);
+        }
+
+        public IEnumerable<ItemWebSearchList>? PublicWebSearch(string searchTerm)
+        {
+            return BuildWebSearch(searchTerm);
+        }
+
+        private IEnumerable<ItemWebSearchList>? BuildWebSearch(string searchTerm)
         {
             var items = Uow.Items.Search(new ItemSearchReq { IsActiveOnly = true, Term = searchTerm })?.ToList();
 

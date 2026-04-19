@@ -45,6 +45,11 @@ namespace KLS.Models
 
         public bool IsFirstOrderOnly { get; set; }
 
+        // Stackability: when true, this promo cannot combine with other qualifying
+        // promos on the same cart — it wins solo if it's the best among exclusives.
+        // Default false preserves legacy behavior where every promo stacks.
+        public bool IsExclusive { get; set; }
+
         public int BogoMaxRewardRepeats { get; set; }
 
         public DateTime CreatedAt { get; set; }

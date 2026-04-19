@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[RecalcQAV] --EXEC [RecalcQAV] 419,'02/25/26'
+CREATE   PROCEDURE [dbo].[RecalcQAV] --EXEC [RecalcQAV] 419,'02/25/26'
     @ItemId INT,
     @BeginDate DATE,
 	@LCloQty DECIMAL(18,6) OUTPUT,
@@ -35,11 +35,21 @@ BEGIN
 		TxDate DATE,
 		SourceDocOrder INT,
 		TxDetailId BIGINT,
-		SourceDocNum INT
+		SourceDocNum INT,
+		Qty DECIMAL(18,6),
+		Price DECIMAL(18,6),
+		BillQty DECIMAL(18,6),
+		PayeeId INT,
+		FactorToBase DECIMAL(18,6),
+		PairedAccountId INT
 	);
-	INSERT INTO #QAVTable (TxDate, SourceDocOrder, TxDetailId, SourceDocNum)
-	SELECT tj.TxDate, tj.SourceDocOrder, tjd.TxDetailId, tj.SourceDocNumber
-	FROM dbo.TransactionJournal AS tj INNER JOIN dbo.TransactionJournalDetail AS tjd ON tj.TxId = tjd.TxId
+	-- Preload the loop-driving row data once so the RBAR section does not
+	-- re-query TransactionJournalDetail for every inventory row.
+	INSERT INTO #QAVTable (TxDate, SourceDocOrder, TxDetailId, SourceDocNum, Qty, Price, BillQty, PayeeId, FactorToBase, PairedAccountId)
+	SELECT tj.TxDate, tj.SourceDocOrder, tjd.TxDetailId, tj.SourceDocNumber, tjd.Qty, tjd.Price, tjd.BillQty, tjd.PayeeId, ISNULL(tjd.FactorToBase,1), paired.AccountId
+	FROM dbo.TransactionJournal AS tj
+	INNER JOIN dbo.TransactionJournalDetail AS tjd ON tj.TxId = tjd.TxId
+	LEFT JOIN dbo.TransactionJournalDetail AS paired ON paired.TxDetailId = tjd.TxDetailId - 1
 	WHERE
 		(tj.TxDate >= ISNULL(@LastDate,@BeginDate)) and
 		--IF @LastDate IS NULL SET @LastDate = @BeginDate
@@ -104,12 +114,12 @@ BEGIN
 	WHILE @RowNum <= @MaxRow
 	BEGIN
 		
-		-- Fetch transaction meta info for the current row from the temp table
-		SELECT @MyId = AutoId, @MyTxDate = TxDate, @MySourceDocOrder = SourceDocOrder, @MyTxDetailId = TxDetailId, @MySourceDocNum = SourceDocNum
+		-- Fetch transaction meta info and the inventory row payload from the
+		-- preloaded temp table. This keeps the loop logic unchanged while
+		-- avoiding repeated point-lookups back into TransactionJournalDetail.
+		SELECT @MyId = AutoId, @MyTxDate = TxDate, @MySourceDocOrder = SourceDocOrder, @MyTxDetailId = TxDetailId, @MySourceDocNum = SourceDocNum,
+			@Qty = Qty, @Price = Price, @BillQty = BillQty, @PayeeId = PayeeId, @FactorToBase = FactorToBase, @AccountId = PairedAccountId
 		FROM #QAVTable WHERE AutoId = @RowNum;
-		-- Fetch inventory transaction details for the current transaction detail ID
-		SELECT @Qty = Qty, @Price = Price, @BillQty = BillQty, @PayeeId = PayeeId, @FactorToBase = ISNULL(FactorToBase,1)
-		FROM TransactionJournalDetail WHERE TxDetailId = @MyTxDetailId;
 		--@InventoryValue only for Calculate AvgCost. has no other purpose.
 		--When in Sales, AvgCost is not change.
 		--@Amount is actual Value changed in 'INV'
@@ -193,7 +203,6 @@ BEGIN
 				CrDeAmount = @CrDeAmt
 			WHERE TxDetailId = @MyTxDetailId
 			--PAIRED @COGS RECALC
-			SELECT @AccountId=AccountId FROM TransactionJournalDetail WHERE TxDetailId=@MyTxDetailId-1
 			--SELECT TOP 1 @MyTxDetailId = TxDetailId, @ChartAcctCode = ChartAcctCode
 			--FROM TransactionJournalDetail WHERE TxDetailId < @MyTxDetailId ORDER BY TxDetailId DESC
 			IF @AccountId = @COGSAccountId --'@COGS'
@@ -212,7 +221,7 @@ BEGIN
 				SET @Amount = NULL; SET @CrDeAmt = NULL; --SET @DebitAmt = NULL; SET @CreditAmt = NULL;
 		END
 		--if SourceDocOrder is 500 then Sales
-		ELSE IF @MySourceDocOrder = 500
+		ELSE IF @MySourceDocOrder IN (500,505)
 		BEGIN
 				--SET @CloQty = @LCloQty - @Qty
 				--IF (@CloQty>0) AND (@CloQty-FLOOR(@CloQty))<(1/@RetailFactor/2)
@@ -262,7 +271,6 @@ BEGIN
 			WHERE TxDetailId = @MyTxDetailId
 			
 			--PAIRED @COGS RECALC
-			SELECT @AccountId=AccountId FROM TransactionJournalDetail WHERE TxDetailId=@MyTxDetailId-1
 			--SELECT TOP 1 @MyTxDetailId = TxDetailId, @ChartAcctCode = ChartAcctCode
 			--FROM TransactionJournalDetail WHERE TxDetailId < @MyTxDetailId ORDER BY TxDetailId DESC
 			IF @AccountId = @COGSAccountId--'@COGS'
@@ -473,6 +481,72 @@ BEGIN
 					CrDeAmount = @CrDeAmt
 				WHERE TxDetailId = @MyTxDetailId - 1
 			END	
+
+			ELSE IF @AdjType = 'C' -- Convert/Repack
+			BEGIN
+				-- Delta-based qty (not absolute like 'Q')
+				SET @CloQty = @LCloQty + @Qty
+
+				IF @Qty > 0  -- Destination: recalc avg cost (purchase behavior)
+				BEGIN
+					SET @Price = ABS(@Price)
+					IF @CloQty > 0
+						SET @AvgCost = ROUND((@LInventoryValue + (@Qty * @Price)) / @CloQty, 6)
+					ELSE
+						SET @AvgCost = @Price
+
+					SET @InventoryValue = ROUND(@CloQty * @AvgCost, 6)
+					SET @Amount = @InventoryValue - @LInventoryValue
+				END
+				ELSE  -- Source: keep avg cost (sales behavior)
+				BEGIN
+					SET @AvgCost = @LAvgCost
+					SET @InventoryValue = ROUND(@CloQty * @AvgCost, 6)
+					SET @Amount = @InventoryValue - @LInventoryValue
+				END
+
+				-- @INV line update
+				SET @Amount = ISNULL(@Amount, 0);
+				IF @Amount = 0
+					SET @CrDeAmt = 0;
+				ELSE
+					SET @CrDeAmt = CASE WHEN @Amount > 0 THEN -ABS(@Amount) ELSE ABS(@Amount) END;
+
+				UPDATE TransactionJournalDetail SET
+					ClosingQty = @CloQty,
+					AverageCost = @AvgCost,
+					InventoryValue = @InventoryValue,
+					Amount = @Amount,
+					CrDeAmount = @CrDeAmt,
+					InventoryQty = @CloQty
+				WHERE TxDetailId = @MyTxDetailId
+
+				-- Offset line (same gain/loss pattern as other adj types)
+				IF @Amount >= 0
+				BEGIN
+					SET @AccountId = @InvGainAccountId
+					SET @IsDebit = 0
+				END
+				ELSE
+				BEGIN
+					SET @AccountId = CASE WHEN @PayeeId IS NULL THEN @InvLossAccountId ELSE @AREAccountId END
+					SET @Amount = -(@Amount)
+					SET @IsDebit = 1
+				END
+
+				IF @Amount = 0
+					SET @CrDeAmt = 0;
+				ELSE IF @IsDebit = 1
+					SET @CrDeAmt = CASE WHEN @Amount > 0 THEN -ABS(@Amount) ELSE ABS(@Amount) END;
+				ELSE IF @IsDebit = 0
+					SET @CrDeAmt = CASE WHEN @Amount > 0 THEN ABS(@Amount) ELSE -ABS(@Amount) END;
+
+				UPDATE TransactionJournalDetail SET
+					AccountId = @AccountId,
+					Amount = @Amount,
+					CrDeAmount = @CrDeAmt
+				WHERE TxDetailId = @MyTxDetailId - 1
+			END
 		END
 		
 		ELSE IF @MySourceDocOrder = 100 --OBE

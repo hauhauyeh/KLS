@@ -150,7 +150,6 @@ namespace KLS.Common
         {
             DISCOUNT_FLAT,
             DISCOUNT_PERCENTAGE,
-            DISCOUNT_CART,
             DISCOUNT_ITEM_FLAT,
             DISCOUNT_ITEM_PERCENTAGE,
             BOGO_ITEM_CATEGORY,

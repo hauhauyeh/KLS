@@ -24,6 +24,7 @@ namespace KLS.Services
         private readonly IEmailService _emailService;
         private readonly IEmailSettingService _emailSettingService;
         private readonly IExportService _exportService;
+        private readonly IPortalModeService _portalModeService;
 
         public CustomerService(IUnitOfWork uow,
             ISystemSettingService systemSettingService,
@@ -33,7 +34,8 @@ namespace KLS.Services
             IPDFService pdfService,
             IEmailService emailService,
             IEmailSettingService emailSettingService,
-            IExportService exportService) : base(uow)
+            IExportService exportService,
+            IPortalModeService portalModeService) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _companyService = companyService;
@@ -43,6 +45,7 @@ namespace KLS.Services
             _emailService = emailService;
             _emailSettingService = emailSettingService;
             _exportService = exportService;
+            _portalModeService = portalModeService;
         }
 
         public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
@@ -89,6 +92,23 @@ namespace KLS.Services
             if (customer != null)
                 dto.InjectFrom(customer);
 
+            var deliverSchedule = Uow.DeliverSchedules.GetActiveByPayeeId(payeeId);
+            if (deliverSchedule != null)
+            {
+                dto.AdvancedScheduleType = deliverSchedule.ScheduleType;
+                dto.AdvancedStartDate = deliverSchedule.StartDate;
+                dto.AdvancedDayOfWeek = deliverSchedule.DayOfWeek;
+                dto.AdvancedWeekOfMonth = deliverSchedule.WeekOfMonth;
+                dto.AdvancedDayOfMonth = deliverSchedule.DayOfMonth;
+            }
+
+            var userAccount = Uow.UserAccounts.Find(u => u.PayeeId == payeeId).FirstOrDefault();
+            if (userAccount != null)
+            {
+                dto.Username = userAccount.Username;
+                dto.Password = string.IsNullOrEmpty(userAccount.PasswordHash) ? null : Utilities.Decrypt(userAccount.PasswordHash);
+            }
+
             //salesrep name
             if (dto.SalesRepId.HasValue)
                 dto.SalesRepName = Uow.Payees.GetById(dto.SalesRepId.Value)?.PayeeName;
@@ -112,6 +132,9 @@ namespace KLS.Services
 
         public bool NameExists(string? payeeName, int payeeId)
         {
+            if (string.IsNullOrWhiteSpace(payeeName))
+                return false;
+
             return Uow.Payees.Exists(p => p.PayeeName.ToLower() == payeeName.ToLower() && p.PayeeId != payeeId && p.PayeeType == EnumHelper.PayeeType.C.ToString());
         }
 
@@ -138,7 +161,6 @@ namespace KLS.Services
             }
 
             Uow.Payees.Add(payee);
-            Uow.Commit();
 
             var customer = new Customer();
             customer.InjectFrom(dto);
@@ -148,6 +170,8 @@ namespace KLS.Services
             customer.BillId = dto.BillId ?? newPayeeId;
 
             Uow.Customers.Add(customer);
+            SyncDeliverSchedule(newPayeeId, dto);
+            SyncUserAccount(newPayeeId, dto);
             Uow.Commit();
 
             return GetById(newPayeeId);
@@ -251,6 +275,8 @@ namespace KLS.Services
                 Uow.Customers.Update(customer);
             }
 
+            SyncDeliverSchedule(dto.PayeeId, dto);
+            SyncUserAccount(dto.PayeeId, dto);
             Uow.Commit();
 
             return GetById(customer.PayeeId);
@@ -258,7 +284,105 @@ namespace KLS.Services
 
         public void Delete(int payeeId)
         {
-            Uow.Payees.Delete(payeeId);
+            Uow.ExecuteInTransaction(() =>
+            {
+                var existingSchedules = Uow.DeliverSchedules.GetByPayeeId(payeeId).ToList();
+                foreach (var existing in existingSchedules)
+                {
+                    Uow.DeliverSchedules.Remove(existing);
+                }
+
+                if (existingSchedules.Count > 0)
+                {
+                    Uow.Commit();
+                }
+
+                Uow.Payees.Delete(payeeId);
+            });
+        }
+
+        private void SyncDeliverSchedule(int payeeId, CustomerDto dto)
+        {
+            var activeSchedule = Uow.DeliverSchedules.GetActiveByPayeeId(payeeId);
+            if (activeSchedule != null)
+            {
+                Uow.DeliverSchedules.Remove(activeSchedule);
+            }
+
+            if (!HasAdvancedSchedule(dto))
+                return;
+
+            var deliverSchedule = new DeliverSchedule
+            {
+                PayeeId = payeeId,
+                ScheduleType = dto.AdvancedScheduleType!,
+                StartDate = dto.AdvancedStartDate,
+                EndDate = null,
+                WeekInterval = dto.AdvancedScheduleType == "BiWeekly" ? 2 : null,
+                DayOfWeek = dto.AdvancedDayOfWeek,
+                WeekOfMonth = dto.AdvancedScheduleType == "Monthly" ? dto.AdvancedWeekOfMonth : null,
+                DayOfMonth = dto.AdvancedScheduleType == "Monthly" ? dto.AdvancedDayOfMonth : null,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                EnterBy = UserContext.SystemUserId == 0 ? null : UserContext.SystemUserId.ToString(),
+                UpdateBy = UserContext.SystemUserId == 0 ? null : UserContext.SystemUserId.ToString()
+            };
+
+            Uow.DeliverSchedules.Add(deliverSchedule);
+        }
+
+        private static bool HasAdvancedSchedule(CustomerDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.AdvancedScheduleType))
+                return false;
+
+            if (dto.AdvancedScheduleType == "BiWeekly")
+                return dto.AdvancedStartDate.HasValue && dto.AdvancedDayOfWeek.HasValue;
+
+            if (dto.AdvancedScheduleType == "Monthly")
+                return dto.AdvancedDayOfMonth.HasValue || (dto.AdvancedWeekOfMonth.HasValue && dto.AdvancedDayOfWeek.HasValue);
+
+            return false;
+        }
+
+        private void SyncUserAccount(int payeeId, CustomerDto dto)
+        {
+            var existingUser = Uow.UserAccounts.Find(u => u.PayeeId == payeeId).FirstOrDefault();
+            var hasUsername = !string.IsNullOrWhiteSpace(dto.Username);
+            var hasPassword = !string.IsNullOrWhiteSpace(dto.Password);
+
+            if (!hasUsername && !hasPassword)
+                return;
+
+            if (!hasUsername || !hasPassword)
+                throw new ArgumentException("Username and password are both required for web access.");
+
+            if (existingUser != null)
+            {
+                existingUser.Email = dto.Email ?? string.Empty;
+                existingUser.Phone = dto.Phone1;
+                existingUser.Username = dto.Username!;
+                existingUser.PasswordHash = Utilities.Encrypt(dto.Password!);
+                existingUser.Inactive = dto.IsClosed;
+                existingUser.UpdatedAt = DateTime.UtcNow;
+
+                Uow.UserAccounts.Update(existingUser);
+                return;
+            }
+
+            var userAccount = new UserAccount
+            {
+                RoleId = 1,
+                PayeeId = payeeId,
+                Email = dto.Email ?? string.Empty,
+                Username = dto.Username!,
+                Phone = dto.Phone1,
+                PasswordHash = Utilities.Encrypt(dto.Password!),
+                Inactive = dto.IsClosed
+            };
+
+            Uow.UserAccounts.Add(userAccount);
         }
 
         public int GetMaxCustomerId()
@@ -475,9 +599,29 @@ namespace KLS.Services
         //---web method
         public void Register(RegisterReq registerReq, string url)
         {
+            var isB2C = _portalModeService.IsB2C();
+            var payeeName = string.IsNullOrWhiteSpace(registerReq.PayeeName)
+                ? registerReq.Username
+                : registerReq.PayeeName;
+
+            if (isB2C)
+            {
+                if (string.IsNullOrWhiteSpace(registerReq.Email))
+                    throw new Exception("Email is required.");
+                if (string.IsNullOrWhiteSpace(registerReq.Phone))
+                    throw new Exception("Phone is required.");
+                if (string.IsNullOrWhiteSpace(registerReq.Username))
+                    throw new Exception("Username is required.");
+                if (string.IsNullOrWhiteSpace(registerReq.Address)
+                    || string.IsNullOrWhiteSpace(registerReq.City)
+                    || string.IsNullOrWhiteSpace(registerReq.State)
+                    || string.IsNullOrWhiteSpace(registerReq.ZipCode))
+                    throw new Exception("Shipping address is required.");
+            }
+
             var customerDto = new CustomerDto
             {
-                PayeeName = registerReq.PayeeName,
+                PayeeName = payeeName,
                 EIN = registerReq.EIN,
                 StoreType = registerReq.StoreType,
                 Email = registerReq.Email,
@@ -498,7 +642,7 @@ namespace KLS.Services
                 IsPromotionEnabled = true,
                 IsStatementPrint = true,
                 SalesRepId = null,
-                IsApproved = false,
+                IsApproved = isB2C,
                 IsOnlineRegister = true
             };
 

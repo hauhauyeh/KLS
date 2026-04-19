@@ -9,6 +9,7 @@ ALTER VIEW [dbo].[View_Customer] AS
 SELECT
     p.PayeeId,
     p.PayeeName,
+    p.TermId,
     c.SalesRepId,
     c.Region,
     c.DefaultRoute,

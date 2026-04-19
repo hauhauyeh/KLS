@@ -1,0 +1,258 @@
+IF EXISTS (
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID('dbo.DeliverSchedule')
+      AND name = 'UX_DeliverSchedule_ActivePayee'
+)
+BEGIN
+    DROP INDEX [UX_DeliverSchedule_ActivePayee] ON [dbo].[DeliverSchedule];
+END
+GO
+
+IF EXISTS (
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE parent_object_id = OBJECT_ID('dbo.DeliverSchedule')
+      AND name = 'CK_DeliverSchedule_TypeShape'
+)
+BEGIN
+    ALTER TABLE [dbo].[DeliverSchedule]
+    DROP CONSTRAINT [CK_DeliverSchedule_TypeShape];
+END
+GO
+
+IF OBJECT_ID('dbo.Fn_Calc_NextShipDate', 'P') IS NOT NULL
+BEGIN
+    DROP PROCEDURE [dbo].[Fn_Calc_NextShipDate];
+END
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE PROCEDURE [dbo].[Fn_Calc_NextShipDate]
+    @PayeeId   INT,
+    @ShipDate  DATE OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE
+        @Now                 DATETIME,
+        @ORDER_CHECKOUT_HOUR INT,
+        @NEXT_SHIPDATE_MODE  NVARCHAR(50),
+        @CustSchedule        NVARCHAR(50),
+        @WorkSchedule        NVARCHAR(50),
+        @TodayIdx            INT,
+        @Idx                 INT,
+        @Offset              INT,
+        @CandidateDate       DATE,
+        @AdvScheduleType     NVARCHAR(30),
+        @AdvStartDate        DATE,
+        @AdvEndDate          DATE,
+        @AdvWeekInterval     INT,
+        @AdvDayOfWeek        INT,
+        @AdvWeekOfMonth      INT,
+        @AdvDayOfMonth       INT,
+        @CandidateWeekNum    INT,
+        @CandidateWeekOfMonth INT,
+        @CandidateDaysInMonth INT;
+
+    EXEC dbo.Get_TodayLocalDate @Now OUTPUT;
+
+    SELECT @ORDER_CHECKOUT_HOUR = TRY_CONVERT(INT, SettingValue)
+    FROM SystemSetting
+    WHERE SettingKey = 'ORDER_CHECKOUT_HOUR';
+
+    SELECT @NEXT_SHIPDATE_MODE = UPPER(LTRIM(RTRIM(ISNULL(SettingValue, 'CUSTOMER'))))
+    FROM SystemSetting
+    WHERE SettingKey = 'NEXT_SHIPDATE_MODE';
+
+    IF ISNULL(@NEXT_SHIPDATE_MODE, '') = ''
+        SET @NEXT_SHIPDATE_MODE = 'CUSTOMER';
+
+    IF @NEXT_SHIPDATE_MODE = 'CUSTOMER'
+    BEGIN
+        SELECT TOP 1
+            @AdvScheduleType = ds.ScheduleType,
+            @AdvStartDate = ds.StartDate,
+            @AdvEndDate = ds.EndDate,
+            @AdvWeekInterval = ds.WeekInterval,
+            @AdvDayOfWeek = ds.DayOfWeek,
+            @AdvWeekOfMonth = ds.WeekOfMonth,
+            @AdvDayOfMonth = ds.DayOfMonth
+        FROM dbo.DeliverSchedule ds
+        WHERE ds.PayeeId = @PayeeId
+          AND ds.IsActive = 1
+          AND ds.ScheduleType IN ('BiWeekly', 'Monthly')
+        ORDER BY ds.DeliverScheduleId DESC;
+
+        SELECT @CustSchedule = LTRIM(RTRIM(ISNULL(CallSchedule, '')))
+        FROM Customer
+        WHERE PayeeId = @PayeeId;
+
+        SET @CustSchedule = REPLACE(ISNULL(@CustSchedule, ''), ' ', '');
+
+        IF @CustSchedule = ''
+            SET @WorkSchedule = '123456';
+        ELSE
+            SET @WorkSchedule = @CustSchedule;
+    END
+    ELSE
+    BEGIN
+        SET @WorkSchedule = '123456';
+    END
+
+    SET @TodayIdx =
+        CASE DATENAME(WEEKDAY, @Now)
+            WHEN 'Sunday'    THEN 0
+            WHEN 'Monday'    THEN 1
+            WHEN 'Tuesday'   THEN 2
+            WHEN 'Wednesday' THEN 3
+            WHEN 'Thursday'  THEN 4
+            WHEN 'Friday'    THEN 5
+            WHEN 'Saturday'  THEN 6
+        END;
+
+    IF @NEXT_SHIPDATE_MODE = 'CUSTOMER'
+       AND @AdvScheduleType IS NOT NULL
+    BEGIN
+        IF @AdvScheduleType = 'BiWeekly'
+           AND @AdvDayOfWeek IS NOT NULL
+           AND @AdvStartDate IS NOT NULL
+        BEGIN
+            SET @Offset = 0;
+            SET @ShipDate = NULL;
+
+            WHILE @Offset <= 21 AND @ShipDate IS NULL
+            BEGIN
+                SET @CandidateDate = DATEADD(DAY, @Offset, CONVERT(DATE, @Now));
+                SET @Idx =
+                    CASE DATENAME(WEEKDAY, @CandidateDate)
+                        WHEN 'Sunday'    THEN 0
+                        WHEN 'Monday'    THEN 1
+                        WHEN 'Tuesday'   THEN 2
+                        WHEN 'Wednesday' THEN 3
+                        WHEN 'Thursday'  THEN 4
+                        WHEN 'Friday'    THEN 5
+                        WHEN 'Saturday'  THEN 6
+                    END;
+
+                IF @Idx = @AdvDayOfWeek
+                   AND @CandidateDate >= @AdvStartDate
+                   AND (@AdvEndDate IS NULL OR @CandidateDate <= @AdvEndDate)
+                BEGIN
+                    SET @CandidateWeekNum = DATEDIFF(DAY, @AdvStartDate, @CandidateDate) / 7;
+
+                    IF @CandidateWeekNum >= 0
+                       AND @CandidateWeekNum % ISNULL(NULLIF(@AdvWeekInterval, 0), 2) = 0
+                       AND (
+                            @Offset > 0
+                            OR (
+                                DATEPART(HOUR, @Now) < ISNULL(@ORDER_CHECKOUT_HOUR, 10)
+                                AND @TodayIdx = @AdvDayOfWeek
+                            )
+                       )
+                    BEGIN
+                        SET @ShipDate = @CandidateDate;
+                    END
+                END
+
+                SET @Offset += 1;
+            END
+        END
+        ELSE IF @AdvScheduleType = 'Monthly'
+                AND (
+                    @AdvDayOfMonth IS NOT NULL
+                    OR (@AdvWeekOfMonth IS NOT NULL AND @AdvDayOfWeek IS NOT NULL)
+                )
+        BEGIN
+            SET @Offset = 0;
+            SET @ShipDate = NULL;
+
+            WHILE @Offset <= 62 AND @ShipDate IS NULL
+            BEGIN
+                SET @CandidateDate = DATEADD(DAY, @Offset, CONVERT(DATE, @Now));
+                SET @Idx =
+                    CASE DATENAME(WEEKDAY, @CandidateDate)
+                        WHEN 'Sunday'    THEN 0
+                        WHEN 'Monday'    THEN 1
+                        WHEN 'Tuesday'   THEN 2
+                        WHEN 'Wednesday' THEN 3
+                        WHEN 'Thursday'  THEN 4
+                        WHEN 'Friday'    THEN 5
+                        WHEN 'Saturday'  THEN 6
+                    END;
+
+                SET @CandidateDaysInMonth = DAY(EOMONTH(@CandidateDate));
+                SET @CandidateWeekOfMonth = ((DAY(@CandidateDate) - 1) / 7) + 1;
+
+                IF (@AdvEndDate IS NULL OR @CandidateDate <= @AdvEndDate)
+                   AND (
+                        (@AdvDayOfMonth IS NOT NULL AND DAY(@CandidateDate) = @AdvDayOfMonth)
+                        OR (
+                            @AdvWeekOfMonth IS NOT NULL
+                            AND @AdvDayOfWeek IS NOT NULL
+                            AND @Idx = @AdvDayOfWeek
+                            AND (
+                                @CandidateWeekOfMonth = @AdvWeekOfMonth
+                                OR (
+                                    @AdvWeekOfMonth = 5
+                                    AND @CandidateWeekOfMonth >= 4
+                                    AND DAY(@CandidateDate) + 7 > @CandidateDaysInMonth
+                                )
+                            )
+                        )
+                   )
+                   AND (
+                        @Offset > 0
+                        OR DATEPART(HOUR, @Now) < ISNULL(@ORDER_CHECKOUT_HOUR, 10)
+                   )
+                BEGIN
+                    SET @ShipDate = @CandidateDate;
+                END
+
+                SET @Offset += 1;
+            END
+        END
+
+        IF @ShipDate IS NOT NULL
+            RETURN;
+    END
+
+    IF DATEPART(HOUR, @Now) < ISNULL(@ORDER_CHECKOUT_HOUR, 10)
+       AND CHARINDEX(CONVERT(CHAR(1), @TodayIdx), @WorkSchedule) > 0
+    BEGIN
+        SET @ShipDate = CONVERT(DATE, @Now);
+        RETURN;
+    END
+
+    SET @Offset = 1;
+    SET @ShipDate = NULL;
+
+    WHILE @Offset <= 14 AND @ShipDate IS NULL
+    BEGIN
+        SET @CandidateDate = DATEADD(DAY, @Offset, CONVERT(DATE, @Now));
+
+        SET @Idx =
+            CASE DATENAME(WEEKDAY, @CandidateDate)
+                WHEN 'Sunday'    THEN 0
+                WHEN 'Monday'    THEN 1
+                WHEN 'Tuesday'   THEN 2
+                WHEN 'Wednesday' THEN 3
+                WHEN 'Thursday'  THEN 4
+                WHEN 'Friday'    THEN 5
+                WHEN 'Saturday'  THEN 6
+            END;
+
+        IF CHARINDEX(CONVERT(CHAR(1), @Idx), @WorkSchedule) > 0
+        BEGIN
+            SET @ShipDate = @CandidateDate;
+        END
+
+        SET @Offset += 1;
+    END
+END
+GO

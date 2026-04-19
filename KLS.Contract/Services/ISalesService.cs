@@ -84,5 +84,7 @@ namespace KLS.Contract.Services
         PagingResponse<OrderWebList>? GetWebPagedList(SalesListReq salesListReq);
 
         int WebCheckout(SalesWebCheckoutReq webCheckoutReq);
+
+        int WebCheckoutB2C(SalesB2cCheckoutReq webCheckoutReq);
     }
 }

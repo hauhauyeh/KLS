@@ -3,13 +3,11 @@ using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
 {
     [AuthorizeWeb]
     [Route("api/web/[controller]")]
-    [Display(Name = "Role Management", GroupName = "Web")]
     public class UserRolesController : BaseController
     {
         #region --- Member(s) ---

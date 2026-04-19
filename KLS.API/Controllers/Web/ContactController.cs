@@ -1,20 +1,28 @@
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
 {
     [Route("api/web/[controller]")]
-    [Display(Name = "Contact", GroupName = "Web")]
     public class ContactController : BaseController
     {
+        #region --- Member(s) ---
+
         private readonly IContactService _contactService;
+
+        #endregion
+
+        #region --- Constructor(s) ---
 
         public ContactController(IContactService contactService)
         {
             _contactService = contactService;
         }
+
+        #endregion
+
+        #region --- Method(s) ---
 
         [HttpPost]
         public IActionResult Send([FromBody] ContactMessageReq req)
@@ -22,5 +30,7 @@ namespace KLS.API.Controllers.Web
             _contactService.SendMessage(req);
             return Ok(new { Message = "Message sent." });
         }
+
+        #endregion
     }
 }

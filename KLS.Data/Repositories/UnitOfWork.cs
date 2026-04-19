@@ -1,5 +1,6 @@
 ﻿using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,22 @@ namespace KLS.Data.Repositories
             DbContext.SaveChanges();
         }
 
+        public void ExecuteInTransaction(Action action)
+        {
+            using IDbContextTransaction transaction = DbContext.Database.BeginTransaction();
+
+            try
+            {
+                action();
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
         public IHolidayRepository Holidays { get { return new HolidayRepository(DbContext); } }
 
         public ISystemRoleRepository SystemRoles { get { return new SystemRoleRepository(DbContext); } }
@@ -49,6 +66,8 @@ namespace KLS.Data.Repositories
         public IEmailSettingRepository EmailSettings { get { return new EmailSettingRepository(DbContext); } }
 
         public ICustomerRepository Customers { get { return new CustomerRepository(DbContext); } }
+
+        public IDeliverScheduleRepository DeliverSchedules { get { return new DeliverScheduleRepository(DbContext); } }
 
         public IVendorRepository Vendors { get { return new VendorRepository(DbContext); } }
 

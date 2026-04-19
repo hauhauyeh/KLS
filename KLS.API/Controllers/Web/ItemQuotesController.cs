@@ -3,13 +3,11 @@ using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
 {
     [AuthorizeWeb]
     [Route("api/web/[controller]")]
-    [Display(Name = "Item Quotes", GroupName = "Web")]
     public class ItemQuotesController : BaseController
     {
         #region --- Member(s) ---

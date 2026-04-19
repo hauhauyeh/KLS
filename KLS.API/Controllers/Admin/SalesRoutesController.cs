@@ -58,6 +58,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("GetByDateRoute")]
+        public IActionResult GetByDateRoute([FromQuery] DateOnly shipDate, [FromQuery] string? shipRoute)
+        {
+            return Ok(_salesRouteService.GetByDateRoute(shipDate, shipRoute));
+        }
+
+
         [HttpPost("SaveAssignTrucks")]
         public IActionResult SaveAssignTrucks([FromBody] List<AssignTruck> assignTrucks)
         {

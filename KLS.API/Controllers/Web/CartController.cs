@@ -3,28 +3,28 @@ using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models.Cart;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
 {
     [AuthorizeWeb]
     [Route("api/web/[controller]")]
-    [Display(Name = "Cart", GroupName = "Web")]
     public class CartController : BaseController
     {
         #region --- Member(s) ---
 
         private readonly ITempSalesService _tempSalesService;
         private readonly ISystemSettingService _systemSettingService;
+        private readonly IPromoHelperService _promoHelper;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public CartController(ITempSalesService tempSalesService, ISystemSettingService systemSettingService)
+        public CartController(ITempSalesService tempSalesService, ISystemSettingService systemSettingService, IPromoHelperService promoHelper)
         {
             _tempSalesService = tempSalesService;
             _systemSettingService = systemSettingService;
+            _promoHelper = promoHelper;
         }
 
         #endregion
@@ -48,7 +48,7 @@ namespace KLS.API.Controllers.Web
         [HttpGet("count")]
         public IActionResult GetCount()
         {
-            return Ok(_tempSalesService.GetCartItems()?.Count());
+            return Ok(_tempSalesService.GetCartCount());
         }
 
 
@@ -92,8 +92,9 @@ namespace KLS.API.Controllers.Web
         public IActionResult Delete(int id)
         {
             _tempSalesService.Delete(id);
+            _promoHelper.ApplyPromotion(salesId: 0, payeeId: UserContext.EmpId);
 
-            return Ok();
+            return Ok(_tempSalesService.GetCartItems());
         }
 
 

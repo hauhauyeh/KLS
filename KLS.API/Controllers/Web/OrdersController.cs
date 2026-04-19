@@ -4,13 +4,11 @@ using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Web
 {
     [AuthorizeWeb]
     [Route("api/web/[controller]")]
-    [Display(Name = "Orders", GroupName = "Web")]
     public class OrdersController : BaseController
     {
         #region --- Member(s) ---
@@ -74,6 +72,14 @@ namespace KLS.API.Controllers.Web
         public IActionResult Checkout([FromBody] SalesWebCheckoutReq webCheckoutReq)
         {
             var salesId = _salesService.WebCheckout(webCheckoutReq);
+            return Ok(new { SalesId = salesId });
+        }
+
+
+        [HttpPost("CheckoutB2C")]
+        public IActionResult CheckoutB2C([FromBody] SalesB2cCheckoutReq webCheckoutReq)
+        {
+            var salesId = _salesService.WebCheckoutB2C(webCheckoutReq);
             return Ok(new { SalesId = salesId });
         }
 

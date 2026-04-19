@@ -31,7 +31,7 @@ namespace KLS.API.Controllers.Web
         [HttpPost("Register")]
         public IActionResult Register([FromBody] RegisterReq registerReq)
         {
-            if (_customerService.NameExists(registerReq.PayeeName, 0))
+            if (!string.IsNullOrWhiteSpace(registerReq.PayeeName) && _customerService.NameExists(registerReq.PayeeName, 0))
                 return Conflict("Company name already exists.");
 
             if (_userAccountService.EmailExists(registerReq.Email, 0))

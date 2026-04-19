@@ -26,6 +26,8 @@ namespace KLS.Models
 
         public bool IsEditGuide { get; set; }
 
+        public bool IsPromotionEnabled { get; set; }
+
         public ICollection<string>? Permissions { get; set; }
     }
 }

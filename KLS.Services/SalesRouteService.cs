@@ -139,9 +139,12 @@ namespace KLS.Services
                 }
             }
 
-            // Group routes by truck number
+            // Group only assigned routes by a non-empty truck number. Unassigned routes
+            // are still valid rows in SalesRoute, but they cannot be used as dictionary
+            // keys and should simply remain outside the truck lookup.
             var routeLookup = assignRoutes?
-                .GroupBy(r => r.TruckNumber)
+                .Where(r => !string.IsNullOrWhiteSpace(r.TruckNumber))
+                .GroupBy(r => r.TruckNumber!.Trim())
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             var assignTrucks = trucks
