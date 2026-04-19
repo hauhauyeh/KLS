@@ -140,6 +140,16 @@ namespace KLS.Models
 
         public string? CallSchedule { get; set; }
 
+        public string? AdvancedScheduleType { get; set; }
+
+        public DateOnly? AdvancedStartDate { get; set; }
+
+        public int? AdvancedDayOfWeek { get; set; }
+
+        public int? AdvancedWeekOfMonth { get; set; }
+
+        public int? AdvancedDayOfMonth { get; set; }
+
         public DateTime? LastCallingTime { get; set; }
 
         public string? LastCallingStatus { get; set; }
@@ -175,6 +185,10 @@ namespace KLS.Models
         public bool IsPromotionEnabled { get; set; }
 
         public int? ShippingCarrierId { get; set; }
+
+        public string? Username { get; set; }
+
+        public string? Password { get; set; }
 
         public bool IsOnlineRegister { get; set; }
 
