@@ -137,7 +137,12 @@ namespace KLS.Data.Repositories
                 ? new SqlParameter("@ShipmentIds", copyToBillReq.ShipmentIds)
                 : new SqlParameter("@ShipmentIds", DBNull.Value);
 
-            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_CopyToBill] @PurchaseId,@ItemsJson,@EmpId,@ShipmentIds", EmpIdParam, PayeeIdParam, POIdParam, ShipmentIdsParam);
+            var OrderModeParam = (!string.IsNullOrWhiteSpace(copyToBillReq.OrderMode))
+                ? new SqlParameter("@OrderMode", copyToBillReq.OrderMode)
+                : new SqlParameter("@OrderMode", DBNull.Value);
+
+            DbContext.Database.ExecuteSqlRaw("[PurchaseOrder_CopyToBill] @PurchaseId,@ItemsJson,@EmpId,@ShipmentIds,@OrderMode",
+                POIdParam, PayeeIdParam, EmpIdParam, ShipmentIdsParam, OrderModeParam);
         }
     }
 }

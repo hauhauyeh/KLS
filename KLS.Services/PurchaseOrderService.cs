@@ -66,7 +66,10 @@ namespace KLS.Services
         {
             var purchase = Uow.Purchases.GetById(PurchaseId);
 
-            if (purchase != null && purchase.StageId == 1)
+            // PO and Bill Manager point at the same shared Purchase row.
+            // Deleting from PO Manager must remove that same document before
+            // convert-to-bill, otherwise Bill Manager still shows the orphaned row.
+            if (purchase != null && !purchase.IsLocked)
             {
                 Uow.Purchases.Find(c => c.PurchaseId == PurchaseId).ExecuteDelete();
 
