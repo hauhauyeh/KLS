@@ -57,6 +57,14 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("Reorder")]
+        public IActionResult Reorder([FromBody] TempPurchaseReorderReq reorderReq)
+        {
+            _tempPurchaseService.Reorder(reorderReq);
+            return Ok();
+        }
+
+
         [HttpDelete("{tempId}")]
         public IActionResult Delete(int tempId)
         {

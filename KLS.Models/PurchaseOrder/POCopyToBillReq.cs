@@ -13,5 +13,7 @@ namespace KLS.Models
         public string? ItemsJson { get; set; }
 
         public string? ShipmentIds { get; set; }
+
+        public string? OrderMode { get; set; }
     }
 }

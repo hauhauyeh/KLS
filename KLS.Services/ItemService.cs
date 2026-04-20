@@ -228,7 +228,7 @@ namespace KLS.Services
                                 dbUnit.Unit = unit.Unit;
                                 dbUnit.FactorToBase = unit.IsBaseUnit ? 1 : unit.FactorToBase;
                                 dbUnit.IsDefaultSalesUnit = unit.IsDefaultSalesUnit;
-                                //dbUnit.PricePercentToBase = unit.PricePercentToBase;
+                                dbUnit.PricePercentToBase = unit.IsBaseUnit ? null : unit.PricePercentToBase;
                                 dbUnit.Barcode = unit.Barcode;
                                 dbUnit.P1 = unit.P1;
                                 dbUnit.MSRP = unit.MSRP;

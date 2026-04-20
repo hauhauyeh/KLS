@@ -118,6 +118,39 @@ namespace KLS.Services
             return dto;
         }
 
+        public void Reorder(TempPurchaseReorderReq reorderReq)
+        {
+            if (reorderReq.Items.Count == 0)
+                throw new ArgumentException("No temp purchase rows provided for reorder.");
+
+            var tempRows = Uow.TempPurchases
+                .Find(c => c.EmpId == UserContext.EmpId
+                    && c.PayeeId == reorderReq.PayeeId
+                    && c.PurchaseId == reorderReq.PurchaseId)
+                .ToList();
+
+            if (tempRows.Count == 0)
+                throw new KeyNotFoundException("Temp purchase rows not found for reorder.");
+
+            var requestedIds = reorderReq.Items
+                .Select(c => c.TempPurchaseId)
+                .Distinct()
+                .ToList();
+
+            if (requestedIds.Count != reorderReq.Items.Count)
+                throw new ArgumentException("Duplicate temp purchase rows found in reorder request.");
+
+            if (requestedIds.Count != tempRows.Count)
+                throw new ArgumentException("Reorder request must include every temp purchase row.");
+
+            var existingIds = tempRows.Select(c => c.TempPurchaseId).ToHashSet();
+
+            if (requestedIds.Any(id => !existingIds.Contains(id)))
+                throw new ArgumentException("Reorder request contains invalid temp purchase rows.");
+
+            Uow.TempPurchases.Reorder(reorderReq);
+        }
+
         public void Delete(int tempId)
         {
             var temp = Uow.TempPurchases.GetById(tempId);

@@ -1,10 +1,6 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- Purchase_PartialUpdate codex candidate
--- Baseline: live dbo.Purchase_PartialUpdate from KLS_Latest
+-- Purchase_PartialUpdate
+-- Final live-aligned version for PO receive LineId persistence
+-- Baseline: dbo.Purchase_PartialUpdate from KLS_Latest
 --
 -- Summary:
 --   Goal: preserve baseline partial-update journal behavior, while making
@@ -20,7 +16,7 @@ GO
 --   6. I/U/D journal behavior stays in the same baseline branches
 --   7. Recalc enqueue remains immediately after commit
 
-CREATE OR ALTER PROCEDURE [dbo].[Purchase_PartialUpdate]
+CREATE   PROCEDURE [dbo].[Purchase_PartialUpdate]
 
 	@PurchaseId INT,
 	@EmpId INT,
@@ -309,8 +305,9 @@ BEGIN
         BEGIN
 			-- Section 8b: inserted row.
 			-- When @IsBill = 1, insert a new PurchaseDetail row. When @IsBill = 0
-			-- (PO-to-bill path), reuse the existing PurchaseDetail row and only
-			-- create the corresponding journal rows.
+			-- (PO-to-bill path), reuse the existing PurchaseDetail row, persist
+			-- temp-cart order back to the PO detail LineId, and only create the
+			-- corresponding journal rows.
 			IF @IsBill = 1 --If bill then insert to source otherwise for PO the source detail is already there 
 			BEGIN
 				INSERT INTO [dbo].[PurchaseDetail]
@@ -377,6 +374,12 @@ BEGIN
 				   ,@ItemVolume);
 
 				SET @PurchaseDetailId=SCOPE_IDENTITY();
+			END
+			ELSE
+			BEGIN
+				UPDATE PurchaseDetail
+				SET LineId = @LineId
+				WHERE PurchaseDetailId = @PurchaseDetailId
 			END
 
             -- If It's Account Code
@@ -506,7 +509,8 @@ BEGIN
 			-- Section 8c: updated row.
 			-- When @IsBill = 1, update the source detail row. When @IsBill = 0,
 			-- the source detail is already updated by the PO-to-bill path, so this
-			-- branch still updates the journal rows without reinserting source data.
+			-- branch must still persist LineId back to PurchaseDetail before
+			-- updating the journal rows.
 			IF @IsBill = 1 --If bill then update to source otherwise for PO the source already updated 
 			BEGIN
 				UPDATE PurchaseDetail
@@ -537,6 +541,12 @@ BEGIN
 					,TariffPercent     = @TariffPercent
 					,ItemVolume        = @ItemVolume
 				WHERE PurchaseDetailId   = @PurchaseDetailId;
+			END
+			ELSE
+			BEGIN
+				UPDATE PurchaseDetail
+				SET LineId = @LineId
+				WHERE PurchaseDetailId = @PurchaseDetailId
 			END
 
 			--if itemcode is changed then calculate old itemcode too
@@ -619,11 +629,19 @@ BEGIN
 			-- Section 8d: deleted row.
 			-- When @IsBill = 1, delete the source detail row and its journal rows.
 			-- When @IsBill = 0, the source detail stays in the PO, but the bill
-			-- journal rows for that source detail are removed.
-			IF @IsBill = 1 --If bill then delete otherwise for PO the source already updated to NULL
+			-- journal rows for that source detail are removed. Persist LineId
+			-- back to the PO row as well so reordered receive edits do not leave
+			-- stale or duplicate PurchaseDetail line numbers.
+			IF @IsBill = 1 --If bill then delete otherwise for PO the source detail remains
 			BEGIN
 				DELETE FROM ShipmentAllocation WHERE PurchaseDetailId = @PurchaseDetailId
 				DELETE FROM PurchaseDetail WHERE PurchaseDetailId = @PurchaseDetailId
+			END
+			ELSE
+			BEGIN
+				UPDATE PurchaseDetail
+				SET LineId = @LineId
+				WHERE PurchaseDetailId = @PurchaseDetailId
 			END
 
 			DELETE FROM TransactionJournalDetail WHERE SourceDetailId=@PurchaseDetailId AND TxId=@TxId
@@ -691,3 +709,5 @@ BEGIN
 	--   5. @IsBill = 0 still reuses existing PurchaseDetail rows while creating,
 	--      updating, or deleting the bill-side journal rows.
 END
+
+

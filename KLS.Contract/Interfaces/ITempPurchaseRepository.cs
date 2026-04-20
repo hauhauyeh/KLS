@@ -10,5 +10,7 @@ namespace KLS.Contract.Interfaces
     public interface ITempPurchaseRepository : IRepository<TempPurchase>
     {
         IQueryable<TempPurchaseItem>? GetList(TempPurchaseReq tempReq);
+
+        void Reorder(TempPurchaseReorderReq reorderReq);
     }
 }
