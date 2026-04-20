@@ -148,7 +148,7 @@ namespace KLS.Services
 
         public PayPeriod? GetPayPeriod()
         {
-            return Uow.Timesheets.GetPayPeriod();
+            return Uow.Timesheets.GetPayPeriod(null, null, "Previous");
         }
 
         public List<PayPeriod> GetPayPeriods(int count)
