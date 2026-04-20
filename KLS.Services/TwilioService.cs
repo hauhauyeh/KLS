@@ -30,15 +30,15 @@ namespace KLS.Services
             {
                 TwilioClient.Init(accountSid, authToken);
 
-                ////var message = MessageResource.Create(
-                ////    body: messageBody,
-                ////    from: new Twilio.Types.PhoneNumber(from),
-                ////    to: new Twilio.Types.PhoneNumber(to)
-                ////);
+                var message = MessageResource.Create(
+                    body: messageBody,
+                    from: new Twilio.Types.PhoneNumber(from),
+                    to: new Twilio.Types.PhoneNumber(to)
+                );
 
-                //return message.ErrorCode == null;
+                return message.ErrorCode == null;
 
-                return true;
+                //return true;
             }
 
             return false;

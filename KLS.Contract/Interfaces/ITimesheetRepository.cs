@@ -13,7 +13,7 @@ namespace KLS.Contract.Interfaces
 
         void Inject(int timesheetId, bool isClone);
 
-        PayPeriod? GetPayPeriod();
+        PayPeriod? GetPayPeriod(int? payOption, DateOnly? paymentDate, string mode = "Previous");
 
         List<PayPeriod> GetPayPeriods(int count);
 

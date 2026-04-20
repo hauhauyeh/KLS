@@ -43,16 +43,14 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("{vendorPaymentId}")]
         public IActionResult GetById(int vendorPaymentId)
         {
-            //return Ok(_payrollDetailService.GetById(vendorPaymentId));
-            return Ok();
+            return Ok(_payrollDetailService.GetById(vendorPaymentId));
         }
 
 
         [HttpPost("InjectEmp")]
         public IActionResult InjectEmp([FromBody] PayrollInjectEmpReq injectEmpReq)
         {
-            _payrollDetailService.InjectEmp(injectEmpReq);
-            return Ok();
+            return Ok(_payrollDetailService.InjectEmp(injectEmpReq));
         }
 
 
@@ -68,9 +66,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPost]
         [DisplayName("Create/Update Payroll")]
         [PermissionKey("Employee.Payroll.Save")]
-        public IActionResult Save([FromBody] PayrollReq payrollReq)
+        public IActionResult Save([FromBody] Payroll payroll)
         {
-            //_payrollDetailService.SavePayroll(payrollReq);
+            _payrollDetailService.SavePayroll(payroll);
             return Ok();
         }
 
@@ -100,6 +98,8 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("VoidCheck/{vendorPaymentId}")]
+        [DisplayName("Void Payroll Check")]
+        [PermissionKey("Employee.Payroll.VoidCheck")]
         public IActionResult VoidCheck(int vendorPaymentId)
         {
             _payrollDetailService.VoidCheck(vendorPaymentId);
@@ -109,10 +109,32 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("UnVoidCheck/{vendorPaymentId}")]
+        [DisplayName("UnVoid Payroll Check")]
+        [PermissionKey("Employee.Payroll.UnVoidCheck")]
         public IActionResult UnVoidCheck(int vendorPaymentId)
         {
             _vendorPaymentService.UnVoidCheck(vendorPaymentId);
 
+            return Ok();
+        }
+
+
+        [HttpPost("SendStatement/{vendorPaymentId}")]
+        [DisplayName("Send Statement On Text Message")]
+        [PermissionKey("Employee.Payroll.SendStatement")]
+        public IActionResult SendTextStmt(int vendorPaymentId)
+        {
+            _payrollDetailService.SendTextStmt(vendorPaymentId);
+            return Ok();
+        }
+
+
+        [HttpPost("UpdateReferenceId")]
+        [DisplayName("Update Payroll Reference Id")]
+        [PermissionKey("Employee.Payroll.UpdateReferenceId")]
+        public IActionResult UpdateReferenceId([FromBody] PayrollUpdateReq updateReq)
+        {
+            _payrollDetailService.UpdateReferenceId(updateReq);
             return Ok();
         }
 

@@ -95,6 +95,27 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Inject] @EmpId,@VendorPaymentId", EmpIdParam, VendorPaymentIdParam);
         }
 
+        public void SavePayroll(Payroll payroll)
+        {
+            var VendorPaymentIdParam = new SqlParameter("@VendorPaymentId", payroll.VendorPaymentId);
+
+            var PaymentDateParam = new SqlParameter("@PaymentDate", payroll.PaymentDate);
+
+            var PaymentMethodParam = new SqlParameter("@PaymentMethod", payroll.PaymentMethod);
+
+            var FromAccountIdParam = new SqlParameter("@FromAccountId", payroll.FromAccountId);
+
+            var NotesParam = (!string.IsNullOrEmpty(payroll.Notes)) ? new SqlParameter("@Notes", payroll.Notes) : new SqlParameter("@Notes", DBNull.Value);
+
+            var PayrollStartDateParam = payroll.PayPeriodStart.HasValue ? new SqlParameter("@PayrollStartDate", payroll.PayPeriodStart) : new SqlParameter("@PayrollStartDate", DBNull.Value);
+
+            var PayrollEndDateParam = payroll.PayPeriodEnd.HasValue ? new SqlParameter("@PayrollEndDate", payroll.PayPeriodEnd) : new SqlParameter("@PayrollEndDate", DBNull.Value);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Insert] @VendorPaymentId,@PaymentDate,@PaymentMethod,@FromAccountId,@Notes,@PayrollStartDate,@PayrollEndDate,@EmpId", VendorPaymentIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, NotesParam, PayrollStartDateParam, PayrollEndDateParam, EmpIdParam);
+        }
+
         public ImportPayrollResp ImportPayroll(string excelfile)
         {
             var FilePathParam = String.IsNullOrEmpty(excelfile) ? new SqlParameter("@FilePath", DBNull.Value) : new SqlParameter("@FilePath", excelfile);

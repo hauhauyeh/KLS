@@ -65,7 +65,7 @@ namespace KLS.Data.Repositories
 
             var PayOptionParam = new SqlParameter("@PayOption", tempPayroll.PayOption);
 
-            var PayDateParam = new SqlParameter("@PayDate", tempPayroll.PayDate);
+            var PayDateParam = tempPayroll.PayDate != default ? new SqlParameter("@PayDate", tempPayroll.PayDate) : new SqlParameter("@PayDate", DBNull.Value);
 
             var IsEmpFWHChangeParam = new SqlParameter("@IsEmpFWHChange", tempPayroll.IsEmpFWHChange);
 
@@ -101,7 +101,7 @@ namespace KLS.Data.Repositories
 
             var ReimbursementParam = tempPayroll.Reimbursement.HasValue ? new SqlParameter("@Reimbursement", tempPayroll.Reimbursement) : new SqlParameter("@Reimbursement", DBNull.Value);
 
-            DbContext.Database.ExecuteSqlRaw("[TempPayroll_Update] @TempPayrollId,@IsApplied,@TotalHour,@RegularHour,@OvertimeHour,@IsTotalHourChange,@IsRegularHourChange,@IsOTHourChange,@Rate,@RegularWage,@AddOvertime,@AddCommission,@PreTax401K,@PreTaxHealthIns,@PreTaxVisionIns,@PreTaxDentalIns,@ChildSup1,@ChildSup2,@Garnishment,@LoanRepayment,@VendorPaymentId,@PayOption,@PayDate,@IsEmpFWHChange,@EFWH,@IsEmpOASDIChange,@EOASDI,@IsEmpHIChange,@EHI,@IsCOASDIChange,@COASDI,@IsCHIChange,@CHI,@IsCFUTAChange,@CFUTA,@IsCSUTAChange,@CSUTA,@Cash,@Deduction,@Reimbursement", TempPayrollIdParam, IsAppliedParam, TotalHourParam, RegularHourParam, OvertimeHourParam, IsTotalHourChangeParam, IsRegularHourChangeParam, IsOTHourChangeParam, RateParam, RegularWageParam, AddOvertimeParam, AddCommissionParam, PreTax401KParam, PreTaxHealthInsParam, PreTaxVisionInsParam, PreTaxDentalInsParam, ChildSup1Param, ChildSup2Param, GarnishmentParam, LoanRepaymentParam, VendorPmtNumParam, PayOptionParam, PayDateParam, IsEmpFWHChangeParam, EmpFWHParam, IsEmpOASDIChangeParam, EmpOASDIParam, IsEmpHIChangeParam, EmpHIParam, IsCOASDIChangeParam, CompanyOASDIParam, IsCHIChangeParam, CompanyHIParam, IsCFUTAChangeParam, CompanyFUTAParam, IsCSUTAChangeParam, CompanySUTAParam, CashPayParam, DeductionParam, ReimbursementParam);
+            DbContext.Database.ExecuteSqlRaw("[TempPayroll_Update] @TempPayrollId,@IsApplied,@TotalHour,@RegularHour,@OvertimeHour,@IsTotalHourChange,@IsRegularHourChange,@IsOTHourChange,@Rate,@RegularWage,@AddOvertime,@AddCommission,@PreTax401K,@PreTaxHealthIns,@PreTaxVisionIns,@PreTaxDentalIns,@ChildSup1,@ChildSup2,@Garnishment,@LoanRepayment,@VendorPaymentId,@PayOption,@PayDate,@IsEmpFWHChange,@EFWH,@IsEmpOASDIChange,@EOASDI,@IsEmpHIChange,@EHI,@IsCOASDIChange,@COASDI,@IsCHIChange,@CHI,@IsCFUTAChange,@CFUTA,@IsCSUTAChange,@CSUTA,@CashPay,@Deduction,@Reimbursement", TempPayrollIdParam, IsAppliedParam, TotalHourParam, RegularHourParam, OvertimeHourParam, IsTotalHourChangeParam, IsRegularHourChangeParam, IsOTHourChangeParam, RateParam, RegularWageParam, AddOvertimeParam, AddCommissionParam, PreTax401KParam, PreTaxHealthInsParam, PreTaxVisionInsParam, PreTaxDentalInsParam, ChildSup1Param, ChildSup2Param, GarnishmentParam, LoanRepaymentParam, VendorPmtNumParam, PayOptionParam, PayDateParam, IsEmpFWHChangeParam, EmpFWHParam, IsEmpOASDIChangeParam, EmpOASDIParam, IsEmpHIChangeParam, EmpHIParam, IsCOASDIChangeParam, CompanyOASDIParam, IsCHIChangeParam, CompanyHIParam, IsCFUTAChangeParam, CompanyFUTAParam, IsCSUTAChangeParam, CompanySUTAParam, CashPayParam, DeductionParam, ReimbursementParam);
         }
     }
 }

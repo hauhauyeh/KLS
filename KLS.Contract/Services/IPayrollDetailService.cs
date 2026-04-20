@@ -12,14 +12,22 @@ namespace KLS.Contract.Services
     {
         PagingResponse<PayrollList> GetPagedList(PayrollReq payrollReq);
 
-        void InjectEmp(PayrollInjectEmpReq injectEmpReq);
+        Payroll GetById(int vendorPaymentId);
+
+        PayPeriod? InjectEmp(PayrollInjectEmpReq injectEmpReq);
 
         void Inject(int vendorPaymentId);
+
+        void SavePayroll(Payroll payroll);
 
         void Delete(int vendorPaymentId);
 
         ImportPayrollResp Import(IFormFile payrollFile);
 
         void VoidCheck(int vendorPaymentId);
+
+        void SendTextStmt(int vendorPaymentId);
+
+        void UpdateReferenceId(PayrollUpdateReq updateReq);
     }
 }
