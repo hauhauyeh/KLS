@@ -79,6 +79,8 @@ namespace KLS.Models
 
         public bool HasFallback { get; set; }
 
+        public bool IsBillStage => StageId == 6;
+
         [NotMapped]
         public bool IsPdfExist { get; set; }
     }

@@ -18,6 +18,8 @@ namespace KLS.Contract.Services
 
         TempPurchaseItem UpdateUnit(TempPurchaseItem tempPurchase);
 
+        void Reorder(TempPurchaseReorderReq reorderReq);
+
         void Delete(int tempId);
 
         void Clear(TempPurchaseReq tempReq);
