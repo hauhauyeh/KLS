@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# KLS runtime uploads — item images and generated PDFs
+KLS.API/wwwroot/CategoryImages/
+KLS.API/wwwroot/Images/items/
+KLS.API/wwwroot/BillPdf/
+KLS.API/wwwroot/InvoicePdf/
+KLS.API/wwwroot/MergeInvoice/
+KLS.API/wwwroot/Pdf/
+KLS.API/wwwroot/Payroll/
