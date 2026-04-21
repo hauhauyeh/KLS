@@ -182,9 +182,12 @@ namespace KLS.Services
             var customer = Uow.Customers.GetById(dto.PayeeId);
             var existingPayee = Uow.Payees.GetById(dto.PayeeId);
 
-            var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
-            var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
-            var distance = GetDistance(dto.FullAddress, mapAPIKey);
+            // Keep the Google-selected geocode values unless the user explicitly reselects an address
+            // from autocomplete. Manual edits to Address/City/State/ZipCode are allowed for suite/site
+            // adjustments and should not silently overwrite GooglePlaceId/lat/long/FormatAddress.
+            // var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
+            // var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
+            // var distance = GetDistance(dto.FullAddress, mapAPIKey);
 
             if (customer == null || existingPayee == null)
                 return null;
@@ -222,14 +225,16 @@ namespace KLS.Services
             existingPayee.Phone6 = dto.Phone6;
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
-            if (latlong != null)
-            {
-                existingPayee.GoogleLat = latlong.Latitude;
-                existingPayee.GoogleLong = latlong.Longitude;
-                existingPayee.GooglePlaceId = latlong.PlaceId;
-                existingPayee.FormatAddress = latlong.FormatAddress;
-                existingPayee.Distance = distance;
-            }
+            // Disabled: automatic re-geocoding on save can replace a user-confirmed Google selection
+            // after small manual address edits such as suite or site numbers.
+            // if (latlong != null)
+            // {
+            //     existingPayee.GoogleLat = latlong.Latitude;
+            //     existingPayee.GoogleLong = latlong.Longitude;
+            //     existingPayee.GooglePlaceId = latlong.PlaceId;
+            //     existingPayee.FormatAddress = latlong.FormatAddress;
+            //     existingPayee.Distance = distance;
+            // }
 
             Uow.Payees.Update(existingPayee);
 
