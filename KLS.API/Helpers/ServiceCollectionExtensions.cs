@@ -114,6 +114,8 @@ namespace KLS.API.Helpers
             services.AddScoped<IRest365Service, Rest365Service>();
             services.AddScoped<IRest365DetailService, Rest365DetailService>();
             services.AddScoped<ISchedulerConfigService, SchedulerConfigService>();
+            services.AddScoped<IWarehousePCService, WarehousePCService>();
+            services.AddScoped<ILabelPrintLogService, LabelPrintLogService>();
             services.AddScoped<IHomeService, HomeService>();
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddMemoryCache();

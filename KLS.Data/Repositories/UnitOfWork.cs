@@ -243,6 +243,10 @@ namespace KLS.Data.Repositories
 
         public ISchedulerConfigRepository SchedulerConfigs { get { return new SchedulerConfigRepository(DbContext); } }
 
+        public IWarehousePCRepository WarehousePCs { get { return new WarehousePCRepository(DbContext); } }
+
+        public ILabelPrintLogRepository LabelPrintLogs { get { return new LabelPrintLogRepository(DbContext); } }
+
         public IPermissionRepository Permissions { get { return new PermissionRepository(DbContext); } }
 
         public IRolePermissionRepository RolePermissions { get { return new RolePermissionRepository(DbContext); } }

@@ -121,6 +121,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<TempSalesPromo>().ToTable("TempSalesPromo");
             modelBuilder.Entity<Permission>().ToTable("Permission");
             modelBuilder.Entity<RolePermission>().ToTable("RolePermission");
+            modelBuilder.Entity<WarehousePC>().ToTable("WarehousePC");
+            modelBuilder.Entity<LabelPrintLog>().ToTable("LabelPrintLog");
 
             modelBuilder.Entity<Country>().ToTable("Country");
             modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
@@ -338,6 +340,10 @@ namespace KLS.Data.DataContext
         public DbSet<Permission> Permissions { get; set; }
 
         public DbSet<RolePermission> RolePermissions { get; set; }
+
+        public DbSet<WarehousePC> WarehousePCs { get; set; }
+
+        public DbSet<LabelPrintLog> LabelPrintLogs { get; set; }
 
         // Marketplace
         public DbSet<MarketAccount> MarketAccounts { get; set; }
