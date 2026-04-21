@@ -200,6 +200,10 @@ namespace KLS.Contract.Interfaces
 
         ISchedulerConfigRepository SchedulerConfigs { get; }
 
+        IWarehousePCRepository WarehousePCs { get; }
+
+        ILabelPrintLogRepository LabelPrintLogs { get; }
+
         IPermissionRepository Permissions { get; }
 
         IRolePermissionRepository RolePermissions { get; }
