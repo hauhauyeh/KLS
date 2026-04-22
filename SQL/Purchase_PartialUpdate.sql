@@ -1,3 +1,4 @@
+
 -- Purchase_PartialUpdate
 -- Final live-aligned version for PO receive LineId persistence
 -- Baseline: dbo.Purchase_PartialUpdate from KLS_Latest
@@ -16,7 +17,7 @@
 --   6. I/U/D journal behavior stays in the same baseline branches
 --   7. Recalc enqueue remains immediately after commit
 
-CREATE   PROCEDURE [dbo].[Purchase_PartialUpdate]
+CREATE PROCEDURE [dbo].[Purchase_PartialUpdate]
 
 	@PurchaseId INT,
 	@EmpId INT,
@@ -271,8 +272,16 @@ BEGIN
             @FinalPrice         = FinalPrice,
 			@ImportCommission   = ImportCommission,
             @FinalExtTotal      = FinalExtTotal,
-			@BaseReceiveQty     = ROUND(ReceiveQty / FactorToBase, 6),
-			@BaseFinalQty       = ROUND(FinalQty / FactorToBase, 6),
+			-- 2026-04-20: Base qty must be recomputed here because the narrowed
+			-- calc follow-up no longer repairs PurchaseDetail after partial update.
+			@BaseReceiveQty     = CASE
+									WHEN ReceiveQty IS NULL OR NULLIF(FactorToBase, 0) IS NULL THEN NULL
+									ELSE ROUND(ReceiveQty / FactorToBase, 6)
+								 END,
+			@BaseFinalQty       = CASE
+									WHEN FinalQty IS NULL OR NULLIF(FactorToBase, 0) IS NULL THEN NULL
+									ELSE ROUND(FinalQty / FactorToBase, 6)
+								 END,
 			@FactorToBase       = FactorToBase,
             @ExpiryDate         = ExpiryDate,
             @DiscountPercent    = DiscountPercent,
@@ -310,6 +319,7 @@ BEGIN
 			-- corresponding journal rows.
 			IF @IsBill = 1 --If bill then insert to source otherwise for PO the source detail is already there 
 			BEGIN
+				-- 2026-04-20: Keep PurchaseDetail base qty columns in sync at insert time.
 				INSERT INTO [dbo].[PurchaseDetail]
 				   ([PurchaseId]
 				   ,[LineId]
@@ -328,6 +338,8 @@ BEGIN
 				   ,[OrdQty1]
 				   ,[ReceiveQty]
 				   ,[FinalQty]
+				   ,[BaseReceiveQty]
+				   ,[BaseFinalQty]
 				   ,[BillPrice]
 				   ,[BillExtTotal]
 				   ,[FinalPrice]
@@ -359,6 +371,8 @@ BEGIN
 				   ,@OrdQty1
 				   ,@ReceiveQty
 				   ,@FinalQty
+				   ,@BaseReceiveQty
+				   ,@BaseFinalQty
 				   ,@BillPrice
 				   ,@BillExtTotal
 				   ,@FinalPrice
@@ -377,8 +391,16 @@ BEGIN
 			END
 			ELSE
 			BEGIN
+				-- 2026-04-20: PO-to-bill can reuse an existing detail row while changing
+				-- receive/final qty, so persist base qty and factor here too.
 				UPDATE PurchaseDetail
-				SET LineId = @LineId
+				SET LineId         = @LineId,
+					ReceiveQty     = @ReceiveQty,
+					FinalQty       = @FinalQty,
+					BillQty        = @BillQty,
+					BaseReceiveQty = @BaseReceiveQty,
+					BaseFinalQty   = @BaseFinalQty,
+					FactorToBase   = @FactorToBase
 				WHERE PurchaseDetailId = @PurchaseDetailId
 			END
 
@@ -527,6 +549,8 @@ BEGIN
 					,OrdQty1           = @OrdQty1
 					,ReceiveQty        = @ReceiveQty
 					,FinalQty          = @FinalQty
+					,BaseReceiveQty    = @BaseReceiveQty
+					,BaseFinalQty      = @BaseFinalQty
 					,BillPrice         = @BillPrice
 					,BillExtTotal      = @BillExtTotal
 					,FinalPrice        = @FinalPrice
@@ -544,8 +568,16 @@ BEGIN
 			END
 			ELSE
 			BEGIN
+				-- 2026-04-20: When qty or factor changes on update, base qty must change
+				-- in the same write so PurchaseDetail does not drift from journal detail.
 				UPDATE PurchaseDetail
-				SET LineId = @LineId
+				SET LineId         = @LineId,
+					ReceiveQty     = @ReceiveQty,
+					FinalQty       = @FinalQty,
+					BillQty        = @BillQty,
+					BaseReceiveQty = @BaseReceiveQty,
+					BaseFinalQty   = @BaseFinalQty,
+					FactorToBase   = @FactorToBase
 				WHERE PurchaseDetailId = @PurchaseDetailId
 			END
 
@@ -639,6 +671,8 @@ BEGIN
 			END
 			ELSE
 			BEGIN
+				-- 2026-04-20: Even in @IsBill = 0 reuse mode, keep qty/base-qty columns
+				-- aligned on the source detail row instead of only updating LineId.
 				UPDATE PurchaseDetail
 				SET LineId = @LineId
 				WHERE PurchaseDetailId = @PurchaseDetailId
@@ -709,5 +743,7 @@ BEGIN
 	--   5. @IsBill = 0 still reuses existing PurchaseDetail rows while creating,
 	--      updating, or deleting the bill-side journal rows.
 END
+
+
 
 
