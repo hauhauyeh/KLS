@@ -145,7 +145,12 @@ namespace KLS.Services
             var routeLookup = assignRoutes?
                 .Where(r => !string.IsNullOrWhiteSpace(r.TruckNumber))
                 .GroupBy(r => r.TruckNumber!.Trim())
-                .ToDictionary(g => g.Key, g => g.ToList());
+                .ToDictionary(
+                    g => g.Key,
+                    g => g
+                        .OrderBy(r => r.TruckRouteOrder ?? int.MaxValue)
+                        .ThenBy(r => r.SalesRouteId)
+                        .ToList());
 
             var assignTrucks = trucks
            .Select(truck =>
@@ -166,8 +171,9 @@ namespace KLS.Services
                };
            })
 
-           // Sort by SalesRouteId first, then TruckNumber
-           .OrderBy(at => at.Routes?.FirstOrDefault()?.SalesRouteId ?? int.MaxValue)
+           // Preserve explicit assign-truck sequence when it exists, then fall back.
+           .OrderBy(at => at.Routes?.FirstOrDefault()?.TruckRouteOrder ?? int.MaxValue)
+           .ThenBy(at => at.Routes?.FirstOrDefault()?.SalesRouteId ?? int.MaxValue)
            .ThenBy(at => at.TruckNumber)
            .ToList();
 
@@ -179,17 +185,27 @@ namespace KLS.Services
             if (assignTrucks == null || assignTrucks.Count == 0)
                 return;
 
-            var incoming = assignTrucks
-                .Where(t => t.Routes != null && t.Routes.Count > 0)
-                .SelectMany(t => t.Routes!.Select(r => new
+            var incoming = new List<(DateOnly ShipDate, string ShipRoute, string? TruckNumber, int? Deliverby, int TruckRouteOrder)>();
+            var truckRouteOrder = 0;
+
+            foreach (var truck in assignTrucks.Where(t => t.Routes != null && t.Routes.Count > 0))
+            {
+                foreach (var route in truck.Routes!)
                 {
-                    ShipDate = r.ShipDate,
-                    ShipRoute = (r.ShipRoute ?? "").Trim(),
-                    TruckNumber = string.IsNullOrWhiteSpace(t.TruckNumber) ? null : t.TruckNumber.Trim(),
-                    Deliverby = t.DriverId
-                }))
-               .Where(r => !string.IsNullOrWhiteSpace(r.ShipRoute))
-               .ToList();
+                    var shipRoute = (route.ShipRoute ?? "").Trim();
+                    if (string.IsNullOrWhiteSpace(shipRoute))
+                        continue;
+
+                    truckRouteOrder += 1;
+                    incoming.Add((
+                        route.ShipDate,
+                        shipRoute,
+                        string.IsNullOrWhiteSpace(truck.TruckNumber) ? null : truck.TruckNumber.Trim(),
+                        truck.DriverId,
+                        truckRouteOrder
+                    ));
+                }
+            }
 
             if (incoming.Count == 0)
                 return;
@@ -200,8 +216,9 @@ namespace KLS.Services
                 x => x.ShipRoute,
                 x => new
                 {
-                    x.TruckNumber,
-                    x.Deliverby
+                    TruckNumber = x.TruckNumber,
+                    Deliverby = x.Deliverby,
+                    TruckRouteOrder = x.TruckRouteOrder
                 },
                 StringComparer.OrdinalIgnoreCase);
 
@@ -225,6 +242,24 @@ namespace KLS.Services
 
             Uow.Commit();
             SyncByDate(shipDate);
+
+            var salesRoutes = Uow.SalesRoutes.Find(r => r.ShipDate == shipDate).ToList();
+            foreach (var route in salesRoutes)
+            {
+                route.TruckRouteOrder = null;
+
+                var shipRoute = route.ShipRoute?.Trim();
+                if (!string.IsNullOrWhiteSpace(shipRoute) &&
+                    routeAssignments.TryGetValue(shipRoute, out var assignment) &&
+                    !string.IsNullOrWhiteSpace(assignment.TruckNumber))
+                {
+                    route.TruckRouteOrder = assignment.TruckRouteOrder;
+                }
+
+                Uow.SalesRoutes.Update(route);
+            }
+
+            Uow.Commit();
         }
 
         public void SyncByDate(DateOnly shipDate)

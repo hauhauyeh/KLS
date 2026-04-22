@@ -1,7 +1,6 @@
 ﻿using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
-using OneOf.Types;
 
 namespace KLS.API.Controllers.Warehouse
 {

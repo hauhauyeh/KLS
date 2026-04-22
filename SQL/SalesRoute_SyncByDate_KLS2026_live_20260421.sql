@@ -1,9 +1,5 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
-CREATE OR ALTER PROCEDURE [dbo].[SalesRoute_SyncByDate]
+CREATE   PROCEDURE [dbo].[SalesRoute_SyncByDate]
     @ShipDate DATE
 AS
 BEGIN
@@ -161,10 +157,6 @@ BEGIN
     SET
         sr.TruckNumber = ar.TruckNumber,
         sr.Driver = ar.Driver,
-        sr.TruckRouteOrder = CASE
-            WHEN ar.TruckNumber IS NULL THEN NULL
-            ELSE sr.TruckRouteOrder
-        END,
         sr.UpdatedAt = GETUTCDATE()
     FROM dbo.SalesRoute AS sr
     INNER JOIN #ActualRoutes AS ar
@@ -172,8 +164,7 @@ BEGIN
        AND ar.ShipRoute = LTRIM(RTRIM(sr.ShipRoute))
     WHERE sr.ShipDate = @ShipDate
       AND (ISNULL(sr.TruckNumber, '') <> ISNULL(ar.TruckNumber, '')
-       OR ISNULL(sr.Driver, '') <> ISNULL(ar.Driver, '')
-       OR (ar.TruckNumber IS NULL AND sr.TruckRouteOrder IS NOT NULL));
+       OR ISNULL(sr.Driver, '') <> ISNULL(ar.Driver, ''));
 
     SET @UpdatedCount = @@ROWCOUNT;
 
@@ -182,7 +173,6 @@ BEGIN
         ShipDate,
         ShipRoute,
         TruckNumber,
-        TruckRouteOrder,
         Driver,
         PrintCount,
         CreatedAt
@@ -191,7 +181,6 @@ BEGIN
         ar.ShipDate,
         ar.ShipRoute,
         ar.TruckNumber,
-        NULL,
         ar.Driver,
         0,
         GETUTCDATE()
@@ -208,4 +197,5 @@ BEGIN
         DeletedCount = @DeletedCount,
         UpdatedCount = @UpdatedCount;
 END
-GO
+
+
