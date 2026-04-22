@@ -1,5 +1,4 @@
 using KLS.Contract.Services;
-using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KLS.API.Controllers.Service
