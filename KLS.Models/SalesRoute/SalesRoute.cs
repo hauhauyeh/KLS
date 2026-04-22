@@ -36,6 +36,8 @@ namespace KLS.Models
 
         public string? TruckNumber { get; set; }
 
+        public int? TruckRouteOrder { get; set; }
+
         public decimal? BeginMileage { get; set; }
 
         public decimal? EndMileage { get; set; }
