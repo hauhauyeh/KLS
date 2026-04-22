@@ -1,7 +1,3 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 CREATE PROCEDURE [dbo].[PurchaseOrder_CopyToBill] --[PurchaseOrder_CopyToBill] 31,60,null
 	
@@ -64,7 +60,9 @@ BEGIN
 		ON pd.PurchaseDetailId = r.PurchaseDetailId
 	WHERE pd.PurchaseId = @PurchaseId;
 
-	-- 1. update source
+	-- 2026-04-20: copy-to-bill writes ReceiveQty / FinalQty directly on the PO
+	-- detail before Purchase_PartialUpdate runs, so BaseReceiveQty / BaseFinalQty
+	-- must be updated in the same statement to avoid stale PurchaseDetail values.
 	UPDATE pd
 	SET 
 		ReceiveQty =
@@ -87,6 +85,62 @@ BEGIN
 						ELSE r.ReceiveQty
 					END
 				ELSE r.ReceiveQty
+			END,
+		BaseReceiveQty =
+			CASE
+				WHEN
+					CASE WHEN r.ReceiveQty IS NOT NULL THEN
+							CASE
+								WHEN pd.IsFree = 1 THEN r.ReceiveQty
+								WHEN pd.IsOut  = 1 THEN 0
+								WHEN pd.IsCRCG = 1 THEN 0
+								ELSE r.ReceiveQty
+							END
+						ELSE r.ReceiveQty
+					END IS NULL
+					OR NULLIF(pd.FactorToBase, 0) IS NULL
+				THEN NULL
+				ELSE ROUND(
+					(
+						CASE WHEN r.ReceiveQty IS NOT NULL THEN
+								CASE
+									WHEN pd.IsFree = 1 THEN r.ReceiveQty
+									WHEN pd.IsOut  = 1 THEN 0
+									WHEN pd.IsCRCG = 1 THEN 0
+									ELSE r.ReceiveQty
+								END
+							ELSE r.ReceiveQty
+						END
+					) / pd.FactorToBase, 6)
+			END,
+		BaseFinalQty =
+			CASE
+				WHEN
+					CASE
+						WHEN r.ReceiveQty IS NOT NULL THEN
+							CASE
+								WHEN pd.IsFree = 1 THEN 0
+								WHEN pd.IsOut  = 1 THEN 0
+								WHEN pd.IsCRCG = 1 THEN r.ReceiveQty
+								ELSE r.ReceiveQty
+							END
+						ELSE r.ReceiveQty
+					END IS NULL
+					OR NULLIF(pd.FactorToBase, 0) IS NULL
+				THEN NULL
+				ELSE ROUND(
+					(
+						CASE
+							WHEN r.ReceiveQty IS NOT NULL THEN
+								CASE
+									WHEN pd.IsFree = 1 THEN 0
+									WHEN pd.IsOut  = 1 THEN 0
+									WHEN pd.IsCRCG = 1 THEN r.ReceiveQty
+									ELSE r.ReceiveQty
+								END
+							ELSE r.ReceiveQty
+						END
+					) / pd.FactorToBase, 6)
 			END
 	FROM PurchaseDetail AS pd
 	INNER JOIN @Receivetable AS r
@@ -147,4 +201,4 @@ BEGIN
 	--5. 
 	EXEC [Purchase_PartialUpdate] @PurchaseId,@EmpId,0
 END
-GO
+

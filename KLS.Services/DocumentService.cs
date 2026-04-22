@@ -696,7 +696,22 @@ namespace KLS.Services
             if (string.Equals(storageName, "Prepack", StringComparison.OrdinalIgnoreCase))
                 return 1;
 
-            return 2;
+            if (string.Equals(storageName, "Freezer", StringComparison.OrdinalIgnoreCase))
+                return 2;
+
+            if (string.Equals(storageName, "Warehouse", StringComparison.OrdinalIgnoreCase))
+                return 3;
+
+            if (string.Equals(storageName, "Driver", StringComparison.OrdinalIgnoreCase))
+                return 4;
+
+            if (string.Equals(storageName, "Store", StringComparison.OrdinalIgnoreCase))
+                return 5;
+
+            if (string.Equals(storageName, "Customer", StringComparison.OrdinalIgnoreCase))
+                return 6;
+
+            return 99;
         }
 
         // Default behavior keeps the historical product box merge:
@@ -836,7 +851,10 @@ namespace KLS.Services
 
         private List<SalesRoute> GetAssignedRoutes(DateOnly shipDate)
         {
-            return Uow.SalesRoutes.Find(c => c.ShipDate == shipDate).OrderBy(s => s.SalesRouteId).ToList();
+            return Uow.SalesRoutes.Find(c => c.ShipDate == shipDate)
+                .OrderBy(s => s.TruckRouteOrder ?? int.MaxValue)
+                .ThenBy(s => s.SalesRouteId)
+                .ToList();
         }
 
         private PdfGenerationResult GenerateInvoice(int salesId, bool isPrint)
