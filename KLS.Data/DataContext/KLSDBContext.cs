@@ -98,7 +98,6 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PrintLog>().ToTable("PrintLog");
             modelBuilder.Entity<CustomerPayment>().ToTable("CustomerPayment");
             modelBuilder.Entity<CustomerPaymentDetail>().ToTable("CustomerPaymentDetail");
-            modelBuilder.Entity<CustomerPaymentSourceUse>().ToTable("CustomerPaymentSourceUse");
             modelBuilder.Entity<TempCustomerPayment>().ToTable("TempCustomerPayment");
             modelBuilder.Entity<TempExtraPayment>().ToTable("TempExtraPayment");
             modelBuilder.Entity<Liability>().ToTable("Liability");
@@ -276,8 +275,6 @@ namespace KLS.Data.DataContext
         public DbSet<CustomerPayment> CustomerPayments { get; set; }
 
         public DbSet<CustomerPaymentDetail> CustomerPaymentDetails { get; set; }
-
-        public DbSet<CustomerPaymentSourceUse> CustomerPaymentSourceUses { get; set; }
 
         public DbSet<TempCustomerPayment> TempCustomerPayments { get; set; }
 

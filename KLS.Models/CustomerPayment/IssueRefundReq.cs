@@ -4,7 +4,7 @@ namespace KLS.Models
 {
     public class IssueRefundReq
     {
-        public int CustomerPaymentSourceUseId { get; set; }
+        public int PaymentDetailId { get; set; }
 
         public DateOnly? PaymentDate { get; set; }
 

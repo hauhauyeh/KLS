@@ -33,6 +33,16 @@ namespace KLS.Models
 
         public int? SourcePaymentNumber { get; set; }
 
+        public string? DetailRole { get; set; }
+
+        public int? SourceCustomerPaymentId { get; set; }
+
+        public int? SourceSalesId { get; set; }
+
+        public int? RefundPaymentId { get; set; }
+
+        public DateTime? RefundedAt { get; set; }
+
 
         [ForeignKey("SalesId")]
         public virtual Sales? Sales { get; set; }

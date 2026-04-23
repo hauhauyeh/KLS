@@ -4,7 +4,7 @@ namespace KLS.Models
 {
     public class RefundQueueRow
     {
-        public int CustomerPaymentSourceUseId { get; set; }
+        public int PaymentDetailId { get; set; }
 
         public int CustomerPaymentId { get; set; }
 

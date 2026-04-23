@@ -1,8 +1,7 @@
 -- Recalculate CustomerPayment.PaymentApplied and CustomerPayment.UnappliedAmount
--- from committed detail truth.
+-- from committed unified CustomerPaymentDetail truth.
 --
--- Use this after deploying v3 source-credit fixes, or anytime header amounts drift
--- from CustomerPaymentDetail / SourcePaymentNumber reality.
+-- Use this after unified-detail rollout, or anytime header amounts drift.
 
 ;WITH HeaderSource AS
 (
@@ -11,24 +10,25 @@
         cp.PaymentAmount,
         ISNULL(cp.AsIncome, 0) AS AsIncome,
         SourceUseRefundSelf = ISNULL((
-            SELECT SUM(ISNULL(su.Amount, 0))
-            FROM dbo.CustomerPaymentSourceUse su
-            WHERE su.CustomerPaymentId = cp.CustomerPaymentId
-              AND su.SourcePaymentNumber = cp.PaymentNumber
-              AND su.UseType = 'Refund'
+            SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+            FROM dbo.CustomerPaymentDetail pd
+            WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+              AND pd.DetailRole = 'AsRefund'
+              AND ISNULL(pd.SourceCustomerPaymentId, 0) = cp.CustomerPaymentId
         ), 0),
         SourceUseAsIncome = ISNULL((
-            SELECT SUM(ISNULL(su.Amount, 0))
-            FROM dbo.CustomerPaymentSourceUse su
-            WHERE su.CustomerPaymentId = cp.CustomerPaymentId
-              AND su.UseType = 'AsIncome'
+            SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+            FROM dbo.CustomerPaymentDetail pd
+            WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+              AND pd.DetailRole = 'AsIncome'
+              AND ISNULL(pd.SourceCustomerPaymentId, 0) <> cp.CustomerPaymentId
         ), 0),
         OwnCashApplied = ISNULL((
             SELECT SUM(ISNULL(pd.PaymentApplied, 0))
             FROM dbo.CustomerPaymentDetail pd
             WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
-              AND pd.IsCreditMemo = 0
-              AND pd.SourcePaymentNumber IS NULL
+              AND pd.DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+              AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
         ), 0),
         CreditMemoUsed = ISNULL((
             SELECT SUM(CASE WHEN pd.PaymentApplied < 0 THEN ISNULL(pd.PaymentApplied, 0) * -1 ELSE 0 END)
@@ -39,7 +39,7 @@
         ConsumedByOthers = ISNULL((
             SELECT SUM(ISNULL(pd.PaymentApplied, 0))
             FROM dbo.CustomerPaymentDetail pd
-            WHERE pd.SourcePaymentNumber = cp.PaymentNumber
+            WHERE pd.SourceCustomerPaymentId = cp.CustomerPaymentId
               AND pd.CustomerPaymentId != cp.CustomerPaymentId
         ), 0)
     FROM dbo.CustomerPayment cp

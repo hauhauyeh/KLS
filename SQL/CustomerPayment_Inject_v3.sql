@@ -53,8 +53,12 @@ BEGIN
             FROM dbo.CustomerPaymentDetail pd
             INNER JOIN dbo.CustomerPayment p
                 ON p.CustomerPaymentId = pd.CustomerPaymentId
-            WHERE p.PaymentDate < @PaymentDate
-               OR (p.PaymentDate = @PaymentDate AND p.CustomerPaymentId < @CustomerPaymentId)
+            WHERE (
+                    p.PaymentDate < @PaymentDate
+                 OR (p.PaymentDate = @PaymentDate AND p.CustomerPaymentId < @CustomerPaymentId)
+                  )
+              AND pd.SalesId > 0
+              AND ISNULL(pd.DetailRole, 'Invoice') IN ('Invoice', 'DebitMemo', 'CreditMemo', 'CCFee')
             GROUP BY pd.SalesId
         ),
         PriorDiscount AS
@@ -65,8 +69,12 @@ BEGIN
             FROM dbo.CustomerPaymentDetail pd
             INNER JOIN dbo.CustomerPayment p
                 ON p.CustomerPaymentId = pd.CustomerPaymentId
-            WHERE p.PaymentDate < @PaymentDate
-               OR (p.PaymentDate = @PaymentDate AND p.CustomerPaymentId < @CustomerPaymentId)
+            WHERE (
+                    p.PaymentDate < @PaymentDate
+                 OR (p.PaymentDate = @PaymentDate AND p.CustomerPaymentId < @CustomerPaymentId)
+                  )
+              AND pd.SalesId > 0
+              AND ISNULL(pd.DetailRole, 'Invoice') IN ('Invoice', 'DebitMemo', 'CreditMemo', 'CCFee')
             GROUP BY pd.SalesId
         )
         INSERT INTO dbo.TempCustomerPayment
@@ -108,12 +116,13 @@ BEGIN
             SUM(pd.PaymentDiscount),
             SUM(pd.ShortDiscount),
             SUM(pd.OtherDiscount),
-            MAX(CASE WHEN pd.IsCreditMemo = 1 THEN 1 ELSE 0 END),
-            MAX(CASE WHEN pd.IsCCFee = 1 THEN 1 ELSE 0 END),
+            MAX(CASE WHEN ISNULL(pd.DetailRole, '') = 'CreditMemo' OR pd.IsCreditMemo = 1 THEN 1 ELSE 0 END),
+            MAX(CASE WHEN ISNULL(pd.DetailRole, '') = 'CCFee' OR pd.IsCCFee = 1 THEN 1 ELSE 0 END),
             1 AS IsApplied,
             CASE
-                WHEN MAX(CASE WHEN pd.IsCCFee = 1 THEN 1 ELSE 0 END) = 1 THEN 'CCFee'
-                WHEN s.SalesTotal < 0 THEN 'CreditMemo'
+                WHEN MAX(CASE WHEN ISNULL(pd.DetailRole, '') = 'CCFee' OR pd.IsCCFee = 1 THEN 1 ELSE 0 END) = 1 THEN 'CCFee'
+                WHEN MAX(CASE WHEN ISNULL(pd.DetailRole, '') = 'CreditMemo' OR pd.IsCreditMemo = 1 THEN 1 ELSE 0 END) = 1 THEN 'CreditMemo'
+                WHEN MAX(CASE WHEN ISNULL(pd.DetailRole, '') = 'DebitMemo' THEN 1 ELSE 0 END) = 1 THEN 'DebitMemo'
                 ELSE 'Invoice'
             END,
             pd.SalesId,
@@ -138,6 +147,8 @@ BEGIN
         LEFT JOIN PriorDiscount prd ON prd.SalesId = pd.SalesId
         LEFT JOIN dbo.Term tm ON tm.TermId = s.TermId
         WHERE p.CustomerPaymentId = @CustomerPaymentId
+          AND pd.SalesId > 0
+          AND ISNULL(pd.DetailRole, 'Invoice') IN ('Invoice', 'DebitMemo', 'CreditMemo', 'CCFee')
         GROUP BY
             pd.SalesId,
             s.SalesNumber,
@@ -211,21 +222,16 @@ BEGIN
             0
         FROM
         (
-            SELECT pd.SourcePaymentNumber, SUM(ISNULL(pd.PaymentApplied, 0)) AS TotalConsumed
+            SELECT
+                pd.SourceCustomerPaymentId,
+                SUM(ISNULL(pd.PaymentApplied, 0)) AS TotalConsumed
             FROM dbo.CustomerPaymentDetail pd
             WHERE pd.CustomerPaymentId = @CustomerPaymentId
-              AND pd.SourcePaymentNumber IS NOT NULL
-            GROUP BY pd.SourcePaymentNumber
-
-            UNION ALL
-
-            SELECT su.SourcePaymentNumber, SUM(ISNULL(su.Amount, 0)) AS TotalConsumed
-            FROM dbo.CustomerPaymentSourceUse su
-            WHERE su.CustomerPaymentId = @CustomerPaymentId
-              AND NOT (su.UseType = 'Refund' AND su.SourcePaymentNumber = @PaymentNumber)
-            GROUP BY su.SourcePaymentNumber
+              AND pd.SourceCustomerPaymentId IS NOT NULL
+              AND pd.SourceCustomerPaymentId <> @CustomerPaymentId
+            GROUP BY pd.SourceCustomerPaymentId
         ) src
-        INNER JOIN dbo.CustomerPayment cp ON cp.PaymentNumber = src.SourcePaymentNumber
+        INNER JOIN dbo.CustomerPayment cp ON cp.CustomerPaymentId = src.SourceCustomerPaymentId
         LEFT JOIN dbo.Payee p ON p.PayeeId = cp.PayeeId
         GROUP BY
             cp.CustomerPaymentId,
@@ -261,17 +267,9 @@ BEGIN
         (
             SELECT pd.CustomerPaymentId, SUM(pd.PaymentApplied) AS TotalConsumed
             FROM dbo.CustomerPaymentDetail pd
-            WHERE pd.SourcePaymentNumber = @PaymentNumber
+            WHERE pd.SourceCustomerPaymentId = @CustomerPaymentId
               AND pd.CustomerPaymentId != @CustomerPaymentId
             GROUP BY pd.CustomerPaymentId
-
-            UNION ALL
-
-            SELECT su.CustomerPaymentId, SUM(su.Amount) AS TotalConsumed
-            FROM dbo.CustomerPaymentSourceUse su
-            WHERE su.SourcePaymentNumber = @PaymentNumber
-              AND su.CustomerPaymentId != @CustomerPaymentId
-            GROUP BY su.CustomerPaymentId
         ) cs
         INNER JOIN dbo.CustomerPayment cp2 ON cp2.CustomerPaymentId = cs.CustomerPaymentId
         GROUP BY cs.CustomerPaymentId, cp2.PaymentNumber, cp2.PaymentDate;
@@ -440,12 +438,13 @@ BEGIN
          OR cp.PaymentDate IS NULL
          OR cp.PaymentDate <= @PaymentDate
           )
-      AND cp.PaymentNumber NOT IN
+      AND cp.CustomerPaymentId NOT IN
       (
-          SELECT DISTINCT pd.SourcePaymentNumber
+          SELECT DISTINCT pd.SourceCustomerPaymentId
           FROM dbo.CustomerPaymentDetail pd
           WHERE pd.CustomerPaymentId = @CustomerPaymentId
-            AND pd.SourcePaymentNumber IS NOT NULL
+            AND pd.SourceCustomerPaymentId IS NOT NULL
+            AND pd.SourceCustomerPaymentId <> @CustomerPaymentId
       )
       AND ISNULL(cp.IsReturned, 0) = 0;
 END
