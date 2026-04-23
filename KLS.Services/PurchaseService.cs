@@ -225,7 +225,8 @@ namespace KLS.Services
                 r.ContainerType,
                 r.ContainerNo,
                 r.Status,
-                r.PayeeName
+                r.PayeeName,
+                r.IsLocked
             })
             .Select(g => new AssignedShipment
             {
@@ -236,6 +237,7 @@ namespace KLS.Services
                 ContainerNo = g.Key.ContainerNo,
                 Status = g.Key.Status,
                 PayeeName = g.Key.PayeeName,
+                IsShipmentPaid = g.Key.IsLocked,
 
                 Charges = g.Where(c => c.ChargeId != null)
                 .Select(x => new ShipmentCharge
