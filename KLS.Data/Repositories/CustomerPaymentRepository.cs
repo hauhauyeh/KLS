@@ -149,6 +149,21 @@ namespace KLS.Data.Repositories
             return DbContext.CustomerPaymentStatement.FromSqlRaw("[dbo].[CustomerPayment_GetStmt] @PayeeId", PayeeIdParam);
         }
 
+        public CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId)
+        {
+            var CustomerPaymentIdParam = new SqlParameter("@CustomerPaymentId", customerPaymentId);
+
+            return DbContext.CustomerPaymentEditEligibility
+                .FromSqlRaw("[dbo].[CustomerPayment_GetEditEligibility] @CustomerPaymentId", CustomerPaymentIdParam)
+                .AsEnumerable()
+                .FirstOrDefault() ?? new CustomerPaymentEditEligibility
+                {
+                    CanEdit = false,
+                    IsReadOnly = true,
+                    Reason = "Payment not found."
+                };
+        }
+
         public int SaveGatewayPayment(CreateGatewayPaymentReq paymentReq)
         {
             var PayeeIdParam = new SqlParameter("@PayeeId", paymentReq.PayeeId);

@@ -139,6 +139,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankReconBalance>().HasNoKey();
             modelBuilder.Entity<BankTx>().HasNoKey();
             modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
+            modelBuilder.Entity<CustomerPaymentEditEligibility>().HasNoKey();
 
             // Marketplace tables
             modelBuilder.Entity<MarketAccount>().ToTable("MarketAccount");
@@ -275,6 +276,8 @@ namespace KLS.Data.DataContext
         public DbSet<CustomerPayment> CustomerPayments { get; set; }
 
         public DbSet<CustomerPaymentDetail> CustomerPaymentDetails { get; set; }
+
+        public DbSet<CustomerPaymentEditEligibility> CustomerPaymentEditEligibility { get; set; }
 
         public DbSet<TempCustomerPayment> TempCustomerPayments { get; set; }
 

@@ -23,6 +23,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<CustomerPaymentStatement>? Statement(int payeeId);
 
+        CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId);
+
         int SaveGatewayPayment(CreateGatewayPaymentReq paymentReq);
     }
 }
