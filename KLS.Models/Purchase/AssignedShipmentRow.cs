@@ -26,6 +26,7 @@ namespace KLS.Models
         public decimal? ChargeAmount { get; set; }
         public string? Notes { get; set; }
         public string? UsedMethod { get; set; }
+        public bool IsLocked { get; set; }
     }
 
     public class AssignedShipment
@@ -37,6 +38,8 @@ namespace KLS.Models
         public string? ContainerType { get; set; }
         public string? ContainerNo { get; set; }
         public string? PayeeName { get; set; }
+
+        public bool IsShipmentPaid { get; set; }
 
         public string? Status { get; set; }
 
