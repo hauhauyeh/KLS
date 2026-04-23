@@ -188,7 +188,7 @@ namespace KLS.Services
 
             Uow.Commit();
 
-            Uow.Shipments.UpdateCharges(shipment.ShipmentId);
+            //Uow.Shipments.UpdateCharges(shipment.ShipmentId);
 
             return existing;
         }
