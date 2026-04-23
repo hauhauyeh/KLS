@@ -237,7 +237,8 @@ namespace KLS.Services
                 Status = g.Key.Status,
                 PayeeName = g.Key.PayeeName,
 
-                Charges = g.Select(x => new ShipmentCharge
+                Charges = g.Where(c => c.ChargeId != null)
+                .Select(x => new ShipmentCharge
                 {
                     ChargeId = x.ChargeId!.Value,
                     ShipmentId = g.Key.ShipmentId,
