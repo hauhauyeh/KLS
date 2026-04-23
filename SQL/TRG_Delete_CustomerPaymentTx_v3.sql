@@ -32,18 +32,9 @@ BEGIN
         SELECT 1
         FROM deleted d
         INNER JOIN dbo.CustomerPaymentDetail pd
-            ON pd.SourcePaymentNumber = d.PaymentNumber
+            ON pd.SourceCustomerPaymentId = d.CustomerPaymentId
         LEFT JOIN deleted d2
             ON d2.CustomerPaymentId = pd.CustomerPaymentId
-        WHERE d2.CustomerPaymentId IS NULL
-    )
-    OR EXISTS (
-        SELECT 1
-        FROM deleted d
-        INNER JOIN dbo.CustomerPaymentSourceUse su
-            ON su.SourcePaymentNumber = d.PaymentNumber
-        LEFT JOIN deleted d2
-            ON d2.CustomerPaymentId = su.CustomerPaymentId
         WHERE d2.CustomerPaymentId IS NULL
     )
     BEGIN
@@ -53,22 +44,13 @@ BEGIN
     END
 
     INSERT INTO @AffectedSourcePayment(PaymentNumber)
-    SELECT DISTINCT pd.SourcePaymentNumber
+    SELECT DISTINCT cp.PaymentNumber
     FROM dbo.CustomerPaymentDetail pd
     INNER JOIN deleted d
         ON d.CustomerPaymentId = pd.CustomerPaymentId
-    WHERE pd.SourcePaymentNumber IS NOT NULL;
-
-    INSERT INTO @AffectedSourcePayment(PaymentNumber)
-    SELECT DISTINCT su.SourcePaymentNumber
-    FROM dbo.CustomerPaymentSourceUse su
-    INNER JOIN deleted d
-        ON d.CustomerPaymentId = su.CustomerPaymentId
-    WHERE NOT EXISTS (
-            SELECT 1
-            FROM @AffectedSourcePayment a
-            WHERE a.PaymentNumber = su.SourcePaymentNumber
-    );
+    INNER JOIN dbo.CustomerPayment cp
+        ON cp.CustomerPaymentId = pd.SourceCustomerPaymentId
+    WHERE pd.SourceCustomerPaymentId IS NOT NULL;
 
     DECLARE @PmtDelete TABLE (
         AutoId INT IDENTITY(1,1) PRIMARY KEY,
@@ -99,15 +81,6 @@ BEGIN
             SELECT SalesId
             FROM dbo.CustomerPaymentDetail
             WHERE CustomerPaymentId = @CustomerPaymentId
-              AND IsCreditMemo = 1
-        )
-          AND AmountDue = SalesTotal;
-
-        DELETE FROM dbo.Sales
-        WHERE SalesId IN (
-            SELECT SalesId
-            FROM dbo.CustomerPaymentDetail
-            WHERE CustomerPaymentId = @CustomerPaymentId
               AND IsCCFee = 1
         );
 
@@ -118,6 +91,13 @@ BEGIN
         WHERE SourceDocType IN ('Customer Payment', 'Customer Refund', 'Other Incoming Payment')
           AND SourceDocNumber = @CustomerPaymentNumber;
 
+        UPDATE pd
+        SET
+            RefundPaymentId = NULL,
+            RefundedAt = NULL
+        FROM dbo.CustomerPaymentDetail pd
+        WHERE pd.RefundPaymentId = @CustomerPaymentId;
+
         IF @VendorPaymentId IS NOT NULL
         BEGIN
             DELETE FROM dbo.VendorPayment
@@ -127,19 +107,6 @@ BEGIN
         SET @RowNum += 1;
     END
 
-    DELETE su
-    FROM dbo.CustomerPaymentSourceUse su
-    INNER JOIN deleted d
-        ON d.CustomerPaymentId = su.CustomerPaymentId;
-
-    UPDATE su
-    SET
-        RefundPaymentId = NULL,
-        RefundedAt = NULL
-    FROM dbo.CustomerPaymentSourceUse su
-    INNER JOIN deleted d
-        ON su.RefundPaymentId = d.CustomerPaymentId;
-
     ;WITH SourceHeader AS
     (
         SELECT
@@ -147,24 +114,25 @@ BEGIN
             cp.PaymentAmount,
             ISNULL(cp.AsIncome, 0) AS AsIncome,
             SourceUseRefundSelf = ISNULL((
-                SELECT SUM(ISNULL(su.Amount, 0))
-                FROM dbo.CustomerPaymentSourceUse su
-                WHERE su.CustomerPaymentId = cp.CustomerPaymentId
-                  AND su.SourcePaymentNumber = cp.PaymentNumber
-                  AND su.UseType = 'Refund'
+                SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+                  AND pd.DetailRole = 'AsRefund'
+                  AND ISNULL(pd.SourceCustomerPaymentId, 0) = cp.CustomerPaymentId
             ), 0),
             SourceUseAsIncome = ISNULL((
-                SELECT SUM(ISNULL(su.Amount, 0))
-                FROM dbo.CustomerPaymentSourceUse su
-                WHERE su.CustomerPaymentId = cp.CustomerPaymentId
-                  AND su.UseType = 'AsIncome'
+                SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+                  AND pd.DetailRole = 'AsIncome'
+                  AND ISNULL(pd.SourceCustomerPaymentId, 0) <> cp.CustomerPaymentId
             ), 0),
             OwnCashApplied = ISNULL((
                 SELECT SUM(ISNULL(pd.PaymentApplied, 0))
                 FROM dbo.CustomerPaymentDetail pd
                 WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
-                  AND pd.IsCreditMemo = 0
-                  AND pd.SourcePaymentNumber IS NULL
+                  AND pd.DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+                  AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
             ), 0),
             CreditMemoUsed = ISNULL((
                 SELECT SUM(CASE WHEN pd.PaymentApplied < 0 THEN ISNULL(pd.PaymentApplied, 0) * -1 ELSE 0 END)
@@ -175,13 +143,8 @@ BEGIN
             ConsumedByOthers = ISNULL((
                 SELECT SUM(ISNULL(pd.PaymentApplied, 0))
                 FROM dbo.CustomerPaymentDetail pd
-                WHERE pd.SourcePaymentNumber = cp.PaymentNumber
+                WHERE pd.SourceCustomerPaymentId = cp.CustomerPaymentId
                   AND pd.CustomerPaymentId != cp.CustomerPaymentId
-            ), 0) + ISNULL((
-                SELECT SUM(ISNULL(su.Amount, 0))
-                FROM dbo.CustomerPaymentSourceUse su
-                WHERE su.SourcePaymentNumber = cp.PaymentNumber
-                  AND su.CustomerPaymentId != cp.CustomerPaymentId
             ), 0)
         FROM dbo.CustomerPayment cp
         INNER JOIN @AffectedSourcePayment a

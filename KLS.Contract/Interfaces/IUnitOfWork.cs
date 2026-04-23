@@ -100,8 +100,6 @@ namespace KLS.Contract.Interfaces
 
         ICustomerPaymentDetailRepository CustomerPaymentDetails { get; }
 
-        ICustomerPaymentSourceUseRepository CustomerPaymentSourceUses { get; }
-
         IItemRepository Items { get; }
 
         IIncomingPaymentRepository IncomingPayments { get; }
