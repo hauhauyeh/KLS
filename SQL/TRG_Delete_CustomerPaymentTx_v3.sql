@@ -81,15 +81,6 @@ BEGIN
             SELECT SalesId
             FROM dbo.CustomerPaymentDetail
             WHERE CustomerPaymentId = @CustomerPaymentId
-              AND IsCreditMemo = 1
-        )
-          AND AmountDue = SalesTotal;
-
-        DELETE FROM dbo.Sales
-        WHERE SalesId IN (
-            SELECT SalesId
-            FROM dbo.CustomerPaymentDetail
-            WHERE CustomerPaymentId = @CustomerPaymentId
               AND IsCCFee = 1
         );
 
