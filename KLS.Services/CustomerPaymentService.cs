@@ -185,24 +185,27 @@ namespace KLS.Services
             var payments = Uow.CustomerPayments.GetAll();
             var payees = Uow.Payees.GetAll();
 
-            return Uow.CustomerPaymentSourceUses.GetAll()
-                .Where(su => su.UseType == "Refund" && su.RefundPaymentId == null)
+            return Uow.CustomerPaymentDetails.GetAll()
+                .Where(pd => pd.DetailRole == "AsRefund"
+                    && pd.SourceCustomerPaymentId == pd.CustomerPaymentId
+                    && pd.RefundPaymentId == null
+                    && (pd.PaymentApplied ?? 0) > 0)
                 .Join(payments,
-                    su => su.CustomerPaymentId,
+                    pd => pd.CustomerPaymentId,
                     cp => cp.CustomerPaymentId,
-                    (su, cp) => new { su, cp })
+                    (pd, cp) => new { pd, cp })
                 .Join(payees,
                     x => x.cp.PayeeId,
                     p => p.PayeeId,
                     (x, p) => new RefundQueueRow
                     {
-                        CustomerPaymentSourceUseId = x.su.CustomerPaymentSourceUseId,
+                        PaymentDetailId = x.pd.PaymentDetailId,
                         CustomerPaymentId = x.cp.CustomerPaymentId,
                         PayeeId = x.cp.PayeeId,
                         PayeeName = p.PayeeName,
                         SourcePaymentNumber = x.cp.PaymentNumber,
                         PaymentDate = x.cp.PaymentDate,
-                        ReservedAmount = x.su.Amount,
+                        ReservedAmount = x.pd.PaymentApplied ?? 0,
                         ReferenceId = x.cp.ReferenceId,
                         Notes = x.cp.Notes
                     })
@@ -213,7 +216,7 @@ namespace KLS.Services
 
         public CustomerPaymentList IssueRefund(IssueRefundReq issueRefundReq)
         {
-            if (issueRefundReq.CustomerPaymentSourceUseId <= 0)
+            if (issueRefundReq.PaymentDetailId <= 0)
                 throw new ValidationException("Refund source is required.");
 
             if (!issueRefundReq.PaymentDate.HasValue)
@@ -225,16 +228,20 @@ namespace KLS.Services
             if (!issueRefundReq.FromAccountId.HasValue || issueRefundReq.FromAccountId <= 0)
                 throw new ValidationException("From account is required.");
 
-            var refundSource = Uow.CustomerPaymentSourceUses.Find(x => x.CustomerPaymentSourceUseId == issueRefundReq.CustomerPaymentSourceUseId)
+            var refundSource = Uow.CustomerPaymentDetails.Find(x => x.PaymentDetailId == issueRefundReq.PaymentDetailId)
                 .FirstOrDefault();
 
-            if (refundSource == null || refundSource.UseType != "Refund")
+            if (refundSource == null
+                || refundSource.DetailRole != "AsRefund"
+                || refundSource.SourceCustomerPaymentId != refundSource.CustomerPaymentId)
                 throw new ValidationException("Refund source was not found.");
 
             if (refundSource.RefundPaymentId.HasValue)
                 throw new ValidationException("This refund was already issued.");
 
-            if (refundSource.Amount <= 0)
+            var refundAmount = refundSource.PaymentApplied ?? 0m;
+
+            if (refundAmount <= 0)
                 throw new ValidationException("Refund amount must be greater than 0.");
 
             var sourcePayment = Uow.CustomerPayments.Find(x => x.CustomerPaymentId == refundSource.CustomerPaymentId)
@@ -252,7 +259,7 @@ namespace KLS.Services
                 PaymentMethod = issueRefundReq.PaymentMethod?.Trim(),
                 FromAccountId = issueRefundReq.FromAccountId,
                 ReferenceId = issueRefundReq.ReferenceId,
-                PaymentAmount = refundSource.Amount,
+                PaymentAmount = refundAmount,
                 Notes = issueRefundReq.Notes,
                 CCFee = 0
             };
@@ -266,7 +273,7 @@ namespace KLS.Services
                 PaymentMethod = issueRefundReq.PaymentMethod?.Trim(),
                 FromAccountId = issueRefundReq.FromAccountId,
                 ReferenceId = issueRefundReq.ReferenceId,
-                PaymentAmount = refundSource.Amount,
+                PaymentAmount = refundAmount,
                 Notes = issueRefundReq.Notes
             };
 
@@ -281,11 +288,11 @@ namespace KLS.Services
                 Uow.CustomerPayments.Find(x => x.CustomerPaymentId == refundPaymentId)
                     .ExecuteUpdate(setters => setters
                         .SetProperty(x => x.VendorPaymentId, x => vendorPaymentId)
-                        .SetProperty(x => x.PaymentApplied, x => refundSource.Amount)
+                        .SetProperty(x => x.PaymentApplied, x => refundAmount)
                         .SetProperty(x => x.UnappliedAmount, x => 0)
                         .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
 
-                Uow.CustomerPaymentSourceUses.Find(x => x.CustomerPaymentSourceUseId == issueRefundReq.CustomerPaymentSourceUseId)
+                Uow.CustomerPaymentDetails.Find(x => x.PaymentDetailId == issueRefundReq.PaymentDetailId)
                     .ExecuteUpdate(setters => setters
                         .SetProperty(x => x.RefundPaymentId, x => refundPaymentId)
                         .SetProperty(x => x.RefundedAt, x => DateTime.UtcNow));
@@ -294,6 +301,85 @@ namespace KLS.Services
             }
 
             return GetListById(refundPaymentId);
+        }
+
+        public CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId)
+        {
+            const string blockedReason = "There are future payments that must be unused before you can edit this payment.";
+
+            var payment = Uow.CustomerPayments.Find(x => x.CustomerPaymentId == customerPaymentId)
+                .FirstOrDefault();
+
+            if (payment == null)
+            {
+                return new CustomerPaymentEditEligibility
+                {
+                    CanEdit = false,
+                    IsReadOnly = true,
+                    Reason = "Payment not found."
+                };
+            }
+
+            var allUsageEdges = Uow.CustomerPaymentDetails.GetAll()
+                .Where(pd => pd.SourceCustomerPaymentId.HasValue
+                    && pd.SourceCustomerPaymentId.Value != pd.CustomerPaymentId)
+                .Select(pd => new
+                {
+                    ParentCustomerPaymentId = pd.SourceCustomerPaymentId!.Value,
+                    ChildCustomerPaymentId = pd.CustomerPaymentId
+                })
+                .Distinct()
+                .ToList();
+
+            var descendants = new HashSet<int>();
+            var queue = new Queue<int>();
+            queue.Enqueue(customerPaymentId);
+
+            while (queue.Count > 0)
+            {
+                var currentId = queue.Dequeue();
+
+                foreach (var edge in allUsageEdges.Where(x => x.ParentCustomerPaymentId == currentId))
+                {
+                    if (descendants.Add(edge.ChildCustomerPaymentId))
+                    {
+                        queue.Enqueue(edge.ChildCustomerPaymentId);
+                    }
+                }
+            }
+
+            if (descendants.Count == 0)
+            {
+                return new CustomerPaymentEditEligibility
+                {
+                    CanEdit = true,
+                    IsReadOnly = false,
+                    Reason = null
+                };
+            }
+
+            var dependencyChainIds = descendants.Append(customerPaymentId).ToHashSet();
+
+            var hasFutureDependentUsage = Uow.CustomerPayments.GetAll()
+                .Where(cp => descendants.Contains(cp.CustomerPaymentId)
+                    && cp.PaymentDate.HasValue
+                    && payment.PaymentDate.HasValue
+                    && cp.PaymentDate > payment.PaymentDate)
+                .Join(
+                    Uow.CustomerPaymentDetails.GetAll()
+                        .Where(pd => pd.SourceCustomerPaymentId.HasValue),
+                    cp => cp.CustomerPaymentId,
+                    pd => pd.CustomerPaymentId,
+                    (cp, pd) => new { cp.CustomerPaymentId, SourceCustomerPaymentId = pd.SourceCustomerPaymentId!.Value }
+                )
+                .Any(x => dependencyChainIds.Contains(x.SourceCustomerPaymentId));
+
+            return new CustomerPaymentEditEligibility
+            {
+                CanEdit = !hasFutureDependentUsage,
+                IsReadOnly = hasFutureDependentUsage,
+                Reason = hasFutureDependentUsage ? blockedReason : null
+            };
         }
 
         private void EmailReceipt(int customerPaymentId)
@@ -594,11 +680,10 @@ namespace KLS.Services
 
             if (payment == null) return;
 
-            var refundAmount = Uow.CustomerPaymentSourceUses.Find(su =>
-                    su.CustomerPaymentId == payment.CustomerPaymentId
-                    && su.SourcePaymentNumber == payment.PaymentNumber
-                    && su.UseType == "Refund")
-                .Sum(su => (decimal?)su.Amount) ?? 0m;
+            var refundAmount = payment.PaymentDetails?
+                .Where(d => d.DetailRole == "AsRefund"
+                    && d.SourceCustomerPaymentId == payment.CustomerPaymentId)
+                .Sum(d => (decimal?)d.PaymentApplied) ?? 0m;
 
             if (refundAmount > 0)
             {

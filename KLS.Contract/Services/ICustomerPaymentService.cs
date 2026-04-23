@@ -33,6 +33,8 @@ namespace KLS.Contract.Services
 
         CustomerPaymentList IssueRefund(IssueRefundReq issueRefundReq);
 
+        CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId);
+
         CustomerPayment ChargePayment(PaymentChargeReq chargeReq);
 
         decimal GetDueTotal(string salesIds);

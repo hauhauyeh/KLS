@@ -44,6 +44,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_customerPaymentService.GetById(id));
         }
 
+        [HttpGet("{id}/EditEligibility")]
+        [DisplayName("Check Payment Edit Eligibility")]
+        [PermissionKey("Customer.CustomerPayment.List")]
+        public IActionResult EditEligibility(int id)
+        {
+            return Ok(_customerPaymentService.GetEditEligibility(id));
+        }
+
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Payment")]
