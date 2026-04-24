@@ -46,11 +46,34 @@ BEGIN
 		,cp.PaymentApplied
 		,cp.UnappliedAmount
 		,cp.Notes
+		,CASE 
+			WHEN ISNULL(rf.RefundAmount, 0) > 0 THEN ''Refund''
+			WHEN ISNULL(cp.AsIncome, 0) > 0 THEN ''Income''
+			ELSE NULL
+		 END AS ExtraDisposition
+		,CASE 
+			WHEN ISNULL(rf.RefundAmount, 0) > 0 THEN rf.RefundAmount
+			WHEN ISNULL(cp.AsIncome, 0) > 0 THEN cp.AsIncome
+			ELSE NULL
+		 END AS ExtraDispositionAmount
+		,CAST(CASE 
+			WHEN ISNULL(rf.IsIssuedRefund, 0) = 1 THEN 1
+			ELSE 0
+		 END AS bit) AS IsIssuedRefund
 		,cp.IsLocked
 		,cp.IsReturned'
 
 	SET @Qry+=' FROM CustomerPayment cp INNER JOIN Payee as p ON p.PayeeId = cp.PayeeId 
 	INNER JOIN Customer c ON c.PayeeId = p.PayeeId
+	OUTER APPLY (
+		SELECT
+			SUM(ISNULL(pd.PaymentApplied, 0)) AS RefundAmount,
+			MAX(CASE WHEN pd.RefundPaymentId IS NOT NULL OR pd.RefundedAt IS NOT NULL THEN 1 ELSE 0 END) AS IsIssuedRefund
+		FROM CustomerPaymentDetail pd
+		WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+		  AND pd.DetailRole = ''AsRefund''
+		  AND pd.SourceCustomerPaymentId = cp.CustomerPaymentId
+	) rf
 	WHERE PaymentType NOT IN (''Vendor Refund'',''Other Incoming Payment'')'
 
 -- ================== FILTERS ==================
