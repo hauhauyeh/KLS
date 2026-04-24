@@ -102,6 +102,7 @@ BEGIN
     INSERT INTO @AcctTable(AccountCode) VALUES('@UF');
     INSERT INTO @AcctTable(AccountCode) VALUES('@IDG');
     INSERT INTO @AcctTable(AccountCode) VALUES('@IOT');
+    INSERT INTO @AcctTable(AccountCode) VALUES('@CRP');
     INSERT INTO @AcctTable(AccountCode) VALUES('@EBAD');
     INSERT INTO @AcctTable(AccountCode) VALUES('@INV');
 
@@ -1001,6 +1002,63 @@ BEGIN
         UPDATE dbo.CustomerPayment
         SET AsIncome = @ExtraAmount
         WHERE CustomerPaymentId = @CustomerPaymentId;
+    END;
+
+    -- Phase 9D. Post explicit AsRefund reserve reclass on the same payment document.
+    --
+    -- CPA rule for the reserve step:
+    -- 1. original receipt still posts normally on this same document:
+    --    - AR credit
+    --    - UF debit
+    -- 2. when the user chooses AsRefund, the same document also records the
+    --    refund-reserve reclass:
+    --    - AR debit
+    --    - CRP credit
+    --
+    -- Why this block exists:
+    -- - keep the model simple: one CustomerPayment header, one self AsRefund detail row
+    -- - keep refund queue unchanged because it already keys off that AsRefund detail row
+    -- - let the existing self AsRefund detail/header math keep representing the reserved amount
+    -- - add only the missing reserve accounting required by the CPA
+    --
+    -- This block does not create a second header and does not move the refund into
+    -- VendorPayment yet. That happens later when the refund is actually issued.
+    --
+    -- In other words:
+    -- - CustomerPaymentDetail already says "this amount is reserved"
+    -- - the header recalculation already removes that self-reserved amount from unapplied credit
+    -- - this new block only adds the missing CRP / AR reserve journal lines
+    IF @AsRefund = 1 AND @ExtraAmount > 0
+    BEGIN
+        -- Reserve line 1:
+        -- debit AR to reclass the refundable amount out of normal customer credit.
+        SET @Amount = @ExtraAmount;
+        SELECT @AccountId = AccountId FROM @AcctTable WHERE AccountCode = '@AR';
+        EXEC dbo.Fn_Adjust_CrDeAmount @AccountId, @Amount, @CrDeAmount OUTPUT;
+
+        INSERT INTO dbo.TransactionJournalDetail
+        (
+            TxId, AccountId, PayeeId, Amount, CrDeAmount
+        )
+        VALUES
+        (
+            @TxId, @AccountId, @PayeeId, @Amount, @CrDeAmount
+        );
+
+        -- Reserve line 2:
+        -- credit Customer Refund Payable because the company now owes this amount back.
+        SET @Amount = @ExtraAmount;
+        SELECT @AccountId = AccountId FROM @AcctTable WHERE AccountCode = '@CRP';
+        EXEC dbo.Fn_Adjust_CrDeAmount @AccountId, @Amount, @CrDeAmount OUTPUT;
+
+        INSERT INTO dbo.TransactionJournalDetail
+        (
+            TxId, AccountId, PayeeId, Amount, CrDeAmount
+        )
+        VALUES
+        (
+            @TxId, @AccountId, @PayeeId, @Amount, @CrDeAmount
+        );
     END;
 
     -- Phase 10. Clear temp staging and run downstream recalculation.

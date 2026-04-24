@@ -250,20 +250,6 @@ namespace KLS.Services
             if (sourcePayment == null)
                 throw new ValidationException("Source payment was not found.");
 
-            var customerRefundReq = new CustomerPaymentSaveReq
-            {
-                CustomerPaymentId = 0,
-                PaymentType = "Customer Refund",
-                PayeeId = sourcePayment.PayeeId,
-                PaymentDate = issueRefundReq.PaymentDate,
-                PaymentMethod = issueRefundReq.PaymentMethod?.Trim(),
-                FromAccountId = issueRefundReq.FromAccountId,
-                ReferenceId = issueRefundReq.ReferenceId,
-                PaymentAmount = refundAmount,
-                Notes = issueRefundReq.Notes,
-                CCFee = 0
-            };
-
             var vendorPayment = new VendorPayment
             {
                 VendorPaymentId = 0,
@@ -277,30 +263,21 @@ namespace KLS.Services
                 Notes = issueRefundReq.Notes
             };
 
-            int refundPaymentId;
             int vendorPaymentId;
 
             using (var scope = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
             {
-                refundPaymentId = Uow.CustomerPayments.Save(customerRefundReq);
                 vendorPaymentId = Uow.VendorPayments.Save(vendorPayment);
-
-                Uow.CustomerPayments.Find(x => x.CustomerPaymentId == refundPaymentId)
-                    .ExecuteUpdate(setters => setters
-                        .SetProperty(x => x.VendorPaymentId, x => vendorPaymentId)
-                        .SetProperty(x => x.PaymentApplied, x => refundAmount)
-                        .SetProperty(x => x.UnappliedAmount, x => 0)
-                        .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
 
                 Uow.CustomerPaymentDetails.Find(x => x.PaymentDetailId == issueRefundReq.PaymentDetailId)
                     .ExecuteUpdate(setters => setters
-                        .SetProperty(x => x.RefundPaymentId, x => refundPaymentId)
+                        .SetProperty(x => x.RefundPaymentId, x => vendorPaymentId)
                         .SetProperty(x => x.RefundedAt, x => DateTime.UtcNow));
 
                 scope.Complete();
             }
 
-            return GetListById(refundPaymentId);
+            return GetListById(sourcePayment.CustomerPaymentId);
         }
 
         public CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId)
