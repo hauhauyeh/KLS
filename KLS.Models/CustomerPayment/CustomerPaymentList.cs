@@ -34,6 +34,12 @@ namespace KLS.Models
 
         public string? Notes { get; set; }
 
+        public string? ExtraDisposition { get; set; }
+
+        public decimal? ExtraDispositionAmount { get; set; }
+
+        public bool IsIssuedRefund { get; set; }
+
         public bool IsLocked { get; set; }
 
         public bool IsReturned { get; set; }

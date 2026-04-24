@@ -73,6 +73,15 @@ namespace KLS.Services
 
             if (payment != null && !payment.IsLocked)
             {
+                // Refund issue flow stores the issued vendor payment id on the source AsRefund row.
+                // If that vendor payment is deleted later, release the source row back into the
+                // refund queue by clearing the execution linkage before removing the vendor payment.
+                Uow.CustomerPaymentDetails
+                    .Find(x => x.RefundPaymentId == vendorPaymentId)
+                    .ExecuteUpdate(setters => setters
+                        .SetProperty(x => x.RefundPaymentId, x => null)
+                        .SetProperty(x => x.RefundedAt, x => null));
+
                 Uow.VendorPayments.Find(c => c.VendorPaymentId == vendorPaymentId).ExecuteDelete();
 
                 string docType = payment.PaymentType.ToString();
