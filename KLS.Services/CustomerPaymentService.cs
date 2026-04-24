@@ -108,6 +108,10 @@ namespace KLS.Services
 
         public void Delete(int customerPaymentId)
         {
+            var eligibility = Uow.CustomerPayments.GetEditEligibility(customerPaymentId);
+            if (!eligibility.CanEdit)
+                throw new ValidationException("This payment cannot be deleted because future payments still depend on it.");
+
             var payment = Uow.CustomerPayments.GetById(customerPaymentId);
 
             if (payment != null && !payment.IsLocked)

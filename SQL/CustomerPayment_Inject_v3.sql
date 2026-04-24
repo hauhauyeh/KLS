@@ -55,7 +55,7 @@ BEGIN
                 ON p.CustomerPaymentId = pd.CustomerPaymentId
             WHERE (
                     p.PaymentDate < @PaymentDate
-                 OR (p.PaymentDate = @PaymentDate AND p.CustomerPaymentId < @CustomerPaymentId)
+                 OR (p.PaymentDate = @PaymentDate AND p.PaymentNumber < @PaymentNumber)
                   )
               AND pd.SalesId > 0
               AND ISNULL(pd.DetailRole, 'Invoice') IN ('Invoice', 'DebitMemo', 'CreditMemo', 'CCFee')
@@ -71,7 +71,7 @@ BEGIN
                 ON p.CustomerPaymentId = pd.CustomerPaymentId
             WHERE (
                     p.PaymentDate < @PaymentDate
-                 OR (p.PaymentDate = @PaymentDate AND p.CustomerPaymentId < @CustomerPaymentId)
+                 OR (p.PaymentDate = @PaymentDate AND p.PaymentNumber < @PaymentNumber)
                   )
               AND pd.SalesId > 0
               AND ISNULL(pd.DetailRole, 'Invoice') IN ('Invoice', 'DebitMemo', 'CreditMemo', 'CCFee')
@@ -436,7 +436,8 @@ BEGIN
       AND (
             @CustomerPaymentId = 0
          OR cp.PaymentDate IS NULL
-         OR cp.PaymentDate <= @PaymentDate
+         OR cp.PaymentDate < @PaymentDate
+         OR (cp.PaymentDate = @PaymentDate AND cp.PaymentNumber < @PaymentNumber)
           )
       AND cp.CustomerPaymentId NOT IN
       (
