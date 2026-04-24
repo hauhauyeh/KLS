@@ -1,0 +1,13 @@
+namespace KLS.Contract.Dtos.DropShipment
+{
+    public class DropShipmentInsertReq
+    {
+        public int SalesId { get; set; }
+        public int PayeeId { get; set; }
+        public int VendorPayeeId { get; set; }
+        public DateTime? ShipDate { get; set; }
+        public string? ShipRoute { get; set; }
+        public string? Instruction { get; set; }
+        public DateTime? PurchaseDate { get; set; }
+    }
+}

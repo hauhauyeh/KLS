@@ -71,6 +71,9 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18,4)")]
         public decimal? SalesMarginOrderPercent { get; set; }
 
+        public bool IsDropShip { get; set; }
+        public int? DropShipPurchaseId { get; set; }
+
         public bool IsLocked { get; set; }
         public bool IsStatementAttached { get; set; }
 

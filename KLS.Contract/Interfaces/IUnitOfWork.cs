@@ -213,6 +213,8 @@ namespace KLS.Contract.Interfaces
         IMarketOrderItemRepository MarketOrderItems { get; }
         IMarketSyncLogRepository MarketSyncLogs { get; }
 
+        IDropShipmentRepository DropShipments { get; }
+
         void Commit();
         void ExecuteInTransaction(Action action);
     }

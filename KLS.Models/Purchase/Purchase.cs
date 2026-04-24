@@ -61,6 +61,9 @@ namespace KLS.Models
 
         public bool IsStartFromPO { get; set; }
 
+        public bool IsDropShip { get; set; }
+        public int? DropShipSalesId { get; set; }
+
         public bool IsFreightOnly { get; set; }
 
         public bool IsShipment { get; set; }
