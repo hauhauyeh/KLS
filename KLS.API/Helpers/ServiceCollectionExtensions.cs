@@ -92,6 +92,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IShipmentService, ShipmentService>();
             services.AddScoped<IShipmentPurchaseService, ShipmentPurchaseService>();
             services.AddScoped<IItemTariffService, ItemTariffService>();
+            services.AddScoped<IDropShipmentService, DropShipmentService>();
 
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IEmailService, EmailService>();

@@ -255,5 +255,7 @@ namespace KLS.Data.Repositories
         public IMarketOrderRepository MarketOrders { get { return new MarketOrderRepository(DbContext); } }
         public IMarketOrderItemRepository MarketOrderItems { get { return new MarketOrderItemRepository(DbContext); } }
         public IMarketSyncLogRepository MarketSyncLogs { get { return new MarketSyncLogRepository(DbContext); } }
+
+        public IDropShipmentRepository DropShipments { get { return new DropShipmentRepository(DbContext); } }
     }
 }

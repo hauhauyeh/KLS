@@ -43,7 +43,7 @@ namespace KLS.Data.Repositories
 
             var SalesIdParam = new SqlParameter("@SalesId", tempReq.SalesId);
 
-            var SearchTermParam = (!string.IsNullOrEmpty(tempReq.SortField)) ? new SqlParameter("@SearchTerm", tempReq.SearchTerm) : new SqlParameter("@SearchTerm", DBNull.Value);
+            var SearchTermParam = (!string.IsNullOrEmpty(tempReq.SearchTerm)) ? new SqlParameter("@SearchTerm", tempReq.SearchTerm) : new SqlParameter("@SearchTerm", DBNull.Value);
 
             return DbContext.ItemSearch.FromSqlRaw("[TempSales_SearchByTerm] @EmpId,@PayeeId,@SalesId,@SearchTerm", EmpIdParam, PayeeIdParam, SalesIdParam, SearchTermParam);
         }
