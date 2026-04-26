@@ -47,6 +47,10 @@ namespace KLS.Models
 
         public int? LoadOrder { get; set; }
 
+        public string? TruckNumber { get; set; }
+
+        public string? DriverName { get; set; }
+
         public string? PayeeName { get; set; }
 
         public string? City { get; set; }

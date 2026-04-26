@@ -13,17 +13,17 @@ namespace KLS.Services
 
         public DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req)
         {
-            return Uow.DropShipments.InsertSalesAndPO(req, UserContext.EmpId);
+            return Uow.DropShipments.InsertSalesAndPO(req);
         }
 
         public void UpdateShipQty(DropShipmentUpdateShipQtyReq req)
         {
-            Uow.DropShipments.UpdateShipQty(req.PurchaseId, UserContext.EmpId);
+            Uow.DropShipments.UpdateShipQty(req.PurchaseId);
         }
 
         public void ConvertPOToBill(DropShipmentConvertReq req)
         {
-            Uow.DropShipments.ConvertPOToBill(req, UserContext.EmpId);
+            Uow.DropShipments.ConvertPOToBill(req);
         }
     }
 }
