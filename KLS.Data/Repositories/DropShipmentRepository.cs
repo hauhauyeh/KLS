@@ -16,7 +16,7 @@ namespace KLS.Data.Repositories
             DbContext = dbContext;
         }
 
-        public DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req, int empId)
+        public DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req)
         {
             var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
             var payeeIdParam = new SqlParameter("@PayeeId", req.PayeeId);
@@ -30,7 +30,7 @@ namespace KLS.Data.Repositories
             var instructionParam = !string.IsNullOrEmpty(req.Instruction)
                 ? new SqlParameter("@Instruction", req.Instruction)
                 : new SqlParameter("@Instruction", DBNull.Value);
-            var empIdParam = new SqlParameter("@EmpId", empId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
             var purchaseDateParam = req.PurchaseDate.HasValue
                 ? new SqlParameter("@PurchaseDate", req.PurchaseDate)
                 : new SqlParameter("@PurchaseDate", DBNull.Value);
@@ -68,17 +68,17 @@ namespace KLS.Data.Repositories
             };
         }
 
-        public void UpdateShipQty(int purchaseId, int empId)
+        public void UpdateShipQty(int purchaseId)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
-            var empIdParam = new SqlParameter("@EmpId", empId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
             DbContext.Database.ExecuteSqlRaw(
                 "[DropShipment_UpdateShipQty] @PurchaseId,@EmpId",
                 purchaseIdParam, empIdParam);
         }
 
-        public void ConvertPOToBill(DropShipmentConvertReq req, int empId)
+        public void ConvertPOToBill(DropShipmentConvertReq req)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", req.PurchaseId);
             var vendorDocNumberParam = !string.IsNullOrEmpty(req.VendorDocNumber)
@@ -87,7 +87,7 @@ namespace KLS.Data.Repositories
             var invoiceDateParam = req.InvoiceDate.HasValue
                 ? new SqlParameter("@InvoiceDate", req.InvoiceDate)
                 : new SqlParameter("@InvoiceDate", DBNull.Value);
-            var empIdParam = new SqlParameter("@EmpId", empId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
             DbContext.Database.ExecuteSqlRaw(
                 "[DropShipment_ConvertPOToBill] @PurchaseId,@VendorDocNumber,@InvoiceDate,@EmpId",
