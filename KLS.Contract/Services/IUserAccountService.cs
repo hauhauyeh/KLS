@@ -9,13 +9,15 @@ namespace KLS.Contract.Services
 {
     public interface IUserAccountService
     {
+        UserAccount? GetById(int userId);
+
         UserAccount? GetByEmail(string email);
 
-        LoginResult LoginUser(LoginReq loginReq);
+        WebLoginResult LoginUser(LoginReq loginReq);
 
-        LoginResult LoginByPayeeId(int payeeId);
+        WebLoginResult LoginByPayeeId(int payeeId);
 
-        LoginResult RefreshToken(RefreshTokenReq tokenReq);
+        WebLoginResult RefreshToken(RefreshTokenReq tokenReq);
 
         void Logout();
 
@@ -41,6 +43,6 @@ namespace KLS.Contract.Services
 
         bool Delete(int userId);
 
-        LoginResult SetPasswordFromToken(SetPasswordReq req);
+        WebLoginResult SetPasswordFromToken(SetPasswordReq req);
     }
 }

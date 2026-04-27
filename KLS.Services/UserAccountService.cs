@@ -50,20 +50,20 @@ namespace KLS.Services
             return Uow.UserAccounts.Find(e => e.Email == email).FirstOrDefault();
         }
 
-        public LoginResult LoginUser(LoginReq loginReq)
+        public WebLoginResult LoginUser(LoginReq loginReq)
         {
             var user = CheckUserUsername(loginReq);
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-                return new LoginResult { Success = false, ErrorMessage = "Email or password is incorrect" };
+                return new WebLoginResult { Success = false, ErrorMessage = "Email or password is incorrect" };
 
             if (Utilities.Decrypt(user.PasswordHash) != loginReq.Password)
-                return new LoginResult { Success = false, ErrorMessage = "Password is incorrect" };
+                return new WebLoginResult { Success = false, ErrorMessage = "Password is incorrect" };
 
             // EMAIL VERIFICATION CHECK
             if (!user.IsEmailVerified)
             {
-                return new LoginResult
+                return new WebLoginResult
                 {
                     Success = false,
                     ErrorMessage = "Email is not verified. Please verify your email",
@@ -76,7 +76,7 @@ namespace KLS.Services
 
             if (!customer.IsApproved)
             {
-                return new LoginResult
+                return new WebLoginResult
                 {
                     Success = false,
                     ErrorMessage = "Your account has not been approved yet"
@@ -86,37 +86,39 @@ namespace KLS.Services
             return GenerateLoginResult(user);
         }
 
-        public LoginResult LoginByPayeeId(int payeeId)
+        public WebLoginResult LoginByPayeeId(int payeeId)
         {
             var user = Uow.UserAccounts.Find(u => u.PayeeId == payeeId && !u.Inactive).FirstOrDefault();
 
             if (user == null)
-                return new LoginResult { Success = false, ErrorMessage = "No web account found for this customer." };
+                return new WebLoginResult { Success = false, ErrorMessage = "No web account found for this customer." };
 
             return GenerateLoginResult(user);
         }
 
-        public LoginResult RefreshToken(RefreshTokenReq tokenReq)
+        public WebLoginResult RefreshToken(RefreshTokenReq tokenReq)
         {
             var jwtClaim = _jWTService.ValidateExpiredToken(tokenReq.AccessToken);
 
             if (jwtClaim == null)
-                return new LoginResult { Success = false, ErrorMessage = "Invalid or expired token." };
+                return new WebLoginResult { Success = false, ErrorMessage = "Invalid or expired token." };
 
             if (jwtClaim.RefreshToken != tokenReq.RefreshToken || jwtClaim.RefTokenExpire <= DateTime.Now)
-                return new LoginResult { Success = false, ErrorMessage = "Invalid or expired refresh token." };
+                return new WebLoginResult { Success = false, ErrorMessage = "Invalid or expired refresh token." };
 
             var newToken = _jWTService.GenerateJwtToken(jwtClaim);
 
             var role = _userRoleService.GetById(jwtClaim.RoleId);
             var customer = Uow.Customers.GetById(jwtClaim.PayeeId);
 
-            return new LoginResult
+            return new WebLoginResult
             {
                 Success = true,
                 Token = newToken,
                 RefreshToken = jwtClaim.RefreshToken,
                 Username = jwtClaim.Username,
+                UserId = jwtClaim.UserId,
+                IsOwner = jwtClaim.RoleId == 1,
                 IsAdmin = role.IsAdmin,
                 IsPriceShow = customer?.IsPriceShow ?? false,
                 IsEditGuide = customer?.IsEditGuide ?? false,
@@ -124,7 +126,7 @@ namespace KLS.Services
             };
         }
 
-        private LoginResult GenerateLoginResult(UserAccount user)
+        private WebLoginResult GenerateLoginResult(UserAccount user)
         {
             var refreshToken = _jWTService.GenerateRefreshToken();
             user.RefToken = refreshToken;
@@ -148,12 +150,14 @@ namespace KLS.Services
 
             var token = _jWTService.GenerateJwtToken(jwtClaim);
 
-            return new LoginResult
+            return new WebLoginResult
             {
                 Success = true,
                 Token = token,
                 RefreshToken = refreshToken,
                 Username = user.Username,
+                UserId = user.UserId,
+                IsOwner = user.RoleId == 1,
                 IsAdmin = role.IsAdmin,
                 IsPriceShow = customer?.IsPriceShow ?? false,
                 IsEditGuide = customer?.IsEditGuide ?? false,
@@ -337,6 +341,7 @@ namespace KLS.Services
             var token = TokenHelper.GenerateToken();
 
             account.PayeeId = UserContext.EmpId;
+            account.RoleId = 2;
             account.PasswordHash = Utilities.Encrypt(Utilities.GenerateRandomPassword());
             account.IsEmailVerified = true;
             account.EmailVerifyCode = token;
@@ -363,16 +368,16 @@ namespace KLS.Services
             return account;
         }
 
-        public LoginResult SetPasswordFromToken(SetPasswordReq req)
+        public WebLoginResult SetPasswordFromToken(SetPasswordReq req)
         {
             if (req.Password != req.ConfirmPassword)
-                return new LoginResult { Success = false, ErrorMessage = "Passwords do not match." };
+                return new WebLoginResult { Success = false, ErrorMessage = "Passwords do not match." };
 
             var user = Uow.UserAccounts.Find(u => u.EmailVerifyCode != null && u.EmailVerifyCode == req.Token && u.EmailVerifyExpire > DateTime.UtcNow
             ).FirstOrDefault();
 
             if (user == null)
-                return new LoginResult { Success = false, ErrorMessage = "Invalid or expired link." };
+                return new WebLoginResult { Success = false, ErrorMessage = "Invalid or expired link." };
 
             user.PasswordHash = Utilities.Encrypt(req.Password);
 
@@ -390,7 +395,7 @@ namespace KLS.Services
 
             if (customer == null || !customer.IsApproved)
             {
-                return new LoginResult
+                return new WebLoginResult
                 {
                     Success = true,
                     ErrorMessage = "Password set successfully. Your account is pending approval."
@@ -407,7 +412,6 @@ namespace KLS.Services
             if (existing == null)
                 return null;
 
-            existing.RoleId = account.RoleId;
             existing.Username = account.Username;
             existing.Phone = account.Phone;
             existing.Inactive = account.Inactive;

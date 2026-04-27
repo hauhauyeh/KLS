@@ -20,14 +20,6 @@ namespace KLS.Models
         public int EmpId { get; set; }
         public string? EmpSortName { get; set; }
 
-        public bool RequireEmailVerification { get; set; }
-
-        public bool IsPriceShow { get; set; }
-
-        public bool IsEditGuide { get; set; }
-
-        public bool IsPromotionEnabled { get; set; }
-
         public ICollection<string>? Permissions { get; set; }
     }
 }

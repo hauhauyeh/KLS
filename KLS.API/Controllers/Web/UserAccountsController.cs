@@ -60,6 +60,16 @@ namespace KLS.API.Controllers.Web
         [HttpPut]
         public IActionResult Update([FromBody] UserAccount account)
         {
+            var existing = _userAccountService.GetById(account.UserId);
+            if (existing == null || existing.PayeeId != UserContext.EmpId)
+                return NotFound("User not found.");
+
+            if (account.Inactive && existing.UserId == UserContext.SystemUserId)
+                return BadRequest("Cannot deactivate your own account.");
+
+            if (account.Inactive && existing.RoleId == 1)
+                return BadRequest("Cannot deactivate the owner account.");
+
             if (_userAccountService.UsernameExists(account.Username, account.UserId))
                 return Conflict("Username already registered.");
 
@@ -75,13 +85,17 @@ namespace KLS.API.Controllers.Web
         [HttpDelete("{userId}")]
         public IActionResult Delete(int userId)
         {
-            if (userId == UserContext.EmpId)
-                return BadRequest("You cannot delete your own account.");
+            if (userId == UserContext.SystemUserId)
+                return BadRequest("Cannot delete your own account.");
 
-            var deleted = _userAccountService.Delete(userId);
-
-            if (!deleted)
+            var existing = _userAccountService.GetById(userId);
+            if (existing == null || existing.PayeeId != UserContext.EmpId)
                 return NotFound("User not found.");
+
+            if (existing.RoleId == 1)
+                return BadRequest("Cannot delete the owner account.");
+
+            _userAccountService.Delete(userId);
 
             return Ok();
         }
