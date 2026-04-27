@@ -1,0 +1,290 @@
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 40px 20px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: radial-gradient(circle at top left, #f5f3ff 0%, #ede9fe 40%, #e4ddf7 100%);
+        color: #1e1b2e;
+    }
+
+    .page-wrap {
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    .mail-card {
+        background: linear-gradient(180deg, #ffffff 0%, #faf8ff 100%);
+        border: 1px solid #ddd6f0;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 18px 44px rgba(87, 90, 255, 0.08), 0 4px 14px rgba(87, 90, 255, 0.05);
+    }
+
+    .top-accent {
+        height: 8px;
+        background: linear-gradient(90deg, #575aff 0%, #9b37d6 50%, #e001c6 100%);
+    }
+
+    .header {
+        padding: 36px 42px 28px;
+        border-bottom: 1px solid #ece8f5;
+        background: linear-gradient(135deg, rgba(87, 90, 255, 0.07), rgba(255, 255, 255, 0) 45%);
+    }
+
+    .logo-section {
+        margin-bottom: 20px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #e5dfef;
+    }
+
+    .header-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .header-table td {
+        vertical-align: top;
+        border: none;
+        padding: 0;
+    }
+
+    .title-block {
+        padding-right: 20px;
+    }
+
+    .eyebrow {
+        display: inline-block;
+        margin-bottom: 14px;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: #ede9fe;
+        color: #6c47d6;
+        border: 1px solid #d6cef0;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.15px;
+        text-transform: uppercase;
+    }
+
+    .title {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.1;
+        font-weight: 800;
+        color: #1a1535;
+    }
+
+    .subtitle {
+        margin: 10px 0 0;
+        color: #6b6680;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .summary-box {
+        padding: 20px 24px;
+        border-radius: 20px;
+        border: 1px solid #d6cef0;
+        background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    .summary-label {
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6b6680;
+        margin-bottom: 8px;
+    }
+
+    .summary-value {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 900;
+        color: #5b21b6;
+        line-height: 1.2;
+    }
+
+    .content {
+        padding: 34px 42px 40px;
+    }
+
+    .greeting-box {
+        margin-bottom: 28px;
+        padding: 22px 24px;
+        border-radius: 18px;
+        background: #faf9ff;
+        border: 1px solid #e4ddf0;
+        border-left: 5px solid #7c5cfc;
+    }
+
+    .customer {
+        margin: 0 0 8px 0;
+        font-size: 21px;
+        font-weight: 800;
+        color: #1e1b2e;
+    }
+
+    .greeting-text {
+        margin: 0;
+        color: #5d5a6e;
+        font-size: 15px;
+        line-height: 1.75;
+    }
+
+    .button-wrap {
+        margin: 30px 0;
+        text-align: center;
+    }
+
+    .action-btn {
+        display: inline-block;
+        padding: 15px 36px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #575aff 0%, #9b37d6 100%);
+        color: #ffffff !important;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        box-shadow: 0 10px 24px rgba(87, 90, 255, 0.22);
+    }
+
+    .table-wrap {
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid #e0daf0;
+        background: #ffffff;
+        box-shadow: 0 6px 18px rgba(87, 90, 255, 0.04);
+    }
+
+    .table-wrap table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+
+    .table-wrap thead tr {
+        background: linear-gradient(90deg, #575aff 0%, #9b37d6 100%);
+    }
+
+    .table-wrap thead th {
+        padding: 14px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+        color: #ffffff;
+        background: transparent;
+        border: none;
+    }
+
+    .table-wrap tbody td {
+        padding: 8px 14px;
+        border-bottom: 1px solid #ece8f5;
+        font-size: 14px;
+        color: #312e40;
+        vertical-align: middle;
+    }
+
+    .table-wrap tbody tr:nth-child(even) td {
+        background-color: #faf9ff;
+    }
+
+    .table-wrap tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-wrap tfoot td {
+        padding: 18px;
+        background: #f7f5ff;
+        border-top: 2px solid #d6cef0;
+    }
+
+    .total-label {
+        text-align: right;
+        font-size: 16px;
+        font-weight: 900;
+        color: #312e40;
+    }
+
+    .total-value {
+        font-size: 22px;
+        font-weight: 900;
+        color: #5b21b6;
+        white-space: nowrap;
+    }
+
+    .footer {
+        margin-top: 28px;
+        padding: 22px 24px;
+        border-radius: 18px;
+        border: 1px solid #e4ddf0;
+        background: linear-gradient(180deg, #faf9ff 0%, #f5f3ff 100%);
+    }
+
+    .footer p {
+        margin: 0 0 10px 0;
+        color: #5d5a6e;
+        font-size: 14px;
+        line-height: 1.75;
+    }
+
+    .footer p:last-child {
+        margin-bottom: 0;
+    }
+
+    .signature {
+        margin-top: 14px;
+        font-weight: 800;
+        color: #2d2844;
+    }
+
+    @@media print {
+        body {
+            padding: 0;
+            background: #ffffff;
+        }
+
+        .mail-card {
+            box-shadow: none;
+            border: 1px solid #d9d9d9;
+        }
+    }
+
+    @@media only screen and (max-width: 768px) {
+        .header,
+        .content {
+            padding: 24px;
+        }
+
+        .title {
+            font-size: 28px;
+        }
+
+        .header-table,
+        .header-table tbody,
+        .header-table tr,
+        .header-table td {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        .title-block {
+            padding-right: 0;
+            padding-bottom: 16px;
+        }
+
+        .table-wrap thead th,
+        .table-wrap tbody td,
+        .table-wrap tfoot td {
+            padding: 12px 10px;
+            font-size: 13px;
+        }
+    }
+</style>

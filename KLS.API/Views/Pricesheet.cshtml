@@ -1,4 +1,4 @@
-﻿@model KLS.Models.EmailPricesheet
+@model KLS.Models.EmailPricesheet
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <!DOCTYPE html>
@@ -7,304 +7,66 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pricesheet</title>
+    <partial name="_EmailTheme" />
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 40px 20px;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at top left, #f8fcef 0%, #edf7df 40%, #e4f0d0 100%);
-            color: #24311d;
-        }
-
-        .page-wrap {
-            max-width: 980px;
-            margin: 0 auto;
-        }
-
-        .pricesheet-card {
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdf8 100%);
-            border: 1px solid #dfe9cd;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 16px 40px rgba(48, 74, 18, 0.10), 0 4px 14px rgba(48, 74, 18, 0.06);
-        }
-
-        .top-accent {
-            height: 8px;
-            background: linear-gradient(90deg, #6f9f10 0%, #8fbe22 45%, #c7e57d 100%);
-        }
-
-        .header {
-            padding: 36px 42px 28px;
-            border-bottom: 1px solid #edf3e1;
-            background: linear-gradient(135deg, rgba(143, 190, 34, 0.09), rgba(255,255,255,0) 45%);
-        }
-
-        .logo-section {
-            margin-bottom: 20px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid #e9f0dd;
-        }
-
         .header-row {
             display: flex;
             justify-content: space-between;
         }
 
-        .title-block {
-            min-width: 60%;
-        }
+        .title-block { min-width: 60%; }
+        .summary-box { min-width: 250px; padding: 18px 22px; border-radius: 18px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
+        .summary-value { font-size: 30px; color: #7a1f1f; }
 
-        .eyebrow {
-            display: inline-block;
-            margin-bottom: 14px;
-            padding: 7px 14px;
-            border-radius: 999px;
-            background: #eef7da;
-            color: #5d8210;
-            border: 1px solid #dce8c8;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 1.15px;
-            text-transform: uppercase;
-        }
-
-        .title {
-            margin: 0;
-            font-size: 30px;
-            line-height: 1.1;
-            font-weight: 800;
-            color: #1f2b19;
-        }
-
-        .subtitle {
-            margin: 10px 0 0;
-            color: #66735c;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        .summary-box {
-            min-width: 250px;
-            padding: 18px 22px;
-            border-radius: 18px;
-            border: 1px solid #dce8c8;
-            background: linear-gradient(180deg, #f8fcef 0%, #eff6e2 100%);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
-        }
-
-        .summary-label {
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #6b785f;
-            margin-bottom: 8px;
-        }
-
-        .summary-value {
-            margin: 0;
-            font-size: 30px;
-            font-weight: 900;
-            color: #6e1f1f;
-        }
-
-        .summary-note {
-            margin-top: 6px;
-            color: #66735c;
-            font-size: 13px;
-        }
-
-        .content {
-            padding: 34px 42px 40px;
-        }
-
-        .greeting-box {
-            margin-bottom: 28px;
-            padding: 22px 24px;
-            border-radius: 18px;
-            background: #fcfef8;
-            border: 1px solid #e8efdb;
-            border-left: 5px solid #8fbe22;
-        }
-
-        .customer {
-            margin: 0 0 8px 0;
-            font-size: 21px;
-            font-weight: 800;
-            color: #293521;
-        }
-
-        .greeting-text {
-            margin: 0;
-            color: #5f6c56;
-            font-size: 15px;
-            line-height: 1.75;
-        }
-
-        .table-wrap {
-            overflow: hidden;
-            border-radius: 18px;
-            border: 1px solid #e5edd7;
-            background: #ffffff;
-            box-shadow: 0 6px 18px rgba(36, 49, 29, 0.04);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead th {
-            padding: 10px 10px;
-            text-align: left;
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 0.4px;
-            color: #ffffff;
-            background: linear-gradient(90deg, #6f9f10 0%, #87b91a 100%);
-            border: none;
-        }
-
-        tbody td {
-            padding: 5px 10px;
-            border-bottom: 1px solid #eef3e5;
-            font-size: 14px;
-            color: #33412c;
-            vertical-align: middle;
-        }
-
-        tbody tr:nth-child(even) td {
-            background-color: #fbfdf8;
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
+        .table-wrap thead th { padding: 10px 10px; }
+        .table-wrap tbody td { padding: 5px 10px; }
 
         .code {
             font-weight: 800;
-            color: #4f641f;
+            color: #5b21b6;
             letter-spacing: 0.2px;
         }
 
         .name {
             font-weight: 600;
-            color: #2d3927;
+            color: #2d2844;
         }
 
         .unit-badge {
             display: inline-block;
             padding: 6px 12px;
             border-radius: 999px;
-            background: #f2f7e8;
-            border: 1px solid #e0ead0;
-            color: #506344;
+            background: #f0edff;
+            border: 1px solid #ddd6f0;
+            color: #5b527a;
             font-size: 12px;
             font-weight: 700;
         }
 
-            .unit-badge.private {
-                background: linear-gradient(180deg, #eef7da 0%, #e4f0c8 100%);
-                border: 1px solid #cfe19f;
-                color: #4d660d;
-                font-weight: 800;
-                box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
-            }
+        .unit-badge.private {
+            background: linear-gradient(180deg, #ede9fe 0%, #ddd6f0 100%);
+            border: 1px solid #c4b5e8;
+            color: #5b21b6;
+            font-weight: 800;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+        }
 
         .price {
             font-weight: 800;
-            color: #27341f;
+            color: #2d2844;
             white-space: nowrap;
         }
 
-        tfoot td {
-            padding: 18px;
-            background: #fafdf5;
-            border-top: 2px solid #dce8c8;
-        }
-
-        .total-label {
-            text-align: right;
-            font-size: 16px;
-            font-weight: 900;
-            color: #34422d;
-        }
-
-        .total-value {
-            font-size: 22px;
-            font-weight: 900;
-            color: #7a1f1f;
-            white-space: nowrap;
-        }
-
-        .footer {
-            margin-top: 28px;
-            padding: 22px 24px;
-            border-radius: 18px;
-            border: 1px solid #e7efda;
-            background: linear-gradient(180deg, #fcfef8 0%, #f6faef 100%);
-        }
-
-            .footer p {
-                margin: 0 0 10px 0;
-                color: #5d6a54;
-                font-size: 14px;
-                line-height: 1.75;
-            }
-
-                .footer p:last-child {
-                    margin-bottom: 0;
-                }
-
-        .signature {
-            margin-top: 14px;
-            font-weight: 800;
-            color: #314028;
-        }
-
-        @@media print {
-            body {
-                padding: 0;
-                background: #ffffff;
-            }
-
-            .pricesheet-card {
-                box-shadow: none;
-                border: 1px solid #d9d9d9;
-            }
-        }
+        .total-value { color: #7a1f1f; }
 
         @@media (max-width: 768px) {
-            .header,
-            .content {
-                padding: 24px;
-            }
-
-            .title {
-                font-size: 28px;
-            }
-
-            .summary-value {
-                font-size: 24px;
-            }
-
-            thead th,
-            tbody td,
-            tfoot td {
-                padding: 12px 10px;
-                font-size: 13px;
-            }
+            .summary-value { font-size: 24px; }
         }
     </style>
 </head>
 <body>
     <div class="page-wrap">
-        <div class="pricesheet-card">
+        <div class="mail-card">
             <div class="top-accent"></div>
 
             <div class="header">
@@ -376,7 +138,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b7861;">
+                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b6680;">
                                         No pricesheet items available.
                                     </td>
                                 </tr>
