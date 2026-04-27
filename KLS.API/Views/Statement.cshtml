@@ -1,4 +1,4 @@
-﻿@model KLS.Models.Reports.RptCustStmt
+@model KLS.Models.Reports.RptCustStmt
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <!DOCTYPE html>
@@ -7,180 +7,45 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Statement</title>
+    <partial name="_EmailTheme" />
     <style>
-        * {
-            box-sizing: border-box;
+        .mail-card {
+            box-shadow: 0 10px 30px rgba(87, 90, 255, 0.06), 0 2px 10px rgba(87, 90, 255, 0.04);
         }
 
-        body {
-            margin: 0;
-            padding: 40px 20px;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at top left, #f7fbef 0%, #edf6df 35%, #e4f0d0 100%);
-            color: #24311d;
-        }
-
-        .page-wrap {
-            max-width: 960px;
-            margin: 0 auto;
-        }
-
-        .statement-card {
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdf7 100%);
-            border: 1px solid #dce8c8;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(55, 80, 20, 0.08), 0 2px 10px rgba(55, 80, 20, 0.05);
-        }
-
-        .top-accent {
-            height: 8px;
-            background: linear-gradient(90deg, #6e9f10 0%, #9acb2d 50%, #c7e57d 100%);
-        }
-
-        .header {
-            padding: 38px 42px 24px;
-            border-bottom: 1px solid #edf3e1;
-            background: linear-gradient(135deg, rgba(154, 203, 45, 0.08), rgba(255,255,255,0) 45%);
-        }
+        .header { padding: 38px 42px 24px; }
+        .title { font-weight: 700; }
 
         .header-box {
             display: flex !important;
             justify-content: space-between !important;
         }
 
-        .brand-block {
-            min-width: 60%;
-        }
-
-        .statement-badge {
-            display: inline-block;
-            padding: 7px 14px;
-            border-radius: 999px;
-            background: #eef7da;
-            color: #5f8412;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            margin-bottom: 14px;
-            border: 1px solid #dce8c8;
-        }
-
-        .title {
-            margin: 0;
-            font-size: 30px;
-            line-height: 1.1;
-            font-weight: 700;
-            color: #1f2b19;
-        }
-
-        .subtitle {
-            margin: 10px 0 0;
-            font-size: 15px;
-            color: #66735c;
-        }
-
-        .summary-box {
-            min-width: 260px;
-            padding: 18px 22px;
-            background: linear-gradient(180deg, #f7fbef 0%, #eff6e1 100%);
-            border: 1px solid #dce8c8;
-            border-radius: 18px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-        }
-
-        .summary-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #6c7a61;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
+        .brand-block { min-width: 60%; }
+        .summary-box { min-width: 260px; padding: 18px 22px; border-radius: 18px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
 
         .summary-total {
             font-size: 30px;
             font-weight: 800;
-            color: #6a1f1f;
+            color: #7a1f1f;
             margin: 0;
         }
 
         .summary-note {
             margin-top: 6px;
             font-size: 13px;
-            color: #66735c;
+            color: #6b6680;
         }
 
-        .content {
-            padding: 34px 42px 40px;
-        }
-
-        .greeting-box {
-            background: #fcfef8;
-            border: 1px solid #edf3e1;
-            border-left: 5px solid #8ebd24;
-            border-radius: 16px;
-            padding: 20px 22px;
-            margin-bottom: 28px;
-        }
-
-        .customer {
-            margin: 0 0 8px 0;
-            font-size: 20px;
-            font-weight: 700;
-            color: #283521;
-        }
-
-        .greeting-text {
-            margin: 0;
-            font-size: 15px;
-            line-height: 1.7;
-            color: #5f6c56;
-        }
-
-        .table-wrap {
-            border: 1px solid #e5edd6;
-            border-radius: 18px;
-            overflow: hidden;
-            background: #ffffff;
-            box-shadow: 0 4px 16px rgba(36, 49, 29, 0.04);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead th {
-            padding: 16px 18px;
-            text-align: left;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.4px;
-            color: #ffffff;
-            background: linear-gradient(90deg, #6f9f10 0%, #86b91a 100%);
-            border: none;
-        }
-
-        tbody td {
-            padding: 8px 16px;
-            border-bottom: 1px solid #eef3e5;
-            font-size: 14px;
-            color: #33412c;
-            vertical-align: middle;
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
+        .table-wrap thead th { padding: 10px 10px; }
+        .table-wrap tbody td { padding: 5px 10px; }
 
         .month-row td {
-            background: linear-gradient(90deg, #f7fbef 0%, #fcfef8 100%);
+            background: linear-gradient(90deg, #f5f3ff 0%, #faf9ff 100%);
             font-weight: 700;
-            color: #4e631f;
-            border-top: 1px solid #e8f0d9;
-            border-bottom: 1px solid #e8f0d9;
+            color: #5b21b6;
+            border-top: 1px solid #e4ddf0;
+            border-bottom: 1px solid #e4ddf0;
             padding-top: 15px;
             padding-bottom: 15px;
         }
@@ -189,15 +54,15 @@
             display: inline-block;
             padding: 6px 12px;
             border-radius: 999px;
-            background: #eaf4d1;
-            border: 1px solid #d6e6b5;
+            background: #ede9fe;
+            border: 1px solid #d6cef0;
             font-size: 13px;
-            color: #587414;
+            color: #6c47d6;
         }
 
         .amount {
             font-weight: 700;
-            color: #2f3a2a;
+            color: #2d2844;
             white-space: nowrap;
         }
 
@@ -209,31 +74,25 @@
 
         .sales-no {
             font-weight: 600;
-            color: #526348;
+            color: #5b527a;
         }
 
         .route-chip {
             display: inline-block;
-            background: #f3f7ea;
-            border: 1px solid #e1ebd0;
-            color: #4b5f3f;
+            background: #f0edff;
+            border: 1px solid #ddd6f0;
+            color: #5b527a;
             padding: 5px 10px;
             border-radius: 999px;
             font-size: 12px;
             font-weight: 600;
         }
 
-        tfoot td {
-            padding: 18px;
-            background: #fafdf5;
-            border-top: 2px solid #dce8c8;
-        }
-
         .grand-total-label {
             text-align: right;
             font-size: 16px;
             font-weight: 800;
-            color: #34422d;
+            color: #312e40;
         }
 
         .grand-total-value {
@@ -243,69 +102,14 @@
             white-space: nowrap;
         }
 
-        .footer {
-            margin-top: 28px;
-            padding: 22px 24px;
-            background: linear-gradient(180deg, #fcfef8 0%, #f6faee 100%);
-            border: 1px solid #e7efda;
-            border-radius: 16px;
-        }
-
-            .footer p {
-                margin: 0 0 10px 0;
-                color: #5d6a54;
-                line-height: 1.7;
-                font-size: 14px;
-            }
-
-                .footer p:last-child {
-                    margin-bottom: 0;
-                }
-
-        .signature {
-            margin-top: 16px;
-            font-weight: 700;
-            color: #314028;
-        }
-
-        @@media print {
-            body {
-                background: #ffffff;
-                padding: 0;
-            }
-
-            .statement-card {
-                box-shadow: none;
-                border: 1px solid #d9d9d9;
-            }
-        }
-
         @@media (max-width: 768px) {
-            .header,
-            .content {
-                padding: 24px;
-            }
-
-            .title {
-                font-size: 28px;
-            }
-
-            .summary-total {
-                font-size: 24px;
-            }
-
-            thead th,
-            tbody td,
-            tfoot td {
-                padding: 12px 10px;
-                font-size: 13px;
-            }
+            .summary-total { font-size: 24px; }
         }
     </style>
 </head>
 <body>
     <div class="page-wrap">
-        <div class="statement-card">
+        <div class="mail-card">
             <div class="top-accent"></div>
 
             <div class="header">
@@ -314,7 +118,7 @@
                         @* Uncomment if needed *@
                         @* <partial name="_Header.cshtml" model="@Model.Company" /> *@
 
-                        <div class="statement-badge">Customer Statement</div>
+                        <div class="eyebrow">Customer Statement</div>
                         <h2 class="title">Account Statement</h2>
                         <p class="subtitle">
                             A summary of outstanding sales transactions and balance due.
@@ -383,7 +187,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b7861;">
+                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b6680;">
                                         No statement details available.
                                     </td>
                                 </tr>

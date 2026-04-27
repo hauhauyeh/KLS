@@ -1,4 +1,4 @@
-﻿@model KLS.Models.EmailReceipt
+@model KLS.Models.EmailReceipt
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <!DOCTYPE html>
@@ -7,149 +7,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Payment Receipt</title>
+    <partial name="_EmailTheme" />
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        .summary-value { font-size: 32px; line-height: 1.1; }
 
-        body {
-            margin: 0;
-            padding: 40px 20px;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at top left, #f8fcef 0%, #edf7df 40%, #e4f0d0 100%);
-            color: #24311d;
-        }
-
-        .page-wrap {
-            max-width: 980px;
-            margin: 0 auto;
-        }
-
-        .receipt-card {
-            background: linear-gradient(180deg, #ffffff 0%, #fbfdf8 100%);
-            border: 1px solid #dfe9cd;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 18px 44px rgba(48, 74, 18, 0.10), 0 4px 14px rgba(48, 74, 18, 0.06);
-        }
-
-        .top-accent {
-            height: 8px;
-            background: linear-gradient(90deg, #6f9f10 0%, #8fbe22 45%, #c7e57d 100%);
-        }
-
-        .header {
-            padding: 36px 42px 28px;
-            border-bottom: 1px solid #edf3e1;
-            background: linear-gradient(135deg, rgba(143, 190, 34, 0.10), rgba(255,255,255,0) 45%);
-        }
-
-        .logo-section {
-            margin-bottom: 20px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid #e9f0dd;
-        }
-
-        .header-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-            .header-table td {
-                vertical-align: top;
-                border: none;
-                padding: 0;
-            }
-
-        .title-block {
-            padding-right: 20px;
-        }
-
-        .eyebrow {
-            display: inline-block;
-            margin-bottom: 14px;
-            padding: 7px 14px;
-            border-radius: 999px;
-            background: #eef7da;
-            color: #5d8210;
-            border: 1px solid #dce8c8;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 1.15px;
-            text-transform: uppercase;
-        }
-
-        .title {
-            margin: 0;
-            font-size: 30px;
-            line-height: 1.1;
-            font-weight: 800;
-            color: #1f2b19;
-        }
-
-        .subtitle {
-            margin: 10px 0 0;
-            color: #66735c;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        .paid-box {
-            padding: 20px 24px;
-            border-radius: 20px;
-            border: 1px solid #dce8c8;
-            background: linear-gradient(180deg, #f8fcef 0%, #eff6e2 100%);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
-        }
-
-        .paid-label {
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #6b785f;
-            margin-bottom: 8px;
-        }
-
-        .paid-value {
-            margin: 0;
-            font-size: 32px;
-            font-weight: 900;
-            color: #256328;
-            line-height: 1.1;
-        }
-
-        .paid-note {
+        .summary-note {
             margin-top: 8px;
-            color: #66735c;
+            color: #6b6680;
             font-size: 13px;
-        }
-
-        .content {
-            padding: 34px 42px 40px;
-        }
-
-        .greeting-box {
-            margin-bottom: 28px;
-            padding: 22px 24px;
-            border-radius: 18px;
-            background: #fcfef8;
-            border: 1px solid #e8efdb;
-            border-left: 5px solid #8fbe22;
-        }
-
-        .customer {
-            margin: 0 0 8px 0;
-            font-size: 21px;
-            font-weight: 800;
-            color: #293521;
-        }
-
-        .greeting-text {
-            margin: 0;
-            color: #5f6c56;
-            font-size: 15px;
-            line-height: 1.75;
         }
 
         .payment-meta-table {
@@ -158,31 +23,22 @@
             margin-bottom: 30px;
         }
 
-            .payment-meta-table td {
-                border: none;
-                vertical-align: top;
-                padding: 0;
-            }
-
-        .meta-cell-right {
-            padding-left: 8px !important;
+        .payment-meta-table td {
+            border: none;
+            vertical-align: top;
+            padding: 0;
         }
 
-        .meta-cell-left {
-            padding-right: 8px !important;
-        }
-
-        .meta-cell-center {
-            padding-left: 4px !important;
-            padding-right: 4px !important;
-        }
+        .meta-cell-right { padding-left: 8px !important; }
+        .meta-cell-left { padding-right: 8px !important; }
+        .meta-cell-center { padding-left: 4px !important; padding-right: 4px !important; }
 
         .meta-card {
             padding: 18px 20px;
             border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff 0%, #fafdf5 100%);
-            border: 1px solid #e5edd7;
-            box-shadow: 0 4px 14px rgba(36, 49, 29, 0.04);
+            background: linear-gradient(180deg, #ffffff 0%, #f7f5ff 100%);
+            border: 1px solid #e0daf0;
+            box-shadow: 0 4px 14px rgba(87, 90, 255, 0.04);
         }
 
         .meta-label {
@@ -190,78 +46,40 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #6c7a61;
+            color: #6b6680;
             margin-bottom: 8px;
         }
 
         .meta-value {
             font-size: 16px;
             font-weight: 700;
-            color: #2c3826;
+            color: #2d2844;
             line-height: 1.5;
             word-break: break-word;
         }
 
         .amount-card {
-            background: linear-gradient(180deg, #f8fcef 0%, #eff6e2 100%);
-            border: 1px solid #dce8c8;
+            background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+            border: 1px solid #d6cef0;
         }
 
         .meta-value.amount {
-            color: #256328;
+            color: #5b21b6;
             font-size: 22px;
             font-weight: 900;
         }
 
-        .table-wrap {
-            overflow: hidden;
-            border-radius: 18px;
-            border: 1px solid #e5edd7;
-            background: #ffffff;
-            box-shadow: 0 6px 18px rgba(36, 49, 29, 0.04);
-        }
-
-        table.receipt-lines {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-        }
-
-        .receipt-lines thead th {
-            padding: 16px 18px;
-            text-align: left;
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 0.4px;
-            color: #ffffff;
-            background: linear-gradient(90deg, #6f9f10 0%, #87b91a 100%);
-            border: none;
-        }
-
-        .receipt-lines tbody td {
-            padding: 15px 18px;
-            border-bottom: 1px solid #eef3e5;
-            font-size: 14px;
-            color: #33412c;
-            vertical-align: middle;
-        }
-
-        .receipt-lines tbody tr:nth-child(even) td {
-            background-color: #fbfdf8;
-        }
-
-        .receipt-lines tbody tr:last-child td {
-            border-bottom: none;
-        }
+        .table-wrap thead th { padding: 10px 10px; }
+        .table-wrap tbody td { padding: 8px 10px; }
 
         .invoice-no {
             font-weight: 800;
-            color: #4f641f;
+            color: #5b21b6;
             letter-spacing: 0.2px;
         }
 
         .invoice-date {
-            color: #55644c;
+            color: #5b527a;
             font-weight: 600;
         }
 
@@ -272,86 +90,16 @@
         }
 
         .payment-applied {
-            color: #27341f;
+            color: #2d2844;
             font-weight: 800;
             white-space: nowrap;
         }
 
-        .receipt-lines tfoot td {
-            padding: 18px;
-            background: #fafdf5;
-            border-top: 2px solid #dce8c8;
-        }
-
-        .total-label {
-            text-align: right;
-            font-size: 16px;
-            font-weight: 900;
-            color: #34422d;
-        }
-
-        .total-value {
-            font-size: 24px;
-            font-weight: 900;
-            color: #256328;
-            white-space: nowrap;
-        }
-
-        .footer {
-            margin-top: 28px;
-            padding: 22px 24px;
-            border-radius: 18px;
-            border: 1px solid #e7efda;
-            background: linear-gradient(180deg, #fcfef8 0%, #f6faef 100%);
-        }
-
-            .footer p {
-                margin: 0 0 10px 0;
-                color: #5d6a54;
-                font-size: 14px;
-                line-height: 1.75;
-            }
-
-                .footer p:last-child {
-                    margin-bottom: 0;
-                }
-
-        .signature {
-            margin-top: 14px;
-            font-weight: 800;
-            color: #314028;
-        }
-
-        @@media print {
-            body {
-                padding: 0;
-                background: #ffffff;
-            }
-
-            .receipt-card {
-                box-shadow: none;
-                border: 1px solid #d9d9d9;
-            }
-        }
+        .total-value { font-size: 24px; }
 
         @@media only screen and (max-width: 768px) {
-            .header,
-            .content {
-                padding: 24px;
-            }
+            .summary-value { font-size: 26px; }
 
-            .title {
-                font-size: 28px;
-            }
-
-            .paid-value {
-                font-size: 26px;
-            }
-
-            .header-table,
-            .header-table tbody,
-            .header-table tr,
-            .header-table td,
             .payment-meta-table,
             .payment-meta-table tbody,
             .payment-meta-table tr,
@@ -371,9 +119,9 @@
                 padding: 0 0 12px 0 !important;
             }
 
-            .receipt-lines thead th,
-            .receipt-lines tbody td,
-            .receipt-lines tfoot td {
+            .table-wrap thead th,
+            .table-wrap tbody td,
+            .table-wrap tfoot td {
                 padding: 12px 10px;
                 font-size: 13px;
             }
@@ -382,7 +130,7 @@
 </head>
 <body>
     <div class="page-wrap">
-        <div class="receipt-card">
+        <div class="mail-card">
             <div class="top-accent"></div>
 
             <div class="header">
@@ -402,12 +150,12 @@
                             </div>
                         </td>
                         <td style="width:35%;">
-                            <div class="paid-box">
-                                <div class="paid-label">Amount Received</div>
-                                <p class="paid-value">
+                            <div class="summary-box">
+                                <div class="summary-label">Amount Received</div>
+                                <p class="summary-value">
                                     @string.Format("{0:c}", Model.Payment.PaymentAmount)
                                 </p>
-                               @*  <div class="paid-note">
+                               @*  <div class="summary-note">
                                     Thank you for your payment. Your receipt details are listed below.
                                 </div> *@
                             </div>
@@ -460,7 +208,7 @@
                 </table>
 
                 <div class="table-wrap">
-                    <table class="receipt-lines">
+                    <table>
                         <thead>
                             <tr>
                                 <th style="width: 24%;">Invoice #</th>
@@ -494,7 +242,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b7861;">
+                                    <td colspan="4" style="text-align:center; padding:30px; color:#6b6680;">
                                         No payment application details available.
                                     </td>
                                 </tr>
