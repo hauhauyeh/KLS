@@ -140,6 +140,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankTx>().HasNoKey();
             modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
             modelBuilder.Entity<CustomerPaymentEditEligibility>().HasNoKey();
+            modelBuilder.Entity<RptSalesYearlyRow>().HasNoKey();
 
             // Marketplace tables
             modelBuilder.Entity<MarketAccount>().ToTable("MarketAccount");
@@ -486,6 +487,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptSalesTax> RptSalesTax { get; set; }
 
+        public virtual DbSet<RptServiceSummary> RptServiceSummary { get; set; }
+
         public virtual DbSet<RptResponsibleRow> RptResponsibleRow { get; set; }
 
         public virtual DbSet<RptDailySummaryRow> RptDailySummaryRow { get; set; }
@@ -550,6 +553,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptSalesCommission2Row> RptSalesCommission2Row { get; set; }
 
         public virtual DbSet<RptSalesDaily2Row> RptSalesDaily2Row { get; set; }
+
+        public virtual DbSet<RptSalesByInvoiceRow> RptSalesByInvoiceRow { get; set; }
 
         public virtual DbSet<RptSalesYearlyRow> RptSalesYearlyRow { get; set; }
 

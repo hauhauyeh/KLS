@@ -251,6 +251,7 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (6406, 'Report.Sales.SalesByItem', 'Sales By Item', 'Report', 'Sales', 'SalesByItem', 'page', 6400, 6406, 'Reports-SalesByItem'),
 (6407, 'Report.Sales.SalesDetail', 'Sales Detail', 'Report', 'Sales', 'SalesDetail', 'page', 6400, 6407, 'Reports-SalesDetail'),
 (6408, 'Report.Sales.SalesDaily2', 'Sales Daily 2', 'Report', 'Sales', 'SalesDaily2', 'page', 6400, 6408, 'Reports-SalesDaily2'),
+(6412, 'Report.Sales.SalesByInvoice', 'Sales By Invoice', 'Report', 'Sales', 'SalesByInvoice', 'page', 6400, 6412, 'Reports-SalesByInvoice'),
 (6409, 'Report.Sales.SalesYearly', 'Sales Yearly', 'Report', 'Sales', 'SalesYearly', 'page', 6400, 6409, 'Reports-SalesYearly'),
 (6410, 'Report.Sales.SalesCommission', 'Sales Commission', 'Report', 'Sales', 'SalesCommission', 'page', 6400, 6410, 'Reports-SalesCommission'),
 (6411, 'Report.Sales.SalesCommission2', 'Sales Commission 2', 'Report', 'Sales', 'SalesCommission2', 'page', 6400, 6411, 'Reports-SalesCommission2'),
