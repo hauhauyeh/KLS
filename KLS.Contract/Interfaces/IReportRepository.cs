@@ -40,6 +40,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptSalesTax>? SalesTax(ReportRequest reportReq);
 
+        IQueryable<RptServiceSummary> ServiceSummary(ReportRequest reportReq);
+
         IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate);
 
         IQueryable<RptDailySummaryRow>? DailySummary(DateOnly? ShipDate);
@@ -83,6 +85,8 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
 
         IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
+
+        IQueryable<RptSalesByInvoiceRow> SalesByInvoice(ReportRequest reportReq);
 
         IQueryable<RptSalesYearlyRow> SalesYearly();
 

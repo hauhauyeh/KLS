@@ -2,11 +2,23 @@ CREATE OR ALTER PROCEDURE [dbo].[InventoryAdj_PartialUpdate]
 	@AdjId INT,
 	@AdjDate DATE,
 	@AdjType NVARCHAR(50),
+	@OpenClose NVARCHAR(50),
 	@Notes NVARCHAR(255),
 	@EmpId INT
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	-- This procedure updates an existing inventory adjustment and keeps its
+	-- TransactionJournal header aligned with the selected timing.
+	--
+	-- Timing rule:
+	-- - Before Receiving  -> Inventory Adj         -> SourceDocOrder 600
+	-- - After Receiving   -> Inventory Adj Closing -> SourceDocOrder 695
+	--
+	-- RecalcQAV is not changed here. It already respects SourceDocOrder.
+
+	-- Section 1. Load the target adjustment header and resolve journal timing.
 	DECLARE @TxId BIGINT
 	DECLARE @TxDate DATE
 	DECLARE @RowNum INT=1
@@ -22,8 +34,21 @@ BEGIN
 	DECLARE @Direction VARCHAR(1)
 	DECLARE @InvAccountId INT
 	DECLARE @AccountId INT
+	DECLARE @SourceDocOrder INT
+	DECLARE @SourceDocType NVARCHAR(50) = 'Inventory Adj'
 	SELECT @AdjNumber=AdjNumber FROM InventoryAdj WHERE AdjId=@AdjId
-	SELECT @TxId=TxId,@TxDate=TxDate FROM TransactionJournal WHERE SourceDocNumber=@AdjNumber AND SourceDocType='Inventory Adj'
+
+	IF @OpenClose = 'After Receiving'
+		SET @SourceDocType = 'Inventory Adj Closing'
+
+	EXEC [Get_SourceDocOrder] @SourceDocType, @SourceDocOrder OUTPUT
+
+	-- Existing rows may already be stored under either inventory-adjustment doc type.
+	SELECT @TxId=TxId,@TxDate=TxDate
+	FROM TransactionJournal
+	WHERE SourceDocNumber=@AdjNumber
+	  AND SourceDocType IN ('Inventory Adj', 'Inventory Adj Closing')
+
 	DECLARE @AcctTable AS Table(
 		Id INT IDENTITY(1,1),
 		AccountCode NVARCHAR(50),
@@ -37,12 +62,11 @@ BEGIN
 	FROM @AcctTable AS t INNER JOIN Account AS a ON t.AccountCode=a.AccountCode
 	SELECT @InvAccountId=AccountId FROM @AcctTable WHERE AccountCode='@INV'
 
-	-- ========================================================
-	-- Convert type: delete + recreate (full rebuild)
-	-- ========================================================
+	-- Section 2. Convert/Repack uses a full rebuild because source and destination
+	-- cost allocation must be recalculated from scratch.
 	IF @AdjType = 'C'
 	BEGIN
-		-- 1. Build item list from temp table BEFORE deleting anything
+		-- Step 2.1. Build the staged convert list before deleting existing rows.
 		DECLARE @ConvertTable TABLE (
 			AutoId INT IDENTITY(1,1) PRIMARY KEY,
 			ItemId INT,
@@ -51,15 +75,14 @@ BEGIN
 			Direction VARCHAR(1),
 			SrcDetailId INT
 		)
-		-- Temp table has all items (changed + unchanged)
+
 		INSERT INTO @ConvertTable (ItemId, NewQty, NewPrice, Direction)
 		SELECT ItemId, NewQty, NewPrice, Direction
 		FROM TempInventoryAdj
 		WHERE EmpId=@EmpId AND AdjId=@AdjId
 		ORDER BY CASE WHEN Direction='S' THEN 0 ELSE 1 END, TempAdjId
 
-		-- 2. Get authoritative avg costs BEFORE deleting TxDetail
-		--    Exclude current adjustment's own TxId to avoid reading zeroed-out values
+		-- Step 2.2. Read authoritative average costs before deleting current detail rows.
 		DECLARE @LastInvTable Table(ItemId INT, LAvgCost DECIMAL(18,6))
 		;WITH cteclo AS (
 			SELECT tjd.ItemId, tjd.AverageCost,
@@ -72,18 +95,18 @@ BEGIN
 		)
 		INSERT INTO @LastInvTable SELECT ItemId, AverageCost FROM cteclo WHERE RN=1
 
-		-- 3. Delete existing detail + journal entries
+		-- Step 2.3. Clear the old adjustment detail and journal detail rows.
 		DELETE FROM TransactionJournalDetail WHERE TxId=@TxId
 		DELETE FROM InventoryAdjDetail WHERE AdjId=@AdjId
 
-		-- 4. Copy ALL temp items to InventoryAdjDetail
+		-- Step 2.4. Copy all staged rows into InventoryAdjDetail.
 		INSERT INTO [dbo].[InventoryAdjDetail]
 				([AdjId],[ItemId],[NewQty],[QtyDiffer],[NewPrice],[Notes],[Direction])
 		SELECT @AdjId, ItemId, NewQty, QtyDiffer, NewPrice, Notes, Direction
 		FROM TempInventoryAdj
 		WHERE EmpId=@EmpId AND AdjId=@AdjId
 
-		-- 5. Update SrcDetailId in @ConvertTable from newly inserted AdjDetailIds
+		-- Step 2.5. Reconnect staged rows to their new AdjDetailId values.
 		;WITH NewDetails AS (
 			SELECT AdjDetailId, ItemId, Direction,
 			ROW_NUMBER() OVER(ORDER BY CASE WHEN Direction='S' THEN 0 ELSE 1 END, AdjDetailId) AS RN
@@ -93,7 +116,7 @@ BEGIN
 		FROM @ConvertTable c
 		INNER JOIN NewDetails nd ON nd.RN = c.AutoId
 
-		-- 5. Calculate source costs + dest allocation
+		-- Step 2.6. Calculate source cost totals and destination allocation.
 		DECLARE @TotalSourceCost DECIMAL(18,6)
 		DECLARE @TotalDestQty DECIMAL(18,6)
 		DECLARE @DestUnitCost DECIMAL(18,6)
@@ -114,7 +137,7 @@ BEGIN
 		ELSE
 			SET @DestUnitCost = 0
 
-		-- 6. Create journal entries for each item
+		-- Step 2.7. Stage the new journal detail rows.
 		CREATE TABLE #ConvertTxDetail (
 			AutoId INT IDENTITY(1,1),
 			TxId BIGINT, AccountId INT, ItemId INT,
@@ -136,13 +159,13 @@ BEGIN
 
 			IF @Direction = 'S'
 			BEGIN
-				-- Source: use authoritative avg cost
+				-- Source rows always leave inventory at authoritative average cost.
 				SELECT @NewPrice = ISNULL(LAvgCost, 0) FROM @LastInvTable WHERE ItemId=@ItemId
 				SET @Amount = ROUND(@NewQty * @NewPrice, 2)
 			END
 			ELSE
 			BEGIN
-				-- Destination: use allocated cost with last-line remainder
+				-- Destination rows receive the allocated convert cost.
 				SET @DestProcessed = @DestProcessed + 1
 				IF @DestProcessed = @DestCount
 					SET @NewPrice = ROUND((@TotalSourceCost - @AllocatedSoFar) / @NewQty, 6)
@@ -161,11 +184,11 @@ BEGIN
 
 			SELECT @AccountId=AccountId FROM @AcctTable WHERE AccountCode=@AdjAcctCode
 
-			-- Offset line
+			-- Offset row
 			INSERT INTO #ConvertTxDetail (TxId, AccountId, ItemId, Qty, Price, Amount, SrcDetailId)
 			VALUES (@TxId, @AccountId, @ItemId, @NewQty, @NewPrice, ABS(@Amount), @SrcDetailId)
 
-			-- INV line
+			-- Inventory row
 			EXEC Fn_Adjust_CrDeAmount @InvAccountId, @Amount, @CrDeAmount OUTPUT
 			INSERT INTO #ConvertTxDetail (TxId, AccountId, ItemId, Qty, Price, Amount, CrDeAmount, SrcDetailId)
 			VALUES (@TxId, @InvAccountId, @ItemId, @NewQty, @NewPrice, @Amount, @CrDeAmount, @SrcDetailId)
@@ -173,7 +196,7 @@ BEGIN
 			SET @CRowNum += 1
 		END
 
-		-- 7. Bulk insert journal entries
+		-- Step 2.8. Insert staged journal detail rows in a stable order.
 		INSERT INTO TransactionJournalDetail
 			([TxId],[AccountId],[ItemId],[Qty],[Price],[Amount],[CrDeAmount],[SourceDetailId])
 		SELECT TxId, AccountId, ItemId, Qty, Price, Amount, CrDeAmount, SrcDetailId
@@ -181,10 +204,16 @@ BEGIN
 
 		DROP TABLE #ConvertTxDetail
 
-		-- 8. Update header + cleanup + recalc
-		UPDATE InventoryAdj SET AdjType=@AdjType, AdjDate=@AdjDate, Notes=@Notes, UpdatedAt=GETUTCDATE()
+		-- Step 2.9. Save the header, switch journal timing if needed, clear temp rows,
+		-- and recalculate from the correct date.
+		UPDATE InventoryAdj SET AdjType=@AdjType, AdjDate=@AdjDate, OpenClose=@OpenClose, Notes=@Notes, UpdatedAt=GETUTCDATE()
 		WHERE AdjId=@AdjId
-		UPDATE TransactionJournal SET TxDate=@AdjDate, TxTime=GETUTCDATE() WHERE TxId=@TxId
+		UPDATE TransactionJournal
+		SET TxDate=@AdjDate,
+			TxTime=GETUTCDATE(),
+			SourceDocType=@SourceDocType,
+			SourceDocOrder=@SourceDocOrder
+		WHERE TxId=@TxId
 		DELETE TempInventoryAdj WHERE EmpId=@EmpId
 
 		IF @AdjDate!=@TxDate
@@ -200,9 +229,8 @@ BEGIN
 		RETURN
 	END
 
-	-- ========================================================
-	-- Non-Convert types: incremental update (existing logic)
-	-- ========================================================
+	-- Section 3. Non-convert adjustments apply staged insert, update, and delete
+	-- changes directly to detail rows and matching journal rows.
 	DECLARE @TempInvTable TABLE (
 		[AutoId] INT IDENTITY(1,1) NOT NULL,
 		[ItemId] INT NULL,
@@ -220,6 +248,8 @@ BEGIN
 	FROM TempInventoryAdj AS t
 	WHERE EmpId=@EmpId AND AdjId=@AdjId AND ChangeStatus IS NOT NULL
 
+	-- Each staged row tells this procedure whether to insert, update, or delete
+	-- one adjustment line and its matching journal rows.
 	SELECT @MaxRow=COUNT(AutoId) FROM @TempInvTable
 
 	WHILE @RowNum <= @MaxRow
@@ -280,9 +310,16 @@ BEGIN
 		SET @RowNum+=1
 	END
 
-	UPDATE InventoryAdj SET AdjType=@AdjType, AdjDate=@AdjDate, Notes=@Notes, UpdatedAt=GETUTCDATE()
+	-- Section 4. Save header changes, switch journal timing if needed, and trigger
+	-- recalculation only for the affected rows.
+	UPDATE InventoryAdj SET AdjType=@AdjType, AdjDate=@AdjDate, OpenClose=@OpenClose, Notes=@Notes, UpdatedAt=GETUTCDATE()
 	WHERE AdjId=@AdjId
-	UPDATE TransactionJournal SET TxDate=@AdjDate, TxTime=GETUTCDATE() WHERE TxId=@TxId
+	UPDATE TransactionJournal
+	SET TxDate=@AdjDate,
+		TxTime=GETUTCDATE(),
+		SourceDocType=@SourceDocType,
+		SourceDocOrder=@SourceDocOrder
+	WHERE TxId=@TxId
 	DELETE TempInventoryAdj WHERE EmpId=@EmpId
 
 	IF @AdjDate!=@TxDate

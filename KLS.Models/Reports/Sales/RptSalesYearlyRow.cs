@@ -1,5 +1,3 @@
-﻿using System.ComponentModel.DataAnnotations;
-
 namespace KLS.Models.Reports
 {
     public class RptSalesYearlyRow
@@ -8,7 +6,6 @@ namespace KLS.Models.Reports
 
         public string? SalesMonthName { get; set; }
 
-        [Key]
         public int AccountId { get; set; }
 
         public string? AccountName { get; set; }

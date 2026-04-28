@@ -1,6 +1,3 @@
--- Deploy: Create Report_SalesDaily2 SP
--- Migrated from KLS_New with updated column/table names
-
 CREATE OR ALTER PROCEDURE [dbo].[Report_SalesDaily2]
     @StartDate DATE,
     @EndDate DATE,
@@ -22,15 +19,8 @@ BEGIN
     )
 
     ;WITH FilteredSales AS (
-        SELECT
-            s.SalesId,
-            s.SalesNumber,
-            s.ShipDate,
-            s.ShipId,
-            s.SalesTotal,
-            s.DiscountTotal,
-            COALESCE(s.SalesMarginOrderPercent, s.SalesMarginPercent, 0) AS MarginPercent,
-            sd.ExtTotal
+        SELECT s.SalesId, s.ShipDate, s.ShipId, s.SalesTotal, s.DiscountTotal,
+               sd.ShipQty, sd.ExtTotal, sd.FIFOCost
         FROM Sales s
         JOIN SalesDetail sd ON s.SalesId = sd.SalesId
         INNER JOIN Item i ON i.ItemId = sd.ItemId
@@ -41,15 +31,14 @@ BEGIN
 
     INSERT INTO @SalesMargin(SalesNum, ShipId, ShipDate, SalesTotal, CountableTotal, CostTotal)
     SELECT
-        s.SalesNumber,
+        s.SalesId,
         s.ShipId,
         s.ShipDate,
-        MAX(s.SalesTotal),
-        SUM(s.ExtTotal) - ISNULL(MAX(s.DiscountTotal), 0),
-        (SUM(s.ExtTotal) - ISNULL(MAX(s.DiscountTotal), 0))
-            * (1 - COALESCE(MAX(s.MarginPercent), 0)) AS CostTotal
+        s.SalesTotal,
+        SUM(s.ExtTotal) - ISNULL(s.DiscountTotal, 0),
+        ISNULL(SUM(s.FIFOCost * s.ShipQty), 0) AS CostTotal
     FROM FilteredSales s
-    GROUP BY s.SalesNumber, s.ShipId, s.ShipDate
+    GROUP BY s.SalesId, s.ShipId, s.ShipDate, s.SalesTotal, s.DiscountTotal
 
     UPDATE @SalesMargin SET Margin = (CountableTotal - CostTotal) / CASE WHEN CountableTotal != 0 THEN CountableTotal ELSE 1 END
 

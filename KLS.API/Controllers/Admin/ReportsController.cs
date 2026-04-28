@@ -71,6 +71,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.SalesTax(reportReq));
         }
 
+        [HttpGet("ServiceSummary")]
+        [DisplayName("Sales -> Sales by Service Rep")]
+        [PermissionKey("Report.Sales.Responsible")]
+        public IActionResult ServiceSummary([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.ServiceSummary(reportReq));
+        }
+
 
         [HttpGet("Responsible")]
         [DisplayName("Sales -> Responsible")]
@@ -321,6 +329,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult SalesDaily2([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesDaily2(reportReq));
+        }
+
+        [HttpGet("SalesByInvoice")]
+        [DisplayName("Sales -> Sales By Invoice")]
+        [PermissionKey("Report.Sales.SalesByInvoice")]
+        public IActionResult SalesByInvoice([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesByInvoice(reportReq));
         }
 
 

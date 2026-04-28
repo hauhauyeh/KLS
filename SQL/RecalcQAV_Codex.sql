@@ -1,4 +1,4 @@
-CREATE   PROCEDURE [dbo].[RecalcQAV] --EXEC [RecalcQAV] 419,'02/25/26'
+CREATE OR ALTER PROCEDURE [dbo].[RecalcQAV] --EXEC [RecalcQAV] 419,'02/25/26'
     @ItemId INT,
     @BeginDate DATE,
 	@LCloQty DECIMAL(18,6) OUTPUT,
@@ -288,8 +288,12 @@ BEGIN
 			ELSE
 				SET @Amount = NULL; SET @CrDeAmt = NULL; --SET @DebitAmt = NULL; SET @CreditAmt = NULL;
 		END	
-		--if SourceDocOrder is 600 then inventory adj.
-		ELSE IF @MySourceDocOrder IN (600, 250)
+		-- Inventory adjustments now use:
+		-- 600 = Before Receiving
+		-- 695 = After Receiving
+		-- 250 (Inventory Adj Opening) is retired and should no longer be treated
+		-- as an active inventory-adjustment posting order.
+		ELSE IF @MySourceDocOrder IN (600, 695)
 		BEGIN
 			SELECT @AdjType = AdjType FROM InventoryAdj WHERE AdjNumber = @MySourceDocNum
 			IF @AdjType = 'Q' -- Quantity Adjustment

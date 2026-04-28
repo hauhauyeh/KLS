@@ -162,6 +162,14 @@ namespace KLS.Data.Repositories
             return DbContext.RptSalesTax.FromSqlRaw("[dbo].[Report_SalesTax] @StartDate,@EndDate", StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptServiceSummary> ServiceSummary(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptServiceSummary.FromSqlRaw("[dbo].[Report_ServiceSummary] @StartDate,@EndDate", StartDateParam, EndDateParam);
+        }
+
         public IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate)
         {
             var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
@@ -361,6 +369,16 @@ namespace KLS.Data.Repositories
             var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
 
             return DbContext.RptSalesDaily2Row.FromSqlRaw("[dbo].[Report_SalesDaily2] @StartDate,@EndDate,@SalesRep",
+                StartDateParam, EndDateParam, SalesRepParam);
+        }
+
+        public IQueryable<RptSalesByInvoiceRow> SalesByInvoice(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
+
+            return DbContext.RptSalesByInvoiceRow.FromSqlRaw("[dbo].[Report_SalesByInvoice] @StartDate,@EndDate,@SalesRep",
                 StartDateParam, EndDateParam, SalesRepParam);
         }
 
