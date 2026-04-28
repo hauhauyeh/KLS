@@ -82,6 +82,53 @@ namespace KLS.API.Controllers.Web
         }
 
 
+        [HttpGet("profile")]
+        public IActionResult GetProfile()
+        {
+            var user = _userAccountService.GetById(UserContext.SystemUserId);
+            if (user == null) return NotFound();
+
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.Email,
+                user.Phone
+            });
+        }
+
+
+        [HttpPut("profile")]
+        public IActionResult UpdateProfile([FromBody] UpdateProfileReq req)
+        {
+            if (_userAccountService.UsernameExists(req.Username, UserContext.SystemUserId))
+                return Conflict("Username already registered.");
+
+            if (_userAccountService.EmailExists(req.Email, UserContext.SystemUserId))
+                return Conflict("Email already registered.");
+
+            if (!string.IsNullOrWhiteSpace(req.Phone) && _userAccountService.PhoneExists(req.Phone, UserContext.SystemUserId))
+                return Conflict("Phone number already registered.");
+
+            var updated = _userAccountService.UpdateProfile(UserContext.SystemUserId, req);
+            if (updated == null) return NotFound();
+
+            return Ok();
+        }
+
+
+        [HttpPost("change-password")]
+        public IActionResult ChangePassword([FromBody] ChangePasswordReq req)
+        {
+            var changed = _userAccountService.ChangePassword(UserContext.SystemUserId, req.CurrentPassword, req.NewPassword);
+
+            if (!changed)
+                return BadRequest("Current password is incorrect.");
+
+            return Ok();
+        }
+
+
         [HttpDelete("{userId}")]
         public IActionResult Delete(int userId)
         {

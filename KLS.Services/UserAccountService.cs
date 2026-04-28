@@ -423,6 +423,38 @@ namespace KLS.Services
             return existing;
         }
 
+        public UserAccount? UpdateProfile(int userId, UpdateProfileReq req)
+        {
+            var existing = GetById(userId);
+            if (existing == null) return null;
+
+            existing.Username = req.Username;
+            existing.Email = req.Email;
+            existing.Phone = req.Phone;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(existing);
+            Uow.Commit();
+
+            return existing;
+        }
+
+        public bool ChangePassword(int userId, string currentPassword, string newPassword)
+        {
+            var user = GetById(userId);
+            if (user == null) return false;
+
+            if (Utilities.Decrypt(user.PasswordHash) != currentPassword)
+                return false;
+
+            user.PasswordHash = Utilities.Encrypt(newPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(user);
+            Uow.Commit();
+            return true;
+        }
+
         public bool Delete(int userId)
         {
             var user = Uow.UserAccounts.Find(e => e.UserId == userId && e.PayeeId == UserContext.EmpId).FirstOrDefault();

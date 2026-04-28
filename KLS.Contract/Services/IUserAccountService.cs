@@ -41,6 +41,10 @@ namespace KLS.Contract.Services
 
         UserAccount? Update(UserAccount account);
 
+        UserAccount? UpdateProfile(int userId, UpdateProfileReq req);
+
+        bool ChangePassword(int userId, string currentPassword, string newPassword);
+
         bool Delete(int userId);
 
         WebLoginResult SetPasswordFromToken(SetPasswordReq req);
