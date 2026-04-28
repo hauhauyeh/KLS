@@ -436,6 +436,59 @@ namespace KLS.Services
             return true;
         }
 
+        public UserAccount CreateForAdmin(UserAccount account)
+        {
+            var existingAccounts = Uow.UserAccounts.Find(u => u.PayeeId == account.PayeeId).ToList();
+            if (!existingAccounts.Any())
+                account.RoleId = 1;
+            else if (existingAccounts.Any(u => u.RoleId == 1))
+                account.RoleId = 2;
+
+            account.IsEmailVerified = true;
+            account.CreatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Add(account);
+            Uow.Commit();
+
+            return account;
+        }
+
+        public UserAccount? UpdateForAdmin(UserAccount account)
+        {
+            var existing = GetById(account.UserId);
+
+            if (existing == null)
+                return null;
+
+            existing.Username = account.Username;
+            existing.Email = account.Email;
+            existing.Phone = account.Phone;
+            existing.Inactive = account.Inactive;
+
+            if (!string.IsNullOrEmpty(account.PasswordHash))
+                existing.PasswordHash = account.PasswordHash;
+
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            Uow.UserAccounts.Update(existing);
+            Uow.Commit();
+
+            return existing;
+        }
+
+        public bool DeleteForAdmin(int userId, int payeeId)
+        {
+            var user = Uow.UserAccounts.Find(e => e.UserId == userId && e.PayeeId == payeeId).FirstOrDefault();
+
+            if (user == null)
+                return false;
+
+            Uow.UserAccounts.Remove(user);
+            Uow.Commit();
+
+            return true;
+        }
+
         public void Logout()
         {
             var user = GetById(UserContext.SystemUserId);

@@ -91,6 +91,7 @@ namespace KLS.Services
             payee.PayeeType = EnumHelper.PayeeType.E.ToString();
 
             Uow.Payees.Add(payee);
+            Uow.Commit();
 
             var employee = new Employee();
             employee.InjectFrom(employeeDTO);

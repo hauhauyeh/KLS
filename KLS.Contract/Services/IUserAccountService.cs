@@ -44,5 +44,11 @@ namespace KLS.Contract.Services
         bool Delete(int userId);
 
         WebLoginResult SetPasswordFromToken(SetPasswordReq req);
+
+        UserAccount CreateForAdmin(UserAccount account);
+
+        UserAccount? UpdateForAdmin(UserAccount account);
+
+        bool DeleteForAdmin(int userId, int payeeId);
     }
 }
