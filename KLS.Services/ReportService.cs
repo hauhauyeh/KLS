@@ -583,6 +583,11 @@ namespace KLS.Services
             return Uow.Reports.SalesTax(reportReq);
         }
 
+        public IQueryable<RptServiceSummary> ServiceSummary(ReportRequest reportReq)
+        {
+            return Uow.Reports.ServiceSummary(reportReq);
+        }
+
         public IEnumerable<RptResponsible> Responsible(DateOnly? shipDate)
         {
             var data = Uow.Reports.Responsible(shipDate).ToList();
@@ -786,6 +791,16 @@ namespace KLS.Services
             return Uow.Reports.SalesDaily2(reportReq);
         }
 
+        public IQueryable<RptSalesByInvoiceRow> SalesByInvoice(ReportRequest reportReq)
+        {
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
+            return Uow.Reports.SalesByInvoice(reportReq);
+        }
+
         public RptSalesYearly SalesYearly()
         {
             var data = Uow.Reports.SalesYearly().AsEnumerable().ToList();
@@ -804,18 +819,19 @@ namespace KLS.Services
                         Y1Total = y1Total,
                         Y2Total = y2Total,
                         Y3Total = y3Total,
-                        Y1Perc = y2Total != 0 ? (y1Total - y2Total) / y2Total : 0,
-                        Y2Perc = y3Total != 0 ? (y2Total - y3Total) / y3Total : 0,
+                        // Match legacy behavior: month percent comes from the proc row values.
+                        Y1Perc = g.FirstOrDefault()?.Y1Percent ?? 0,
+                        Y2Perc = g.FirstOrDefault()?.Y2Percent ?? 0,
                         MonthlySales = g.ToList()
                     };
                 })
                 .ToList();
 
             var accounts = data
-                .GroupBy(r => r.AccountName)
+                .GroupBy(r => new { r.AccountId, r.AccountName })
                 .Select(g => new RptSalesYearlyAccount
                 {
-                    AcctName = g.Key,
+                    AcctName = g.Key.AccountName,
                     Y1Total = g.Sum(r => r.Y1 ?? 0),
                     Y2Total = g.Sum(r => r.Y2 ?? 0),
                     Y3Total = g.Sum(r => r.Y3 ?? 0)

@@ -217,6 +217,9 @@ namespace KLS.Services
             if (jwtClaim.RefreshToken != tokenReq.RefreshToken || jwtClaim.RefTokenExpire <= DateTime.Now)
                 return new LoginResult { Success = false, ErrorMessage = "Invalid or expired refresh token." };
 
+            var dbUser = GetById(jwtClaim.UserId);
+            if (dbUser == null || dbUser.RefToken != tokenReq.RefreshToken)
+                return new LoginResult { Success = false, ErrorMessage = "You have been logged out because your account was signed in from another device." };
 
             var newToken = _jWTService.GenerateJwtToken(jwtClaim);
 

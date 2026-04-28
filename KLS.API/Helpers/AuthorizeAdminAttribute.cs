@@ -32,9 +32,13 @@ namespace KLS.API.Helpers
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(refreshToken) || refreshToken != currentUser.RefreshToken)
+            var dbRefToken = context.HttpContext.Items["DbRefToken"]?.ToString();
+            if (string.IsNullOrWhiteSpace(refreshToken) || refreshToken != dbRefToken)
             {
-                context.Result = new UnauthorizedResult();
+                context.Result = new JsonResult(new { message = "Session ended. You logged in from another device." })
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized
+                };
                 return;
             }
 

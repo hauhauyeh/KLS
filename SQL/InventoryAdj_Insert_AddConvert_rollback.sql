@@ -2,6 +2,7 @@ CREATE OR ALTER PROCEDURE [dbo].[InventoryAdj_Insert]
 	@AdjId INT,
 	@AdjDate DATE,
 	@AdjType NVARCHAR(50),
+	@OpenClose NVARCHAR(50),
 	@Notes NVARCHAR(255),
 	@EmpId INT,
 	@NewAdjId INT OUTPUT
@@ -23,6 +24,10 @@ BEGIN
 	DECLARE @AdjAcctCode NVARCHAR(50);
 	DECLARE @Amount DECIMAL(18,2);
 	DECLARE @CrDeAmount DECIMAL(18,2)= 0;
+
+	IF @OpenClose = 'After Receiving'
+		SET @SourceDocType = 'Inventory Adj Closing';
+
 	EXEC [Get_SourceDocOrder] @SourceDocType, @SourceDocOrder OUTPUT;
 	DECLARE @AcctTable AS Table(
 		Id INT IDENTITY(1,1),
@@ -50,6 +55,7 @@ BEGIN
 			([AdjNumber]
 			,[AdjDate]
 			,[AdjType]
+			,[OpenClose]
 			,[Notes]
 			,[CreatedAt]
 			,[UpdatedAt])
@@ -57,6 +63,7 @@ BEGIN
 			(@AdjNumber
 			,@AdjDate
 			,@Adjtype
+			,@OpenClose
 			,@Notes
 			,@CreatedAt
 			,@UpdatedAt)
@@ -78,16 +85,6 @@ BEGIN
 			Notes
 	FROM TempInventoryAdj WHERE EmpId=@EmpId AND AdjId=(CASE WHEN @IsEdit=0 THEN 0 ELSE @OldAdjId END)
 	
-	--IF @OpenClose='Opening' OR @OpenClose='Intermediate'
-	--BEGIN
-	--	SET @SourceDocType = 'Inventory Adj Opening'
-	--	EXEC [Get_SourceDocOrder] @SourceDocType,@SourceDocOrder OUTPUT
-	--END
-	--ELSE
-	--BEGIN
-	--	SET @SourceDocType = 'Inventory Adj'
-	--	EXEC [Get_SourceDocOrder] @SourceDocType,@SourceDocOrder OUTPUT
-	--END
 	INSERT INTO [dbo].[TransactionJournal]
 			([TxDate]
 			,[TxTime]

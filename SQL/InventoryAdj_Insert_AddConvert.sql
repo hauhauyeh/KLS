@@ -2,12 +2,24 @@ CREATE OR ALTER PROCEDURE [dbo].[InventoryAdj_Insert]
 	@AdjId INT,
 	@AdjDate DATE,
 	@AdjType NVARCHAR(50),
+	@OpenClose NVARCHAR(50),
 	@Notes NVARCHAR(255),
 	@EmpId INT,
 	@NewAdjId INT OUTPUT
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	-- This procedure creates one inventory adjustment and immediately writes its
+	-- matching TransactionJournal header and detail rows.
+	--
+	-- Timing rule:
+	-- - Before Receiving  -> Inventory Adj         -> SourceDocOrder 600
+	-- - After Receiving   -> Inventory Adj Closing -> SourceDocOrder 695
+	--
+	-- RecalcQAV is not changed here. It already respects SourceDocOrder.
+
+	-- Section 1. Set up header variables, journal timing, and account lookups.
 	DECLARE @IsEdit BIT=0
 	DECLARE @OldAdjId INT
 	DECLARE @AdjNumber INT
@@ -21,7 +33,13 @@ BEGIN
 	DECLARE @AdjAcctCode NVARCHAR(50);
 	DECLARE @Amount DECIMAL(18,2);
 	DECLARE @CrDeAmount DECIMAL(18,2)= 0;
+
+	-- Closing adjustments must post after purchase receiving rows on the same day.
+	IF @OpenClose = 'After Receiving'
+		SET @SourceDocType = 'Inventory Adj Closing';
+
 	EXEC [Get_SourceDocOrder] @SourceDocType, @SourceDocOrder OUTPUT;
+
 	DECLARE @AcctTable AS Table(
 		Id INT IDENTITY(1,1),
 		AccountCode NVARCHAR(50),
@@ -34,6 +52,8 @@ BEGIN
 	UPDATE t SET t.AccountId=a.AccountId
 	FROM @AcctTable AS t INNER JOIN Account AS a ON t.AccountCode=a.AccountCode
 	SELECT @InvAccountId=AccountId FROM @AcctTable WHERE AccountCode='@INV'
+
+	-- Section 2. Create the InventoryAdj header row.
     IF @AdjId > 0
     BEGIN
         SET @IsEdit = 1;
@@ -48,6 +68,7 @@ BEGIN
 			([AdjNumber]
 			,[AdjDate]
 			,[AdjType]
+			,[OpenClose]
 			,[Notes]
 			,[CreatedAt]
 			,[UpdatedAt])
@@ -55,11 +76,14 @@ BEGIN
 			(@AdjNumber
 			,@AdjDate
 			,@Adjtype
+			,@OpenClose
 			,@Notes
 			,@CreatedAt
 			,@UpdatedAt)
 	SELECT @AdjId = SCOPE_IDENTITY();
 	SET @NewAdjId = @AdjId
+
+	-- Section 3. Copy staged temp-cart rows into InventoryAdjDetail.
 	INSERT INTO [dbo].[InventoryAdjDetail]
 			([AdjId]
 			,[ItemId]
@@ -105,11 +129,13 @@ BEGIN
 		AutoId INT IDENTITY(1,1) PRIMARY KEY,
 		ItemId INT,
 		NewQty DECIMAL(18,2),
-		QtyDiffer DECIMAL(18,2),
-		NewPrice DECIMAL(18,2),
-		SrcDetailId INT,
-		Direction VARCHAR(1)
+			QtyDiffer DECIMAL(18,2),
+			NewPrice DECIMAL(18,2),
+			SrcDetailId INT,
+			Direction VARCHAR(1)
 	)
+
+	-- Journal detail rows are staged first, then inserted in one ordered batch.
 	CREATE TABLE #InvTxDetail
 	(
 		AutoId int IDENTITY(1,1),
@@ -124,8 +150,8 @@ BEGIN
 		SrcDetailId INT
 	)
 
-	-- For Convert type: order source lines before destination lines
-	-- For other types: preserve original order
+	-- Section 4. Load adjustment detail rows in the order they must post.
+	-- Convert/Repack must process source rows before destination rows.
 	INSERT INTO	@MyTable(
 		ItemId,
 		NewQty,
@@ -143,10 +169,7 @@ BEGIN
 	FROM InventoryAdjDetail WHERE AdjId=@AdjId
 	ORDER BY CASE WHEN @AdjType='C' THEN CASE WHEN Direction='S' THEN 0 ELSE 1 END ELSE 0 END, AdjDetailId
 
-	/*
-		--- Convert type pre-calculation ---
-		Calculate source costs and destination unit cost before the loop
-	*/
+	-- Section 5. Pre-calculate convert/repack costs before writing any journal rows.
 	DECLARE @TotalSourceCost DECIMAL(18,6) = 0;
 	DECLARE @TotalDestQty DECIMAL(18,6) = 0;
 	DECLARE @DestUnitCost DECIMAL(18,6) = 0;
@@ -171,11 +194,7 @@ BEGIN
 		SELECT @DestCount = COUNT(*) FROM @MyTable WHERE Direction='D';
 	END
 
-	/*
-		Insert MyTable To TransactionJournalDetail
-		Adjustment Account
-		Inventory Account
-	*/
+	-- Section 6. Load the latest known inventory state for every affected item.
 	DECLARE @MaxRow INT
 	DECLARE @RowNum INT=1
 	SELECT @MaxRow = COUNT(AutoId) FROM @MyTable
@@ -201,7 +220,7 @@ BEGIN
 	INSERT INTO @LastInvTable
 	SELECT ItemId,ClosingQty,AverageCost,InventoryValue FROM cteclo WHERE RN=1
 
-	-- For Convert: calculate total source cost from authoritative avg costs
+	-- For Convert/Repack, source rows must use the authoritative average cost.
 	IF @AdjType = 'C'
 	BEGIN
 		SELECT @TotalSourceCost = SUM(ROUND(ABS(m.NewQty) * ISNULL(li.LAvgCost, 0), 6))
@@ -219,6 +238,8 @@ BEGIN
 		SET @DestUnitCost = ROUND(@TotalSourceCost / @TotalDestQty, 6);
 	END
 
+	-- Section 7. Build the TransactionJournalDetail rows one adjustment line at a time.
+	-- Each branch below explains how that adjustment type affects inventory value.
 	WHILE @RowNum <= @MaxRow
 	BEGIN
 
@@ -238,6 +259,8 @@ BEGIN
 
 		If @AdjType='Q'
 		BEGIN
+			-- Quantity Only:
+			-- keep the current average cost and adjust inventory value only for the quantity delta.
 			SET @NewPrice = @LAvgCost
 			SET @Amount = ROUND(((@NewQty-@LCloQty) * @NewPrice),2)
 
@@ -289,6 +312,8 @@ BEGIN
 
 		IF @AdjType='V'
 		BEGIN
+			-- Value Only:
+			-- keep the current quantity and change value by the difference in average cost.
 			SET @NewQty=@LCloQty
 			SET @Amount = ROUND((@NewQty * (@NewPrice-@LAvgCost)),2)
 			If @Amount>=0
@@ -339,6 +364,8 @@ BEGIN
 
 		IF @AdjType='B'
 		BEGIN
+			-- Qty And Value:
+			-- replace the full closing quantity and value with the new stated amount.
 			SET @Amount = ROUND((@NewQty * @NewPrice),2) - @LInventoryValue
 
 			If @Amount>=0
@@ -389,6 +416,8 @@ BEGIN
 
 		IF @AdjType='A'
 		BEGIN
+			-- Direct Amount:
+			-- write only the inventory-side row using the explicit amount.
 			SET @Amount = ROUND((@NewQty * @NewPrice),2)
 			EXEC Fn_Adjust_CrDeAmount @InvAccountId,@Amount,@CrDeAmount OUTPUT
 			INSERT INTO #InvTxDetail
@@ -415,6 +444,8 @@ BEGIN
 
 		IF @AdjType='N'
 		BEGIN
+			-- Normalization:
+			-- move quantity at the current average cost against COGS and inventory.
 			SET @NewPrice = @LAvgCost
 			SET @Amount = ROUND((@NewQty * @NewPrice),2)
 			SELECT @AccountId=AccountId FROM @AcctTable WHERE AccountCode='@COGS'
@@ -450,6 +481,8 @@ BEGIN
 
 		If @AdjType='QR'
 		BEGIN
+			-- Quantity Reset:
+			-- recalculate value from the current average cost and offset the difference.
 			SET @NewPrice = @LAvgCost
 			SET @Amount = ROUND((@NewQty * @NewPrice),2)
 
@@ -502,13 +535,14 @@ BEGIN
 			   ,@SrcDetailId)
 		END
 
-		IF @AdjType='C'  -- Convert/Repack
+		IF @AdjType='C'
 		BEGIN
-			IF @Direction = 'S'  -- Source: reduce inventory, use authoritative avg cost
+			-- Convert/Repack:
+			-- source rows reduce inventory at authoritative average cost,
+			-- destination rows increase inventory at the allocated destination cost.
+			IF @Direction = 'S'
 			BEGIN
 				SET @NewPrice = @LAvgCost
-				-- Qty stored as negative delta (e.g. -10000)
-				-- Amount = delta * avg cost (negative = inventory goes down)
 				SET @Amount = ROUND(@NewQty * @NewPrice, 2)
 
 				If @Amount >= 0
@@ -563,9 +597,11 @@ BEGIN
 			END
 		END
 
-NEXT_ITEM:
+	NEXT_ITEM:
 		SET @RowNum += 1
 	END
+
+	-- Section 8. Write the staged journal rows in a stable order.
 	INSERT INTO TransactionJournalDetail
 			([TxId]
 			,[AccountId]
@@ -588,5 +624,6 @@ NEXT_ITEM:
 	FROM #InvTxDetail ORDER BY AutoId
 	DELETE TempInventoryAdj WHERE EmpId=@EmpId
 
+	-- Section 9. Trigger recalculation from this adjustment date forward.
 	EXEC Recalc_AfterInsert @TxId,@AdjDate
 END

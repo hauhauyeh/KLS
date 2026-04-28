@@ -67,6 +67,8 @@ namespace KLS.Models
 
         public int? ShipmentLinkCount { get; set; }
 
+        public string? ShipmentContainerNos { get; set; }
+
         public int? PurchaseLinkCount { get; set; }
 
         public bool IsNormalPurchase { get; set; }
@@ -78,6 +80,8 @@ namespace KLS.Models
         public bool NeedsReallocation { get; set; }
 
         public bool HasFallback { get; set; }
+
+        public string? FallbackMethods { get; set; }
 
         public bool IsBillStage => StageId == 6;
 

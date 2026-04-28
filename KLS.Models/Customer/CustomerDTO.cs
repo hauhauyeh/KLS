@@ -186,9 +186,7 @@ namespace KLS.Models
 
         public int? ShippingCarrierId { get; set; }
 
-        public string? Username { get; set; }
-
-        public string? Password { get; set; }
+        public List<UserAccountDto>? WebAccounts { get; set; }
 
         public bool IsOnlineRegister { get; set; }
 

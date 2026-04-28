@@ -12,7 +12,7 @@ IF OBJECT_ID('dbo.Purchase_GetAllList_prev') IS NULL
     EXEC sp_rename 'Purchase_GetAllList', 'Purchase_GetAllList_prev';
 GO
 
-CREATE PROCEDURE [dbo].[Purchase_GetAllList]
+CREATE OR ALTER PROCEDURE [dbo].[Purchase_GetAllList]
     @Pageno INT,
     @Pagesize INT,
     @Search NVARCHAR(50),
@@ -70,6 +70,7 @@ BEGIN
         p.IsShipment,
         p.SourceShipmentId,
         spx.ShipmentLinkCount,
+        shipinfo.ShipmentContainerNos,
         sps.PurchaseLinkCount,
         CASE
         WHEN EXISTS (
@@ -121,7 +122,8 @@ BEGIN
                   AND sa.AllocationMethod = ''BY_VALUE_FALLBACK''
             ) THEN CAST(1 AS bit)
             ELSE CAST(0 AS bit)
-        END AS HasFallback';
+        END AS HasFallback,
+        fallback.FallbackMethods';
 
     SET @Qry += ' FROM Purchase AS p INNER JOIN Payee AS v ON p.PayeeId = v.PayeeId
         LEFT JOIN PurchaseStage AS pst ON pst.StageId = p.StageId
@@ -160,6 +162,14 @@ BEGIN
             WHERE sp.PurchaseId = p.PurchaseId
         ) spx
         OUTER APPLY (
+            SELECT STRING_AGG(s.ContainerNo, '', '') AS ShipmentContainerNos
+            FROM dbo.ShipmentPurchase sp
+            INNER JOIN dbo.Shipment s ON sp.ShipmentId = s.ShipmentId
+            WHERE sp.PurchaseId = p.PurchaseId
+              AND s.ContainerNo IS NOT NULL
+              AND LTRIM(RTRIM(s.ContainerNo)) <> ''''
+        ) shipinfo
+        OUTER APPLY (
             SELECT
                 COUNT(*) AS PurchaseLinkCount
             FROM dbo.ShipmentPurchase sp
@@ -172,6 +182,17 @@ BEGIN
             JOIN dbo.ShipmentPurchase sp ON sc.ShipmentId = sp.ShipmentId
             WHERE sp.PurchaseId = p.PurchaseId
         ) alloc
+        OUTER APPLY (
+            SELECT STRING_AGG(REPLACE(sa.AllocationMethod, ''_FALLBACK'', ''''), '', '') AS FallbackMethods
+            FROM (
+                SELECT DISTINCT sa.AllocationMethod
+                FROM dbo.ShipmentAllocation sa
+                JOIN dbo.ShipmentCharge sc ON sa.ChargeId = sc.ChargeId
+                JOIN dbo.ShipmentPurchase sp ON sc.ShipmentId = sp.ShipmentId
+                WHERE sp.PurchaseId = p.PurchaseId
+                  AND sa.AllocationMethod LIKE ''%FALLBACK''
+            ) sa
+        ) fallback
         WHERE 1=1';
 
     IF @Id IS NOT NULL

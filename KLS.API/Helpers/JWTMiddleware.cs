@@ -59,6 +59,10 @@ namespace KLS.API.Helpers
                             accessPermission = role.RoleAccess;
                             */
                         }
+
+                        var systemUserService = context.RequestServices.GetRequiredService<ISystemUserService>();
+                        var dbUser = systemUserService.GetById(jwtClaim.UserId);
+                        context.Items["DbRefToken"] = dbUser?.RefToken;
                     }
                     else
                     {

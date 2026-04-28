@@ -2,6 +2,7 @@ CREATE OR ALTER PROCEDURE [dbo].[InventoryAdj_PartialUpdate]
 	@AdjId INT,
 	@AdjDate DATE,
 	@AdjType NVARCHAR(50),
+	@OpenClose NVARCHAR(50),
 	@Notes NVARCHAR(255),
 	@EmpId INT
 AS
@@ -23,8 +24,18 @@ BEGIN
 	DECLARE @SrcDetailId INT
 	DECLARE @InvAccountId INT
 	DECLARE @AccountId INT
+	DECLARE @SourceDocOrder INT
+	DECLARE @SourceDocType NVARCHAR(50)='Inventory Adj'
 	SELECT @AdjNumber=AdjNumber FROM InventoryAdj WHERE AdjId=@AdjId
-	SELECT @TxId=TxId,@TxDate=TxDate FROM TransactionJournal WHERE SourceDocNumber=@AdjNumber AND SourceDocType='Inventory Adj'
+	IF @OpenClose = 'After Receiving'
+		SET @SourceDocType = 'Inventory Adj Closing'
+
+	EXEC [Get_SourceDocOrder] @SourceDocType, @SourceDocOrder OUTPUT
+
+	SELECT @TxId=TxId,@TxDate=TxDate
+	FROM TransactionJournal
+	WHERE SourceDocNumber=@AdjNumber
+	  AND SourceDocType IN ('Inventory Adj', 'Inventory Adj Closing')
 	DECLARE @AcctTable AS Table(
 		Id INT IDENTITY(1,1),
 		AccountCode NVARCHAR(50),
@@ -176,9 +187,14 @@ BEGIN
 		END
 		SET @RowNum+=1
 	END
-	UPDATE InventoryAdj SET AdjType=@AdjType,AdjDate=@AdjDate,Notes=@Notes,UpdatedAt=GETUTCDATE() 
+	UPDATE InventoryAdj SET AdjType=@AdjType,AdjDate=@AdjDate,OpenClose=@OpenClose,Notes=@Notes,UpdatedAt=GETUTCDATE() 
 	WHERE AdjId=@AdjId
-	UPDATE TransactionJournal SET TxDate=@AdjDate,TxTime=GETUTCDATE() WHERE TxId=@TxId
+	UPDATE TransactionJournal
+	SET TxDate=@AdjDate,
+		TxTime=GETUTCDATE(),
+		SourceDocType=@SourceDocType,
+		SourceDocOrder=@SourceDocOrder
+	WHERE TxId=@TxId
 	DELETE TempInventoryAdj WHERE EmpId=@EmpId 
 	IF @AdjDate!=@TxDate
 	BEGIN

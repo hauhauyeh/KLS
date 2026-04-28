@@ -370,6 +370,7 @@ VALUES
 (167, 'Report.Sales.SalesByItem',      'Sales By Item',     'Report', 'Sales', 'SalesByItem',      'page', 'Report', 616, 'Reports-SalesByItem'),
 (168, 'Report.Sales.SalesDetail',      'Sales Detail',      'Report', 'Sales', 'SalesDetail',      'page', 'Report', 617, 'Reports-SalesDetail'),
 (169, 'Report.Sales.SalesDaily2',      'Sales Daily 2',     'Report', 'Sales', 'SalesDaily2',      'page', 'Report', 618, 'Reports-SalesDaily2'),
+(254, 'Report.Sales.SalesByInvoice',   'Sales By Invoice',  'Report', 'Sales', 'SalesByInvoice',   'page', 'Report', 622, 'Reports-SalesByInvoice'),
 (170, 'Report.Sales.SalesYearly',      'Sales Yearly',      'Report', 'Sales', 'SalesYearly',      'page', 'Report', 619, 'Reports-SalesYearly'),
 (171, 'Report.Sales.SalesCommission',  'Sales Commission',  'Report', 'Sales', 'SalesCommission',  'page', 'Report', 620, 'Reports-SalesCommission'),
 (172, 'Report.Sales.SalesCommission2', 'Sales Commission 2','Report', 'Sales', 'SalesCommission2', 'page', 'Report', 621, 'Reports-SalesCommission2');

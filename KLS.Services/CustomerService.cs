@@ -102,12 +102,18 @@ namespace KLS.Services
                 dto.AdvancedDayOfMonth = deliverSchedule.DayOfMonth;
             }
 
-            var userAccount = Uow.UserAccounts.Find(u => u.PayeeId == payeeId).FirstOrDefault();
-            if (userAccount != null)
+            var userAccounts = Uow.UserAccounts.Find(u => u.PayeeId == payeeId).ToList();
+            var roles = Uow.UserRoles.GetAll().ToDictionary(r => r.RoleId, r => r.RoleName);
+            dto.WebAccounts = userAccounts.Select(u => new UserAccountDto
             {
-                dto.Username = userAccount.Username;
-                dto.Password = string.IsNullOrEmpty(userAccount.PasswordHash) ? null : Utilities.Decrypt(userAccount.PasswordHash);
-            }
+                UserId = u.UserId,
+                Username = u.Username,
+                Email = u.Email,
+                Phone = u.Phone,
+                Inactive = u.Inactive,
+                RoleId = u.RoleId,
+                RoleName = roles.GetValueOrDefault(u.RoleId, "Unknown")
+            }).ToList();
 
             //salesrep name
             if (dto.SalesRepId.HasValue)
@@ -161,6 +167,7 @@ namespace KLS.Services
             }
 
             Uow.Payees.Add(payee);
+            Uow.Commit();
 
             var customer = new Customer();
             customer.InjectFrom(dto);
@@ -171,7 +178,6 @@ namespace KLS.Services
 
             Uow.Customers.Add(customer);
             SyncDeliverSchedule(newPayeeId, dto);
-            SyncUserAccount(newPayeeId, dto);
             Uow.Commit();
 
             return GetById(newPayeeId);
@@ -185,9 +191,9 @@ namespace KLS.Services
             // Keep the Google-selected geocode values unless the user explicitly reselects an address
             // from autocomplete. Manual edits to Address/City/State/ZipCode are allowed for suite/site
             // adjustments and should not silently overwrite GooglePlaceId/lat/long/FormatAddress.
-            // var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
-            // var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
-            // var distance = GetDistance(dto.FullAddress, mapAPIKey);
+            var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
+            var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
+            var distance = GetDistance(dto.FullAddress, mapAPIKey);
 
             if (customer == null || existingPayee == null)
                 return null;
@@ -227,14 +233,14 @@ namespace KLS.Services
 
             // Disabled: automatic re-geocoding on save can replace a user-confirmed Google selection
             // after small manual address edits such as suite or site numbers.
-            // if (latlong != null)
-            // {
-            //     existingPayee.GoogleLat = latlong.Latitude;
-            //     existingPayee.GoogleLong = latlong.Longitude;
-            //     existingPayee.GooglePlaceId = latlong.PlaceId;
-            //     existingPayee.FormatAddress = latlong.FormatAddress;
-            //     existingPayee.Distance = distance;
-            // }
+            if (latlong != null)
+            {
+                existingPayee.GoogleLat = latlong.Latitude;
+                existingPayee.GoogleLong = latlong.Longitude;
+                existingPayee.GooglePlaceId = latlong.PlaceId;
+                existingPayee.FormatAddress = latlong.FormatAddress;
+                existingPayee.Distance = distance;
+            }
 
             Uow.Payees.Update(existingPayee);
 
@@ -281,7 +287,6 @@ namespace KLS.Services
             }
 
             SyncDeliverSchedule(dto.PayeeId, dto);
-            SyncUserAccount(dto.PayeeId, dto);
             Uow.Commit();
 
             return GetById(customer.PayeeId);
@@ -349,45 +354,6 @@ namespace KLS.Services
                 return dto.AdvancedDayOfMonth.HasValue || (dto.AdvancedWeekOfMonth.HasValue && dto.AdvancedDayOfWeek.HasValue);
 
             return false;
-        }
-
-        private void SyncUserAccount(int payeeId, CustomerDto dto)
-        {
-            var existingUser = Uow.UserAccounts.Find(u => u.PayeeId == payeeId).FirstOrDefault();
-            var hasUsername = !string.IsNullOrWhiteSpace(dto.Username);
-            var hasPassword = !string.IsNullOrWhiteSpace(dto.Password);
-
-            if (!hasUsername && !hasPassword)
-                return;
-
-            if (!hasUsername || !hasPassword)
-                throw new ArgumentException("Username and password are both required for web access.");
-
-            if (existingUser != null)
-            {
-                existingUser.Email = dto.Email ?? string.Empty;
-                existingUser.Phone = dto.Phone1;
-                existingUser.Username = dto.Username!;
-                existingUser.PasswordHash = Utilities.Encrypt(dto.Password!);
-                existingUser.Inactive = dto.IsClosed;
-                existingUser.UpdatedAt = DateTime.UtcNow;
-
-                Uow.UserAccounts.Update(existingUser);
-                return;
-            }
-
-            var userAccount = new UserAccount
-            {
-                RoleId = 1,
-                PayeeId = payeeId,
-                Email = dto.Email ?? string.Empty,
-                Username = dto.Username!,
-                Phone = dto.Phone1,
-                PasswordHash = Utilities.Encrypt(dto.Password!),
-                Inactive = dto.IsClosed
-            };
-
-            Uow.UserAccounts.Add(userAccount);
         }
 
         public int GetMaxCustomerId()

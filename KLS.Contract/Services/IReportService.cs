@@ -32,6 +32,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<RptSalesTax>? SalesTax(ReportRequest reportReq);
 
+        IQueryable<RptServiceSummary> ServiceSummary(ReportRequest reportReq);
+
         IEnumerable<RptResponsible> Responsible(DateOnly? shipDate);
 
         List<RptDailySummary> DailySummary(DateOnly? shipDate);
@@ -79,6 +81,8 @@ namespace KLS.Contract.Services
         IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
 
         IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
+
+        IQueryable<RptSalesByInvoiceRow> SalesByInvoice(ReportRequest reportReq);
 
         RptSalesYearly SalesYearly();
 

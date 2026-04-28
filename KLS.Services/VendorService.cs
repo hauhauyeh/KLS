@@ -70,6 +70,7 @@ namespace KLS.Services
             payee.PayeeType = EnumHelper.PayeeType.V.ToString();
 
             Uow.Payees.Add(payee);
+            Uow.Commit();
 
             var vendor = new Vendor();
             vendor.InjectFrom(vendorDTO);
