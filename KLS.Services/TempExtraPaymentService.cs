@@ -45,6 +45,7 @@ namespace KLS.Services
                 existing.AsCredit = extraPayment.AsCredit;
                 existing.AsIncome = extraPayment.AsIncome;
                 existing.AsRefund = extraPayment.AsRefund;
+                existing.AsCCMemo = extraPayment.AsCCMemo;
 
                 Uow.TempExtraPayments.Update(existing);
                 Uow.Commit();

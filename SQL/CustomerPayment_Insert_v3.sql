@@ -16,6 +16,10 @@ CREATE PROCEDURE [dbo].[CustomerPayment_Insert]
     @PaymentAmount DECIMAL(18,2),
     @Notes NVARCHAR(255),
     @CCFee DECIMAL(18,2),
+    @PreviousExtraDisposition NVARCHAR(50) = NULL,
+    @NewExtraDisposition NVARCHAR(50) = NULL,
+    @ExtraDispositionChanged BIT = NULL,
+    @SelectedExtraDispositionAmount DECIMAL(18,2) = NULL,
     @EmpId INT,
     @NewPaymentId INT OUTPUT
 AS
@@ -73,15 +77,20 @@ BEGIN
     DECLARE @TotalDiscountApplied DECIMAL(18,2) = 0;
     DECLARE @CreditMemoUsed DECIMAL(18,2) = 0;
     DECLARE @PriorUnappliedUsed DECIMAL(18,2) = 0;
+    DECLARE @DirectDocumentApplied DECIMAL(18,2) = 0;
+    DECLARE @DirectCCFeeApplied DECIMAL(18,2) = 0;
 
     DECLARE @AsCredit BIT = 0;
     DECLARE @AsIncome BIT = 0;
     DECLARE @AsRefund BIT = 0;
+    DECLARE @AsCCFee BIT = 0;
     DECLARE @ExtraAmount DECIMAL(18,2) = 0;
     DECLARE @SourceUseAsIncome DECIMAL(18,2) = 0;
     DECLARE @SourceUseRefundSelf DECIMAL(18,2) = 0;
     DECLARE @PrevAsIncome DECIMAL(18,2) = 0;
     DECLARE @PrevRefund DECIMAL(18,2) = 0;
+    DECLARE @PrevCCFee DECIMAL(18,2) = 0;
+    DECLARE @HasExplicitDispositionSwitch BIT = ISNULL(@ExtraDispositionChanged, 0);
 
     -- #AffectedSourcePayment:
     -- list of older customer payments that are acting as source credit.
@@ -102,6 +111,7 @@ BEGIN
     INSERT INTO @AcctTable(AccountCode) VALUES('@UF');
     INSERT INTO @AcctTable(AccountCode) VALUES('@IDG');
     INSERT INTO @AcctTable(AccountCode) VALUES('@IOT');
+    INSERT INTO @AcctTable(AccountCode) VALUES('@ICCF');
     INSERT INTO @AcctTable(AccountCode) VALUES('@CRP');
     INSERT INTO @AcctTable(AccountCode) VALUES('@EBAD');
     INSERT INTO @AcctTable(AccountCode) VALUES('@INV');
@@ -163,14 +173,56 @@ BEGIN
     -- - AsCredit: leave leftover as unapplied credit
     -- - AsIncome: recognize leftover as income
     -- - AsRefund: reserve leftover for later refund issuance
+    -- - AsCCFee: use the whole leftover amount as card fee
     SELECT
         @AsCredit = AsCredit,
         @AsIncome = AsIncome,
         @AsRefund = AsRefund,
+        @AsCCFee = AsCCMemo,
         @ExtraAmount = ExtraAmount
     FROM dbo.TempExtraPayment
     WHERE PayeeId = @PayeeId
       AND CustomerPaymentId = @CustomerPaymentId;
+
+    -- When the user explicitly changed disposition in the current save flow,
+    -- trust the save-request contract first instead of relying on temp-flag timing.
+    IF @HasExplicitDispositionSwitch = 1 AND ISNULL(@NewExtraDisposition, '') <> ''
+    BEGIN
+        SET @AsCredit = 0;
+        SET @AsIncome = 0;
+        SET @AsRefund = 0;
+        SET @AsCCFee = 0;
+        SET @ExtraAmount = ISNULL(@SelectedExtraDispositionAmount, 0);
+
+        IF @NewExtraDisposition = 'Credit'
+            SET @AsCredit = 1;
+        ELSE IF @NewExtraDisposition = 'Income'
+            SET @AsIncome = 1;
+        ELSE IF @NewExtraDisposition = 'Refund'
+            SET @AsRefund = 1;
+        ELSE IF @NewExtraDisposition = 'CCFee'
+            SET @AsCCFee = 1;
+    END;
+
+    -- As CC Fee is only valid for credit-card payments.
+    -- Enforce that rule here too so non-UI callers cannot persist an invalid disposition.
+    IF @AsCCFee = 1 AND ISNULL(@PaymentMethod, '') <> 'CREDIT CARD'
+    BEGIN
+        THROW 50005, 'As CC Fee is only allowed when PaymentMethod is CREDIT CARD.', 1;
+    END;
+
+    -- Strict As CC Fee rule:
+    -- if the user chose As CC Fee, the whole leftover amount becomes fee.
+    -- That means:
+    -- - no leftover is treated as credit/income/refund
+    -- - @CCFee is driven from the explicit extra-disposition amount
+    IF @AsCCFee = 1
+    BEGIN
+        SET @AsCredit = 0;
+        SET @AsIncome = 0;
+        SET @AsRefund = 0;
+        SET @CCFee = @ExtraAmount;
+    END;
 
     -- Phase 1C. Leave-as-credit pre-adjustment.
     --
@@ -253,24 +305,43 @@ BEGIN
             THROW 50004, @EditBlockedReason, 1;
         END;
 
-        -- Preserve prior extra-disposition intent if the current temp request no longer
-        -- carries it. This mainly matters for edit scenarios where the header is being
-        -- rebuilt but the user did not actively reopen/change the extra dialog.
+        -- Preserve prior extra-disposition intent only when the user did NOT
+        -- explicitly switch disposition in the current edit flow.
+        --
+        -- Replacement rule:
+        -- - explicit switch = trust the current save contract only
+        -- - untouched edit save = allow fallback to prior intent
         SELECT @PrevRefund = ISNULL(SUM(ISNULL(pd.PaymentApplied, 0)), 0)
         FROM dbo.CustomerPaymentDetail pd
         WHERE pd.CustomerPaymentId = @CustomerPaymentId
           AND pd.DetailRole = 'AsRefund'
           AND ISNULL(pd.SourcePaymentNumber, @PaymentNumber) = @PaymentNumber;
 
-        IF @ExtraAmount = 0
+        SELECT @PrevCCFee = ISNULL(SUM(ISNULL(pd.PaymentApplied, 0)), 0)
+        FROM dbo.CustomerPaymentDetail pd
+        WHERE pd.CustomerPaymentId = @CustomerPaymentId
+          AND pd.DetailRole = 'CCFee';
+
+        IF @HasExplicitDispositionSwitch = 0
+           AND @ExtraAmount = 0
            AND @AsIncome = 0
            AND @AsRefund = 0
-           AND (@PrevAsIncome > 0 OR @PrevRefund > 0)
+           AND @AsCCFee = 0
+           AND (@PrevAsIncome > 0 OR @PrevRefund > 0 OR @PrevCCFee > 0)
         BEGIN
-            SET @ExtraAmount = CASE WHEN @PrevRefund > 0 THEN @PrevRefund ELSE @PrevAsIncome END;
+            SET @ExtraAmount =
+                CASE
+                    WHEN @PrevRefund > 0 THEN @PrevRefund
+                    WHEN @PrevCCFee > 0 THEN @PrevCCFee
+                    ELSE @PrevAsIncome
+                END;
             SET @AsRefund = CASE WHEN @PrevRefund > 0 THEN 1 ELSE 0 END;
-            SET @AsIncome = CASE WHEN @PrevRefund > 0 THEN 0 ELSE 1 END;
+            SET @AsCCFee = CASE WHEN @PrevRefund = 0 AND @PrevCCFee > 0 THEN 1 ELSE 0 END;
+            SET @AsIncome = CASE WHEN @PrevRefund > 0 OR @PrevCCFee > 0 THEN 0 ELSE 1 END;
             SET @AsCredit = 0;
+
+            IF @AsCCFee = 1
+                SET @CCFee = @ExtraAmount;
         END;
 
         -- Delete the old header now. The delete trigger cleans dependent committed rows.
@@ -784,31 +855,73 @@ BEGIN
       AND IsCreditMemo = 1
       AND PaymentApplied < 0;
 
+    -- Header applied amount should mean only real document application.
+    -- In plain words:
+    -- - invoice rows count
+    -- - debit memo rows count
+    -- - CCFee rows do NOT count
+    --
+    -- Why:
+    -- CCFee is a separate fee carved out of the gross receipt.
+    -- It is not customer AR application and it is not reusable customer credit.
     SELECT @CashApplied = ISNULL(SUM(ISNULL(PaymentApplied, 0)), 0)
     FROM dbo.CustomerPaymentDetail
     WHERE CustomerPaymentId = @CustomerPaymentId
-      AND DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+      AND DetailRole IN ('Invoice', 'DebitMemo')
       AND ISNULL(SourceCustomerPaymentId, 0) = 0;
 
     SET @CashApplied = @CashApplied - @CreditMemoUsed;
+
+    -- For AR posting, use only the real document application amount.
+    -- This is the invoice/debit-memo portion of the receipt before any fee posting.
+    SELECT @DirectDocumentApplied = ISNULL(SUM(ISNULL(PaymentApplied, 0)), 0)
+    FROM dbo.CustomerPaymentDetail
+    WHERE CustomerPaymentId = @CustomerPaymentId
+      AND DetailRole IN ('Invoice', 'DebitMemo')
+      AND ISNULL(SourceCustomerPaymentId, 0) = 0;
+
+    -- Track the direct fee portion separately.
+    -- This amount is consumed by the payment, but it is not AR application
+    -- and it must not remain as reusable customer credit.
+    SELECT @DirectCCFeeApplied = ISNULL(SUM(ISNULL(PaymentApplied, 0)), 0)
+    FROM dbo.CustomerPaymentDetail
+    WHERE CustomerPaymentId = @CustomerPaymentId
+      AND DetailRole = 'CCFee'
+      AND ISNULL(SourceCustomerPaymentId, 0) = 0;
 
     SELECT @TotalDiscountApplied = ISNULL(SUM(ISNULL(DiscountApplied, 0)), 0)
     FROM dbo.CustomerPaymentDetail
     WHERE CustomerPaymentId = @CustomerPaymentId;
 
+    -- Prior source-credit usage should follow the same rule.
+    -- Only invoice/debit-memo application funded by prior credit counts here.
+    -- CCFee does not belong in reusable-credit math.
     SELECT @PriorUnappliedUsed = ISNULL(SUM(ISNULL(PaymentApplied, 0)), 0)
     FROM dbo.CustomerPaymentDetail
     WHERE CustomerPaymentId = @CustomerPaymentId
-      AND DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+      AND DetailRole IN ('Invoice', 'DebitMemo')
       AND ISNULL(SourceCustomerPaymentId, 0) <> 0;
 
-    SET @AR = @PaymentAmount + @TotalDiscountApplied;
+    -- AR posting rule in plain words:
+    -- - gross cash stays on UF
+    -- - fee stays on ICCF
+    -- - AR gets only real customer document settlement plus discount
+    -- - AsIncome does NOT reduce AR here because it already gets its own
+    --   dedicated IOT posting line later in the journal build
+    -- - AsCredit DOES increase AR here because unapplied customer credit still
+    --   belongs on AR even when it is not yet applied to a document
+    -- - AsRefund ALSO increases AR here because the initial receipt still
+    --   creates customer credit before the later AR/CRP reserve reclass
+    SET @AR = @DirectDocumentApplied + @TotalDiscountApplied;
 
     IF @IsBadDebt = 1
         SET @AR = @CashApplied + @TotalDiscountApplied;
 
-    IF @AsIncome = 1
-        SET @AR = @AR - @ExtraAmount;
+    IF @AsCredit = 1
+        SET @AR = @AR + @ExtraAmount;
+
+    IF @AsRefund = 1
+        SET @AR = @AR + @ExtraAmount;
 
     -- Phase 7A. Translate business totals into journal posting amounts.
     --
@@ -829,6 +942,13 @@ BEGIN
     DECLARE @PostBadDebtDiscount DECIMAL(18,2) = @TotalDiscountApplied;
     DECLARE @PostUF DECIMAL(18,2) = @PaymentAmount;
     DECLARE @PostIDG DECIMAL(18,2) = @TotalDiscountApplied;
+    DECLARE @PostICCF DECIMAL(18,2) = ISNULL((
+        SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+        FROM dbo.CustomerPaymentDetail pd
+        WHERE pd.CustomerPaymentId = @CustomerPaymentId
+          AND pd.DetailRole = 'CCFee'
+          AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
+    ), 0);
     -- Reuse of prior unapplied payments or credit memos creates no new G/L.
     -- Those source documents already created their own accounting when they were created.
     DECLARE @PostIOTReuse DECIMAL(18,2) = 0;
@@ -851,6 +971,16 @@ BEGIN
     -- Phase 9. Insert TransactionJournalDetail rows.
     --
     -- These lines are the actual accounting result of the save.
+    --
+    -- Sign convention reminder for every account line in this section:
+    -- - first set @Amount to the business increase/decrease for that account
+    -- - then call Fn_Adjust_CrDeAmount
+    -- - the function converts that increase/decrease into debit/credit-side
+    --   storage through CrDeAmount
+    --
+    -- In other words:
+    -- - Amount = source of truth for INC / DEC
+    -- - CrDeAmount = derived debit / credit storage
 
     -- Phase 9A. Post the AR control line.
     --
@@ -942,6 +1072,35 @@ BEGIN
         BEGIN
             SET @Amount = @PostIDG;
             SELECT @AccountId = AccountId FROM @AcctTable WHERE AccountCode = '@IDG';
+            EXEC dbo.Fn_Adjust_CrDeAmount @AccountId, @Amount, @CrDeAmount OUTPUT;
+
+            INSERT INTO dbo.TransactionJournalDetail
+            (
+                TxId, AccountId, PayeeId, Amount, CrDeAmount
+            )
+            VALUES
+            (
+                @TxId, @AccountId, @PayeeId, @Amount, @CrDeAmount
+            );
+        END;
+
+        -- Post the fee as its own dedicated credit line.
+        -- This keeps fee out of AR application and out of reusable customer credit.
+        IF @PostICCF <> 0
+        BEGIN
+            /*
+                Sign convention reminder:
+
+                Amount is the source of truth for account increase/decrease.
+                Fn_Adjust_CrDeAmount is responsible for converting that business
+                increase/decrease into debit-side or credit-side storage.
+
+                So for credit-card fee income:
+                - income increasing means Amount must be positive
+                - the function will then derive the credit-side CrDeAmount
+            */
+            SET @Amount = @PostICCF;
+            SELECT @AccountId = AccountId FROM @AcctTable WHERE AccountCode = '@ICCF';
             EXEC dbo.Fn_Adjust_CrDeAmount @AccountId, @Amount, @CrDeAmount OUTPUT;
 
             INSERT INTO dbo.TransactionJournalDetail
@@ -1110,20 +1269,27 @@ BEGIN
 
     UPDATE dbo.CustomerPayment
     SET
+        -- Current payment header refresh.
+        --
+        -- Keep the rule simple:
+        -- - PaymentApplied = only invoice/debit-memo application
+        -- - UnappliedAmount = reusable customer credit only
+        -- - CCFee is consumed by the receipt, so subtract it from reusable leftover
+        -- - CCFee still does NOT count as PaymentApplied
         PaymentApplied = (
             SELECT ISNULL(SUM(ISNULL(PaymentApplied, 0)), 0)
             FROM dbo.CustomerPaymentDetail
             WHERE CustomerPaymentId = @CustomerPaymentId
-              AND DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+              AND DetailRole IN ('Invoice', 'DebitMemo')
               AND ISNULL(SourceCustomerPaymentId, 0) = 0
         ) - @CreditMemoUsed,
         UnappliedAmount = @PaymentAmount - (
             SELECT ISNULL(SUM(ISNULL(PaymentApplied, 0)), 0)
             FROM dbo.CustomerPaymentDetail
             WHERE CustomerPaymentId = @CustomerPaymentId
-              AND DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+              AND DetailRole IN ('Invoice', 'DebitMemo')
               AND ISNULL(SourceCustomerPaymentId, 0) = 0
-        ) + @CreditMemoUsed - (ISNULL(AsIncome, 0) - @SourceUseAsIncome) - @SourceUseRefundSelf - @ConsumedByOthers
+        ) - @DirectCCFeeApplied + @CreditMemoUsed - (ISNULL(AsIncome, 0) - @SourceUseAsIncome) - @SourceUseRefundSelf - @ConsumedByOthers
     WHERE CustomerPaymentId = @CustomerPaymentId;
 
     ;WITH SourceHeader AS
@@ -1146,11 +1312,21 @@ BEGIN
                   AND pd.DetailRole = 'AsIncome'
                   AND ISNULL(pd.SourceCustomerPaymentId, 0) <> cp.CustomerPaymentId
             ), 0),
+            -- Source-payment header refresh uses the same rule as the current payment:
+            -- count only invoice/debit-memo rows as PaymentApplied,
+            -- but subtract CCFee from reusable leftover credit.
             OwnCashApplied = ISNULL((
                 SELECT SUM(ISNULL(pd.PaymentApplied, 0))
                 FROM dbo.CustomerPaymentDetail pd
                 WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
-                  AND pd.DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+                  AND pd.DetailRole IN ('Invoice', 'DebitMemo')
+                  AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
+            ), 0),
+            DirectCCFeeApplied = ISNULL((
+                SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+                  AND pd.DetailRole = 'CCFee'
                   AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
             ), 0),
             CreditMemoUsed = ISNULL((
@@ -1172,7 +1348,7 @@ BEGIN
     UPDATE cp
     SET
         PaymentApplied = sh.OwnCashApplied - sh.CreditMemoUsed,
-        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.SourceUseRefundSelf - sh.ConsumedByOthers
+        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied - sh.DirectCCFeeApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.SourceUseRefundSelf - sh.ConsumedByOthers
     FROM dbo.CustomerPayment cp
     INNER JOIN SourceHeader sh
         ON sh.CustomerPaymentId = cp.CustomerPaymentId;

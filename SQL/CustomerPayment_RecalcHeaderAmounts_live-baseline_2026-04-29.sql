@@ -1,7 +1,5 @@
--- Recalculate CustomerPayment.PaymentApplied and CustomerPayment.UnappliedAmount
--- from committed unified CustomerPaymentDetail truth.
---
--- Use this after unified-detail rollout, or anytime header amounts drift.
+-- Live baseline captured on 2026-04-29 before the next CCFee header-only fix.
+-- This matches the pre-fix behavior where CCFee still counts inside OwnCashApplied.
 
 ;WITH HeaderSource AS
 (
@@ -23,22 +21,11 @@
               AND pd.DetailRole = 'AsIncome'
               AND ISNULL(pd.SourceCustomerPaymentId, 0) <> cp.CustomerPaymentId
         ), 0),
-        -- Global header recalculation must follow the same simple rule:
-        -- invoice/debit-memo rows count as customer application;
-        -- CCFee does not count as PaymentApplied,
-        -- but it does reduce reusable leftover credit.
         OwnCashApplied = ISNULL((
             SELECT SUM(ISNULL(pd.PaymentApplied, 0))
             FROM dbo.CustomerPaymentDetail pd
             WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
-              AND pd.DetailRole IN ('Invoice', 'DebitMemo')
-              AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
-        ), 0),
-        DirectCCFeeApplied = ISNULL((
-            SELECT SUM(ISNULL(pd.PaymentApplied, 0))
-            FROM dbo.CustomerPaymentDetail pd
-            WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
-              AND pd.DetailRole = 'CCFee'
+              AND pd.DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
               AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
         ), 0),
         CreditMemoUsed = ISNULL((
@@ -58,7 +45,7 @@
 UPDATE cp
 SET
     PaymentApplied = hs.OwnCashApplied - hs.CreditMemoUsed,
-    UnappliedAmount = hs.PaymentAmount - hs.OwnCashApplied - hs.DirectCCFeeApplied + hs.CreditMemoUsed - (hs.AsIncome - hs.SourceUseAsIncome) - hs.SourceUseRefundSelf - hs.ConsumedByOthers
+    UnappliedAmount = hs.PaymentAmount - hs.OwnCashApplied + hs.CreditMemoUsed - (hs.AsIncome - hs.SourceUseAsIncome) - hs.SourceUseRefundSelf - hs.ConsumedByOthers
 FROM dbo.CustomerPayment cp
 INNER JOIN HeaderSource hs
     ON hs.CustomerPaymentId = cp.CustomerPaymentId;

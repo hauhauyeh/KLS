@@ -592,10 +592,26 @@ namespace KLS.Services
                     && d.SourceCustomerPaymentId == payment.CustomerPaymentId)
                 .Sum(d => (decimal?)d.PaymentApplied) ?? 0m;
 
+            var ccFeeAmount = payment.PaymentDetails?
+                .Where(d => d.DetailRole == "CCFee")
+                .Sum(d => (decimal?)d.PaymentApplied) ?? 0m;
+            var isCreditCardPayment = string.Equals(payment.PaymentMethod, "CREDIT CARD", StringComparison.OrdinalIgnoreCase);
+
             if (refundAmount > 0)
             {
                 payment.ExtraDisposition = "Refund";
                 payment.ExtraDispositionAmount = refundAmount;
+                return;
+            }
+
+            // A persisted CCFee row on a credit-card payment means the leftover was
+            // explicitly disposed as CC fee. Treat that as its own first-class
+            // disposition on reload/edit so the UI can reopen the payment in the
+            // same disposition the user originally chose.
+            if (isCreditCardPayment && ccFeeAmount > 0)
+            {
+                payment.ExtraDisposition = "CCFee";
+                payment.ExtraDispositionAmount = ccFeeAmount;
                 return;
             }
 

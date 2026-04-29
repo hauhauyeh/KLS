@@ -27,5 +27,13 @@ namespace KLS.Models
         public string? Notes { get; set; }
 
         public decimal? CCFee { get; set; }
+
+        public string? PreviousExtraDisposition { get; set; }
+
+        public string? NewExtraDisposition { get; set; }
+
+        public bool? ExtraDispositionChanged { get; set; }
+
+        public decimal? SelectedExtraDispositionAmount { get; set; }
     }
 }

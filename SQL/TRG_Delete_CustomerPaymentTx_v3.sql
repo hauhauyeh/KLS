@@ -127,11 +127,32 @@ BEGIN
                   AND pd.DetailRole = 'AsIncome'
                   AND ISNULL(pd.SourceCustomerPaymentId, 0) <> cp.CustomerPaymentId
             ), 0),
+            /*
+            Legacy delete-trigger header baseline for quick rollback/reference:
+
             OwnCashApplied = ISNULL((
                 SELECT SUM(ISNULL(pd.PaymentApplied, 0))
                 FROM dbo.CustomerPaymentDetail pd
                 WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
                   AND pd.DetailRole IN ('Invoice', 'DebitMemo', 'CCFee')
+                  AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
+            ), 0),
+            */
+            -- Keep delete-trigger header math on the same business rule as save/recalc:
+            -- - only Invoice / DebitMemo count as customer application
+            -- - CCFee is consumed by the payment but does not count as PaymentApplied
+            OwnCashApplied = ISNULL((
+                SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+                  AND pd.DetailRole IN ('Invoice', 'DebitMemo')
+                  AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
+            ), 0),
+            DirectCCFeeApplied = ISNULL((
+                SELECT SUM(ISNULL(pd.PaymentApplied, 0))
+                FROM dbo.CustomerPaymentDetail pd
+                WHERE pd.CustomerPaymentId = cp.CustomerPaymentId
+                  AND pd.DetailRole = 'CCFee'
                   AND ISNULL(pd.SourceCustomerPaymentId, 0) = 0
             ), 0),
             CreditMemoUsed = ISNULL((
@@ -153,7 +174,7 @@ BEGIN
     UPDATE cp
     SET
         PaymentApplied = sh.OwnCashApplied - sh.CreditMemoUsed,
-        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.SourceUseRefundSelf - sh.ConsumedByOthers
+        UnappliedAmount = sh.PaymentAmount - sh.OwnCashApplied - sh.DirectCCFeeApplied + sh.CreditMemoUsed - (sh.AsIncome - sh.SourceUseAsIncome) - sh.SourceUseRefundSelf - sh.ConsumedByOthers
     FROM dbo.CustomerPayment cp
     INNER JOIN SourceHeader sh
         ON sh.CustomerPaymentId = cp.CustomerPaymentId;
