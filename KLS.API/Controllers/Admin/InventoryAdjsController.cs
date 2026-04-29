@@ -113,8 +113,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Product.InventoryAdj.QtyAdj")]
         public IActionResult QtyAdj([FromBody] QtyAdjReq adjReq)
         {
-            _inventoryAdjService.QtyAdj(adjReq);
-            return Ok();
+            return Ok(_inventoryAdjService.QtyAdj(adjReq));
         }
 
 

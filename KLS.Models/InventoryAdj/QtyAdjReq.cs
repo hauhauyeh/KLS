@@ -12,6 +12,8 @@ namespace KLS.Models
 
         public int ItemId { get; set; }
 
+        public string? OpenClose { get; set; }
+
         public decimal? NewQty { get; set; }
 
         public decimal? NewPrice { get; set; }

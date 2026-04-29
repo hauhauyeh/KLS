@@ -11,9 +11,11 @@ namespace KLS.Contract.Services
     {
         PagingResponse<InventoryAdjList> GetPagedList(InventoryAdjListReq inventoryAdjListReq);
 
+        IEnumerable<InventoryAdjList> GetHistoryByItem(int itemId);
+
         InventoryAdj GetById(int adjId);
 
-        IEnumerable<InventoryAdjList> Save(InventoryAdj inventoryAdj);
+        int Save(InventoryAdj inventoryAdj);
 
         void Inject(int adjId);
 
@@ -25,7 +27,7 @@ namespace KLS.Contract.Services
 
         void UpdateDetailNotes(InventoryAdjList inventoryAdjList);
 
-        void QtyAdj(QtyAdjReq adjReq);
+        InventoryClosingDetail QtyAdj(QtyAdjReq adjReq);
 
         InventoryClosingDetail GetClosingQty(int itemId);
     }

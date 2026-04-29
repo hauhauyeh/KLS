@@ -126,6 +126,26 @@ BEGIN
     FROM dbo.Account
     WHERE AccountCode = '@INV';
 
+    -- QtyBefore and PriceBefore show the inventory state immediately before each adjustment row.
+    -- Even though each list row only needs one previous inventory row, SQL Server must know the
+    -- full item transaction order to identify that previous row correctly.
+    --
+    -- Do not filter this CTE to only SourceDocOrder 600/695. Those are the adjustment rows, but
+    -- the previous inventory state can come from a purchase, sale, return, opening balance, or
+    -- another adjustment. Filtering to only adjustment rows would be faster but would return the
+    -- previous adjustment, not the true previous inventory state.
+    --
+    -- This page can include many different items. The CTE below calculates the ordered inventory
+    -- history for the items on the current page, then joins the matching adjustment rows back to
+    -- #InvTable. The supporting index
+    -- IX_TransactionJournalDetail_AccountId_ItemId_TxId_History helps SQL Server find the relevant
+    -- inventory rows by account and item before it applies the TxDate/SourceDocOrder/TxDetailId order.
+    --
+    -- Tested alternatives:
+    -- - OUTER APPLY TOP (1) per adjustment row matched the output but was slower.
+    -- - A scoped-window rewrite matched the output but was also slower.
+    -- Keep this set-based window version unless a future execution plan proves a better shape.
+
     ;WITH CTE_Qty AS (
         SELECT
             t.TxId,

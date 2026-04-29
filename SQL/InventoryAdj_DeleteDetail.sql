@@ -50,8 +50,12 @@ BEGIN
         RETURN;
     END;
 
-    -- Type A adjustments delete the whole header when any detail is removed.
-    -- Keep that legacy behavior unchanged.
+    -- Retired-type note:
+    -- Type A is no longer supported anywhere in the active UI/backend/SQL path.
+    -- DeleteDetail now follows the same normal detail-delete flow for all active
+    -- adjustment types. The old Type A branch is kept below as commented
+    -- reference only for rollback/history review.
+    /*
     IF @AdjType = 'A'
     BEGIN
         DELETE FROM dbo.InventoryAdj
@@ -59,6 +63,7 @@ BEGIN
 
         RETURN;
     END;
+    */
 
     -- Remove the selected detail row from both the adjustment detail table
     -- and the matching transaction journal detail rows.

@@ -74,14 +74,9 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("Adjustment/{itemId}")]
         [DisplayName("View Adjustment History")]
         [PermissionKey("Product.ItemHistory.Adjustment")]
-        public IActionResult Adjustment(string itemId)
+        public IActionResult Adjustment(int itemId)
         {
-            var adjustments = _adjustmentService.GetPagedList(new InventoryAdjListReq
-            {
-                Pagesize = 300,
-                Search = itemId
-            });
-            return Ok(adjustments.RowData);
+            return Ok(_adjustmentService.GetHistoryByItem(itemId));
         }
 
         #endregion

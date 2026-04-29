@@ -6,6 +6,7 @@ GO
 CREATE OR ALTER PROCEDURE [dbo].[InventoryAdj_FromProduct]
     @AdjDate DATE,
     @ItemId INT,
+    @OpenClose NVARCHAR(50),
     @NewQty DECIMAL(18,2),
     @NewPrice DECIMAL(18,2),
     @EmpId INT
@@ -15,6 +16,14 @@ BEGIN
 
     DECLARE @AdjType NVARCHAR(50) = 'Q';
     DECLARE @NewAdjId INT;
+    DECLARE @ResolvedOpenClose NVARCHAR(50) = LTRIM(RTRIM(ISNULL(@OpenClose, '')));
+
+    -- Product-origin adjustments default to the normal before-receiving timing
+    -- unless the caller explicitly chooses the closing/after-receiving path.
+    IF @ResolvedOpenClose NOT IN ('Before Receiving', 'After Receiving')
+    BEGIN
+        SET @ResolvedOpenClose = 'Before Receiving';
+    END;
 
     -- When price is being adjusted, this quick-create path should use
     -- the combined quantity/price adjustment type.
@@ -23,6 +32,10 @@ BEGIN
         SET @AdjType = 'B';
     END;
 
+    -- Qty-only reset from the product dialog still needs to zero out cost.
+    -- The UI no longer exposes price editing here, so a zero quantity means
+    -- "reset inventory and reset average cost" unless another caller
+    -- explicitly passes a replacement price.
     IF @NewQty = 0 AND @NewPrice IS NULL
     BEGIN
         SET @NewPrice = 0;
@@ -48,14 +61,12 @@ BEGIN
         @NewPrice
     );
 
-    -- Product-origin adjustments should continue to post as the normal
-    -- "Before Receiving" timing unless the user opens the full adjustment
-    -- screen and changes the timing explicitly.
+    -- The qty-adjust dialog now passes the chosen timing directly.
     EXEC dbo.InventoryAdj_Insert
         @AdjId = 0,
         @AdjDate = @AdjDate,
         @AdjType = @AdjType,
-        @OpenClose = 'Before Receiving',
+        @OpenClose = @ResolvedOpenClose,
         @Notes = NULL,
         @EmpId = @EmpId,
         @NewAdjId = @NewAdjId OUTPUT;
