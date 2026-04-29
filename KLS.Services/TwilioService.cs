@@ -22,26 +22,31 @@ namespace KLS.Services
 
         public bool SendMessage(string to, string messageBody)
         {
-            string? accountSid = _systemSettingService.GetByKey<string>(GlobalKey.TWILIO_SID);
-            string? authToken = _systemSettingService.GetByKey<string>(GlobalKey.TWILIO_TOKEN);
-            string? from = _systemSettingService.GetByKey<string>(GlobalKey.TWILIO_FROM);
-
-            if (!string.IsNullOrEmpty(accountSid) && !string.IsNullOrEmpty(to))
+            try
             {
-                TwilioClient.Init(accountSid, authToken);
+                string? accountSid = _systemSettingService.GetByKey<string>(GlobalKey.TWILIO_SID);
+                string? authToken = _systemSettingService.GetByKey<string>(GlobalKey.TWILIO_TOKEN);
+                string? from = _systemSettingService.GetByKey<string>(GlobalKey.TWILIO_FROM);
 
-                var message = MessageResource.Create(
-                    body: messageBody,
-                    from: new Twilio.Types.PhoneNumber(from),
-                    to: new Twilio.Types.PhoneNumber(to)
-                );
+                if (!string.IsNullOrEmpty(accountSid) && !string.IsNullOrEmpty(to))
+                {
+                    TwilioClient.Init(accountSid, authToken);
 
-                return message.ErrorCode == null;
+                    var message = MessageResource.Create(
+                        body: messageBody,
+                        from: new Twilio.Types.PhoneNumber(from),
+                        to: new Twilio.Types.PhoneNumber(to)
+                    );
 
-                //return true;
+                    return message.ErrorCode == null;
+                }
+
+                return false;
             }
-
-            return false;
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

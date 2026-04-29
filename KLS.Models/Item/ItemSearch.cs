@@ -31,7 +31,6 @@ namespace KLS.Models
 
         public string? LastOrderUnit { get; set; }
 
-        [NotMapped]
         public string? PrimaryImageUrl { get; set; }
 
         [NotMapped]

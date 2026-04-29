@@ -106,9 +106,9 @@ namespace KLS.API.Controllers.Admin
 
             // Safety: reject paths outside the expected location
             var fullPath = Path.GetFullPath(sourceFolder);
-            if (!fullPath.StartsWith("C:\\Angular19\\", StringComparison.OrdinalIgnoreCase) &&
-                !fullPath.StartsWith("C:/Angular19/", StringComparison.OrdinalIgnoreCase))
-                return BadRequest("sourceFolder must be under C:\\Angular19\\");
+            //if (!fullPath.StartsWith("C:\\Angular19\\", StringComparison.OrdinalIgnoreCase) &&
+            //    !fullPath.StartsWith("C:/Angular19/", StringComparison.OrdinalIgnoreCase))
+            //    return BadRequest("sourceFolder must be under C:\\Angular19\\");
 
             var result = _itemImageService.MigrateLegacyImages(fullPath, dryRun, limit);
             return Ok(result);
