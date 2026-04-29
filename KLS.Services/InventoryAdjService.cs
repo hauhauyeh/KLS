@@ -132,6 +132,11 @@ namespace KLS.Services
 
         public InventoryClosingDetail QtyAdj(QtyAdjReq adjReq)
         {
+            // Read the current average cost before posting.
+            // The product-list qty-adj flow patches the visible inventory qty
+            // immediately after save, and the just-created @INV journal row may
+            // still be pre-recalc at that moment. Returning adjReq.NewQty avoids
+            // flashing 0/on old state in the UI while recalculation catches up.
             var currentSnapshot = GetClosingQty(adjReq.ItemId);
             Uow.InventoryAdjs.QtyAdj(adjReq);
 
