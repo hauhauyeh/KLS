@@ -18,6 +18,13 @@ BEGIN
 	-- - After Receiving   -> Inventory Adj Closing -> SourceDocOrder 695
 	--
 	-- RecalcQAV is not changed here. It already respects SourceDocOrder.
+	--
+	-- Active-type guard:
+	-- Only Q, V, B, and C remain supported in the live application flow.
+	-- Retired types must fail early here so manual calls cannot create a posting
+	-- shape that the current recalculation path no longer supports.
+	IF @AdjType NOT IN ('Q','V','B','C')
+		RAISERROR('Unsupported inventory adjustment type. Only Q, V, B, and C are allowed.', 16, 1);
 
 	-- Section 1. Set up header variables, journal timing, and account lookups.
 	DECLARE @IsEdit BIT=0
@@ -54,6 +61,11 @@ BEGIN
 	SELECT @InvAccountId=AccountId FROM @AcctTable WHERE AccountCode='@INV'
 
 	-- Section 2. Create the InventoryAdj header row.
+    /*
+    Legacy edit-via-insert branch retained for reference only.
+    Current callers use InventoryAdj_PartialUpdate for edits and call
+    InventoryAdj_Insert only for new adjustments with @AdjId = 0.
+
     IF @AdjId > 0
     BEGIN
         SET @IsEdit = 1;
@@ -64,6 +76,9 @@ BEGIN
     END
     ELSE
         SET @AdjNumber = NEXT VALUE FOR dbo.Seq_AdjNumber;
+    */
+
+    SET @AdjNumber = NEXT VALUE FOR dbo.Seq_AdjNumber;
 	INSERT INTO [dbo].[InventoryAdj]
 			([AdjNumber]
 			,[AdjDate]
@@ -95,9 +110,9 @@ BEGIN
 	SELECT
 			@AdjId,
 			ItemId,
-			NewQty,
+			CASE WHEN @AdjType='V' THEN NULL ELSE NewQty END,
 			QtyDiffer,
-			NewPrice,
+			CASE WHEN @AdjType='Q' THEN NULL ELSE NewPrice END,
 			Notes,
 			Direction
 	FROM TempInventoryAdj WHERE EmpId=@EmpId AND AdjId=(CASE WHEN @IsEdit=0 THEN 0 ELSE @OldAdjId END)
@@ -208,6 +223,10 @@ BEGIN
 		LAvgCost DECIMAL(18,2),
 		LInventoryValue DECIMAL(18,2)
 	)
+
+	/*
+	Legacy Section 6 baseline for quick rollback/reference:
+
 	;WITH cteclo AS
 	(
 		SELECT tjd.ItemId,ClosingQty,AverageCost,InventoryValue,
@@ -219,6 +238,43 @@ BEGIN
 	)
 	INSERT INTO @LastInvTable
 	SELECT ItemId,ClosingQty,AverageCost,InventoryValue FROM cteclo WHERE RN=1
+	*/
+
+	-- Temp table gives SQL Server real rowcount stats for the affected-item set,
+	-- which tends to plan better than joining the large ledger directly to @MyTable.
+	CREATE TABLE #AdjItems (
+		ItemId INT NOT NULL PRIMARY KEY
+	);
+
+	INSERT INTO #AdjItems (ItemId)
+	SELECT DISTINCT ItemId
+	FROM @MyTable;
+
+	;WITH LatestInv AS
+	(
+		SELECT
+			td.ItemId,
+			td.ClosingQty,
+			td.AverageCost,
+			td.InventoryValue,
+			ROW_NUMBER() OVER (
+				PARTITION BY td.ItemId
+				ORDER BY t.TxDate DESC, t.SourceDocOrder DESC, td.TxDetailId DESC
+			) AS RN
+		FROM #AdjItems AS ai
+		INNER JOIN dbo.TransactionJournalDetail AS td
+			ON td.ItemId = ai.ItemId
+		   AND td.AccountId = @InvAccountId
+		INNER JOIN dbo.TransactionJournal AS t
+			ON t.TxId = td.TxId
+		WHERE t.TxDate <= @AdjDate
+	)
+	INSERT INTO @LastInvTable (ItemId, LCloQty, LAvgCost, LInventoryValue)
+	SELECT ItemId, ClosingQty, AverageCost, InventoryValue
+	FROM LatestInv
+	WHERE RN = 1;
+
+	DROP TABLE #AdjItems;
 
 	-- For Convert/Repack, source rows must use the authoritative average cost.
 	IF @AdjType = 'C'
@@ -414,75 +470,42 @@ BEGIN
 			   ,@SrcDetailId)
 		END
 
+		/*
+		Retired adjustment types kept only as commented reference:
+		- A  = Direct Amount
+		- N  = Normalization
+		- QR = Quantity Reset
+		These types no longer exist in live data and are not supported by the
+		current active posting/recalculation path. Do not restore them casually
+		without also restoring end-to-end RecalcQAV coverage.
+
 		IF @AdjType='A'
 		BEGIN
-			-- Direct Amount:
-			-- write only the inventory-side row using the explicit amount.
 			SET @Amount = ROUND((@NewQty * @NewPrice),2)
 			EXEC Fn_Adjust_CrDeAmount @InvAccountId,@Amount,@CrDeAmount OUTPUT
 			INSERT INTO #InvTxDetail
-			   ([TxId]
-			   ,[AccountId]
-			   ,[ItemId]
-			   ,[Qty]
-			   ,[Price]
-			   ,[BillQty]
-			   ,[Amount]
-			   ,[CrDeAmount]
-			   ,[SrcDetailId])
+			   ([TxId],[AccountId],[ItemId],[Qty],[Price],[BillQty],[Amount],[CrDeAmount],[SrcDetailId])
 			VALUES
-			   (@TxId
-			   ,@InvAccountId
-			   ,@ItemId
-			   ,@NewQty
-			   ,@NewPrice
-			   ,NULL
-			   ,@Amount
-			   ,@CrDeAmount
-			   ,@SrcDetailId)
+			   (@TxId,@InvAccountId,@ItemId,@NewQty,@NewPrice,NULL,@Amount,@CrDeAmount,@SrcDetailId)
 		END
 
 		IF @AdjType='N'
 		BEGIN
-			-- Normalization:
-			-- move quantity at the current average cost against COGS and inventory.
 			SET @NewPrice = @LAvgCost
 			SET @Amount = ROUND((@NewQty * @NewPrice),2)
 			SELECT @AccountId=AccountId FROM @AcctTable WHERE AccountCode='@COGS'
 			INSERT INTO #InvTxDetail
-			   ([TxId]
-			   ,[AccountId]
-			   ,[ItemId]
-			   ,[Qty]
-			   ,[Price]
-			   ,[SrcDetailId])
+			   ([TxId],[AccountId],[ItemId],[Qty],[Price],[SrcDetailId])
 			VALUES
-			   (@TxId
-			   ,@AccountId
-			   ,@ItemId
-			   ,@NewQty
-			   ,@NewPrice
-			   ,@SrcDetailId)
+			   (@TxId,@AccountId,@ItemId,@NewQty,@NewPrice,@SrcDetailId)
 			INSERT INTO #InvTxDetail
-			   ([TxId]
-			   ,[AccountId]
-			   ,[ItemId]
-			   ,[Qty]
-			   ,[Price]
-			   ,[SrcDetailId])
+			   ([TxId],[AccountId],[ItemId],[Qty],[Price],[SrcDetailId])
 			VALUES
-			   (@TxId
-			   ,@InvAccountId
-			   ,@ItemId
-			   ,@NewQty
-			   ,@NewPrice
-			   ,@SrcDetailId)
+			   (@TxId,@InvAccountId,@ItemId,@NewQty,@NewPrice,@SrcDetailId)
 		END
 
 		If @AdjType='QR'
 		BEGIN
-			-- Quantity Reset:
-			-- recalculate value from the current average cost and offset the difference.
 			SET @NewPrice = @LAvgCost
 			SET @Amount = ROUND((@NewQty * @NewPrice),2)
 
@@ -493,47 +516,16 @@ BEGIN
 
 			SELECT @AccountId=AccountId FROM @AcctTable WHERE AccountCode=@AdjAcctCode
 			INSERT INTO #InvTxDetail
-					([TxId]
-					,[AccountId]
-					,[ItemId]
-					,[Qty]
-					,[Price]
-					,[BillQty]
-					,[Amount]
-					,[CrDeAmount]
-					,[SrcDetailId])
+					([TxId],[AccountId],[ItemId],[Qty],[Price],[BillQty],[Amount],[CrDeAmount],[SrcDetailId])
 				VALUES
-				   (@TxId
-				   ,@AccountId
-				   ,@ItemId
-				   ,@NewQty
-				   ,@NewPrice
-				   ,NULL
-				   ,ABS(@Amount)
-				   ,@CrDeAmount
-				   ,@SrcDetailId)
+				   (@TxId,@AccountId,@ItemId,@NewQty,@NewPrice,NULL,ABS(@Amount),@CrDeAmount,@SrcDetailId)
 			EXEC Fn_Adjust_CrDeAmount @InvAccountId,@Amount,@CrDeAmount OUTPUT
 			INSERT INTO #InvTxDetail
-			   ([TxId]
-			   ,[AccountId]
-			   ,[ItemId]
-			   ,[Qty]
-			   ,[Price]
-			   ,[BillQty]
-			   ,[Amount]
-			   ,[CrDeAmount]
-			   ,[SrcDetailId])
+			   ([TxId],[AccountId],[ItemId],[Qty],[Price],[BillQty],[Amount],[CrDeAmount],[SrcDetailId])
 			VALUES
-			   (@TxId
-			   ,@InvAccountId
-			   ,@ItemId
-			   ,@NewQty
-			   ,@NewPrice
-			   ,NULL
-			   ,@Amount
-			   ,@CrDeAmount
-			   ,@SrcDetailId)
+			   (@TxId,@InvAccountId,@ItemId,@NewQty,@NewPrice,NULL,@Amount,@CrDeAmount,@SrcDetailId)
 		END
+		*/
 
 		IF @AdjType='C'
 		BEGIN

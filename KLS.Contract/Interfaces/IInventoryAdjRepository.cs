@@ -11,6 +11,8 @@ namespace KLS.Contract.Interfaces
     {
         IQueryable<InventoryAdjList> GetPagedList(InventoryAdjListReq inventoryAdjListReq);
 
+        IEnumerable<InventoryAdjList> GetHistoryByItem(int itemId);
+
         int Count(InventoryAdjListReq inventoryAdjListReq);
 
         int Save(InventoryAdj inventoryAdj);

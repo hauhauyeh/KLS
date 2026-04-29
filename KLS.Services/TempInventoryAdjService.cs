@@ -47,7 +47,10 @@ namespace KLS.Services
             tempItem.PackSize = item.PackSize;
             tempItem.CurrentAvgCost = item.LAvgCost ?? 0;
             tempItem.NewQty = tempItem.NewQty ?? 0;
-            tempItem.NewPrice = 0;
+            // Qty-only adjustments do not carry an entered adjustment price.
+            // Leave it null by default so the saved adjustment row can keep
+            // a blank Adj Price instead of an artificial 0.00.
+            tempItem.NewPrice = null;
 
             var tempAdj = new TempInventoryAdj();
             tempAdj.InjectFrom(tempItem);

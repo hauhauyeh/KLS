@@ -3,6 +3,8 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,10 +16,12 @@ namespace KLS.Services
     public class InventoryAdjService : BaseService, IInventoryAdjService
     {
         private readonly IDeleteLogService _deleteLogService;
+        private readonly ILogger<InventoryAdjService> _logger;
 
-        public InventoryAdjService(IUnitOfWork uow, IDeleteLogService deleteLogService) : base(uow)
+        public InventoryAdjService(IUnitOfWork uow, IDeleteLogService deleteLogService, ILogger<InventoryAdjService> logger) : base(uow)
         {
             _deleteLogService = deleteLogService;
+            _logger = logger;
         }
 
         public PagingResponse<InventoryAdjList> GetPagedList(InventoryAdjListReq inventoryAdjListReq)
@@ -30,6 +34,11 @@ namespace KLS.Services
             {
                 RowData = list,
             };
+        }
+
+        public IEnumerable<InventoryAdjList> GetHistoryByItem(int itemId)
+        {
+            return Uow.InventoryAdjs.GetHistoryByItem(itemId);
         }
 
         public InventoryAdj GetById(int adjId)
@@ -47,11 +56,25 @@ namespace KLS.Services
             return Uow.InventoryAdjs.GetPagedList(listReq);
         }
 
-        public IEnumerable<InventoryAdjList> Save(InventoryAdj inventoryAdj)
+        public int Save(InventoryAdj inventoryAdj)
         {
+            var totalSw = Stopwatch.StartNew();
+            var saveSw = Stopwatch.StartNew();
             var newAdjId = Uow.InventoryAdjs.Save(inventoryAdj);
+            saveSw.Stop();
+            totalSw.Stop();
 
-            return GetListById(newAdjId);
+            _logger.LogInformation(
+                "InventoryAdj Save timing: Mode={Mode}, AdjId={AdjId}, NewAdjId={NewAdjId}, AdjType={AdjType}, SaveDbMs={SaveDbMs}, ReadbackMs={ReadbackMs}, TotalMs={TotalMs}",
+                inventoryAdj.AdjId > 0 ? "Edit" : "Create",
+                inventoryAdj.AdjId,
+                newAdjId,
+                inventoryAdj.AdjType,
+                saveSw.ElapsedMilliseconds,
+                0,
+                totalSw.ElapsedMilliseconds);
+
+            return newAdjId;
         }
 
         public void Inject(int adjId)
@@ -107,9 +130,22 @@ namespace KLS.Services
             }
         }
 
-        public void QtyAdj(QtyAdjReq adjReq)
+        public InventoryClosingDetail QtyAdj(QtyAdjReq adjReq)
         {
+            // Read the current average cost before posting.
+            // The product-list qty-adj flow patches the visible inventory qty
+            // immediately after save, and the just-created @INV journal row may
+            // still be pre-recalc at that moment. Returning adjReq.NewQty avoids
+            // flashing 0/on old state in the UI while recalculation catches up.
+            var currentSnapshot = GetClosingQty(adjReq.ItemId);
             Uow.InventoryAdjs.QtyAdj(adjReq);
+
+            return new InventoryClosingDetail
+            {
+                ItemId = adjReq.ItemId,
+                ClosingQty = adjReq.NewQty,
+                AverageCost = currentSnapshot?.AverageCost
+            };
         }
 
         public InventoryClosingDetail GetClosingQty(int itemId)

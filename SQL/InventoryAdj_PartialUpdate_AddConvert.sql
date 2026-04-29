@@ -17,6 +17,14 @@ BEGIN
 	-- - After Receiving   -> Inventory Adj Closing -> SourceDocOrder 695
 	--
 	-- RecalcQAV is not changed here. It already respects SourceDocOrder.
+	--
+	-- Active-type guard:
+	-- Only Q, V, B, and C remain supported in the live application flow.
+	-- Retired types must fail early here so manual calls cannot update an
+	-- adjustment into a posting shape that the current recalculation path no
+	-- longer supports.
+	IF @AdjType NOT IN ('Q','V','B','C')
+		RAISERROR('Unsupported inventory adjustment type. Only Q, V, B, and C are allowed.', 16, 1);
 
 	-- Section 1. Load the target adjustment header and resolve journal timing.
 	DECLARE @TxId BIGINT
@@ -64,6 +72,20 @@ BEGIN
 
 	-- Section 2. Convert/Repack uses a full rebuild because source and destination
 	-- cost allocation must be recalculated from scratch.
+	--
+	-- Plain-language summary:
+	-- When an edit changes a convert/repack adjustment, we do not try to patch the
+	-- old journal rows in place. Instead, we:
+	-- 1. read the staged convert rows from TempInventoryAdj,
+	-- 2. find the latest pre-adjustment inventory cost for the affected items,
+	-- 3. delete the old detail/journal rows for this adjustment,
+	-- 4. rebuild the detail rows,
+	-- 5. rebuild the journal rows in the correct source-then-destination order,
+	-- 6. update the header and queue recalculation.
+	--
+	-- The cost lookup below now follows the same "known item set first" idea used
+	-- in InventoryAdj_Insert Section 6. SQL Server plans better when we materialize
+	-- the small affected item set into a temp table before joining the large ledger.
 	IF @AdjType = 'C'
 	BEGIN
 		-- Step 2.1. Build the staged convert list before deleting existing rows.
@@ -83,7 +105,13 @@ BEGIN
 		ORDER BY CASE WHEN Direction='S' THEN 0 ELSE 1 END, TempAdjId
 
 		-- Step 2.2. Read authoritative average costs before deleting current detail rows.
+		-- We need the last known pre-adjustment cost for each source item so the
+		-- rebuilt convert posting uses the same authoritative baseline as insert.
 		DECLARE @LastInvTable Table(ItemId INT, LAvgCost DECIMAL(18,6))
+
+		/*
+		Legacy Step 2.2 baseline for quick rollback/reference:
+
 		;WITH cteclo AS (
 			SELECT tjd.ItemId, tjd.AverageCost,
 			ROW_NUMBER() OVER(PARTITION BY tjd.ItemId ORDER BY tj.TxDate DESC, tj.SourceDocOrder DESC, tjd.TxDetailId DESC) As RN
@@ -94,6 +122,39 @@ BEGIN
 			  AND tj.TxId != @TxId  -- exclude current adjustment
 		)
 		INSERT INTO @LastInvTable SELECT ItemId, AverageCost FROM cteclo WHERE RN=1
+		*/
+
+		CREATE TABLE #ConvertItems (
+			ItemId INT NOT NULL PRIMARY KEY
+		);
+
+		INSERT INTO #ConvertItems (ItemId)
+		SELECT DISTINCT ItemId
+		FROM @ConvertTable;
+
+		;WITH LatestCost AS (
+			SELECT
+				tjd.ItemId,
+				tjd.AverageCost,
+				ROW_NUMBER() OVER (
+					PARTITION BY tjd.ItemId
+					ORDER BY tj.TxDate DESC, tj.SourceDocOrder DESC, tjd.TxDetailId DESC
+				) AS RN
+			FROM #ConvertItems AS ci
+			INNER JOIN dbo.TransactionJournalDetail AS tjd
+				ON tjd.ItemId = ci.ItemId
+			   AND tjd.AccountId = @InvAccountId
+			INNER JOIN dbo.TransactionJournal AS tj
+				ON tj.TxId = tjd.TxId
+			WHERE tj.TxDate <= @AdjDate
+			  AND tj.TxId != @TxId  -- exclude current adjustment
+		)
+		INSERT INTO @LastInvTable (ItemId, LAvgCost)
+		SELECT ItemId, AverageCost
+		FROM LatestCost
+		WHERE RN = 1;
+
+		DROP TABLE #ConvertItems;
 
 		-- Step 2.3. Clear the old adjustment detail and journal detail rows.
 		DELETE FROM TransactionJournalDetail WHERE TxId=@TxId
@@ -231,6 +292,12 @@ BEGIN
 
 	-- Section 3. Non-convert adjustments apply staged insert, update, and delete
 	-- changes directly to detail rows and matching journal rows.
+	--
+	-- Plain-language summary:
+	-- For non-convert edits, TempInventoryAdj tells us which lines were inserted,
+	-- updated, or deleted. We replay those staged actions one row at a time.
+	-- This keeps the edit logic narrow and avoids rebuilding the whole adjustment
+	-- when the change is just a normal qty/value edit.
 	DECLARE @TempInvTable TABLE (
 		[AutoId] INT IDENTITY(1,1) NOT NULL,
 		[ItemId] INT NULL,
@@ -267,12 +334,26 @@ BEGIN
 
 		IF @ChangeStatus='I'
 		BEGIN
+			-- New detail rows must keep their own staged line note. The header note
+			-- is saved later on InventoryAdj itself and should not overwrite the line.
+			--
+			-- Retired-type note:
+			-- Only Q, V, and B remain active in this non-convert insert path.
+			-- A, N, and QR are retired in live usage and do not have full active
+			-- recalculation support. Their old posting logic is kept below as a
+			-- commented reference only for rollback/history review.
+			--
+			-- Semantic storage note:
+			-- For Q adjustments, the saved adjustment row should keep Adj Price as
+			-- NULL because price is derived from inventory history, not entered here.
+			-- For V adjustments, the saved adjustment row should keep Adj Qty as
+			-- NULL because quantity is not an entered value for value-only changes.
 			INSERT INTO [dbo].[InventoryAdjDetail]
 				([AdjId],[ItemId],[NewQty],[QtyDiffer],[NewPrice],[Notes],[Direction])
-			VALUES(@AdjId, @ItemId, @NewQty, @QtyDiff, @NewPrice, @Notes, @Direction)
+			VALUES(@AdjId, @ItemId, CASE WHEN @AdjType='V' THEN NULL ELSE @NewQty END, @QtyDiff, CASE WHEN @AdjType='Q' THEN NULL ELSE @NewPrice END, @NoteDetail, @Direction)
 			SET @SrcDetailId=SCOPE_IDENTITY();
 
-			IF @AdjType IN ('Q','V','B','QR')
+			IF @AdjType IN ('Q','V','B')
 			BEGIN
 				SELECT @AccountId=AccountId FROM @AcctTable WHERE AccountCode='@IINVG'
 				INSERT INTO TransactionJournalDetail ([TxId],[AccountId],[ItemId],[SourceDetailId])
@@ -280,6 +361,9 @@ BEGIN
 				INSERT INTO TransactionJournalDetail ([TxId],[AccountId],[ItemId],[Qty],[Price],[SourceDetailId])
 				VALUES (@TxId, @InvAccountId, @ItemId, @NewQty, @NewPrice, @SrcDetailId)
 			END
+			/*
+			Retired non-convert insert branches kept only as commented reference:
+
 			ELSE IF @AdjType IN ('N')
 			BEGIN
 				SELECT @AccountId=AccountId FROM @AcctTable WHERE AccountCode='@COGS'
@@ -293,14 +377,55 @@ BEGIN
 				INSERT INTO TransactionJournalDetail ([TxId],[AccountId],[ItemId],[Qty],[Price],[SourceDetailId])
 				VALUES (@TxId, @InvAccountId, @ItemId, @NewQty, @NewPrice, @SrcDetailId)
 			END
+			*/
 		END
 		ELSE IF @ChangeStatus='U'
 		BEGIN
+			-- Plain-language summary:
+			-- For normal line edits, InventoryAdjDetail keeps the staged row values,
+			-- but the @INV journal row should only copy price from the temp row when
+			-- that adjustment type truly uses an entered price. Qty-only style edits
+			-- (Q / QR / N) often keep NewPrice at 0 in temp/detail rows because the UI
+			-- disables price input. In those cases, overwriting the journal price with
+			-- 0 is wrong; RecalcQAV later recalculates amount/qty state but does not
+			-- restore the journal Price column. Value-only edits should likewise keep
+			-- the saved Adj Qty as NULL because quantity is not entered on that path.
 			UPDATE InventoryAdjDetail
-			SET NewQty=@NewQty, QtyDiffer=@QtyDiff, NewPrice=@NewPrice, Notes=@NoteDetail, Direction=@Direction
+			SET NewQty=CASE WHEN @AdjType='V' THEN NULL ELSE @NewQty END, QtyDiffer=@QtyDiff, NewPrice=CASE WHEN @AdjType='Q' THEN NULL ELSE @NewPrice END, Notes=@NoteDetail, Direction=@Direction
 			WHERE AdjDetailId=@SrcDetailId
+
+			/*
+			Legacy update baseline for quick rollback/reference:
+
 			UPDATE TransactionJournalDetail SET Qty=@NewQty, Price=@NewPrice
 			WHERE TxId=@TxId AND SourceDetailId=@SrcDetailId AND AccountId=@InvAccountId
+			*/
+
+			-- Only Q remains in the qty-only update path. QR and N are retired and
+			-- their former behavior is kept below as a commented reference.
+			IF @AdjType IN ('Q')
+			BEGIN
+				UPDATE TransactionJournalDetail
+				SET Qty=@NewQty
+				WHERE TxId=@TxId AND SourceDetailId=@SrcDetailId AND AccountId=@InvAccountId
+			END
+			ELSE
+			BEGIN
+				UPDATE TransactionJournalDetail
+				SET Qty=@NewQty, Price=@NewPrice
+				WHERE TxId=@TxId AND SourceDetailId=@SrcDetailId AND AccountId=@InvAccountId
+			END
+
+			/*
+			Retired qty-only update condition kept only as commented reference:
+
+			IF @AdjType IN ('Q','QR','N')
+			BEGIN
+				UPDATE TransactionJournalDetail
+				SET Qty=@NewQty
+				WHERE TxId=@TxId AND SourceDetailId=@SrcDetailId AND AccountId=@InvAccountId
+			END
+			*/
 		END
 		ELSE IF @ChangeStatus='D'
 		BEGIN

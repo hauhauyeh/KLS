@@ -26,6 +26,15 @@ namespace KLS.Data.Repositories
             return DbContext.InventoryAdjList.FromSqlRaw("[dbo].[InventoryAdj_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
+        public IEnumerable<InventoryAdjList> GetHistoryByItem(int itemId)
+        {
+            var itemIdParam = new SqlParameter("@ItemId", itemId);
+
+            return DbContext.InventoryAdjList
+                .FromSqlRaw("[dbo].[InventoryAdj_GetHistoryByItem] @ItemId", itemIdParam)
+                .ToList();
+        }
+
         public int Count(InventoryAdjListReq inventoryAdjListReq)
         {
             inventoryAdjListReq.IsCount = true;
@@ -126,13 +135,15 @@ namespace KLS.Data.Repositories
 
             var ItemIdParam = new SqlParameter("@ItemId", adjReq.ItemId);
 
+            var OpenCloseParam = string.IsNullOrEmpty(adjReq.OpenClose) ? new SqlParameter("@OpenClose", DBNull.Value) : new SqlParameter("@OpenClose", adjReq.OpenClose);
+
             var NewQtyParam = new SqlParameter("@NewQty", adjReq.NewQty);
 
             var NewPriceParam = adjReq.NewPrice.HasValue ? new SqlParameter("@NewPrice", adjReq.NewPrice) : new SqlParameter("@NewPrice", DBNull.Value);
 
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_FromProduct] @AdjDate,@ItemId,@NewQty,@NewPrice,@EmpId", AdjDateParam, ItemIdParam, NewQtyParam, NewPriceParam, EmpIdParam);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[InventoryAdj_FromProduct] @AdjDate,@ItemId,@OpenClose,@NewQty,@NewPrice,@EmpId", AdjDateParam, ItemIdParam, OpenCloseParam, NewQtyParam, NewPriceParam, EmpIdParam);
         }
 
         public InventoryClosingDetail GetClosingQty(int itemId)
