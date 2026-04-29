@@ -16,6 +16,7 @@
   <ItemGroup>
     <Folder Include="Hubs\" />
     <Folder Include="wwwroot\Images\category\" />
+    <Folder Include="wwwroot\Images\items\" />
     <Folder Include="wwwroot\Images\item\" />
     <Folder Include="wwwroot\KLS\category\" />
     <Folder Include="wwwroot\Logo\" />

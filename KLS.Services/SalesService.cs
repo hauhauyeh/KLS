@@ -472,6 +472,11 @@ namespace KLS.Services
                 ShipRoute = webCheckoutReq.ShipRoute
             };
 
+            var customer = Uow.Customers.GetById(UserContext.EmpId);
+
+            if (customer != null)
+                checkoutReq.ShipRoute = customer.DefaultRoute;
+
             if (webCheckoutReq.IsPickUp)
                 checkoutReq.ShipRoute = "P";
 
@@ -486,8 +491,6 @@ namespace KLS.Services
 
                 Uow.Payees.Update(payee);
             }
-
-            var customer = Uow.Customers.GetById(UserContext.EmpId);
 
             if (customer.TextOrderConfirm != webCheckoutReq.Phone)
             {
