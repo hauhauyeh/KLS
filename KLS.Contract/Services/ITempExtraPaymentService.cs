@@ -12,5 +12,7 @@ namespace KLS.Contract.Services
         IEnumerable<TempExtraPayment> Create(TempExtraPayment extraPayment);
 
         void Update(TempExtraPayment extraPayment);
+
+        void Clear(TempExtraPayment extraPayment);
     }
 }

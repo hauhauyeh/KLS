@@ -55,6 +55,7 @@ BEGIN
     DECLARE @PaymentExists BIT = 0;
     DECLARE @BlockedReason NVARCHAR(255) = N'There are future payments that must be unused before you can edit this payment.';
     DECLARE @NotFoundReason NVARCHAR(255) = N'Payment not found.';
+    DECLARE @IssuedRefundReason NVARCHAR(255) = N'This payment has an issued refund and is final in normal UI.';
 
     -- First confirm whether the payment exists and capture its payment date and number.
     -- Both are needed later because the current rule treats "future" as:
@@ -76,6 +77,27 @@ BEGIN
             CAST(0 AS BIT) AS CanEdit,
             CAST(1 AS BIT) AS IsReadOnly,
             @NotFoundReason AS Reason;
+        RETURN;
+    END;
+
+    -- If this payment already has an issued refund execution linked to its
+    -- self AsRefund row, treat it as final in the shared edit-eligibility rule.
+    -- This keeps the database rule aligned with the current dialog read-only
+    -- behavior and prevents direct save/edit paths from bypassing refund finality.
+    IF EXISTS
+    (
+        SELECT 1
+        FROM dbo.CustomerPaymentDetail pd
+        WHERE pd.CustomerPaymentId = @CustomerPaymentId
+          AND pd.DetailRole = 'AsRefund'
+          AND pd.SourceCustomerPaymentId = @CustomerPaymentId
+          AND (pd.RefundPaymentId IS NOT NULL OR pd.RefundedAt IS NOT NULL)
+    )
+    BEGIN
+        SELECT
+            CAST(0 AS BIT) AS CanEdit,
+            CAST(1 AS BIT) AS IsReadOnly,
+            @IssuedRefundReason AS Reason;
         RETURN;
     END;
 

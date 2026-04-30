@@ -42,6 +42,13 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        [HttpPost("clear")]
+        public IActionResult Clear([FromBody] TempExtraPayment extraPayment)
+        {
+            _tempExtraPaymentService.Clear(extraPayment);
+            return Ok();
+        }
+
         #endregion
     }
 }
