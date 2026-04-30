@@ -324,25 +324,6 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        public ItemDefaultFreight GetDefaultFreight(int itemId)
-        {
-            return Uow.Items.GetDefaultFreight(itemId);
-        }
-
-        public void SaveFreight(ItemDefaultFreight defaultFreight)
-        {
-            var item = GetById(defaultFreight.ItemId);
-
-            if (item != null)
-            {
-                item.PaletteFactor = defaultFreight.PaletteFactor;
-                item.UpdatedAt = DateTime.UtcNow;
-
-                Uow.Items.Update(item);
-                Uow.Commit();
-            }
-        }
-
         public IEnumerable<ItemSearch> GetSearchList(int payeeId)
         {
             return Uow.Items.GetSearchList(payeeId);

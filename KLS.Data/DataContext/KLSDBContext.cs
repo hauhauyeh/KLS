@@ -425,8 +425,6 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ItemPrice> ItemPrice { get; set; }
 
-        public virtual DbSet<ItemDefaultFreight> ItemDefaultFreight { get; set; }
-
         public virtual DbSet<PODetail> PODetail { get; set; }
 
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
