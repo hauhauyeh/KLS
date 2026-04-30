@@ -36,7 +36,6 @@ namespace KLS.Models
 
         //public decimal? DefaultCost { get; set; }
 
-        //public decimal? FreightCost { get; set; }
 
         //public decimal? P1 { get; set; }
 

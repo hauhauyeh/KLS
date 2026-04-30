@@ -30,7 +30,6 @@ namespace KLS.Models
         public string? Barcode { get; set; }
 
         public decimal? RecentCost { get; set; }
-        public decimal? FreightCost { get; set; }
         public decimal? P1 { get; set; }
         public decimal? MSRP { get; set; }
         public decimal? MarketPrice { get; set; }
