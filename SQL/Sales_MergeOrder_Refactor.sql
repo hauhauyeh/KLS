@@ -37,7 +37,8 @@ BEGIN
     DECLARE @TrackingNo NVARCHAR(100);
     DECLARE @ExternalId NVARCHAR(50);
     DECLARE @IsLoadSeparate BIT;
-    DECLARE @LoadOrder INT;
+    -- Legacy only: merged sales no longer preserve Sales.LoadOrder.
+    -- DECLARE @LoadOrder INT;
     DECLARE @IsLocked BIT;
     DECLARE @IsStatementAttached BIT;
     DECLARE @Deliverby INT;
@@ -127,7 +128,8 @@ BEGIN
             @TrackingNo = TrackingNo,
             @ExternalId = ExternalId,
             @IsLoadSeparate = IsLoadSeparate,
-            @LoadOrder = LoadOrder,
+            -- Legacy only: do not carry forward old Sales.LoadOrder.
+            -- @LoadOrder = LoadOrder,
             @IsLocked = IsLocked,
             @IsStatementAttached = IsStatementAttached,
             @Deliverby = Deliverby,
@@ -156,7 +158,8 @@ BEGIN
             @TrackingNo = TrackingNo,
             @ExternalId = ExternalId,
             @IsLoadSeparate = IsLoadSeparate,
-            @LoadOrder = LoadOrder,
+            -- Legacy only: do not carry forward old Sales.LoadOrder.
+            -- @LoadOrder = LoadOrder,
             @IsLocked = IsLocked,
             @IsStatementAttached = IsStatementAttached,
             @Deliverby = Deliverby,
@@ -338,7 +341,8 @@ BEGIN
             TrackingNo = @TrackingNo,
             ExternalId = @ExternalId,
             IsLoadSeparate = @IsLoadSeparate,
-            LoadOrder = @LoadOrder,
+            -- Legacy only: merged sale should clear old Sales.LoadOrder.
+            -- LoadOrder = @LoadOrder,
             LoadRoute = dbo.Fn_Calc_EffectiveLoadRoute(@ShipRoute, @RouteOrder, @IsLoadSeparate),
             IsLocked = @IsLocked,
             IsStatementAttached = @IsStatementAttached,
