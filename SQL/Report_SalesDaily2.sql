@@ -28,7 +28,7 @@ BEGIN
             s.ShipDate,
             s.ShipId,
             s.SalesTotal,
-            s.DiscountTotal,
+            s.DiscountApplied,
             COALESCE(s.SalesMarginOrderPercent, s.SalesMarginPercent, 0) AS MarginPercent,
             sd.ExtTotal
         FROM Sales s
@@ -45,8 +45,8 @@ BEGIN
         s.ShipId,
         s.ShipDate,
         MAX(s.SalesTotal),
-        SUM(s.ExtTotal) - ISNULL(MAX(s.DiscountTotal), 0),
-        (SUM(s.ExtTotal) - ISNULL(MAX(s.DiscountTotal), 0))
+        SUM(s.ExtTotal) - ISNULL(MAX(s.DiscountApplied), 0),
+        (SUM(s.ExtTotal) - ISNULL(MAX(s.DiscountApplied), 0))
             * (1 - COALESCE(MAX(s.MarginPercent), 0)) AS CostTotal
     FROM FilteredSales s
     GROUP BY s.SalesNumber, s.ShipId, s.ShipDate

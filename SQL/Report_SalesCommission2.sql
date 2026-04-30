@@ -1,7 +1,7 @@
 -- Deploy: Create Report_SalesCommission2 SP
 -- Migrated from KLS_New with updated column/table names
 
-CREATE PROCEDURE [dbo].[Report_SalesCommission2]
+CREATE OR ALTER PROCEDURE [dbo].[Report_SalesCommission2]
     @StartDate DATE,
     @EndDate DATE,
     @SalesRep INT
@@ -35,7 +35,7 @@ BEGIN
         WHERE pd.IsCreditMemo = 0
     ),
     FilteredSales AS (
-        SELECT s.SalesId, s.ShipDate, s.ShipId, s.SalesRepId, s.SalesTotal, s.DiscountTotal,
+        SELECT s.SalesId, s.ShipDate, s.ShipId, s.SalesRepId, s.SalesTotal, s.DiscountApplied,
                sd.ShipQty, sd.ExtTotal, sd.FIFOCost
         FROM Sales s
         JOIN SalesPayments sp ON s.SalesId = sp.SalesId
@@ -53,10 +53,10 @@ BEGIN
         s.ShipDate,
         s.SalesRepId,
         s.SalesTotal,
-        SUM(s.ExtTotal) - ISNULL(s.DiscountTotal, 0),
+        SUM(s.ExtTotal) - ISNULL(MAX(s.DiscountApplied), 0),
         ISNULL(SUM(s.FIFOCost * s.ShipQty), 0) AS CostTotal
     FROM FilteredSales s
-    GROUP BY s.SalesId, s.ShipId, s.ShipDate, s.SalesRepId, s.SalesTotal, s.DiscountTotal
+    GROUP BY s.SalesId, s.ShipId, s.ShipDate, s.SalesRepId, s.SalesTotal
 
     UPDATE @SalesMargin SET Margin = CASE WHEN CountableTotal <> 0 THEN (CountableTotal - CostTotal) / CountableTotal ELSE 0 END
 
