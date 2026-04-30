@@ -130,7 +130,6 @@ namespace KLS.Services
                 vendor.PaymentZipCode = vendorDTO.PaymentZipCode;
                 vendor.AccountNumber = vendorDTO.AccountNumber;
                 vendor.RoutingNumber = vendorDTO.RoutingNumber;
-                vendor.FreightRate = vendorDTO.FreightRate;
                 vendor.InterestRate = vendorDTO.InterestRate;
                 vendor.AccountId1 = vendorDTO.AccountId1;
                 vendor.AccountId2 = vendorDTO.AccountId2;

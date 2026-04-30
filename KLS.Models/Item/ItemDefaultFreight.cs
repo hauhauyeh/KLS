@@ -16,8 +16,6 @@ namespace KLS.Models
 
         public string? PayeeName { get; set; }
 
-        public decimal? FreightRate { get; set; }
-
         public decimal? PaletteFactor { get; set; }
     }
 }

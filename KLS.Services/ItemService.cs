@@ -341,19 +341,6 @@ namespace KLS.Services
                 Uow.Items.Update(item);
                 Uow.Commit();
             }
-
-            if (defaultFreight.PayeeId.HasValue)
-            {
-                var payee = Uow.Vendors.GetById(defaultFreight.PayeeId.Value);
-
-                if (payee != null)
-                {
-                    payee.FreightRate = defaultFreight.FreightRate;
-
-                    Uow.Vendors.Update(payee);
-                    Uow.Commit();
-                }
-            }
         }
 
         public IEnumerable<ItemSearch> GetSearchList(int payeeId)
