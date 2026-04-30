@@ -52,13 +52,6 @@ BEGIN
             THEN 1 ELSE 0
         END,
 
-        -- BY_PALLET: uses Item master PaletteFactor (always fresh)
-        HasPallet = CASE
-            WHEN ISNULL(i.PaletteFactor, 0) > 0
-             AND ISNULL(pd.BaseFinalQty, 0) > 0
-            THEN 1 ELSE 0
-        END,
-
         -- BY_QUANTITY: just needs qty
         HasQty = CASE
             WHEN ISNULL(pd.BaseFinalQty, 0) > 0
@@ -136,16 +129,6 @@ BEGIN
         UNION ALL
 
         SELECT
-            'BY_PALLET',
-            @Total,
-            SUM(HasPallet),
-            @Total - SUM(HasPallet),
-            CAST(SUM(HasPallet) * 100 / @Total AS INT)
-        FROM #Check
-
-        UNION ALL
-
-        SELECT
             'BY_QUANTITY',
             @Total,
             SUM(HasQty),
@@ -183,15 +166,14 @@ BEGIN
             CAST(SUM(HasDuty) * 100 / @Total AS INT)
         FROM #Check
     ) AS Summary
-    ORDER BY
+        ORDER BY
         CASE Method
             WHEN 'BY_VOLUME'   THEN 1
             WHEN 'BY_WEIGHT'   THEN 2
-            WHEN 'BY_PALLET'   THEN 3
-            WHEN 'BY_QUANTITY'  THEN 4
-            WHEN 'BY_VALUE'    THEN 5
-            WHEN 'BY_DUTY'     THEN 6
-            WHEN 'BY_TARIFF'   THEN 7
+            WHEN 'BY_QUANTITY' THEN 3
+            WHEN 'BY_VALUE'    THEN 4
+            WHEN 'BY_DUTY'     THEN 5
+            WHEN 'BY_TARIFF'   THEN 6
         END;
 
     -- ============================================================
@@ -221,17 +203,6 @@ BEGIN
             'CaseWeight'
         FROM #Check
         WHERE HasWeight = 0
-
-        UNION ALL
-
-        SELECT
-            'BY_PALLET',
-            ItemId,
-            ItemCode,
-            ItemName,
-            'PaletteFactor'
-        FROM #Check
-        WHERE HasPallet = 0
 
         UNION ALL
 

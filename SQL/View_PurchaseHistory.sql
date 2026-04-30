@@ -59,14 +59,15 @@ WITH RankedCosts AS (
         --    END,
         --2) AS DutyPerCase,
 
-        -- Deprecated: PaletteFreight
-        ROUND(
-            CASE
-                WHEN ISNULL(p.PalletCount, 0) * ISNULL(i.PaletteFactor, 0) > 0 THEN
-                    p.FreightTotal / (p.PalletCount * i.PaletteFactor)
-                ELSE 0
-            END,
-        2) AS PaletteFreight,  -- (deprecated, retained for backward compatibility)
+        -- Deprecated: old PaletteFactor-based freight estimate retained only as commented reference.
+        --ROUND(
+        --    CASE
+        --        WHEN ISNULL(p.PalletCount, 0) * ISNULL(i.PaletteFactor, 0) > 0 THEN
+        --            p.FreightTotal / (p.PalletCount * i.PaletteFactor)
+        --        ELSE 0
+        --    END,
+        --2) AS PaletteFreight,
+        CAST(0 AS DECIMAL(18,2)) AS PaletteFreight,
 
         ROW_NUMBER() OVER (
             PARTITION BY pd.ItemId
