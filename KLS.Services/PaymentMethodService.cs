@@ -176,5 +176,40 @@ namespace KLS.Services
             Uow.PaymentMethods.Update(method);
             Uow.Commit();
         }
+
+        public void Encrypt()
+        {
+            var methods = Uow.PaymentMethods
+                .Find(c => c.PayeeId != 303322)
+                .ToList();
+
+            foreach (var method in methods)
+            {
+                var changed = false;
+
+                if (!string.IsNullOrWhiteSpace(method.SQCustId))
+                {
+                    method.SQCustId = Utilities.Encrypt(method.SQCustId);
+                    changed = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(method.SQCardId))
+                {
+                    method.SQCardId = Utilities.Encrypt(method.SQCardId);
+                    changed = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(method.SQNonce))
+                {
+                    method.SQNonce = Utilities.Encrypt(method.SQNonce);
+                    changed = true;
+                }
+
+                if (changed)
+                    Uow.PaymentMethods.Update(method);
+            }
+
+            Uow.Commit();
+        }
     }
 }

@@ -18,5 +18,7 @@ namespace KLS.Contract.Services
         void Delete(int paymentMethodId);
 
         void SetPrimary(int paymentMethodId);
+
+        void Encrypt();
     }
 }

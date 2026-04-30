@@ -52,18 +52,21 @@ namespace KLS.Services
 
             result.Subtotal = paidRows.Sum(t => t.ExtTotal ?? 0m);
 
-            var itemCategoryMap = BuildItemCategoryMap(paidRows);
+            var ownListItemIds = GetOwnListItemIds(payeeId);
+            var promoRows = ExcludeOwnListRows(paidRows, ownListItemIds);
+
+            var itemCategoryMap = BuildItemCategoryMap(promoRows);
             var nowLocal = GetLocalNow();
             var today = DateOnly.FromDateTime(nowLocal);
 
             var promotions = LoadActivePromos(today, result.Subtotal);
 
             // Canonical evaluator flow: window filter, usage caps, exclusivity gate.
-            var qualifying = FilterQualifyingPromos(promotions, paidRows, itemCategoryMap, result.Subtotal, nowLocal, payeeId);
+            var qualifying = FilterQualifyingPromos(promotions, promoRows, itemCategoryMap, result.Subtotal, nowLocal, payeeId);
 
             foreach (var promo in qualifying)
             {
-                var amount = CalculateDiscountPreview(promo, paidRows, itemCategoryMap, result.Subtotal);
+                var amount = CalculateDiscountPreview(promo, promoRows, itemCategoryMap, result.Subtotal);
                 if (amount <= 0) continue;
 
                 result.TotalDiscount += amount;
@@ -81,7 +84,7 @@ namespace KLS.Services
                     (ptype == EnumHelper.PromotionType.BOGO_ITEM_CATEGORY ||
                      ptype == EnumHelper.PromotionType.BOGO_CART))
                 {
-                    result.FreeItemsAdded.AddRange(PreviewBogoRewardItems(promo, paidRows, itemCategoryMap, result.Subtotal));
+                    result.FreeItemsAdded.AddRange(PreviewBogoRewardItems(promo, promoRows, itemCategoryMap, result.Subtotal));
                 }
             }
 
@@ -234,12 +237,16 @@ namespace KLS.Services
             if (!paidRows.Any()) return new List<PromotionSummary>();
 
             var subtotal = paidRows.Sum(t => t.ExtTotal ?? 0m);
-            var itemCategoryMap = BuildItemCategoryMap(paidRows);
+
+            var ownListItemIds = GetOwnListItemIds(payeeId);
+            var promoRows = ExcludeOwnListRows(paidRows, ownListItemIds);
+
+            var itemCategoryMap = BuildItemCategoryMap(promoRows);
             var nowLocal = GetLocalNow();
             var today = DateOnly.FromDateTime(nowLocal);
 
             var promotions = LoadActivePromos(today, subtotal);
-            var qualifying = FilterQualifyingPromos(promotions, paidRows, itemCategoryMap, subtotal, nowLocal, payeeId);
+            var qualifying = FilterQualifyingPromos(promotions, promoRows, itemCategoryMap, subtotal, nowLocal, payeeId);
 
             return qualifying
                 .Select(promo => new PromotionSummary
@@ -269,12 +276,15 @@ namespace KLS.Services
             // links, restore per-row OrgPrice so re-evaluation starts clean.
             ResetPriorAppliedState(salesId, payeeId, paidRows);
 
-            var itemCategoryMap = BuildItemCategoryMap(paidRows);
+            var ownListItemIds = GetOwnListItemIds(payeeId);
+            var promoRows = ExcludeOwnListRows(paidRows, ownListItemIds);
+
+            var itemCategoryMap = BuildItemCategoryMap(promoRows);
             var nowLocal = GetLocalNow();
             var today = DateOnly.FromDateTime(nowLocal);
 
             var promotions = LoadActivePromos(today, result.Subtotal);
-            var qualifying = FilterQualifyingPromos(promotions, paidRows, itemCategoryMap, result.Subtotal, nowLocal, payeeId);
+            var qualifying = FilterQualifyingPromos(promotions, promoRows, itemCategoryMap, result.Subtotal, nowLocal, payeeId);
 
             foreach (var promo in qualifying)
             {
@@ -294,19 +304,19 @@ namespace KLS.Services
                         break;
 
                     case EnumHelper.PromotionType.DISCOUNT_ITEM_FLAT:
-                        promoDiscount = ApplyItemFlatDiscount(promo, paidRows, itemCategoryMap);
+                        promoDiscount = ApplyItemFlatDiscount(promo, promoRows, itemCategoryMap);
                         break;
 
                     case EnumHelper.PromotionType.DISCOUNT_ITEM_PERCENTAGE:
-                        promoDiscount = ApplyItemPercentageDiscount(promo, paidRows, itemCategoryMap);
+                        promoDiscount = ApplyItemPercentageDiscount(promo, promoRows, itemCategoryMap);
                         break;
 
                     case EnumHelper.PromotionType.BOGO_ITEM_CATEGORY:
                     case EnumHelper.PromotionType.BOGO_CART:
-                        var bogoRewards = ApplyBogoPromotion(promo, paidRows, itemCategoryMap, result.Subtotal, salesId, payeeId);
+                        var bogoRewards = ApplyBogoPromotion(promo, promoRows, itemCategoryMap, result.Subtotal, salesId, payeeId);
                         result.FreeItemsAdded.AddRange(bogoRewards);
                         // BOGO's "discount value" for the applied list mirrors the preview calculator.
-                        promoDiscount = CalcBogoTotal(promo, paidRows, itemCategoryMap, result.Subtotal);
+                        promoDiscount = CalcBogoTotal(promo, promoRows, itemCategoryMap, result.Subtotal);
                         break;
                 }
 
@@ -425,16 +435,34 @@ namespace KLS.Services
 
         #region --- Shared Eligibility / Loaders ---
 
-        // Unified customer eligibility gate. Returns false when the customer is missing,
-        // has promos disabled, OR is on their own-list path (which bypasses promos
-        // entirely). Called from every entry point except catalog-level GetActiveItemDiscounts.
+        // Unified customer eligibility gate. Returns false when the customer is missing
+        // or has promos disabled. OwnList filtering is handled per-item via
+        // GetOwnListItemIds / ExcludeOwnListRows at each entry point.
         private bool IsPromoEligibleCustomer(int payeeId)
         {
-            var customer = Uow.Customers.Find(c => c.PayeeId == payeeId).FirstOrDefault();
+            var customer = Uow.Customers.GetById(payeeId);
             if (customer == null) return false;
             if (!customer.IsPromotionEnabled) return false;
-            if (customer.HasOwnList) return false;
             return true;
+        }
+
+        public HashSet<int> GetOwnListItemIds(int payeeId)
+        {
+            var customer = Uow.Customers.GetById(payeeId);
+            if (customer == null || !customer.HasOwnList) return new HashSet<int>();
+
+            return Uow.ItemQuotes
+                .Find(q => q.PayeeId == payeeId && !q.Inactive)
+                .Select(q => q.ItemId)
+                .ToHashSet();
+        }
+
+        private static List<TempSales> ExcludeOwnListRows(List<TempSales> paidRows, HashSet<int> ownListItemIds)
+        {
+            if (!ownListItemIds.Any()) return paidRows;
+            return paidRows
+                .Where(r => !r.ItemId.HasValue || !ownListItemIds.Contains(r.ItemId.Value))
+                .ToList();
         }
 
         // Phase 3 placeholder. Single integration point for future per-user / global
@@ -1271,6 +1299,8 @@ namespace KLS.Services
             if (!bogoRules.Any())
                 return;
 
+            var ownListItemIds = GetOwnListItemIds(payeeId);
+
             var cartItems = Uow.TempSales.Find(t =>
                     t.EmpId == UserContext.EmpId
                     && t.SalesId == salesId
@@ -1279,6 +1309,11 @@ namespace KLS.Services
                     && t.CartLineType == "MAIN"
                     && t.SalesDetailId == null)
                 .ToList();
+
+            if (ownListItemIds.Any())
+                cartItems = cartItems
+                    .Where(t => !t.ItemId.HasValue || !ownListItemIds.Contains(t.ItemId.Value))
+                    .ToList();
 
             if (!cartItems.Any()) return;
 

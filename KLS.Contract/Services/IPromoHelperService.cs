@@ -37,6 +37,12 @@ namespace KLS.Contract.Services
         /// </summary>
         Dictionary<int, string> GetActiveItemOfferBadges();
 
+        /// <summary>
+        /// ItemIds from the customer's active ItemQuote list. Used to suppress
+        /// promo badges on items that have customer-specific pricing.
+        /// </summary>
+        HashSet<int> GetOwnListItemIds(int payeeId);
+
         /// <summary>Qualifying promos summary for a cart. Used by admin list-of-qualifying-promos UI.</summary>
         List<PromotionSummary> GetAvailablePromotions(int salesId, int payeeId);
 

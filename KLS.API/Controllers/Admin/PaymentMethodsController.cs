@@ -66,6 +66,14 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+
+        [HttpPost("Encrypt")]
+        public IActionResult Encrypt()
+        {
+            _paymentMethodService.Encrypt();
+            return Ok();
+        }
+
         #endregion
     }
 }
