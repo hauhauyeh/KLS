@@ -95,6 +95,22 @@ namespace KLS.Data.Repositories
 
             var CCFeeParam = paymentSaveReq.CCFee.HasValue ? new SqlParameter("@CCFee", paymentSaveReq.CCFee) : new SqlParameter("@CCFee", DBNull.Value);
 
+            var PreviousExtraDispositionParam = (!string.IsNullOrEmpty(paymentSaveReq.PreviousExtraDisposition))
+                ? new SqlParameter("@PreviousExtraDisposition", paymentSaveReq.PreviousExtraDisposition)
+                : new SqlParameter("@PreviousExtraDisposition", DBNull.Value);
+
+            var NewExtraDispositionParam = (!string.IsNullOrEmpty(paymentSaveReq.NewExtraDisposition))
+                ? new SqlParameter("@NewExtraDisposition", paymentSaveReq.NewExtraDisposition)
+                : new SqlParameter("@NewExtraDisposition", DBNull.Value);
+
+            var ExtraDispositionChangedParam = paymentSaveReq.ExtraDispositionChanged.HasValue
+                ? new SqlParameter("@ExtraDispositionChanged", paymentSaveReq.ExtraDispositionChanged)
+                : new SqlParameter("@ExtraDispositionChanged", DBNull.Value);
+
+            var SelectedExtraDispositionAmountParam = paymentSaveReq.SelectedExtraDispositionAmount.HasValue
+                ? new SqlParameter("@SelectedExtraDispositionAmount", paymentSaveReq.SelectedExtraDispositionAmount)
+                : new SqlParameter("@SelectedExtraDispositionAmount", DBNull.Value);
+
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
             var NewPaymentId = new SqlParameter()
@@ -104,7 +120,7 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_Insert] @CustomerPaymentId,@PaymentType,@PayeeId,@PaymentDate,@PaymentMethod,@FromAccountId,@ReferenceId,@PaymentAmount,@Notes,@CCFee,@EmpId,@NewPaymentId OUTPUT", CustomerPaymentIdParam, PaymentTypeParam, PayeeIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, ReferenceIdParam, PaymentAmountParam, NotesParam, CCFeeParam, EmpIdParam, NewPaymentId);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_Insert] @CustomerPaymentId,@PaymentType,@PayeeId,@PaymentDate,@PaymentMethod,@FromAccountId,@ReferenceId,@PaymentAmount,@Notes,@CCFee,@PreviousExtraDisposition,@NewExtraDisposition,@ExtraDispositionChanged,@SelectedExtraDispositionAmount,@EmpId,@NewPaymentId OUTPUT", CustomerPaymentIdParam, PaymentTypeParam, PayeeIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, ReferenceIdParam, PaymentAmountParam, NotesParam, CCFeeParam, PreviousExtraDispositionParam, NewExtraDispositionParam, ExtraDispositionChangedParam, SelectedExtraDispositionAmountParam, EmpIdParam, NewPaymentId);
 
             return Convert.ToInt32(NewPaymentId.Value);
         }

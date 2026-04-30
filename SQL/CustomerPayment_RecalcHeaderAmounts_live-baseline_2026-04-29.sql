@@ -1,7 +1,5 @@
--- Recalculate CustomerPayment.PaymentApplied and CustomerPayment.UnappliedAmount
--- from committed unified CustomerPaymentDetail truth.
---
--- Use this after unified-detail rollout, or anytime header amounts drift.
+-- Live baseline captured on 2026-04-29 before the next CCFee header-only fix.
+-- This matches the pre-fix behavior where CCFee still counts inside OwnCashApplied.
 
 ;WITH HeaderSource AS
 (
