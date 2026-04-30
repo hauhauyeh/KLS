@@ -1,5 +1,6 @@
 using KLS.API.Decorators;
 using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -43,8 +44,17 @@ namespace KLS.API.Controllers.Web
             var page = _itemService.GetWebPagedList(webListReq);
             var discountMap = _promoHelper.GetActiveItemDiscounts();
             var offerBadgeMap = _promoHelper.GetActiveItemOfferBadges();
-            // Decorate each ItemWebUnitList.Price/MarketPrice/Discount with any
-            // active item-level promos. Catalog-level (no customer context).
+
+            var ownListItemIds = _promoHelper.GetOwnListItemIds(UserContext.EmpId);
+            if (ownListItemIds.Count > 0)
+            {
+                foreach (var id in ownListItemIds)
+                {
+                    discountMap.Remove(id);
+                    offerBadgeMap.Remove(id);
+                }
+            }
+
             page.RowData.ApplyPromoDecoration(discountMap, offerBadgeMap);
             return Ok(page);
         }
