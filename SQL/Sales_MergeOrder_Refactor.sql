@@ -343,7 +343,8 @@ BEGIN
             IsLoadSeparate = @IsLoadSeparate,
             -- Legacy only: merged sale should clear old Sales.LoadOrder.
             -- LoadOrder = @LoadOrder,
-            LoadRoute = dbo.Fn_Calc_EffectiveLoadRoute(@ShipRoute, @RouteOrder, @IsLoadSeparate),
+            -- Legacy only: merged sale used to persist computed Sales.LoadRoute.
+            -- LoadRoute = dbo.Fn_Calc_EffectiveLoadRoute(@ShipRoute, @RouteOrder, @IsLoadSeparate),
             IsLocked = @IsLocked,
             IsStatementAttached = @IsStatementAttached,
             Deliverby = @Deliverby,
