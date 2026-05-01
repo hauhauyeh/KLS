@@ -358,6 +358,13 @@ BEGIN
             i.ItemCode,
             s.ShipDate,
             s.ShipRoute,
+            -- 2026-05-01 23:21 ET: add base load-route inputs so Bomb Sales can
+            -- transition to the same display rule used by Order Manager.
+            s.RouteOrder,
+            s.IsLoadSeparate,
+            -- Legacy transition field:
+            -- Keep computed LoadRoute for now so existing Bomb Sales consumers
+            -- continue to work until the UI switches to base-column display.
             dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate) AS LoadRoute,
             s.StageId,
             s.IsLocked
@@ -392,6 +399,13 @@ BEGIN
             i.ItemCode,
             s.ShipDate,
             s.ShipRoute,
+            -- 2026-05-01 23:21 ET: add base load-route inputs so Bomb Sales can
+            -- transition to the same display rule used by Order Manager.
+            s.RouteOrder,
+            s.IsLoadSeparate,
+            -- Legacy transition field:
+            -- Keep computed LoadRoute for now so existing Bomb Sales consumers
+            -- continue to work until the UI switches to base-column display.
             dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate) AS LoadRoute,
             s.StageId,
             s.IsLocked
