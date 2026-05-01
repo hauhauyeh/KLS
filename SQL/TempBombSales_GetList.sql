@@ -19,10 +19,9 @@ BEGIN
             -- transition to the same display rule used by Order Manager.
             s.RouteOrder,
             s.IsLoadSeparate,
-            -- Legacy transition field:
-            -- Keep computed LoadRoute for now so existing Bomb Sales consumers
-            -- continue to work until the UI switches to base-column display.
-            dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate) AS LoadRoute,
+            -- 2026-05-01 23:45 ET: legacy computed LoadRoute output commented out
+            -- after Bomb Sales list and report moved to base-column route display.
+            -- dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate) AS LoadRoute,
             s.StageId,
             s.IsLocked
         FROM TempBombSales t
@@ -60,10 +59,9 @@ BEGIN
             -- transition to the same display rule used by Order Manager.
             s.RouteOrder,
             s.IsLoadSeparate,
-            -- Legacy transition field:
-            -- Keep computed LoadRoute for now so existing Bomb Sales consumers
-            -- continue to work until the UI switches to base-column display.
-            dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate) AS LoadRoute,
+            -- 2026-05-01 23:45 ET: legacy computed LoadRoute output commented out
+            -- after Bomb Sales list and report moved to base-column route display.
+            -- dbo.Fn_Calc_EffectiveLoadRoute(s.ShipRoute, s.RouteOrder, s.IsLoadSeparate) AS LoadRoute,
             s.StageId,
             s.IsLocked
         FROM TempBombSales t
