@@ -39,10 +39,6 @@ namespace KLS.Contract.Services
 
         void UpdateInventorySettings(ItemInventorySettingsReq req);
 
-        ItemDefaultFreight GetDefaultFreight(int itemId);
-
-        void SaveFreight(ItemDefaultFreight defaultFreight);
-
         IEnumerable<ItemSearch> GetSearchList(int payeeId);
 
 

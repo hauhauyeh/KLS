@@ -80,8 +80,6 @@ namespace KLS.Models
 
         public string? RoutingNumber { get; set; }
 
-        public decimal? FreightRate { get; set; }
-
         public decimal? InterestRate { get; set; }
 
         public int? AccountId1 { get; set; }

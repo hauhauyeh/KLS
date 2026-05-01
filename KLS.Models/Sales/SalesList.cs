@@ -45,8 +45,6 @@ namespace KLS.Models
 
         public bool IsLoadSeparate { get; set; }
 
-        public int? LoadOrder { get; set; }
-
         public string? TruckNumber { get; set; }
 
         public string? DriverName { get; set; }

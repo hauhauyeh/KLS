@@ -146,13 +146,6 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Item_UpdateBaseP1] @ItemUnitId,@BaseP1", ItemUnitIdParam, BaseP1Param);
         }
 
-        public ItemDefaultFreight GetDefaultFreight(int itemId)
-        {
-            var ItemIdParam = new SqlParameter("@ItemId", itemId);
-
-            return DbContext.ItemDefaultFreight.FromSqlRaw("[Item_GetDefaultFreight] @ItemId", ItemIdParam).ToList().FirstOrDefault();
-        }
-
         public IEnumerable<ItemSearch> GetSearchList(int payeeId)
         {
             var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);

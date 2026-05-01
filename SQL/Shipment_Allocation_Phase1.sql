@@ -95,8 +95,6 @@ BEGIN
                             THEN ISNULL(pd.BaseFinalQty, 0) * ISNULL(pd.ItemVolume, 0)
                         WHEN @AllocationType = 'BY_WEIGHT'
                             THEN ISNULL(pd.BaseFinalQty, 0) * ISNULL(i.CaseWeight, 0)
-                        WHEN @AllocationType = 'BY_PALLET' AND ISNULL(i.PaletteFactor, 0) > 0
-                            THEN ISNULL(pd.BaseFinalQty, 0) / i.PaletteFactor
                         WHEN @AllocationType = 'BY_QUANTITY'
                             THEN ISNULL(pd.BaseFinalQty, 0)
                         ELSE
@@ -162,11 +160,6 @@ BEGIN
             DutyWeight = (ISNULL(pd.FinalQty, 0) * ISNULL(pd.FinalPrice, 0))
                          * (ISNULL(pd.CustomDutyRate, 0) + ISNULL(pd.TariffPercent, 0)),
             LineWeight = ISNULL(pd.BaseFinalQty, 0) * ISNULL(i.CaseWeight, 0),
-            LinePallet = CASE
-                             WHEN ISNULL(i.PaletteFactor, 0) > 0
-                             THEN ISNULL(pd.BaseFinalQty, 0) / i.PaletteFactor
-                             ELSE 0
-                         END,
             LineQty    = ISNULL(pd.BaseFinalQty, 0)
         INTO   #Lines
         FROM   dbo.PurchaseDetail pd
@@ -180,7 +173,6 @@ BEGIN
           AND  ISNULL(LineVolume, 0) <= 0
           AND  ISNULL(DutyWeight, 0) <= 0
           AND  ISNULL(LineWeight, 0) <= 0
-          AND  ISNULL(LinePallet, 0) <= 0
           AND  ISNULL(LineQty, 0)    <= 0;
 
         IF OBJECT_ID('tempdb..#InlineFreight') IS NOT NULL DROP TABLE #InlineFreight;
@@ -274,7 +266,6 @@ BEGIN
                 TotalVolume  = SUM(l.LineVolume),
                 TotalDutyWgt = SUM(l.DutyWeight),
                 TotalWeight  = SUM(l.LineWeight),
-                TotalPallet  = SUM(l.LinePallet),
                 TotalQty     = SUM(l.LineQty)
             FROM   #Shipments sp
             JOIN   dbo.ShipmentPurchase spx ON spx.ShipmentId = sp.ShipmentId
@@ -295,7 +286,6 @@ BEGIN
                         WHEN c.AllocationMethod IN ('BY_DUTY', 'BY_TARIFF') AND ISNULL(st.TotalDutyWgt, 0) > 0 THEN l.DutyWeight
                         WHEN c.AllocationMethod = 'BY_VOLUME'               AND ISNULL(st.TotalVolume, 0)  > 0 THEN l.LineVolume
                         WHEN c.AllocationMethod = 'BY_WEIGHT'               AND ISNULL(st.TotalWeight, 0)  > 0 THEN l.LineWeight
-                        WHEN c.AllocationMethod = 'BY_PALLET'               AND ISNULL(st.TotalPallet, 0)  > 0 THEN l.LinePallet
                         WHEN c.AllocationMethod = 'BY_QUANTITY'              AND ISNULL(st.TotalQty, 0)    > 0  THEN l.LineQty
                         ELSE l.LineValue
                     END,
@@ -305,7 +295,6 @@ BEGIN
                         WHEN c.AllocationMethod IN ('BY_DUTY', 'BY_TARIFF') AND ISNULL(st.TotalDutyWgt, 0) > 0 THEN st.TotalDutyWgt
                         WHEN c.AllocationMethod = 'BY_VOLUME'               AND ISNULL(st.TotalVolume, 0)  > 0 THEN st.TotalVolume
                         WHEN c.AllocationMethod = 'BY_WEIGHT'               AND ISNULL(st.TotalWeight, 0)  > 0 THEN st.TotalWeight
-                        WHEN c.AllocationMethod = 'BY_PALLET'               AND ISNULL(st.TotalPallet, 0)  > 0 THEN st.TotalPallet
                         WHEN c.AllocationMethod = 'BY_QUANTITY'              AND ISNULL(st.TotalQty, 0)    > 0  THEN st.TotalQty
                         ELSE st.TotalValue
                     END,
@@ -316,7 +305,6 @@ BEGIN
                         WHEN c.AllocationMethod = 'BY_TARIFF'  AND ISNULL(st.TotalDutyWgt, 0) > 0 THEN 'BY_TARIFF'
                         WHEN c.AllocationMethod = 'BY_VOLUME'  AND ISNULL(st.TotalVolume, 0)  > 0 THEN 'BY_VOLUME'
                         WHEN c.AllocationMethod = 'BY_WEIGHT'  AND ISNULL(st.TotalWeight, 0)  > 0 THEN 'BY_WEIGHT'
-                        WHEN c.AllocationMethod = 'BY_PALLET'  AND ISNULL(st.TotalPallet, 0)  > 0 THEN 'BY_PALLET'
                         WHEN c.AllocationMethod = 'BY_QUANTITY' AND ISNULL(st.TotalQty, 0)    > 0  THEN 'BY_QUANTITY'
                         WHEN c.AllocationMethod IN ('BY_DUTY', 'BY_TARIFF', 'BY_VOLUME', 'BY_WEIGHT', 'BY_PALLET', 'BY_QUANTITY')
                             THEN 'BY_VALUE_FALLBACK'
@@ -330,7 +318,6 @@ BEGIN
                             WHEN c.AllocationMethod IN ('BY_DUTY', 'BY_TARIFF') AND ISNULL(st.TotalDutyWgt, 0) > 0 THEN l.DutyWeight
                             WHEN c.AllocationMethod = 'BY_VOLUME'               AND ISNULL(st.TotalVolume, 0)  > 0 THEN l.LineVolume
                             WHEN c.AllocationMethod = 'BY_WEIGHT'               AND ISNULL(st.TotalWeight, 0)  > 0 THEN l.LineWeight
-                            WHEN c.AllocationMethod = 'BY_PALLET'               AND ISNULL(st.TotalPallet, 0)  > 0 THEN l.LinePallet
                             WHEN c.AllocationMethod = 'BY_QUANTITY'              AND ISNULL(st.TotalQty, 0)    > 0  THEN l.LineQty
                             ELSE l.LineValue
                         END DESC,
@@ -345,7 +332,6 @@ BEGIN
                OR  ISNULL(st.TotalVolume, 0)  > 0
                OR  ISNULL(st.TotalDutyWgt, 0) > 0
                OR  ISNULL(st.TotalWeight, 0)  > 0
-               OR  ISNULL(st.TotalPallet, 0)  > 0
                OR  ISNULL(st.TotalQty, 0)     > 0
         ),
         Base2 AS (

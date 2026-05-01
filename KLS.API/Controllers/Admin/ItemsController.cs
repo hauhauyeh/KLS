@@ -150,21 +150,6 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("GetDefaultFreight/{itemId}")]
-        public IActionResult GetDefaultFreight(int itemId)
-        {
-            return Ok(_itemService.GetDefaultFreight(itemId));
-        }
-
-
-        [HttpPut("SaveFreight")]
-        public IActionResult SaveFreight([FromBody] ItemDefaultFreight defaultFreight)
-        {
-            _itemService.SaveFreight(defaultFreight);
-            return Ok();
-        }
-
-
         [HttpGet("GetItemUnitList")]
         public IActionResult GetItemUnitList(string? itemIds)
         {

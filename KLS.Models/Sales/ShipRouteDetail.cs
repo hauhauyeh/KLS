@@ -22,8 +22,6 @@ namespace KLS.Models
 
         public bool IsLoadSeparate { get; set; }
 
-        public int? LoadOrder { get; set; }
-
         public string? PayeeName { get; set; }
 
         public decimal? SalesTotal { get; set; }

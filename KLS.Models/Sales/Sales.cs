@@ -62,8 +62,8 @@ namespace KLS.Models
         public string? ExternalId { get; set; }
 
         public bool IsLoadSeparate { get; set; }
-        public int? LoadOrder { get; set; }
-        public string? LoadRoute { get; set; }
+        // Legacy only: stored Sales.LoadRoute is retired in meaning.
+        // public string? LoadRoute { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal? SalesMarginPercent { get; set; }
