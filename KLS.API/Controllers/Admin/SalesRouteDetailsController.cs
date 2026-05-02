@@ -41,6 +41,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_salesRouteDetailService.GetPendingUntracked());
         }
 
+        [HttpGet("Pending")]
+        [PermissionKey("Customer.Sale.List")]
+        public IActionResult Pending([FromQuery] UntrackReturnListReq req)
+        {
+            return Ok(_salesRouteDetailService.GetPendingUntrackedPaged(req));
+        }
+
 
         [HttpPost]
         public IActionResult Create([FromBody] SalesRouteDetail routeDetail)

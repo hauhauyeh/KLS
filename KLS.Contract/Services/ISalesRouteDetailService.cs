@@ -15,6 +15,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<SalesRouteDetail>? GetPendingUntracked();
 
+        PagingResponse<SalesRouteDetail> GetPendingUntrackedPaged(UntrackReturnListReq req);
+
         SalesRouteDetail GetById(int detailId);
 
         SalesRouteDetail Create(SalesRouteDetail routeDetail);
