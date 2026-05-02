@@ -68,10 +68,89 @@ namespace KLS.Services
                                    CreditMemoSalesId = sd.CreditMemoSalesId,
                                    CreatedAt = sd.CreatedAt,
                                    ShipDate = s.ShipDate,
-                                   ShipRoute = s.ShipRoute
+                                   ShipRoute = s.ShipRoute,
+                                   DriverName = s.Driver
                                }).ToList();
 
             return ReturnItems(returnItems);
+        }
+
+        public PagingResponse<SalesRouteDetail> GetPendingUntrackedPaged(UntrackReturnListReq req)
+        {
+            var isRecent = string.Equals(req.Filterby, "Recent", StringComparison.OrdinalIgnoreCase)
+                || (string.IsNullOrWhiteSpace(req.Filterby)
+                    && !req.StartDate.HasValue
+                    && !req.EndDate.HasValue
+                    && string.IsNullOrWhiteSpace(req.Driver));
+
+            var rows = from s in Uow.SalesRoutes.GetAll()
+                       join sd in Uow.SalesRouteDetails.GetAll() on s.SalesRouteId equals sd.SalesRouteId
+                       where sd.ReturnType == UntrackedType
+                             && sd.ResolutionStatus == PendingStatus
+                       select new
+                       {
+                           Route = s,
+                           Detail = sd
+                       };
+
+            if (req.StartDate.HasValue)
+                rows = rows.Where(x => x.Route.ShipDate >= req.StartDate.Value);
+
+            if (req.EndDate.HasValue)
+                rows = rows.Where(x => x.Route.ShipDate <= req.EndDate.Value);
+
+            if (!string.IsNullOrWhiteSpace(req.Driver))
+                rows = rows.Where(x => x.Route.Driver == req.Driver);
+
+            var totalRecords = rows.Count();
+
+            var pageNo = req.Pageno < 1 ? 1 : req.Pageno;
+            var pageSize = req.Pagesize < 1 ? 50 : req.Pagesize;
+
+            var orderedRows = isRecent
+                ? rows.OrderByDescending(x => x.Detail.CreatedAt)
+                      .ThenByDescending(x => x.Detail.RouteDetailId)
+                : rows.OrderByDescending(x => x.Route.ShipDate)
+                      .ThenBy(x => x.Route.ShipRoute)
+                      .ThenByDescending(x => x.Detail.CreatedAt)
+                      .ThenByDescending(x => x.Detail.RouteDetailId);
+
+            var pageRows = orderedRows
+                .Skip((pageNo - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new SalesRouteDetail
+                {
+                    RouteDetailId = x.Detail.RouteDetailId,
+                    SalesRouteId = x.Detail.SalesRouteId,
+                    ItemId = x.Detail.ItemId,
+                    ItemUnitId = x.Detail.ItemUnitId,
+                    Unit = x.Detail.Unit,
+                    Qty = x.Detail.Qty,
+                    FactorToBase = x.Detail.FactorToBase,
+                    BaseQty = x.Detail.BaseQty,
+                    IsMatch = x.Detail.IsMatch,
+                    Fault = x.Detail.Fault,
+                    Notes = x.Detail.Notes,
+                    ReturnType = x.Detail.ReturnType,
+                    ResolutionStatus = x.Detail.ResolutionStatus,
+                    ResolvedAt = x.Detail.ResolvedAt,
+                    ResolvedBy = x.Detail.ResolvedBy,
+                    InventoryAdjId = x.Detail.InventoryAdjId,
+                    InventoryAdjDetailId = x.Detail.InventoryAdjDetailId,
+                    CreditMemoSalesId = x.Detail.CreditMemoSalesId,
+                    CreatedAt = x.Detail.CreatedAt,
+                    ShipDate = x.Route.ShipDate,
+                    ShipRoute = x.Route.ShipRoute,
+                    DriverName = x.Route.Driver
+                })
+                .ToList();
+
+            pageRows = ReturnItems(pageRows)?.ToList() ?? [];
+
+            return new PagingResponse<SalesRouteDetail>(totalRecords, pageNo, pageSize)
+            {
+                RowData = pageRows
+            };
         }
 
         public SalesRouteDetail GetById(int detailId)

@@ -32,6 +32,10 @@ namespace KLS.Contract.Services
 
         string? LoadingList(DocumentReq documentReq);
 
+        // RouteLoadingList renders only the loading-list section from the bundled
+        // LoadingList document for one selected date and route.
+        string? RouteLoadingList(DocumentReq documentReq);
+
         string? PackingLabel(DocumentReq req);
     }
 }

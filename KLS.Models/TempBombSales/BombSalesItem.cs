@@ -49,7 +49,8 @@ namespace KLS.Models
 
         public DateOnly? ShipDate { get; set; }
         public string? ShipRoute { get; set; }
-        public string? LoadRoute { get; set; }
+        public int? RouteOrder { get; set; }
+        public bool IsLoadSeparate { get; set; }
 
         public int StageId { get; set; }
         public bool IsLocked { get; set; }

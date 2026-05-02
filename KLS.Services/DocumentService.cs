@@ -366,37 +366,7 @@ namespace KLS.Services
                 if (documentFormat == 1)
                 {
                     //1-LoadingList
-                    var loading = Uow.Reports.LoadingList(req).ToList();
-                    var zones = loading.GroupBy(c => c.Department).ToList();
-
-                    foreach (var zone in zones)
-                    {
-                        foreach (var route in assignedRoutes)
-                        {
-                            var grpLoadRoute = zone.Where(c => c.ShipRoute == route.ShipRoute).GroupBy(c => c.LoadRoute).ToList();
-
-                            foreach (var loadRoute in grpLoadRoute)
-                            {
-                                var routeData = loadRoute.ToList();
-
-                                if (routeData.Count > 0)
-                                {
-                                    var loadingList = new RptLoadingList
-                                    {
-                                        LoadingItems = routeData,
-                                        TruckNumber = route.TruckNumber,
-                                        ShipDate = shipDate,
-                                        ShipRoute = loadRoute.Key,
-                                        DropCount = GetDropCount(shipDate, route.ShipRoute),
-                                    };
-
-                                    var loadtemplate = "~/Views/Pdf/LoadingList.cshtml";
-                                    var loadhtml = _pdfService.RenderTemplate(loadtemplate, loadingList);
-                                    pdfs.Add(_pdfService.HtmlToPDF(loadhtml));
-                                }
-                            }
-                        }
-                    }
+                    AppendLoadingListSectionPdfs(pdfs, req, assignedRoutes, shipDate);
 
                     //2-Packinglist
                     var packingItems = Uow.Reports.PackingList(req).ToList();
@@ -487,6 +457,50 @@ namespace KLS.Services
             }
         }
 
+        public string? RouteLoadingList(DocumentReq req)
+        {
+            List<PdfDocument> pdfs = [];
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(req.ShipRoute))
+                    throw new ArgumentException("ShipRoute is required for route loading list.", nameof(req));
+
+                var shipDate = req.ShipDate ?? Uow.Companies.GetNextWorkDate();
+
+                req.ShipDate = shipDate;
+
+                EnsureAssignedRouteRequired(shipDate, req.ShipRoute, "Loading List");
+
+                var assignedRoutes = GetAssignedRoutes(shipDate);
+
+                // RouteLoadingList intentionally renders only the loading-list section
+                // from the bundled LoadingList document. It does not append packing,
+                // Harvills, StoreTotal, Sensitive, or Assign Truck pages.
+                AppendLoadingListSectionPdfs(pdfs, req, assignedRoutes, shipDate, req.ShipRoute);
+
+                if (pdfs.Count == 0)
+                    return null;
+
+                var fileName = $"LoadingList-{shipDate:MMddyyyy}-{req.ShipRoute}.pdf";
+                var relativePath = Path.Combine("Pdf", fileName);
+                string fullPath = Path.Combine(_env.WebRootPath, relativePath);
+
+                using var merged = PdfDocument.Merge(pdfs);
+
+                _pdfService.AddPageFooter(merged);
+
+                merged.SaveAs(fullPath);
+
+                return fullPath;
+            }
+            finally
+            {
+                foreach (var p in pdfs)
+                    p?.Dispose();
+            }
+        }
+
         public string? PackingLabel(DocumentReq req)
         {
             List<PdfDocument> pdfs = [];
@@ -569,6 +583,51 @@ namespace KLS.Services
 
             if (!hasAssignedRoute)
                 throw new InvalidOperationException($"{documentName} requires Assign Truck first for the selected date/route.");
+        }
+
+        // This shared builder is the single source of truth for the loading-list
+        // section shown inside bundled LoadingList and the route-only LoadingList.
+        private void AppendLoadingListSectionPdfs(
+            List<PdfDocument> pdfs,
+            DocumentReq req,
+            List<SalesRoute> assignedRoutes,
+            DateOnly shipDate,
+            string? shipRouteFilter = null)
+        {
+            var loading = Uow.Reports.LoadingList(req).ToList();
+            var routesToRender = string.IsNullOrWhiteSpace(shipRouteFilter)
+                ? assignedRoutes
+                : assignedRoutes.Where(r => r.ShipRoute == shipRouteFilter).ToList();
+            var zones = loading.GroupBy(c => c.Department).ToList();
+
+            foreach (var zone in zones)
+            {
+                foreach (var route in routesToRender)
+                {
+                    var grpLoadRoute = zone.Where(c => c.ShipRoute == route.ShipRoute).GroupBy(c => c.LoadRoute).ToList();
+
+                    foreach (var loadRoute in grpLoadRoute)
+                    {
+                        var routeData = loadRoute.ToList();
+
+                        if (routeData.Count == 0)
+                            continue;
+
+                        var loadingList = new RptLoadingList
+                        {
+                            LoadingItems = routeData,
+                            TruckNumber = route.TruckNumber,
+                            ShipDate = shipDate,
+                            ShipRoute = loadRoute.Key,
+                            DropCount = GetDropCount(shipDate, route.ShipRoute),
+                        };
+
+                        var loadtemplate = "~/Views/Pdf/LoadingList.cshtml";
+                        var loadhtml = _pdfService.RenderTemplate(loadtemplate, loadingList);
+                        pdfs.Add(_pdfService.HtmlToPDF(loadhtml));
+                    }
+                }
+            }
         }
 
         // This shared builder is the single source of truth for the route packing pages

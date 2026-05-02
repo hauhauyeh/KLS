@@ -140,6 +140,18 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("RouteLoadingList")]
+        public IActionResult RouteLoadingList([FromBody] DocumentReq documentReq)
+        {
+            var filePath = _documentService.RouteLoadingList(documentReq);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
 
         [HttpPost("PackingLabel")]
         public IActionResult PackingLabel([FromBody] DocumentReq documentReq)

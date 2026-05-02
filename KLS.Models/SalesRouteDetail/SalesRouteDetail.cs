@@ -75,6 +75,9 @@ namespace KLS.Models
         public string? ShipRoute { get; set; }
 
         [NotMapped]
+        public string? DriverName { get; set; }
+
+        [NotMapped]
         public string? FaultName { get; set; }
     }
 }
