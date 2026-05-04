@@ -9,9 +9,9 @@ namespace KLS.Contract.Services
 {
     public interface IPDFService
     {
-        PdfDocument HtmlToPDF(string html);
+        PdfDocument HtmlToPDF(string html, bool isLabel = false);
 
-        PdfDocument AddPageFooter(PdfDocument pdf);
+        PdfDocument AddPageFooter(PdfDocument pdf, bool isLabel = false);
 
         string RenderTemplate(string templatePath, object model);
     }

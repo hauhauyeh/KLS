@@ -649,17 +649,17 @@ namespace KLS.Services
 
         private static string ExtractMxReferenceId(MxCreatePaymentResponse mxResp)
         {
-            if (mxResp == null) return "";
+            if (mxResp == null || mxResp.Extra.Count == 0) return "";
 
-            // Try common keys
             string? TryGet(string key)
-                => mxResp.Extra.TryGetValue(key, out var v) ? v?.ToString() : null;
+                => mxResp.Extra
+                    .FirstOrDefault(kv => string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase))
+                    .Value?.ToString();
 
             return
                 TryGet("id")
-                ?? TryGet("paymentId")
-                ?? TryGet("transactionId")
-                ?? TryGet("referenceId")
+                ?? TryGet("reference")
+                ?? TryGet("referenceNumber")
                 ?? "";
         }
 

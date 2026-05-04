@@ -53,7 +53,10 @@ namespace KLS.Models
         public string DayOfWeek => InTimeLocal.DayOfWeek.ToString();
 
         [NotMapped]
-        public TimeSpan WorkingHour => OutTimeLocal.HasValue ? OutTimeLocal.Value - InTimeLocal : TimeSpan.Zero;
+        public TimeSpan WorkingHour => OutTimeLocal.HasValue
+         ? TimeSpan.FromMinutes(
+             Math.Round((OutTimeLocal.Value - InTimeLocal).TotalMinutes))
+         : TimeSpan.Zero;
 
         [NotMapped]
         public string InTimeHour => InTimeLocal.ToString("hh");

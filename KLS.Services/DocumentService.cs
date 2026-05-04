@@ -530,7 +530,7 @@ namespace KLS.Services
                             item.Tag = tag;
                             var template = "~/Views/Pdf/PackingLabel.cshtml";
                             var html = _pdfService.RenderTemplate(template, item);
-                            pdfs.Add(_pdfService.HtmlToPDF(html));
+                            pdfs.Add(_pdfService.HtmlToPDF(html, true));
                             tag += 1;
                         }
                     }
@@ -545,7 +545,7 @@ namespace KLS.Services
 
                 using var merged = PdfDocument.Merge(pdfs);
 
-                _pdfService.AddPageFooter(merged);
+                //_pdfService.AddPageFooter(merged);
 
                 merged.SaveAs(fullPath);
 

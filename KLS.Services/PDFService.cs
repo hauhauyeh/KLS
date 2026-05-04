@@ -13,20 +13,21 @@ namespace KLS.Services
 {
     public class PDFService : BaseService, IPDFService
     {
-        private static readonly ChromePdfRenderer _renderer = CreateRenderer();
+        //private static readonly ChromePdfRenderer _renderer = CreateRenderer();
 
         public PDFService(IUnitOfWork uow) : base(uow)
         {
         }
 
-        public PdfDocument HtmlToPDF(string html)
+        public PdfDocument HtmlToPDF(string html, bool isLabel = false)
         {
-            return _renderer.RenderHtmlAsPdf(html);
+            var renderer = CreateRenderer(isLabel);
+            return renderer.RenderHtmlAsPdf(html);
         }
 
-        public PdfDocument AddPageFooter(PdfDocument pdf)
+        public PdfDocument AddPageFooter(PdfDocument pdf, bool isLabel = false)
         {
-            if (pdf == null || pdf.PageCount == 0)
+            if (isLabel || pdf == null || pdf.PageCount == 0)
                 return pdf;
 
             const string footerHtml = @"
@@ -51,16 +52,46 @@ namespace KLS.Services
             return RazorTemplateEngine.RenderAsync(templatePath, model).Result;
         }
 
-        private static ChromePdfRenderer CreateRenderer()
+        //private static ChromePdfRenderer CreateRenderer()
+        //{
+        //    var renderer = new ChromePdfRenderer();
+        //    renderer.RenderingOptions.PrintHtmlBackgrounds = true;
+        //    renderer.RenderingOptions.CssMediaType = PdfCssMediaType.Print;
+        //    renderer.RenderingOptions.PaperSize = PdfPaperSize.Letter;
+        //    renderer.RenderingOptions.MarginBottom = 5;
+        //    renderer.RenderingOptions.MarginTop = 8;
+        //    renderer.RenderingOptions.MarginLeft = 8;
+        //    renderer.RenderingOptions.MarginRight = 8;
+        //    return renderer;
+        //}
+
+        private static ChromePdfRenderer CreateRenderer(bool isLabel = false)
         {
             var renderer = new ChromePdfRenderer();
+
             renderer.RenderingOptions.PrintHtmlBackgrounds = true;
             renderer.RenderingOptions.CssMediaType = PdfCssMediaType.Print;
-            renderer.RenderingOptions.PaperSize = PdfPaperSize.Letter;
-            renderer.RenderingOptions.MarginBottom = 5;
-            renderer.RenderingOptions.MarginTop = 8;
-            renderer.RenderingOptions.MarginLeft = 8;
-            renderer.RenderingOptions.MarginRight = 8;
+
+            if (isLabel)
+            {
+                renderer.RenderingOptions.MarginTop = 0;
+                renderer.RenderingOptions.MarginBottom = 0;
+                renderer.RenderingOptions.MarginLeft = 5;
+                renderer.RenderingOptions.MarginRight = 5;
+                renderer.RenderingOptions.PaperSize = PdfPaperSize.Custom;
+                renderer.RenderingOptions.SetCustomPaperSizeInInches(4, 6);
+            }
+            else
+            {
+                renderer.RenderingOptions.PrintHtmlBackgrounds = true;
+                renderer.RenderingOptions.CssMediaType = PdfCssMediaType.Print;
+                renderer.RenderingOptions.PaperSize = PdfPaperSize.Letter;
+                renderer.RenderingOptions.MarginBottom = 5;
+                renderer.RenderingOptions.MarginTop = 8;
+                renderer.RenderingOptions.MarginLeft = 8;
+                renderer.RenderingOptions.MarginRight = 8;
+            }
+
             return renderer;
         }
     }

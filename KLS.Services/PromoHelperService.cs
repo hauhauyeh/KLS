@@ -452,7 +452,7 @@ namespace KLS.Services
             if (customer == null || !customer.HasOwnList) return new HashSet<int>();
 
             return Uow.ItemQuotes
-                .Find(q => q.PayeeId == payeeId && !q.Inactive)
+                .Find(q => q.PayeeId == payeeId && (q.MarkupPercent.HasValue || q.TargetPrice.Value > 0) && !q.Inactive)
                 .Select(q => q.ItemId)
                 .ToHashSet();
         }
@@ -985,12 +985,12 @@ namespace KLS.Services
             return rewardType switch
             {
                 EnumHelper.RewardType.SAME_AS_CONDITION => rule.ConditionItemId,
-                EnumHelper.RewardType.ITEM               => rule.RewardItemId,
-                EnumHelper.RewardType.CATEGORY           =>
+                EnumHelper.RewardType.ITEM => rule.RewardItemId,
+                EnumHelper.RewardType.CATEGORY =>
                     rule.RewardCategoryId.HasValue
                         ? ResolveCategoryRewardItem(rule.RewardCategoryId.Value)
                         : null,
-                _                                        => null
+                _ => null
             };
         }
 
@@ -1017,10 +1017,10 @@ namespace KLS.Services
         private static decimal ComputeBogoPerUnitDiscount(decimal rewardP1, EnumHelper.DiscountType discountType, decimal discountValue) =>
             discountType switch
             {
-                EnumHelper.DiscountType.FREE       => rewardP1,
-                EnumHelper.DiscountType.FLAT       => Math.Min(rewardP1, Math.Max(0m, discountValue)),
+                EnumHelper.DiscountType.FREE => rewardP1,
+                EnumHelper.DiscountType.FLAT => Math.Min(rewardP1, Math.Max(0m, discountValue)),
                 EnumHelper.DiscountType.PERCENTAGE => rewardP1 * Math.Clamp(discountValue, 0m, 100m) / 100m,
-                _                                  => 0m
+                _ => 0m
             };
 
         // Effective UnitPrice the customer pays for a BOGO reward row.
@@ -1030,10 +1030,10 @@ namespace KLS.Services
         private static decimal ComputeBogoRewardUnitPrice(decimal rewardP1, EnumHelper.DiscountType discountType, decimal discountValue) =>
             discountType switch
             {
-                EnumHelper.DiscountType.FREE       => 0m,
-                EnumHelper.DiscountType.FLAT       => Math.Max(0m, rewardP1 - Math.Max(0m, discountValue)),
+                EnumHelper.DiscountType.FREE => 0m,
+                EnumHelper.DiscountType.FLAT => Math.Max(0m, rewardP1 - Math.Max(0m, discountValue)),
                 EnumHelper.DiscountType.PERCENTAGE => Math.Max(0m, rewardP1 * (1 - Math.Clamp(discountValue, 0m, 100m) / 100m)),
-                _                                  => rewardP1
+                _ => rewardP1
             };
 
         // Total reward-item quantity this rule produces on the current cart.
@@ -1345,7 +1345,7 @@ namespace KLS.Services
                     ConditionQty = rule.Bogo.ConditionQty ?? 0,
                     RewardQty = rule.Bogo.RewardQty ?? 0,
                     PromoPrice = rule.Bogo.PromoPrice,
-                    BadgeText = $"Buy {rule.Bogo.ConditionQty} Get {rule.Bogo.RewardQty}",
+                    BadgeText = $"Buy {rule.Bogo.ConditionQty:0.##} Get {rule.Bogo.RewardQty:0.##}",
                     MatchingTempSalesIds = matchingItems.Select(t => t.TempSalesId).ToArray()
                 });
             }

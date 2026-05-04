@@ -47,23 +47,22 @@ namespace KLS.Services
 
             if (existingRoute != null)
             {
+                existingRoute.TruckNumber = NormalizeTruckNumber(salesRoute.TruckNumber);
+                if (salesRoute.DriverId.HasValue)
+                {
+                    existingRoute.DriverId = salesRoute.DriverId;
+                    existingRoute.Driver = ResolveDriverName(salesRoute.DriverId, salesRoute.Driver);
+                }
+                existingRoute.UpdatedAt = DateTime.UtcNow;
                 var salesRows = Uow.Sales.Find(s => s.ShipDate == existingRoute.ShipDate && s.ShipRoute == existingRoute.ShipRoute).ToList();
 
                 foreach (var sales in salesRows)
                 {
-                    sales.TruckNumber = string.IsNullOrWhiteSpace(salesRoute.TruckNumber) ? null : salesRoute.TruckNumber.Trim();
-                    sales.Deliverby = salesRoute.DriverId;
+                    sales.TruckNumber = existingRoute.TruckNumber;
+                    sales.Deliverby = existingRoute.DriverId;
                     sales.UpdatedAt = DateTime.UtcNow;
                     Uow.Sales.Update(sales);
                 }
-
-                Uow.Commit();
-                SyncByDate(existingRoute.ShipDate);
-
-                existingRoute = GetById(salesRoute.SalesRouteId);
-
-                if (existingRoute == null)
-                    return;
 
                 existingRoute.Loader = salesRoute.Loader;
                 existingRoute.Checker = salesRoute.Checker;
@@ -72,7 +71,6 @@ namespace KLS.Services
                 existingRoute.BeginMileage = salesRoute.BeginMileage;
                 existingRoute.TruckIssue = salesRoute.TruckIssue;
                 existingRoute.PrintCount = (existingRoute.PrintCount ?? 0) + 1;
-                existingRoute.UpdatedAt = DateTime.UtcNow;
 
                 Uow.SalesRoutes.Update(existingRoute);
                 Uow.Commit();
@@ -112,72 +110,68 @@ namespace KLS.Services
 
         public IEnumerable<AssignTruck>? GetAssignTrucks(DateOnly shipDate)
         {
-            var trucks = _truckService.GetActive().ToList();
+            var activeTrucks = _truckService.GetActive()
+                .Select(t => NormalizeTruckNumber(t.TruckNumber))
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .ToList();
 
-            var assignRoutes = Uow.SalesRoutes.Find(c => c.ShipDate == shipDate).OrderBy(c => c.SalesRouteId).ToList();
+            var assignRoutes = Uow.SalesRoutes.Find(c => c.ShipDate == shipDate)
+                .OrderBy(c => c.TruckRouteOrder ?? int.MaxValue)
+                .ThenBy(c => c.SalesRouteId)
+                .ToList();
 
-            var routeAssignments = Uow.Sales.Find(c => c.ShipDate == shipDate && c.ShipRoute != null)
-                .AsEnumerable()
-                .Where(c => !string.IsNullOrWhiteSpace(c.ShipRoute))
-                .GroupBy(c => c.ShipRoute!.Trim())
-                .ToDictionary(
-                    g => g.Key,
-                    g => new
-                    {
-                        TruckNumber = g.Select(x => string.IsNullOrWhiteSpace(x.TruckNumber) ? null : x.TruckNumber!.Trim()).FirstOrDefault(x => !string.IsNullOrEmpty(x)),
-                        DriverId = g.Select(x => x.Deliverby).FirstOrDefault(x => x.HasValue)
-                    });
+            var driverNames = assignRoutes
+                .Select(r => r.Driver?.Trim())
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
-            foreach (var route in assignRoutes)
-            {
-                if (routeAssignments.TryGetValue((route.ShipRoute ?? string.Empty).Trim(), out var assignment))
-                {
-                    route.TruckNumber = assignment.TruckNumber;
-                    route.Driver = assignment.DriverId.HasValue
-                        ? Uow.Payees.GetById(assignment.DriverId.Value)?.PayeeName
-                        : null;
-                }
-            }
+            var driverLookup = Uow.Payees.GetAll()
+                .Where(p => driverNames.Contains(p.PayeeName!))
+                .ToList()
+                .GroupBy(p => p.PayeeName ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .Where(g => g.Select(p => p.PayeeId).Distinct().Count() == 1)
+                .ToDictionary(g => g.Key, g => g.First().PayeeId, StringComparer.OrdinalIgnoreCase);
 
-            // Group only assigned routes by a non-empty truck number. Unassigned routes
-            // are still valid rows in SalesRoute, but they cannot be used as dictionary
-            // keys and should simply remain outside the truck lookup.
-            var routeLookup = assignRoutes?
+            var assignedTrucks = assignRoutes
                 .Where(r => !string.IsNullOrWhiteSpace(r.TruckNumber))
-                .GroupBy(r => r.TruckNumber!.Trim())
-                .ToDictionary(
-                    g => g.Key,
-                    g => g
+                .GroupBy(r => NormalizeTruckNumber(r.TruckNumber)!, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(g => g.Min(r => r.TruckRouteOrder ?? int.MaxValue))
+                .ThenBy(g => g.Min(r => r.SalesRouteId))
+                .Select(g =>
+                {
+                    var routes = g
                         .OrderBy(r => r.TruckRouteOrder ?? int.MaxValue)
                         .ThenBy(r => r.SalesRouteId)
-                        .ToList());
+                        .ToList();
 
-            var assignTrucks = trucks
-           .Select(truck =>
-           {
-               routeLookup.TryGetValue(truck.TruckNumber, out var routes);
+                    var driverId = routes.Select(r => r.DriverId).FirstOrDefault(id => id.HasValue);
+                    var driverName = routes.Select(r => r.Driver?.Trim()).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
+                    return new AssignTruck
+                    {
+                        TruckNumber = g.Key,
+                        Routes = routes,
+                        DriverName = driverName,
+                        DriverId = driverId ?? ResolveDriverId(driverLookup, driverName)
+                    };
+                })
+                .ToList();
 
-               return new AssignTruck
-               {
-                   TruckNumber = truck.TruckNumber,
-                   Routes = routes,
-                   DriverId = routes?.Select(r =>
-                   {
-                       if (routeAssignments.TryGetValue((r.ShipRoute ?? string.Empty).Trim(), out var assignment))
-                           return assignment.DriverId;
-                       return null;
-                   }).FirstOrDefault(x => x.HasValue),
-                   DriverName = routes?.FirstOrDefault()?.Driver
-               };
-           })
+            var assignedTruckNumbers = new HashSet<string>(
+                assignedTrucks
+                    .Select(t => NormalizeTruckNumber(t.TruckNumber))
+                    .Where(t => !string.IsNullOrWhiteSpace(t))!,
+                StringComparer.OrdinalIgnoreCase);
 
-           // Preserve explicit assign-truck sequence when it exists, then fall back.
-           .OrderBy(at => at.Routes?.FirstOrDefault()?.TruckRouteOrder ?? int.MaxValue)
-           .ThenBy(at => at.Routes?.FirstOrDefault()?.SalesRouteId ?? int.MaxValue)
-           .ThenBy(at => at.TruckNumber)
-           .ToList();
+            foreach (var truckNumber in activeTrucks.Where(t => !assignedTruckNumbers.Contains(t!)))
+            {
+                assignedTrucks.Add(new AssignTruck
+                {
+                    TruckNumber = truckNumber
+                });
+            }
 
-            return assignTrucks;
+            return assignedTrucks;
         }
 
         public void SaveAssignTrucks(List<AssignTruck> assignTrucks)
@@ -185,7 +179,7 @@ namespace KLS.Services
             if (assignTrucks == null || assignTrucks.Count == 0)
                 return;
 
-            var incoming = new List<(DateOnly ShipDate, string ShipRoute, string? TruckNumber, int? Deliverby, int TruckRouteOrder)>();
+            var incoming = new List<(DateOnly ShipDate, string ShipRoute, string? TruckNumber, int? Deliverby, string? DriverName, int TruckRouteOrder)>();
             var truckRouteOrder = 0;
 
             foreach (var truck in assignTrucks.Where(t => t.Routes != null && t.Routes.Count > 0))
@@ -200,8 +194,9 @@ namespace KLS.Services
                     incoming.Add((
                         route.ShipDate,
                         shipRoute,
-                        string.IsNullOrWhiteSpace(truck.TruckNumber) ? null : truck.TruckNumber.Trim(),
+                        NormalizeTruckNumber(truck.TruckNumber),
                         truck.DriverId,
+                        ResolveDriverName(truck.DriverId, truck.DriverName),
                         truckRouteOrder
                     ));
                 }
@@ -211,16 +206,67 @@ namespace KLS.Services
                 return;
 
             var shipDate = incoming[0].ShipDate;
-
             var routeAssignments = incoming.ToDictionary(
                 x => x.ShipRoute,
                 x => new
                 {
                     TruckNumber = x.TruckNumber,
                     Deliverby = x.Deliverby,
+                    DriverName = x.DriverName,
                     TruckRouteOrder = x.TruckRouteOrder
                 },
                 StringComparer.OrdinalIgnoreCase);
+
+            var salesRoutes = Uow.SalesRoutes.Find(r => r.ShipDate == shipDate).ToList();
+            var existingRouteLookup = salesRoutes
+                .Where(r => !string.IsNullOrWhiteSpace(r.ShipRoute))
+                .GroupBy(r => r.ShipRoute.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var assignment in incoming)
+            {
+                if (existingRouteLookup.ContainsKey(assignment.ShipRoute))
+                    continue;
+
+                var newRoute = new SalesRoute
+                {
+                    ShipDate = assignment.ShipDate,
+                    ShipRoute = assignment.ShipRoute,
+                    PrintCount = 0
+                };
+
+                Uow.SalesRoutes.Add(newRoute);
+                salesRoutes.Add(newRoute);
+                existingRouteLookup[assignment.ShipRoute] = newRoute;
+            }
+
+            Uow.Commit();
+
+            salesRoutes = Uow.SalesRoutes.Find(r => r.ShipDate == shipDate).ToList();
+            foreach (var route in salesRoutes)
+            {
+                var shipRoute = route.ShipRoute?.Trim();
+                if (!string.IsNullOrWhiteSpace(shipRoute) &&
+                    routeAssignments.TryGetValue(shipRoute, out var assignment))
+                {
+                    route.TruckNumber = assignment.TruckNumber;
+                    route.DriverId = assignment.Deliverby;
+                    route.Driver = assignment.DriverName;
+                    route.TruckRouteOrder = assignment.TruckRouteOrder;
+                }
+                else
+                {
+                    route.TruckNumber = null;
+                    route.DriverId = null;
+                    route.Driver = null;
+                    route.TruckRouteOrder = null;
+                }
+
+                route.UpdatedAt = DateTime.UtcNow;
+                Uow.SalesRoutes.Update(route);
+            }
+
+            Uow.Commit();
 
             var salesRows = Uow.Sales.Find(s => s.ShipDate == shipDate && s.ShipRoute != null).ToList();
 
@@ -235,28 +281,15 @@ namespace KLS.Services
                 {
                     sales.TruckNumber = assignment.TruckNumber;
                     sales.Deliverby = assignment.Deliverby;
-                    sales.UpdatedAt = DateTime.UtcNow;
-                    Uow.Sales.Update(sales);
                 }
-            }
-
-            Uow.Commit();
-            SyncByDate(shipDate);
-
-            var salesRoutes = Uow.SalesRoutes.Find(r => r.ShipDate == shipDate).ToList();
-            foreach (var route in salesRoutes)
-            {
-                route.TruckRouteOrder = null;
-
-                var shipRoute = route.ShipRoute?.Trim();
-                if (!string.IsNullOrWhiteSpace(shipRoute) &&
-                    routeAssignments.TryGetValue(shipRoute, out var assignment) &&
-                    !string.IsNullOrWhiteSpace(assignment.TruckNumber))
+                else
                 {
-                    route.TruckRouteOrder = assignment.TruckRouteOrder;
+                    sales.TruckNumber = null;
+                    sales.Deliverby = null;
                 }
 
-                Uow.SalesRoutes.Update(route);
+                sales.UpdatedAt = DateTime.UtcNow;
+                Uow.Sales.Update(sales);
             }
 
             Uow.Commit();
@@ -270,6 +303,27 @@ namespace KLS.Services
         public bool CheckZeroPrice(PrintInvoiceReq printInvoiceReq)
         {
             return Uow.SalesRoutes.CheckZeroPrice(printInvoiceReq);
+        }
+
+        private static string? NormalizeTruckNumber(string? truckNumber)
+        {
+            return string.IsNullOrWhiteSpace(truckNumber) ? null : truckNumber.Trim();
+        }
+
+        private string? ResolveDriverName(int? driverId, string? fallbackDriverName)
+        {
+            if (driverId.HasValue)
+                return Uow.Payees.GetById(driverId.Value)?.PayeeName;
+
+            return string.IsNullOrWhiteSpace(fallbackDriverName) ? null : fallbackDriverName.Trim();
+        }
+
+        private static int? ResolveDriverId(Dictionary<string, int> driverLookup, string? driverName)
+        {
+            if (string.IsNullOrWhiteSpace(driverName))
+                return null;
+
+            return driverLookup.TryGetValue(driverName.Trim(), out var payeeId) ? payeeId : null;
         }
     }
 }
