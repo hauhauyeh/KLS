@@ -1450,7 +1450,7 @@ namespace KLS.Services
                 IsTaxable = owner.IsTaxable,
                 LineType = "I"
             };
-            rewardLine.ApplyEdits(newRewardQty, true, false, false, 0, null);
+            rewardLine.ApplyEdits(newRewardQty, true, false, false, owner.UnitPrice, null);
             rewardLine.ApplyUnit(rewardUnit ?? "", rewardItemUnitId, rewardFactorToBase);
             rewardLine.DisplaySort = owner.LineId ?? 0;
 
