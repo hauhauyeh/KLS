@@ -1,6 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,13 @@ namespace KLS.Services
     public class MxMerchantService : BaseService, IMxMerchantService
     {
         private readonly HttpClient _http;
+        private readonly ILogger<MxMerchantService> _logger;
         private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
-        public MxMerchantService(IUnitOfWork uow, HttpClient http) : base(uow)
+        public MxMerchantService(IUnitOfWork uow, HttpClient http, ILogger<MxMerchantService> logger) : base(uow)
         {
             _http = http;
+            _logger = logger;
         }
 
         public async Task<MxCreatePaymentResponse> ChargeAsync(PaymentMethod paymentMethod, decimal amount, bool isDecrypt, CancellationToken ct = default)
@@ -119,7 +122,7 @@ namespace KLS.Services
                 };
             }
 
-            var url = new Uri(new Uri(baseUrl), "payment");
+            var url = new Uri(new Uri(baseUrl), "payment?echo=true");
             using var msg = new HttpRequestMessage(HttpMethod.Post, url);
 
             // Basic: base64(username:password) OR base64(consumerKey:consumerSecret)
@@ -135,16 +138,51 @@ namespace KLS.Services
             using var resp = await _http.SendAsync(msg, ct);
             var body = await resp.Content.ReadAsStringAsync(ct);
 
-            if (!resp.IsSuccessStatusCode)
-            {
-                var mxError = JsonSerializer.Deserialize<MxErrorResponse>(body, JsonOpts);
+            _logger.LogInformation("MxMerchant response — Status: {StatusCode}, Body: {Body}",
+                (int)resp.StatusCode, body);
 
-                if (mxError?.details != null && mxError.details.Any())
-                    throw new HttpRequestException(string.Join(" | ", mxError.details));
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                if (resp.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("MxMerchant returned HTTP {StatusCode} with empty body. "
+                        + "Payment may have succeeded.", (int)resp.StatusCode);
+                    return new MxCreatePaymentResponse();
+                }
+
+                throw new HttpRequestException(
+                    $"MxMerchant returned HTTP {(int)resp.StatusCode} with an empty response body.");
             }
 
-            return JsonSerializer.Deserialize<MxCreatePaymentResponse>(body, JsonOpts)
-                   ?? new MxCreatePaymentResponse();
+            if (!resp.IsSuccessStatusCode)
+            {
+                MxErrorResponse? mxError = null;
+                try
+                {
+                    mxError = JsonSerializer.Deserialize<MxErrorResponse>(body, JsonOpts);
+                }
+                catch (JsonException) { }
+
+                var errorMessage = mxError?.details != null && mxError.details.Any()
+                    ? string.Join(" | ", mxError.details)
+                    : mxError?.message
+                      ?? $"MxMerchant returned HTTP {(int)resp.StatusCode}: {body}";
+
+                throw new HttpRequestException(errorMessage);
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<MxCreatePaymentResponse>(body, JsonOpts)
+                       ?? new MxCreatePaymentResponse();
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex,
+                    "MxMerchant payment succeeded but response is not valid JSON. "
+                    + "Returning empty response so payment record is saved. Body: {Body}", body);
+                return new MxCreatePaymentResponse();
+            }
         }
     }
 }

@@ -1345,7 +1345,7 @@ namespace KLS.Services
                     ConditionQty = rule.Bogo.ConditionQty ?? 0,
                     RewardQty = rule.Bogo.RewardQty ?? 0,
                     PromoPrice = rule.Bogo.PromoPrice,
-                    BadgeText = $"Buy {rule.Bogo.ConditionQty} Get {rule.Bogo.RewardQty}",
+                    BadgeText = $"Buy {rule.Bogo.ConditionQty:0.##} Get {rule.Bogo.RewardQty:0.##}",
                     MatchingTempSalesIds = matchingItems.Select(t => t.TempSalesId).ToArray()
                 });
             }
