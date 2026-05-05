@@ -1,21 +1,4 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- Sales_Inject codex candidate
--- Baseline: live/repo Sales_Inject with promo parent/root reverse mapping
---
--- Summary:
---   Goal: in edit mode, seed TempSales directly from persisted SalesDetail.
---   SalesDetail.LineId is now maintained correctly end-to-end, so Sales_Inject
---   no longer needs to rebuild or reinterpret line ordering.
---
--- Improvements:
---   1. Keep the inject path simple: use persisted SalesDetail.LineId order directly
---   2. Preserve parent/root reverse mapping from SalesDetail into TempSales
---   3. Refresh promo reward DisplaySort from the owner's current TempSales.LineId
-
+-- Sales_Inject working file
 CREATE OR ALTER PROCEDURE [dbo].[Sales_Inject]
     @EmpId INT,
     @SalesId INT
@@ -27,8 +10,11 @@ BEGIN
     DECLARE @PayeeId INT;
     DECLARE @ParentSalesNumber INT;
 
-    -- Load the persisted Sales header parent number once so credit memo edit
-    -- mode can carry that same parent into the temp cart rows it injects.
+    /*
+        Load the edit-session header context once. Credit memo edit mode needs
+        the persisted Sales.ParentSalesNumber carried into TempSales so the cart
+        can display the real parent invoice instead of "No Parent".
+    */
     SELECT
         @PayeeId = ShipId,
         @ParentSalesNumber = ParentSalesNumber
@@ -40,9 +26,16 @@ BEGIN
     DELETE FROM TempSales
     WHERE PayeeId = @PayeeId AND EmpId = @EmpId AND SalesId = @SalesId;
 
+    /*
+        2026-05-04 historical note:
+        The previous live insert did not populate TempSales.ParentSalesNumber.
+        That caused credit memo edit mode to show "No Parent" in the cart even
+        when the Sales header already had a valid ParentSalesNumber.
+
+        Old insert column list omitted ParentSalesNumber entirely.
+    */
+
     -- Section 3: seed TempSales directly from persisted SalesDetail order.
-    -- SalesDetail.LineId is now maintained correctly end-to-end, so edit mode
-    -- should trust that persisted order instead of rebuilding a separate one here.
     INSERT INTO [TempSales]
            ([EmpId]
            ,[SalesId]
@@ -81,9 +74,9 @@ BEGIN
            ,[AccountId]
            ,[ItemUnitId]
            ,[Unit]
-           ,CASE WHEN (sd.BillQty = 0 AND sd.ShipQty != 0) THEN 1 ELSE 0 END -- Free
-           ,CASE WHEN (sd.BillQty = 0 AND sd.ShipQty = 0) THEN 1 ELSE 0 END  -- Out
-           ,CASE WHEN (sd.BillQty != 0 AND sd.ShipQty = 0) THEN 1 ELSE 0 END -- Credit
+           ,CASE WHEN (sd.BillQty = 0 AND sd.ShipQty != 0) THEN 1 ELSE 0 END
+           ,CASE WHEN (sd.BillQty = 0 AND sd.ShipQty = 0) THEN 1 ELSE 0 END
+           ,CASE WHEN (sd.BillQty != 0 AND sd.ShipQty = 0) THEN 1 ELSE 0 END
            ,[OrdQty]
            ,[ShipQty]
            ,[BillQty]
@@ -96,16 +89,14 @@ BEGIN
            ,[FactorToBase]
            ,@ParentSalesNumber
            ,[SalesDetailId]
-           ,NULL  -- ParentTempSalesId (populated below)
-           ,NULL  -- RootTempSalesId (populated below)
+           ,NULL
+           ,NULL
            ,ISNULL([CartLineType], 'MAIN')
            ,ISNULL([IsSystemManaged], 0)
            ,[DisplaySort]
-    FROM SalesDetail AS sd WHERE SalesId=@SalesId ORDER BY sd.LineId
+    FROM SalesDetail AS sd WHERE SalesId=@SalesId ORDER BY sd.LineId;
 
     -- Section 4: reverse-map parent/root references using SalesDetailId.
-    -- TempSales.SalesDetailId stores the source SalesDetailId, so the edit cart
-    -- can restore owner/reward linkage after the insert.
     UPDATE ts
     SET ts.ParentTempSalesId = pts.TempSalesId,
         ts.RootTempSalesId = ISNULL(rts.TempSalesId, pts.TempSalesId)
@@ -118,7 +109,7 @@ BEGIN
     WHERE ts.EmpId = @EmpId AND ts.SalesId = @SalesId AND ts.PayeeId = @PayeeId
       AND sd.ParentSalesDetailId IS NOT NULL;
 
-    -- Refresh DisplaySort on PROMO_REWARD rows to match owner's current LineId
+    -- Section 5: refresh reward DisplaySort from the owner's current temp-cart LineId.
     UPDATE ts
     SET ts.DisplaySort = owner.LineId
     FROM TempSales ts
@@ -127,8 +118,4 @@ BEGIN
       AND ts.EmpId = @EmpId
       AND ts.SalesId = @SalesId
       AND ts.PayeeId = @PayeeId;
-
-    -- Section 5: refresh reward DisplaySort from the owner's current temp-cart
-    -- LineId so promo display grouping stays aligned in edit mode.
 END
-GO

@@ -79,6 +79,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.ServiceSummary(reportReq));
         }
 
+        [HttpGet("SalesCallList")]
+        [DisplayName("Sales -> Sales Call List")]
+        [PermissionKey("Report.Sales.Responsible")]
+        public IActionResult SalesCallList()
+        {
+            return Ok(_reportService.SalesCallList());
+        }
+
 
         [HttpGet("Responsible")]
         [DisplayName("Sales -> Responsible")]
@@ -436,6 +444,15 @@ namespace KLS.API.Controllers.Admin
         public IActionResult InventoryIncoming()
         {
             return Ok(_reportService.InventoryIncoming());
+        }
+
+
+        [HttpGet("WorksheetPattern")]
+        [DisplayName("Inventory -> Worksheet Pattern")]
+        [PermissionKey("Report.Inventory.InventoryStatus")]
+        public IActionResult WorksheetPattern([FromQuery] WorksheetPatternReportRequest req)
+        {
+            return Ok(_reportService.WorksheetPattern(req));
         }
 
         #endregion

@@ -170,6 +170,11 @@ namespace KLS.Data.Repositories
             return DbContext.RptServiceSummary.FromSqlRaw("[dbo].[Report_ServiceSummary] @StartDate,@EndDate", StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptSalesCallListRow> SalesCallList()
+        {
+            return DbContext.RptSalesCallListRow.FromSqlRaw("[dbo].[Report_SalesCallList]");
+        }
+
         public IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate)
         {
             var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
@@ -496,6 +501,19 @@ namespace KLS.Data.Repositories
         public IQueryable<RptInventoryIncomingRow> InventoryIncoming()
         {
             return DbContext.RptInventoryIncomingRow.FromSqlRaw("[dbo].[Report_InventoryIncoming]");
+        }
+
+        public IQueryable<RptWorksheet> WorksheetPattern(WorksheetPatternReportRequest req)
+        {
+            var searchParam = !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value);
+            var payeeParam = req.PayeeId.HasValue ? new SqlParameter("@PayeeId", req.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+            var filterbyParam = !string.IsNullOrEmpty(req.Filterby) ? new SqlParameter("@Filterby", req.Filterby) : new SqlParameter("@Filterby", DBNull.Value);
+            var categoryParam = req.CategoryId.HasValue ? new SqlParameter("@Category", req.CategoryId.Value.ToString()) : new SqlParameter("@Category", DBNull.Value);
+            var inactiveParam = new SqlParameter("@Inactive", req.ShowInactive ?? false);
+
+            return DbContext.RptWorksheet.FromSqlRaw(
+                "[dbo].[Report_WorkSheetPattern] @Search,@PayeeId,@Filterby,@Category,@Inactive",
+                searchParam, payeeParam, filterbyParam, categoryParam, inactiveParam);
         }
 
         #endregion
