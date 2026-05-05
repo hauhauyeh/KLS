@@ -629,7 +629,7 @@ namespace KLS.Services
                     return new B2CPaymentResult
                     {
                         Gateway = "MX Merchant",
-                        PaymentMethod = "ACH",
+                        PaymentMethod = "E-CHECK",
                         PaymentAmount = dueTotal,
                         ReferenceId = ExtractMxReferenceId(mxResp),
                         Last4 = method.Last4
@@ -671,7 +671,7 @@ namespace KLS.Services
                 return new B2CPaymentResult
                 {
                     Gateway = "MX Merchant",
-                    PaymentMethod = "ACH",
+                    PaymentMethod = "E-CHECK",
                     PaymentAmount = dueTotal,
                     ReferenceId = ExtractMxReferenceId(mxResp),
                     Last4 = Utilities.GetLast4(webCheckoutReq.PaymentMethod.AccountNumber)
@@ -721,9 +721,9 @@ namespace KLS.Services
                     .FirstOrDefault(kv => string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase))
                     .Value?.ToString();
 
-            return TryGet("id")
-                ?? TryGet("reference")
+            return TryGet("reference")
                 ?? TryGet("referenceNumber")
+                ?? TryGet("id")
                 ?? "";
         }
 
