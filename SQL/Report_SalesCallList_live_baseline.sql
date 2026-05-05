@@ -1,0 +1,8 @@
+-- Live baseline note for dbo.Report_SalesCallList
+-- Captured from KLS_2026 on 2026-05-05
+--
+-- Result:
+-- dbo.Report_SalesCallList was not found in the current live database.
+--
+-- This file is intentionally a baseline note instead of a pulled definition
+-- because there is no current live object to align from.

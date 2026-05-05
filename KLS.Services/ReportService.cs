@@ -693,6 +693,11 @@ namespace KLS.Services
             return Uow.Reports.ServiceSummary(reportReq);
         }
 
+        public IEnumerable<RptSalesCallListRow> SalesCallList()
+        {
+            return Uow.Reports.SalesCallList().ToList();
+        }
+
         public IEnumerable<RptResponsible> Responsible(DateOnly? shipDate)
         {
             var data = Uow.Reports.Responsible(shipDate).ToList();

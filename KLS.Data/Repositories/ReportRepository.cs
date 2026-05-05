@@ -170,6 +170,11 @@ namespace KLS.Data.Repositories
             return DbContext.RptServiceSummary.FromSqlRaw("[dbo].[Report_ServiceSummary] @StartDate,@EndDate", StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptSalesCallListRow> SalesCallList()
+        {
+            return DbContext.RptSalesCallListRow.FromSqlRaw("[dbo].[Report_SalesCallList]");
+        }
+
         public IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate)
         {
             var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);

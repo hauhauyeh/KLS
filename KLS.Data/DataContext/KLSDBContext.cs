@@ -487,6 +487,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptServiceSummary> RptServiceSummary { get; set; }
 
+        public virtual DbSet<RptSalesCallListRow> RptSalesCallListRow { get; set; }
+
         public virtual DbSet<RptResponsibleRow> RptResponsibleRow { get; set; }
 
         public virtual DbSet<RptDailySummaryRow> RptDailySummaryRow { get; set; }

@@ -79,6 +79,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.ServiceSummary(reportReq));
         }
 
+        [HttpGet("SalesCallList")]
+        [DisplayName("Sales -> Sales Call List")]
+        [PermissionKey("Report.Sales.Responsible")]
+        public IActionResult SalesCallList()
+        {
+            return Ok(_reportService.SalesCallList());
+        }
+
 
         [HttpGet("Responsible")]
         [DisplayName("Sales -> Responsible")]

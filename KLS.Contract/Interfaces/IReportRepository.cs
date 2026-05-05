@@ -42,6 +42,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptServiceSummary> ServiceSummary(ReportRequest reportReq);
 
+        IQueryable<RptSalesCallListRow> SalesCallList();
+
         IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate);
 
         IQueryable<RptDailySummaryRow>? DailySummary(DateOnly? ShipDate);
