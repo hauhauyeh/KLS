@@ -438,6 +438,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.InventoryIncoming());
         }
 
+
+        [HttpGet("WorksheetPattern")]
+        [DisplayName("Inventory -> Worksheet Pattern")]
+        [PermissionKey("Report.Inventory.InventoryStatus")]
+        public IActionResult WorksheetPattern([FromQuery] WorksheetPatternReportRequest req)
+        {
+            return Ok(_reportService.WorksheetPattern(req));
+        }
+
         #endregion
     }
 }

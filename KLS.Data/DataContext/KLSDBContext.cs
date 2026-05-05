@@ -578,6 +578,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptInventoryIncomingRow> RptInventoryIncomingRow { get; set; }
 
+        public virtual DbSet<RptWorksheet> RptWorksheet { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

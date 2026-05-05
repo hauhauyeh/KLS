@@ -12,11 +12,15 @@ namespace KLS.Models.Reports
         [Key]
         public int Id { get; set; }
 
+        public int ItemId { get; set; }
+
         public DateOnly ShipDate { get; set; }
 
         public string? Section { get; set; }
 
         public string? ItemName { get; set; }
+
+        public string? Comment { get; set; }
 
         public decimal? ShipQty { get; set; }
 

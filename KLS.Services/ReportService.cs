@@ -86,62 +86,85 @@ namespace KLS.Services
                 packingItems,
                 req,
                 reportTitle: "Total Split",
-                useLbsOuterSplit: true);
+                useLbsOuterSplit: true,
+                useWeightLikeOuterSplit: false,
+                bypassCoolerStorageNameCheck: false,
+                useUnitSplitAcrossAllStorages: false);
         }
 
         public RptPackingList HarvillsPacking(DateOnly shipDate)
         {
-            // Harvills keeps only the cooler subset, but now renders through the same
-            // packing-style layout as standalone PackingList.
-            var packingItems = Uow.Reports.Harvills(shipDate).ToList()
-                // Service-side filter keeps the standalone Harvills report aligned with
-                // the requested section exclusions without changing the legacy SQL yet.
-                .Where(x => !string.Equals(x.Section, "Asian", StringComparison.OrdinalIgnoreCase))
-                .Select(x => new RptPackingItem
+            // Harvills now follows a simpler grouped-total rule:
+            // 1. Keep the SQL section order driven by ItemStorage.SortOrder.
+            // 2. Group rows inside each section by ItemId + Unit + Comment.
+            // 3. Show one grouped total qty/unit line per item group.
+            var rows = Uow.Reports.Harvills(shipDate).ToList();
+
+            var storages = rows
+                .GroupBy(x => x.Section)
+                .Select(g => new PackingListStorage
                 {
-                    Id = x.Id,
-                    StorageName = x.Section,
-                    ItemName = x.ItemName,
-                    ShipQty = x.ShipQty,
-                    Unit = x.Unit
+                    StorageName = g.Key,
+                    Products = g
+                        .GroupBy(x => new { x.ItemId, x.Unit, x.Comment })
+                        .OrderBy(p => p.First().ItemName)
+                        .ThenBy(p => p.Key.Comment)
+                        .ThenBy(p => p.Key.Unit)
+                        .Select(p => new PackingListProduct
+                        {
+                            ItemName = p.First().ItemName,
+                            Comment = p.Key.Comment,
+                            UnitLines = BuildHarvillsUnitLines(p)
+                        })
+                        .ToList()
                 })
                 .ToList();
 
-            return BuildPackingListReport(
-                packingItems,
-                shipDate,
-                shipRoute: null,
-                salesId: null,
-                payeeName: null,
-                truckNumber: null,
-                reportTitle: "Harvills");
+            return new RptPackingList
+            {
+                ReportTitle = "Harvills",
+                ShipDate = shipDate,
+                Storages = storages
+            };
         }
 
         public RptPackingList StoreTotalPacking(DateOnly shipDate)
         {
-            // Store Total is also rendered as a filtered packing-style report now.
-            // Service-side filter keeps standalone Store Total away from lbs rows
-            // without changing the legacy SQL source yet.
-            var packingItems = Uow.Reports.StoreTotal(shipDate).ToList()
-                .Where(x => !string.Equals(x.Unit, "lbs", StringComparison.OrdinalIgnoreCase))
-                .Select(x => new RptPackingItem
+            // Store Total follows its own simpler print rule:
+            // 1. Group rows by ItemId + Unit + Comment inside each section.
+            // 2. Show one grouped total qty/unit line first.
+            // 3. Show one payee detail line under that grouped total for each source row.
+            //
+            // This report no longer tries to imitate TotalSplit outer-box behavior.
+            // The SQL already limits the scope to cooler rows and excludes cs/lbs.
+            var rows = Uow.Reports.StoreTotal(shipDate).ToList();
+
+            var storages = rows
+                .GroupBy(x => x.Section)
+                .Select(g => new PackingListStorage
                 {
-                    Id = x.Id,
-                    StorageName = x.Section,
-                    ItemName = x.ItemName,
-                    ShipQty = x.ShipQty,
-                    Unit = x.Unit
+                    StorageName = g.Key,
+                    Products = g
+                        .GroupBy(x => new { x.ItemId, x.Unit, x.Comment })
+                        .OrderBy(p => p.First().ItemName)
+                        .ThenBy(p => p.Key.Comment)
+                        .ThenBy(p => p.Key.Unit)
+                        .Select(p => new PackingListProduct
+                        {
+                            ItemName = p.First().ItemName,
+                            Comment = p.Key.Comment,
+                            UnitLines = BuildStoreTotalUnitLines(p)
+                        })
+                        .ToList()
                 })
                 .ToList();
 
-            return BuildPackingListReport(
-                packingItems,
-                shipDate,
-                shipRoute: null,
-                salesId: null,
-                payeeName: null,
-                truckNumber: null,
-                reportTitle: "Store Total");
+            return new RptPackingList
+            {
+                ReportTitle = "Store Total",
+                ShipDate = shipDate,
+                Storages = storages
+            };
         }
 
         // Standalone packing-style reports share the same header and inside-box qty
@@ -151,7 +174,10 @@ namespace KLS.Services
             List<RptPackingItem> packingItems,
             DocumentReq req,
             string? reportTitle = null,
-            bool useLbsOuterSplit = false)
+            bool useLbsOuterSplit = false,
+            bool useWeightLikeOuterSplit = false,
+            bool bypassCoolerStorageNameCheck = false,
+            bool useUnitSplitAcrossAllStorages = false)
         {
             var payeeName = "";
 
@@ -171,7 +197,10 @@ namespace KLS.Services
                 payeeName,
                 _salesRouteService.GetByDateRoute(req.ShipDate, req.ShipRoute)?.TruckNumber,
                 reportTitle,
-                useLbsOuterSplit);
+                useLbsOuterSplit,
+                useWeightLikeOuterSplit,
+                bypassCoolerStorageNameCheck,
+                useUnitSplitAcrossAllStorages);
         }
 
         // PackingList.cshtml renders one visible line from Qty + Unit + AisleBay.
@@ -248,7 +277,7 @@ namespace KLS.Services
                     // line first, then show customer split detail only when more than
                     // one source sale contributes to that same unit total.
                     if (!string.Equals(g.Key, "cs", StringComparison.OrdinalIgnoreCase)
-                        && !string.Equals(g.Key, "lbs", StringComparison.OrdinalIgnoreCase))
+                        && !IsWeightLikeUnit(g.Key))
                     {
                         var salesSplits = g
                             .GroupBy(x => new { x.SalesNumber, x.PayeeName })
@@ -274,11 +303,64 @@ namespace KLS.Services
                 .ToList();
         }
 
+        // Store Total prints one grouped total qty/unit line, then the payee detail
+        // rows under it. Grouping is decided earlier by ItemId + Unit + Comment.
+        private static List<PackingListUnitLine> BuildStoreTotalUnitLines(
+            IEnumerable<RptStoreTotalItem> productItems)
+        {
+            var itemList = productItems.ToList();
+            var first = itemList.First();
+
+            var lines = new List<PackingListUnitLine>
+            {
+                new PackingListUnitLine
+                {
+                    ShipQty = itemList.Sum(x => x.ShipQty) ?? 0,
+                    Unit = first.Unit,
+                    IsSplitDetail = false
+                }
+            };
+
+            lines.AddRange(itemList
+                .OrderBy(x => x.PayeeName)
+                .ThenBy(x => x.SalesNumber)
+                .Select(x => new PackingListUnitLine
+                {
+                    ShipQty = x.ShipQty ?? 0,
+                    Unit = x.Unit,
+                    IsSplitDetail = true,
+                    Subtitle = x.PayeeName
+                }));
+
+            return lines;
+        }
+
+        // Harvills shows only one grouped total line per ItemId + Unit + Comment.
+        private static List<PackingListUnitLine> BuildHarvillsUnitLines(
+            IEnumerable<RptHarvillsItem> productItems)
+        {
+            var itemList = productItems.ToList();
+            var first = itemList.First();
+
+            return new List<PackingListUnitLine>
+            {
+                new PackingListUnitLine
+                {
+                    ShipQty = itemList.Sum(x => x.ShipQty) ?? 0,
+                    Unit = first.Unit,
+                    IsSplitDetail = false
+                }
+            };
+        }
+
         private static List<PackingListProduct> BuildPackingProducts(
             IGrouping<string?, RptPackingItem> storageGroup,
-            bool useLbsOuterSplit)
+            bool useLbsOuterSplit,
+            bool useWeightLikeOuterSplit,
+            bool bypassCoolerStorageNameCheck,
+            bool useUnitSplitAcrossAllStorages)
         {
-            if (string.Equals(storageGroup.Key, "Prepack", StringComparison.OrdinalIgnoreCase))
+            if (useUnitSplitAcrossAllStorages || string.Equals(storageGroup.Key, "Prepack", StringComparison.OrdinalIgnoreCase))
             {
                 return storageGroup
                     .GroupBy(c => new { c.ItemName, c.Comment })
@@ -292,7 +374,7 @@ namespace KLS.Services
             }
 
             return storageGroup
-                .GroupBy(c => ResolvePackingProductGroupKey(c, storageGroup, useLbsOuterSplit))
+                .GroupBy(c => ResolvePackingProductGroupKey(c, storageGroup, useLbsOuterSplit, useWeightLikeOuterSplit, bypassCoolerStorageNameCheck))
                 .Select(p => new PackingListProduct
                 {
                     ItemName = p.Key.ItemName,
@@ -325,7 +407,10 @@ namespace KLS.Services
             string? payeeName,
             string? truckNumber,
             string? reportTitle = null,
-            bool useLbsOuterSplit = false)
+            bool useLbsOuterSplit = false,
+            bool useWeightLikeOuterSplit = false,
+            bool bypassCoolerStorageNameCheck = false,
+            bool useUnitSplitAcrossAllStorages = false)
         {
             var itemList = packingItems.ToList();
 
@@ -337,7 +422,7 @@ namespace KLS.Services
                 {
                     StorageName = g.Key,
                     WeightTotal = g.Sum(c => c.ItemWeight),
-                    Products = BuildPackingProducts(g, useLbsOuterSplit)
+                    Products = BuildPackingProducts(g, useLbsOuterSplit, useWeightLikeOuterSplit, bypassCoolerStorageNameCheck, useUnitSplitAcrossAllStorages)
                 })
                 .ToList();
 
@@ -364,18 +449,26 @@ namespace KLS.Services
         private static PackingProductGroupKey ResolvePackingProductGroupKey(
             RptPackingItem item,
             IGrouping<string?, RptPackingItem> storageGroup,
-            bool useLbsOuterSplit)
+            bool useLbsOuterSplit,
+            bool useWeightLikeOuterSplit,
+            bool bypassCoolerStorageNameCheck)
         {
+            var isSplitCandidateUnit = useWeightLikeOuterSplit
+                ? IsWeightLikeUnit(item.Unit)
+                : string.Equals(item.Unit, "lbs", StringComparison.OrdinalIgnoreCase);
+
             if (!useLbsOuterSplit
-                || !string.Equals(storageGroup.Key, "Cooler", StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(item.Unit, "lbs", StringComparison.OrdinalIgnoreCase))
+                || (!bypassCoolerStorageNameCheck && !string.Equals(storageGroup.Key, "Cooler", StringComparison.OrdinalIgnoreCase))
+                || !isSplitCandidateUnit)
             {
                 return new PackingProductGroupKey(item.ItemName, item.Comment, null, null);
             }
 
             var normalizedComment = NormalizePackingComment(item.Comment);
             var hasVisualCollisionAcrossSales = storageGroup.Any(x =>
-                string.Equals(x.Unit, "lbs", StringComparison.OrdinalIgnoreCase)
+                (useWeightLikeOuterSplit
+                    ? IsWeightLikeUnit(x.Unit)
+                    : string.Equals(x.Unit, "lbs", StringComparison.OrdinalIgnoreCase))
                 && string.Equals(x.ItemName, item.ItemName, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(NormalizePackingComment(x.Comment), normalizedComment, StringComparison.OrdinalIgnoreCase)
                 && x.ShipQty == item.ShipQty
@@ -393,6 +486,18 @@ namespace KLS.Services
         // same visible comment for TotalSplit collision detection.
         private static string NormalizePackingComment(string? comment)
             => string.IsNullOrWhiteSpace(comment) ? string.Empty : comment.Trim();
+
+        // Cooler weight rows are not consistently stored as literal "lbs".
+        // Store Total can return values such as "lb" or "pk5lb", and those rows
+        // should still participate in the same split-aware behavior as TotalSplit.
+        private static bool IsWeightLikeUnit(string? unit)
+        {
+            if (string.IsNullOrWhiteSpace(unit))
+                return false;
+
+            var normalized = unit.Trim().ToLowerInvariant();
+            return normalized.Contains("lb");
+        }
 
         private sealed record PackingProductGroupKey(
             string? ItemName,
@@ -1009,6 +1114,24 @@ namespace KLS.Services
         public IEnumerable<RptInventoryIncomingRow> InventoryIncoming()
         {
             return Uow.Reports.InventoryIncoming().AsEnumerable();
+        }
+
+        public IEnumerable<RptWorksheetGroup> WorksheetPattern(WorksheetPatternReportRequest req)
+        {
+            var rows = Uow.Reports.WorksheetPattern(req).ToList();
+
+            var groups = string.Equals(req.Filterby, "vendor", StringComparison.OrdinalIgnoreCase)
+                ? rows.GroupBy(r => string.IsNullOrWhiteSpace(r.PayeeName) ? "No Vendor" : r.PayeeName)
+                : rows.GroupBy(r => string.IsNullOrWhiteSpace(r.Storage) ? "No Storage" : r.Storage);
+
+            return groups
+                .Select(g => new RptWorksheetGroup
+                {
+                    Group = g.Key,
+                    Items = g.ToList()
+                })
+                .OrderBy(g => g.Group)
+                .ToList();
         }
 
         #endregion
