@@ -370,6 +370,11 @@ namespace KLS.Services
                 decimal paymentAmount = dueTotal + ccFee;
                 long paymentAmountCent = Convert.ToInt64(paymentAmount * 100m);
 
+                var emp = Uow.Employees.GetById(UserContext.EmpId);
+                var sortName = emp != null && !string.IsNullOrEmpty(emp.FirstName) && !string.IsNullOrEmpty(emp.LastName)
+                    ? " " + emp.FirstName[0] + emp.LastName[0]
+                    : "";
+
                 CreateGatewayPaymentReq paymentReq = null;
 
                 if (chargeReq.PaymentMethodId.HasValue)
@@ -391,11 +396,11 @@ namespace KLS.Services
                         paymentReq = new CreateGatewayPaymentReq
                         {
                             PayeeId = chargeReq.PayeeId,
-                            PaymentMethod = "ACH",
+                            PaymentMethod = "E-CHECK",
                             ReferenceId = referenceId,
                             PaymentAmount = dueTotal,
                             SalesIds = chargeReq.SalesIds,
-                            Gateway = "MX Merchant",
+                            Gateway = "MX Merchant" + sortName,
                             CCFee = 0m,
                             CardType = null,
                             Last4 = method.Last4
@@ -417,7 +422,7 @@ namespace KLS.Services
                             ReferenceId = paymentResponse.Payment?.Id,
                             PaymentAmount = dueTotal + ccFee,
                             SalesIds = chargeReq.SalesIds,
-                            Gateway = "Square Payment",
+                            Gateway = "Square Payment" + sortName,
                             CCFee = ccFee,
                             CardType = Convert.ToString(paymentResponse.Payment?.CardDetails?.Card?.CardBrand),
                             Last4 = Convert.ToString(paymentResponse.Payment?.CardDetails?.Card?.Last4)
@@ -450,7 +455,7 @@ namespace KLS.Services
                         ReferenceId = paymentResponse?.Payment.Id,
                         PaymentAmount = paymentAmount,
                         SalesIds = chargeReq.SalesIds,
-                        Gateway = "Square Payment",
+                        Gateway = "Square Payment" + sortName,
                         CCFee = ccFee,
                         CardType = Convert.ToString(paymentResponse?.Payment?.CardDetails?.Card?.CardBrand),
                         Last4 = Convert.ToString(paymentResponse?.Payment?.CardDetails?.Card?.Last4)
@@ -484,11 +489,11 @@ namespace KLS.Services
                     paymentReq = new CreateGatewayPaymentReq
                     {
                         PayeeId = chargeReq.PayeeId,
-                        PaymentMethod = isAch ? "ACH" : "CREDIT CARD",
+                        PaymentMethod = isAch ? "E-CHECK" : "CREDIT CARD",
                         ReferenceId = referenceId,
                         PaymentAmount = paymentAmount,
                         SalesIds = chargeReq.SalesIds,
-                        Gateway = "MX Merchant",
+                        Gateway = "MX Merchant" + sortName,
                         CCFee = isAch ? 0m : ccFee,
                         CardType = isAch ? null : chargeReq.PaymentMethod.AccountType,
                         Last4 = last4
@@ -657,9 +662,9 @@ namespace KLS.Services
                     .Value?.ToString();
 
             return
-                TryGet("id")
-                ?? TryGet("reference")
+                TryGet("reference")
                 ?? TryGet("referenceNumber")
+                ?? TryGet("id")
                 ?? "";
         }
 

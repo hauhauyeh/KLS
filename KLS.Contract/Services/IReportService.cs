@@ -34,6 +34,8 @@ namespace KLS.Contract.Services
 
         IQueryable<RptServiceSummary> ServiceSummary(ReportRequest reportReq);
 
+        IEnumerable<RptSalesCallListRow> SalesCallList();
+
         IEnumerable<RptResponsible> Responsible(DateOnly? shipDate);
 
         List<RptDailySummary> DailySummary(DateOnly? shipDate);
@@ -103,5 +105,7 @@ namespace KLS.Contract.Services
         IEnumerable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req);
 
         IEnumerable<RptInventoryIncomingRow> InventoryIncoming();
+
+        IEnumerable<RptWorksheetGroup> WorksheetPattern(WorksheetPatternReportRequest req);
     }
 }

@@ -54,6 +54,21 @@ namespace KLS.Models
 
         public decimal? BaseP1 { get; set; }
 
+        [NotMapped]
+        public int? AltItemUnitId { get; set; }
+
+        [NotMapped]
+        public string? AltUnit { get; set; }
+
+        [NotMapped]
+        public decimal? AltFactorToBase { get; set; }
+
+        [NotMapped]
+        public decimal? AltPricePercentToBase { get; set; }
+
+        [NotMapped]
+        public decimal? AltP1 { get; set; }
+
         public decimal? SaftyInventory { get; set; }
 
         public int? PreferredVendorId { get; set; }

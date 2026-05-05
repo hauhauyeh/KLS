@@ -31,6 +31,14 @@ namespace KLS.Services
         public PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq)
         {
             var itemlist = Uow.Items.GetPagedList(itemListReq).ToList();
+            var itemIds = itemlist.Select(i => i.ItemId).Distinct().ToList();
+            var altUnits = Uow.ItemUnits
+                .Find(u => itemIds.Contains(u.ItemId) && !u.IsBaseUnit && !u.Inactive)
+                .OrderBy(u => u.ItemId)
+                .ThenBy(u => u.ItemUnitId)
+                .ToList()
+                .GroupBy(u => u.ItemId)
+                .ToDictionary(g => g.Key, g => g.First());
 
             var totalRecords = Uow.Items.Count(itemListReq);
 
@@ -44,6 +52,15 @@ namespace KLS.Services
             {
                 item.PrimaryImageUrl = string.IsNullOrEmpty(item.PrimaryImageUrl) ? null
                         : baseUrl + item.PrimaryImageUrl;
+
+                if (altUnits.TryGetValue(item.ItemId, out var altUnit))
+                {
+                    item.AltItemUnitId = altUnit.ItemUnitId;
+                    item.AltUnit = altUnit.Unit;
+                    item.AltFactorToBase = altUnit.FactorToBase;
+                    item.AltPricePercentToBase = altUnit.PricePercentToBase;
+                    item.AltP1 = altUnit.P1;
+                }
             }
 
             return new PagingResponse<ItemList>(totalRecords, itemListReq.Pageno, itemListReq.Pagesize)
