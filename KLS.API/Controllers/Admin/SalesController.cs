@@ -51,6 +51,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(sales);
         }
 
+        [HttpGet("Detail/{salesId}")]
+        [DisplayName("Quick View Order")]
+        [PermissionKey("Customer.Sale.List")]
+        public IActionResult Detail(int salesId)
+        {
+            return Ok(_salesService.GetSalesDetails(salesId));
+        }
+
 
         [HttpPut("UpdateRoute")]
         [DisplayName("Update Route")]
