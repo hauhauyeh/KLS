@@ -1,0 +1,2 @@
+ALTER TABLE dbo.TempTimesheet
+ALTER COLUMN Route NVARCHAR(100) NULL;
