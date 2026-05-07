@@ -23,7 +23,9 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParam(itemListReq);
 
-            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Visibility", param);
+            // 2026-05-07: replaced trailing @Visibility with @ShowInactive,@ShowDeleted
+            // to match the new SP signature. See Phase 1.2 of future-product-list-improve.md.
+            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive,@ShowDeleted", param);
         }
 
         public int Count(ItemListReq itemListReq)
@@ -31,7 +33,7 @@ namespace KLS.Data.Repositories
             itemListReq.IsCount = true;
             var param = BuildParam(itemListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Visibility", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive,@ShowDeleted", param);
 
             var output = param[13] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -73,7 +75,11 @@ namespace KLS.Data.Repositories
                     SqlDbType = SqlDbType.Int
                 },
 
-                string.IsNullOrEmpty(itemListReq.Visibility) ? new SqlParameter("@Visibility", DBNull.Value) : new SqlParameter("@Visibility", itemListReq.Visibility)
+                // Old: string.IsNullOrEmpty(itemListReq.Visibility) ? new SqlParameter("@Visibility", DBNull.Value) : new SqlParameter("@Visibility", itemListReq.Visibility)
+                // 2026-05-07: replaced with two ambient bits matching the new SP signature.
+                new SqlParameter("@ShowInactive", itemListReq.ShowInactive),
+
+                new SqlParameter("@ShowDeleted", itemListReq.ShowDeleted)
             };
 
             return param;

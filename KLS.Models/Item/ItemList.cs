@@ -79,6 +79,10 @@ namespace KLS.Models
 
         public bool Inactive { get; set; }
 
+        // NEW 2026-05-07: lets the frontend dim deleted rows the same way
+        // it dims inactive rows, when ShowDeleted scope flag is on.
+        public bool IsDeleted { get; set; }
+
         public DateOnly? ExpiryDate { get; set; }
 
         public decimal? LCloseQty { get; set; }
