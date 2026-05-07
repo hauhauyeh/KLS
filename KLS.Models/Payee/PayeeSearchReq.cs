@@ -15,5 +15,7 @@ namespace KLS.Models
         public bool IsSearchSales { get; set; }
 
         public bool IsCorporateParentOnly { get; set; }
+
+        public bool IsIncludeInvoiceSearch { get; set; }
     }
 }

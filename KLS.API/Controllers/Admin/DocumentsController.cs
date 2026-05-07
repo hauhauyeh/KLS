@@ -2,6 +2,7 @@
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace KLS.API.Controllers.Admin
@@ -29,6 +30,8 @@ namespace KLS.API.Controllers.Admin
         #region --- Method(s) ---
 
         [HttpPost("SalesOrder")]
+        [DisplayName("Gen Sales Order")]
+        [PermissionKey("Customer.Sale.SalesOrder")]
         public IActionResult SalesOrder([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.SalesOrder(documentReq);
@@ -42,6 +45,8 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("PickTicket")]
+        [DisplayName("Gen Pick Ticket")]
+        [PermissionKey("Customer.Sale.PickTicket")]
         public IActionResult PickTicket([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.PickTicket(documentReq);
@@ -55,6 +60,8 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Invoice")]
+        [DisplayName("Gen Invoice")]
+        [PermissionKey("Customer.Sale.Invoice")]
         public IActionResult Invoice([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.Invoice(documentReq);
@@ -68,6 +75,8 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("PackingList")]
+        [DisplayName("Gen Packing List")]
+        [PermissionKey("Customer.Sale.PackingList")]
         public IActionResult PackingList([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.PackingList(documentReq);
@@ -80,6 +89,8 @@ namespace KLS.API.Controllers.Admin
         }
 
         [HttpPost("TotalList")]
+        [DisplayName("Gen Checking List")]
+        [PermissionKey("Customer.Sale.CheckingList")]
         public IActionResult TotalList([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.TotalList(documentReq);
@@ -92,6 +103,8 @@ namespace KLS.API.Controllers.Admin
         }
 
         [HttpPost("TotalSplitList")]
+        [DisplayName("Gen Total Split")]
+        [PermissionKey("Customer.Sale.TotalSplit")]
         public IActionResult TotalSplitList([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.TotalSplitList(documentReq);
@@ -104,6 +117,8 @@ namespace KLS.API.Controllers.Admin
         }
 
         [HttpPost("HarvillsList")]
+        [DisplayName("Gen Harvills List")]
+        [PermissionKey("Customer.Sale.HarvillsList")]
         public IActionResult HarvillsList([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.HarvillsList(documentReq);
@@ -116,6 +131,8 @@ namespace KLS.API.Controllers.Admin
         }
 
         [HttpPost("StoreTotalList")]
+        [DisplayName("Gen StoreTotal List")]
+        [PermissionKey("Customer.Sale.StoreTotalList")]
         public IActionResult StoreTotalList([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.StoreTotalList(documentReq);
@@ -129,6 +146,8 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("LoadingList")]
+        [DisplayName("Gen Loading List")]
+        [PermissionKey("Customer.Sale.LoadingList")]
         public IActionResult LoadingList([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.LoadingList(documentReq);
@@ -141,6 +160,8 @@ namespace KLS.API.Controllers.Admin
         }
 
         [HttpPost("RouteLoadingList")]
+        [DisplayName("Gen Route Loading List")]
+        [PermissionKey("Customer.Sale.LoadingList")]
         public IActionResult RouteLoadingList([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.RouteLoadingList(documentReq);
@@ -154,6 +175,8 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("PackingLabel")]
+        [DisplayName("Gen Packing Label")]
+        [PermissionKey("Customer.Sale.PackingLabel")]
         public IActionResult PackingLabel([FromBody] DocumentReq documentReq)
         {
             var filePath = _documentService.PackingLabel(documentReq);

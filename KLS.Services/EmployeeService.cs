@@ -46,7 +46,7 @@ namespace KLS.Services
                              Department = e.Department
                          };
 
-            return result.ToList();
+            return result.OrderBy(c => c.PayeeName).ToList();
         }
 
         public EmployeeDTO? GetById(int payeeId)

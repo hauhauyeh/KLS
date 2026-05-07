@@ -30,6 +30,8 @@ namespace KLS.Models
 
         public double? GoogleLong { get; set; }
 
+        public decimal? WeightTotal { get; set; }
+
         public string? TruckNumber { get; set; }
 
         public string GoogleLatLong

@@ -12,7 +12,7 @@ namespace KLS.Contract.Services
     {
         IEnumerable<TempItemQuoteList>? GetList(TempItemQuoteReq tempReq);
 
-        TempItemQuoteList Create(TempItemQuoteList tempQuote);
+        IEnumerable<TempItemQuoteList> Create(TempItemQuoteList tempQuote);
 
         TempItemQuoteList Update(TempItemQuoteList tempQuote);
 

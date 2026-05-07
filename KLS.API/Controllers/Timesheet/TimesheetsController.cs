@@ -12,14 +12,16 @@ namespace KLS.API.Controllers.Timesheet
         #region --- Member(s) ---
 
         private readonly ITimesheetService _timesheetService;
-        
+        private readonly ISalesService _salesService;
+
         #endregion
 
         #region --- Constructor(s) ---
 
-        public TimesheetsController(ITimesheetService timesheetService)
+        public TimesheetsController(ITimesheetService timesheetService, ISalesService salesService)
         {
             _timesheetService = timesheetService;
+            _salesService = salesService;
         }
 
         #endregion
@@ -65,6 +67,13 @@ namespace KLS.API.Controllers.Timesheet
         public IActionResult CheckInOut([FromBody] CheckInOutReq checkInOutReq)
         {
             return Ok(_timesheetService.CheckInOut(checkInOutReq));
+        }
+
+
+        [HttpGet("GetShipRoutes/{ShipDate}")]
+        public IActionResult GetShipRoutes(DateOnly ShipDate)
+        {
+            return Ok(_salesService.GetShipRoutes(ShipDate));
         }
 
         #endregion

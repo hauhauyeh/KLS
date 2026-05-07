@@ -43,7 +43,7 @@ namespace KLS.Services
             return Uow.TempItemQuotes.GetList(tempReq)?.AsEnumerable().FirstOrDefault()!;
         }
 
-        public TempItemQuoteList Create(TempItemQuoteList tempQuote)
+        public IEnumerable<TempItemQuoteList> Create(TempItemQuoteList tempQuote)
         {
             var item = _itemService.GetBySearch(tempQuote.ItemCode);
 
@@ -53,23 +53,36 @@ namespace KLS.Services
             if (item.Inactive)
                 throw new KeyNotFoundException("This product already discontinue");
 
-            var unit = _itemUnitService.GetSalesUnit(item.ItemId);
+            var units = _itemUnitService.GetByItemId(item.ItemId);
 
-            var newTempQuote = new TempItemQuote
+            var insertedRows = new List<TempItemQuote>();
+
+            foreach (var unit in units)
             {
-                PayeeId = tempQuote.PayeeId,
-                EmpId = UserContext.EmpId,
-                ItemId = item.ItemId,
-                ItemUnitId = tempQuote.ItemUnitId > 0 ? tempQuote.ItemUnitId : unit.ItemUnitId
-            };
+                var row = new TempItemQuote
+                {
+                    PayeeId = tempQuote.PayeeId,
+                    EmpId = UserContext.EmpId,
+                    ItemId = item.ItemId,
+                    ItemUnitId = unit.ItemUnitId
+                };
 
-            if (Exists(newTempQuote))
-                throw new KeyNotFoundException("Product with this unit already exists");
+                if (!Exists(row))
+                {
+                    Uow.TempItemQuotes.Add(row);
+                    insertedRows.Add(row);
+                }
+            }
 
-            Uow.TempItemQuotes.Add(newTempQuote);
+            if (!insertedRows.Any())
+                throw new KeyNotFoundException("All units for this product already exist");
+
             Uow.Commit();
 
-            return GetListById(newTempQuote.PayeeId, newTempQuote.TempQuoteId);
+            return insertedRows
+                .Select(x => GetListById(x.PayeeId, x.TempQuoteId))
+                .Where(x => x != null)
+                .ToList();
         }
 
         public TempItemQuoteList Update(TempItemQuoteList tempQuote)

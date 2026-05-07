@@ -50,7 +50,9 @@ namespace KLS.Data.Repositories
 
             var IsCorporateParentOnlyParam = new SqlParameter("@IsCorporateParentOnly", searchReq.IsCorporateParentOnly);
 
-            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Customer_SearchByTerm] @SearchTerm,@IsActiveOnly,@EmpId,@IsSearchSales,@IsCorporateParentOnly", TermParam, IsActiveOnlyParam, EmpIdParam, IsSearchSalesParam, IsCorporateParentOnlyParam);
+            var IsIncludeInvoiceSearchParam = new SqlParameter("@IsIncludeInvoiceSearch", searchReq.IsIncludeInvoiceSearch);
+
+            return DbContext.PayeeSearch.FromSqlRaw("[dbo].[Customer_SearchByTerm] @SearchTerm,@IsActiveOnly,@EmpId,@IsSearchSales,@IsCorporateParentOnly,@IsIncludeInvoiceSearch", TermParam, IsActiveOnlyParam, EmpIdParam, IsSearchSalesParam, IsCorporateParentOnlyParam, IsIncludeInvoiceSearchParam);
         }
 
         public IQueryable<PayeeExport> Export()

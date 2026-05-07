@@ -33,7 +33,7 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[PurchaseOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
 
-            var output = param[11] as SqlParameter;
+            var output = param[12] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
