@@ -23,6 +23,10 @@ namespace KLS.Models
 
         public bool Inactive { get; set; }
 
+        // NEW 2026-05-07: lets the autocomplete dropdown dim deleted rows
+        // the same way it dims inactive rows (when the page's D toggle is on).
+        public bool IsDeleted { get; set; }
+
         public string? ItemSearchTag { get; set; }
 
         public DateOnly? LastOrderDate { get; set; }

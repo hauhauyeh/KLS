@@ -89,9 +89,15 @@ namespace KLS.Data.Repositories
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 
-            var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
+            // 2026-05-07: replaced @IsActiveOnly with @ShowInactive + @ShowDeleted
+            // to match the new SP signature (Phase 2 of future-product-list-improve.md).
+            // Old:
+            //   var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
+            //   return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
+            var ShowInactiveParam = new SqlParameter("@ShowInactive", searchReq.ShowInactive);
+            var ShowDeletedParam = new SqlParameter("@ShowDeleted", searchReq.ShowDeleted);
 
-            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
+            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@ShowInactive,@ShowDeleted", TermParam, ShowInactiveParam, ShowDeletedParam);
         }
 
         public void Delete(int itemId)
