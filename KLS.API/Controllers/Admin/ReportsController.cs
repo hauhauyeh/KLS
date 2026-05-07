@@ -73,7 +73,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("ServiceSummary")]
         [DisplayName("Sales -> Sales by Service Rep")]
-        [PermissionKey("Report.Sales.Responsible")]
+        [PermissionKey("Report.Sales.ServiceSummary")]
         public IActionResult ServiceSummary([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.ServiceSummary(reportReq));
@@ -81,7 +81,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("SalesCallList")]
         [DisplayName("Sales -> Sales Call List")]
-        [PermissionKey("Report.Sales.Responsible")]
+        [PermissionKey("Report.Sales.SalesCallList")]
         public IActionResult SalesCallList()
         {
             return Ok(_reportService.SalesCallList());

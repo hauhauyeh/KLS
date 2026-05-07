@@ -24,6 +24,7 @@ namespace KLS.Services
             var totalRecords = qry.Count();
 
             var list = qry
+                .OrderByDescending(c => c.InTime)
                 .Skip(timesheetReq.Pagesize * (timesheetReq.Pageno - 1))
                 .Take(timesheetReq.Pagesize)
                 .ToList();
