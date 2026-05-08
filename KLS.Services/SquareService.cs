@@ -98,7 +98,7 @@ namespace KLS.Services
                 //saved card payment
                 if (!string.IsNullOrEmpty(squareCustomerId))
                 {
-                    var cardId = Utilities.Decrypt(squareCardId);
+                    var cardId = squareCardId;
 
                     var cardResponse = await client.Cards.GetAsync(new GetCardsRequest
                     {
@@ -111,7 +111,7 @@ namespace KLS.Services
                         AmountMoney = amountMoney,
                         SourceId = cardResponse.Card.Id,
                         Autocomplete = true,
-                        CustomerId = Utilities.Decrypt(squareCustomerId),
+                        CustomerId = squareCustomerId,
                         ReferenceId = payeeId.ToString()
                     };
                 }

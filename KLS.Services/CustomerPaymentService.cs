@@ -408,8 +408,12 @@ namespace KLS.Services
                     }
                     else
                     {
+                        var sqCustId = !string.IsNullOrEmpty(method.SQCustId)
+                            ? Utilities.Decrypt(method.SQCustId)
+                            : Uow.Customers.GetById(chargeReq.PayeeId)?.SquareId;
+
                         var paymentResponse = _squareService
-                            .ChargePayment(chargeReq.PayeeId, method.SQCustId, method.SQCardId, paymentAmountCent)
+                            .ChargePayment(chargeReq.PayeeId, sqCustId, Utilities.Decrypt(method.SQCardId), paymentAmountCent)
                             .GetAwaiter()
                             .GetResult();
 

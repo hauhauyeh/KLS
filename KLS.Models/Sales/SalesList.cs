@@ -75,6 +75,7 @@ namespace KLS.Models
 
         public int? MaxInvoiceAgingDays { get; set; }
 
+        public bool IsPastDue { get; set; }
 
         [NotMapped]
         public bool IsPdfExist { get; set; }
