@@ -133,6 +133,17 @@ namespace KLS.Services
 
         public CustomerPaymentList Save(CustomerPaymentSaveReq paymentSaveReq)
         {
+            if (paymentSaveReq.CustomerPaymentId > 0)
+            {
+                var existingPayment = Uow.CustomerPayments.GetById(paymentSaveReq.CustomerPaymentId);
+
+                if (existingPayment == null)
+                    throw new ValidationException("Customer payment not found.");
+
+                if (existingPayment.IsLocked)
+                    throw new ValidationException("This payment has been deposited and is no longer editable.");
+            }
+
             var newPaymentId = Uow.CustomerPayments.Save(paymentSaveReq);
 
             if (paymentSaveReq.CustomerPaymentId == 0)
