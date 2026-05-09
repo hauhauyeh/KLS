@@ -70,6 +70,8 @@ namespace KLS.Contract.Interfaces
 
         ICompanyRepository Companies { get; }
 
+        ICompanySeoRepository CompanySeos { get; }
+
         IBankReconRepository BankRecons { get; }
 
         IPaymentOptionRepository PaymentOptions { get; }

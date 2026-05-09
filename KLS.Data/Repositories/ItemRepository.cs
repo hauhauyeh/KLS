@@ -23,7 +23,11 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParam(itemListReq);
 
-            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Visibility", param);
+            // 2026-05-07: replaced trailing @Visibility with @ShowInactive,@ShowDeleted.
+            // 2026-05-08: dropped @ShowDeleted (forward-removal of D toggle) so the
+            //             SP signature is now ...,@ShowInactive only.
+            //   Old (2026-05-07): "...,@TotalCount OUTPUT,@ShowInactive,@ShowDeleted"
+            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive", param);
         }
 
         public int Count(ItemListReq itemListReq)
@@ -31,7 +35,8 @@ namespace KLS.Data.Repositories
             itemListReq.IsCount = true;
             var param = BuildParam(itemListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Visibility", param);
+            // 2026-05-08: dropped @ShowDeleted from SP signature (see GetPagedList note).
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive", param);
 
             var output = param[13] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -73,7 +78,11 @@ namespace KLS.Data.Repositories
                     SqlDbType = SqlDbType.Int
                 },
 
-                string.IsNullOrEmpty(itemListReq.Visibility) ? new SqlParameter("@Visibility", DBNull.Value) : new SqlParameter("@Visibility", itemListReq.Visibility)
+                // Old: string.IsNullOrEmpty(itemListReq.Visibility) ? new SqlParameter("@Visibility", DBNull.Value) : new SqlParameter("@Visibility", itemListReq.Visibility)
+                // 2026-05-07: replaced with two ambient bits matching the new SP signature.
+                // 2026-05-08: dropped @ShowDeleted (forward-removal of D toggle).
+                //   Old (2026-05-07): new SqlParameter("@ShowDeleted", itemListReq.ShowDeleted)
+                new SqlParameter("@ShowInactive", itemListReq.ShowInactive)
             };
 
             return param;
@@ -83,9 +92,20 @@ namespace KLS.Data.Repositories
         {
             var TermParam = string.IsNullOrEmpty(searchReq.Term) ? new SqlParameter("@SearchTerm", DBNull.Value) : new SqlParameter("@SearchTerm", searchReq.Term);
 
-            var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
+            // 2026-05-07: replaced @IsActiveOnly with @ShowInactive + @ShowDeleted
+            // to match the new SP signature (Phase 2 of future-product-list-improve.md).
+            // 2026-05-08: dropped @ShowDeleted (forward-removal of D toggle). The SP
+            //             now hides deleted items unconditionally.
+            // Old (2026-05-06):
+            //   var IsActiveOnlyParam = new SqlParameter("@IsActiveOnly", searchReq.IsActiveOnly);
+            //   return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
+            // Old (2026-05-07):
+            //   var ShowInactiveParam = new SqlParameter("@ShowInactive", searchReq.ShowInactive);
+            //   var ShowDeletedParam = new SqlParameter("@ShowDeleted", searchReq.ShowDeleted);
+            //   return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@ShowInactive,@ShowDeleted", TermParam, ShowInactiveParam, ShowDeletedParam);
+            var ShowInactiveParam = new SqlParameter("@ShowInactive", searchReq.ShowInactive);
 
-            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@IsActiveOnly", TermParam, IsActiveOnlyParam);
+            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@ShowInactive", TermParam, ShowInactiveParam);
         }
 
         public void Delete(int itemId)

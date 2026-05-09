@@ -7,5 +7,17 @@ namespace KLS.Models
         public bool EnforceStockLimit { get; set; }
 
         public string CurrencyCode { get; set; } = "USD";
+
+        public string? MetaTitle { get; set; }
+
+        public string? MetaTitleShort { get; set; }
+
+        public string? MetaDesc { get; set; }
+
+        public string? Keywords { get; set; }
+
+        public string? GoogleTagId { get; set; }
+
+        public string? JsonLd { get; set; }
     }
 }

@@ -75,7 +75,7 @@ namespace KLS.Services
             }
 
             if (!insertedRows.Any())
-                throw new KeyNotFoundException("All units for this product already exist");
+                return new List<TempItemQuoteList>();
 
             Uow.Commit();
 

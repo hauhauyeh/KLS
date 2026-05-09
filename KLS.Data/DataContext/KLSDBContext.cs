@@ -59,6 +59,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Sales>().ToTable("Sales", tb => tb.HasTrigger("TRG_Update_Sales"));
             modelBuilder.Entity<DeleteLog>().ToTable("DeleteLog");
             modelBuilder.Entity<Company>().ToTable("Company");
+            modelBuilder.Entity<CompanySeo>().ToTable("CompanySeo");
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
             modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
@@ -213,6 +214,8 @@ namespace KLS.Data.DataContext
         public DbSet<DeleteLog> DeleteLogs { get; set; }
 
         public DbSet<Company> Companies { get; set; }
+
+        public DbSet<CompanySeo> CompanySeos { get; set; }
 
         public DbSet<BankRecon> BankRecons { get; set; }
 

@@ -113,6 +113,8 @@ namespace KLS.Data.Repositories
 
         public ICompanyRepository Companies { get { return new CompanyRepository(DbContext); } }
 
+        public ICompanySeoRepository CompanySeos { get { return new CompanySeoRepository(DbContext); } }
+
         public IBankReconRepository BankRecons { get { return new BankReconRepository(DbContext); } }
 
         public IVendorPaymentRepository VendorPayments { get { return new VendorPaymentRepository(DbContext); } }

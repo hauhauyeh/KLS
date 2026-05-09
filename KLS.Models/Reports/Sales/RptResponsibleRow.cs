@@ -12,7 +12,7 @@ namespace KLS.Models.Reports
         [Key]
         public int AutoId { get; set; }
 
-        public int? SalesId { get; set; }
+        public int? SalesNumber { get; set; }
 
         public string? ShipRoute { get; set; }
 

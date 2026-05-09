@@ -639,8 +639,12 @@ namespace KLS.Services
                 var ccFee = Utilities.Rounding((webCheckoutReq.CCFeePercent ?? 0m) * dueTotal, 2) ?? 0m;
                 var paymentAmount = dueTotal + ccFee;
                 var paymentAmountCent = Convert.ToInt64(paymentAmount * 100m);
+                var sqCustId = !string.IsNullOrEmpty(method.SQCustId)
+                    ? Utilities.Decrypt(method.SQCustId)
+                    : Uow.Customers.GetById(method.PayeeId)?.SquareId;
+
                 var paymentResponse = _squareService
-                    .ChargePayment(UserContext.EmpId, method.SQCustId, method.SQCardId, paymentAmountCent, webCheckoutReq.ClientRequestKey)
+                    .ChargePayment(UserContext.EmpId, sqCustId, Utilities.Decrypt(method.SQCardId), paymentAmountCent, webCheckoutReq.ClientRequestKey)
                     .GetAwaiter()
                     .GetResult();
 
