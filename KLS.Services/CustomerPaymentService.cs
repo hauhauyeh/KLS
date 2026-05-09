@@ -133,6 +133,28 @@ namespace KLS.Services
 
         public CustomerPaymentList Save(CustomerPaymentSaveReq paymentSaveReq)
         {
+            if (paymentSaveReq.CustomerPaymentId > 0)
+            {
+                var existingPayment = Uow.CustomerPayments.GetById(paymentSaveReq.CustomerPaymentId);
+
+                if (existingPayment == null)
+                    throw new ValidationException("Customer payment not found.");
+
+                if (existingPayment.IsLocked)
+                {
+                    var incomingPaymentMethod = paymentSaveReq.PaymentMethod?.Trim();
+                    var existingPaymentMethod = existingPayment.PaymentMethod?.Trim();
+
+                    if (paymentSaveReq.PayeeId != existingPayment.PayeeId
+                        || paymentSaveReq.PaymentAmount != existingPayment.PaymentAmount
+                        || paymentSaveReq.PaymentDate != existingPayment.PaymentDate
+                        || !string.Equals(incomingPaymentMethod, existingPaymentMethod, StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new ValidationException("Deposited payment only allows reapply, notes, and reference updates. Customer, date, method, and amount cannot be changed.");
+                    }
+                }
+            }
+
             var newPaymentId = Uow.CustomerPayments.Save(paymentSaveReq);
 
             if (paymentSaveReq.CustomerPaymentId == 0)
