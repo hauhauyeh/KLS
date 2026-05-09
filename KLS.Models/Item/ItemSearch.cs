@@ -23,9 +23,13 @@ namespace KLS.Models
 
         public bool Inactive { get; set; }
 
-        // NEW 2026-05-07: lets the autocomplete dropdown dim deleted rows
-        // the same way it dims inactive rows (when the page's D toggle is on).
-        public bool IsDeleted { get; set; }
+        // IsDeleted projection removed 2026-05-08 (forward-removal of D toggle).
+        // Neither Item_SearchByTerm nor Item_ListActiveForKeybox projects
+        // i.IsDeleted now, so the DTO must not require this column or EF
+        // will throw on materialization (this was the root cause of the
+        // 2026-05-08 keybox-cache failure). The autocomplete dropdown's
+        // dim binding now uses item.Inactive only.
+        // public bool IsDeleted { get; set; }
 
         public string? ItemSearchTag { get; set; }
 

@@ -17,6 +17,10 @@ namespace KLS.Models
         // public bool IsActiveOnly { get; set; }
         public bool ShowInactive { get; set; }
 
-        public bool ShowDeleted { get; set; }
+        // ShowDeleted removed 2026-05-08 (forward-removal of D toggle). The
+        // autocomplete dropdown now always hides deleted items via an
+        // unconditional WHERE clause inside Item_SearchByTerm; no caller flag
+        // controls it. See future-product-list-remove-d.md.
+        // public bool ShowDeleted { get; set; }
     }
 }

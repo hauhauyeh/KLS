@@ -79,9 +79,13 @@ namespace KLS.Models
 
         public bool Inactive { get; set; }
 
-        // NEW 2026-05-07: lets the frontend dim deleted rows the same way
-        // it dims inactive rows, when ShowDeleted scope flag is on.
-        public bool IsDeleted { get; set; }
+        // IsDeleted projection removed 2026-05-08 (forward-removal of D toggle).
+        // Item_GetAllList no longer projects i.IsDeleted, so the DTO must
+        // not carry this column either or EF will throw on materialization.
+        // The page list's row-dim binding now uses i.Inactive only.
+        // The core entity Item.cs still has IsDeleted -- that's the real
+        // soft-delete column, untouched.
+        // public bool IsDeleted { get; set; }
 
         public DateOnly? ExpiryDate { get; set; }
 
