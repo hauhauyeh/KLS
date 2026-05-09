@@ -1,25 +1,10 @@
--- v3 foundation:
--- Rewrite inject to populate both legacy columns and new v3 snapshot columns,
--- including prior unapplied-payment funding rows.
-
-IF OBJECT_ID('dbo.CustomerPayment_Inject_prev', 'P') IS NOT NULL
-    DROP PROCEDURE dbo.CustomerPayment_Inject_prev;
-
-IF OBJECT_ID('dbo.CustomerPayment_Inject', 'P') IS NOT NULL
-    EXEC sp_rename 'dbo.CustomerPayment_Inject', 'CustomerPayment_Inject_prev';
-GO
-
-SET ANSI_NULLS ON;
-SET QUOTED_IDENTIFIER ON;
-GO
 
 CREATE PROCEDURE [dbo].[CustomerPayment_Inject]
 
     @EmpId INT,
     @PayeeId INT,
     @CustomerPaymentId INT,
-    @PaymentType NVARCHAR(100),
-    @AllowFutureInvoices BIT = 0
+    @PaymentType NVARCHAR(100)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -360,8 +345,6 @@ BEGIN
             )
           )
       AND (
-            @AllowFutureInvoices = 1
-         OR
             @CustomerPaymentId = 0
          OR s.ShipDate IS NULL
          OR s.ShipDate <= @PaymentDate
@@ -452,4 +435,4 @@ BEGIN
       )
       AND ISNULL(cp.IsReturned, 0) = 0;
 END
-GO
+

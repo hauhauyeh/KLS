@@ -41,7 +41,9 @@ namespace KLS.Data.Repositories
 
             var PaymentTypeParam = (!string.IsNullOrEmpty(tempPaymentReq.PaymentType)) ? new SqlParameter("@PaymentType", tempPaymentReq.PaymentType) : new SqlParameter("@PaymentType", DBNull.Value);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_Inject] @EmpId,@PayeeId,@CustomerPaymentId,@PaymentType", EmpIdParam, PayeeIdParam, CustomerPaymentIdParam, PaymentTypeParam);
+            var AllowFutureInvoicesParam = new SqlParameter("@AllowFutureInvoices", tempPaymentReq.AllowFutureInvoices);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[CustomerPayment_Inject] @EmpId,@PayeeId,@CustomerPaymentId,@PaymentType,@AllowFutureInvoices", EmpIdParam, PayeeIdParam, CustomerPaymentIdParam, PaymentTypeParam, AllowFutureInvoicesParam);
         }
 
         public int InsertInvoice(TempPaymentReq tempPaymentReq)
