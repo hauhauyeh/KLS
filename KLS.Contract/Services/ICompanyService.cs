@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         Company GetDefault();
 
+        CompanySeo? GetSeo();
+
         DateOnly GetNextWorkDate();
     }
 }
