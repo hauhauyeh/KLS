@@ -44,7 +44,7 @@ namespace KLS.Models.Reports
         public decimal? FactorToBase { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? BaseBillQty { get { return Utilities.Rounding(BillQty / FactorToBase, 6); } }
+        public decimal? BaseBillQty { get { return Utilities.Rounding((BillQty ?? OrdQty0) / FactorToBase, 6); } }
 
         public string? ItemName { get; set; }
 
@@ -59,7 +59,7 @@ namespace KLS.Models.Reports
 
         public decimal? BillTotal
         {
-            get { return Utilities.Rounding(BillQty * BillPrice, 2); }
+            get { return Utilities.Rounding((BillQty ?? OrdQty0) * BillPrice, 2); }
         }
 
         public decimal? WeightTotal { get { return Utilities.Rounding(BaseBillQty * CaseWeight, 2); } }
