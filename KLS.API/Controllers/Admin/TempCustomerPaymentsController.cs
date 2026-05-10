@@ -37,7 +37,7 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("Inject")]
-        public IActionResult Inject(TempPaymentReq tempPaymentReq)
+        public IActionResult Inject([FromBody] TempPaymentReq tempPaymentReq)
         {
             return Ok(_tempCustomerPaymentService.Inject(tempPaymentReq));
         }

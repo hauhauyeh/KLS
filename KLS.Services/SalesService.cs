@@ -117,11 +117,37 @@ namespace KLS.Services
 
                 sales.UpdatedAt = DateTime.UtcNow;
 
+                // 2026-05-09: keep TruckNumber/Deliverby in sync with the new ShipRoute.
+                // Without this, rerouted Sales rows kept the old route's truck/driver
+                // until Print Invoice ran UpdateInvoice and corrected them.
+                SyncTruckDriverFromRoute(sales);
+
                 Uow.Sales.Update(sales);
                 Uow.Commit();
             }
 
             return sales;
+        }
+
+        // 2026-05-09: After Phase 5 (2026-05-03), Sales.TruckNumber/Deliverby are
+        // owned by SalesRoute. Any path that mutates Sales.ShipRoute must re-sync
+        // truck/driver from SalesRoute or those columns go stale until the next
+        // SaveAssignTrucks / UpdateInvoice (Print Invoice) corrects them.
+        private void SyncTruckDriverFromRoute(Sales sales)
+        {
+            if (string.IsNullOrEmpty(sales.ShipRoute))
+            {
+                sales.TruckNumber = null;
+                sales.Deliverby = null;
+                return;
+            }
+
+            var route = Uow.SalesRoutes
+                .Find(r => r.ShipDate == sales.ShipDate && r.ShipRoute == sales.ShipRoute)
+                .FirstOrDefault();
+
+            sales.TruckNumber = route?.TruckNumber;
+            sales.Deliverby = route?.DriverId;
         }
 
         public void UpdateInstruction(int salesId, string? instruction)
@@ -419,15 +445,43 @@ namespace KLS.Services
             }
         }
 
+        // Old (2026-05-09 replaced):
+        // ExecuteUpdate ran one UPDATE per row and only touched ShipRoute/IsLoadSeparate,
+        // leaving Sales.TruckNumber/Deliverby stale after a route change. Switched to
+        // entity-based update so SyncTruckDriverFromRoute can run per row.
+        // public void UpdateRoute(List<ShipRouteDetail> routeDetails)
+        // {
+        //     foreach (var route in routeDetails)
+        //     {
+        //         Uow.Sales.Find(c => c.SalesId == route.SalesId).ExecuteUpdate(setters => setters
+        //         .SetProperty(x => x.ShipRoute, x => route.ShipRoute)
+        //         .SetProperty(x => x.IsLoadSeparate, x => route.IsLoadSeparate)
+        //         .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+        //     }
+        // }
         public void UpdateRoute(List<ShipRouteDetail> routeDetails)
         {
-            foreach (var route in routeDetails)
+            if (routeDetails == null || routeDetails.Count == 0)
+                return;
+
+            var salesIds = routeDetails.Select(r => r.SalesId).Distinct().ToList();
+            var salesRows = Uow.Sales.Find(s => salesIds.Contains(s.SalesId)).ToList();
+            var detailMap = routeDetails.ToDictionary(r => r.SalesId);
+
+            foreach (var sales in salesRows)
             {
-                Uow.Sales.Find(c => c.SalesId == route.SalesId).ExecuteUpdate(setters => setters
-                .SetProperty(x => x.ShipRoute, x => route.ShipRoute)
-                .SetProperty(x => x.IsLoadSeparate, x => route.IsLoadSeparate)
-                .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+                if (!detailMap.TryGetValue(sales.SalesId, out var detail)) continue;
+
+                sales.ShipRoute = detail.ShipRoute;
+                sales.IsLoadSeparate = detail.IsLoadSeparate;
+                sales.UpdatedAt = DateTime.UtcNow;
+
+                SyncTruckDriverFromRoute(sales);
+
+                Uow.Sales.Update(sales);
             }
+
+            Uow.Commit();
         }
 
         public SalesDetailDto? GetSalesDetails(int salesId)

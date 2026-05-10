@@ -14,6 +14,8 @@ namespace KLS.Models
 
         public string? PaymentType { get; set; }
 
+        public bool AllowFutureInvoices { get; set; }
+
         public int? TempId { get; set; }
     }
 }
