@@ -28,5 +28,7 @@ namespace KLS.Models
         public bool IsPaymentChange { get; set; }
 
         public PaymentMethod? PaymentMethod { get; set; }
+
+        public string? Gateway { get; set; }
     }
 }

@@ -83,6 +83,15 @@ namespace KLS.Services
                 };
             }
 
+            if (!customer.IsOrderingEnabled)
+            {
+                return new WebLoginResult
+                {
+                    Success = false,
+                    ErrorMessage = "Your account is not yet enabled to place orders"
+                };
+            }
+
             return GenerateLoginResult(user);
         }
 
