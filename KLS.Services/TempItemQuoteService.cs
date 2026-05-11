@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.EntityFrameworkCore;
+using Square;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,6 +70,11 @@ namespace KLS.Services
 
                 if (!Exists(row))
                 {
+                    var customer = Uow.Customers.GetById(tempQuote.PayeeId);
+
+                    if (customer != null && !unit.IsBaseUnit && customer.BaseMarkup != 0)
+                        row.MarkupPercent = 0;
+
                     Uow.TempItemQuotes.Add(row);
                     insertedRows.Add(row);
                 }

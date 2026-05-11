@@ -15,7 +15,7 @@ namespace KLS.Models
 
         public bool RequireEmailVerification { get; set; }
 
-        public bool IsPriceShow { get; set; }
+        public string PriceShow { get; set; } = "Hide";
         public bool IsEditGuide { get; set; }
         public bool IsPromotionEnabled { get; set; }
     }

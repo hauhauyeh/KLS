@@ -77,6 +77,8 @@ namespace KLS.Models
 
         public bool IsPastDue { get; set; }
 
+        public bool IsDropShip { get; set; }
+
         [NotMapped]
         public bool IsPdfExist { get; set; }
     }
