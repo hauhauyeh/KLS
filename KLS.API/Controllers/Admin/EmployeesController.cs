@@ -16,15 +16,17 @@ namespace KLS.API.Controllers.Admin
 
         private readonly IEmployeeService _employeeService;
         private readonly ISystemUserService _userService;
+        private readonly ISystemRoleService _roleService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public EmployeesController(IEmployeeService employeeService, ISystemUserService userService)
+        public EmployeesController(IEmployeeService employeeService, ISystemUserService userService, ISystemRoleService roleService)
         {
             _employeeService = employeeService;
             _userService = userService;
+            _roleService = roleService;
         }
 
         #endregion
@@ -71,6 +73,13 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Employee.Employee.Create")]
         public IActionResult Create([FromBody] EmployeeDTO employeeDTO)
         {
+            if (employeeDTO.RoleId > 0)
+            {
+                var targetRole = _roleService.GetById(employeeDTO.RoleId);
+                if (targetRole != null && targetRole.IsAdmin && !IsCurrentUserAdmin())
+                    return StatusCode(403, "Only super admin can assign admin roles.");
+            }
+
             if (_employeeService.NameExists(employeeDTO))
                 return Conflict("Employee name already exists.");
 
@@ -88,6 +97,13 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Employee.Employee.Update")]
         public IActionResult Update([FromBody] EmployeeDTO employeeDTO)
         {
+            if (employeeDTO.RoleId > 0)
+            {
+                var targetRole = _roleService.GetById(employeeDTO.RoleId);
+                if (targetRole != null && targetRole.IsAdmin && !IsCurrentUserAdmin())
+                    return StatusCode(403, "Only super admin can assign admin roles.");
+            }
+
             if (_employeeService.NameExists(employeeDTO))
                 return Conflict("Employee name already exists.");
 
