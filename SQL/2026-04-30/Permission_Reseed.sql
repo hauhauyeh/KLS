@@ -258,6 +258,9 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (6450, 'Report.Timesheet', 'Timesheet Report', 'Report', 'Timesheet', '', 'resource', 6000, 6450, NULL),
 (6451, 'Report.Timesheet.Timesheet', 'Timesheet', 'Report', 'Timesheet', 'Timesheet', 'page', 6450, 6451, 'Reports-Timesheet'),
 (6452, 'Report.Timesheet.JobSummary', 'Job Summary', 'Report', 'Timesheet', 'JobSummary', 'page', 6450, 6452, 'Reports-JobSummary'),
+-- 2026-05-10: added Report.Purchase namespace + Vendor Purchase Summary page.
+(6500, 'Report.Purchase', 'Purchase Report', 'Report', 'Purchase', '', 'resource', 6000, 6500, NULL),
+(6501, 'Report.Purchase.VendorPurchaseSummary', 'Vendor Purchase Summary', 'Report', 'Purchase', 'VendorPurchaseSummary', 'page', 6500, 6501, NULL),
 (7000, 'Vendor', 'Vendor', 'Vendor', '', '', 'menu', NULL, 7000, NULL),
 (7050, 'Vendor.Vendor', 'Vendor', 'Vendor', 'Vendor', '', 'resource', 7000, 7050, NULL),
 (7051, 'Vendor.Vendor.List', 'View Vendors', 'Vendor', 'Vendor', 'List', 'page', 7050, 7051, 'Vendors-List'),
