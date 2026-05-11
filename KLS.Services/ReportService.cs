@@ -698,6 +698,11 @@ namespace KLS.Services
             return Uow.Reports.SalesCallList().ToList();
         }
 
+        public IEnumerable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed)
+        {
+            return Uow.Reports.VendorPurchaseSummary(includeClosed).ToList();
+        }
+
         public IEnumerable<RptResponsible> Responsible(DateOnly? shipDate)
         {
             var data = Uow.Reports.Responsible(shipDate).ToList();

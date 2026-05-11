@@ -44,6 +44,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptSalesCallListRow> SalesCallList();
 
+        IQueryable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed);
+
         IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate);
 
         IQueryable<RptDailySummaryRow>? DailySummary(DateOnly? ShipDate);
