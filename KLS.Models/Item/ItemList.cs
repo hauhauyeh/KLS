@@ -52,6 +52,33 @@ namespace KLS.Models
 
         public decimal? BaseRecentCost { get; set; }
 
+        // 2026-05-11: cost-trend restore. SP fills these from a pivot of
+        // View_RecentCost (RN=1 vs RN=2). Naming parallels BaseRecentCost --
+        // "Base" prefix marks per-base-unit values. TotalCost in the view
+        // is (BaseCost + LandedCostPerCase) = goods + landing per case, so
+        // the trend reflects movement in the all-in landed cost.
+        public decimal? BaseRecentCostB4 { get; set; }
+
+        public int? CostIntervalDays { get; set; }
+
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? BaseCostTrendPercent
+        {
+            get
+            {
+                if (!BaseRecentCost.HasValue || !BaseRecentCostB4.HasValue)
+                    return null;
+
+                if (BaseRecentCostB4.Value == 0)
+                    return null;
+
+                return Utilities.Rounding(
+                    (BaseRecentCost.Value - BaseRecentCostB4.Value) / BaseRecentCostB4.Value,
+                    4
+                );
+            }
+        }
+
         public decimal? BaseP1 { get; set; }
 
         [NotMapped]
