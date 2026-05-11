@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
+    [SuperAdminOnly]
     [Route("api/admin/[controller]")]
     [Display(Name = "Role Management", GroupName = "Admin")]
     public class RolesController : BaseController

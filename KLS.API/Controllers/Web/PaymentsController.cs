@@ -38,6 +38,8 @@ namespace KLS.API.Controllers.Web
         public IActionResult ChargePayment([FromBody] PaymentChargeReq chargeReq)
         {
             chargeReq.PayeeId = UserContext.EmpId;
+            chargeReq.Gateway = "MX";
+            chargeReq.CCFeePercent = 0.01m;
 
             var customerPayment = _customerPaymentService.ChargePayment(chargeReq);
 

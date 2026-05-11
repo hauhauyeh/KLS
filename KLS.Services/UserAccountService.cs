@@ -83,6 +83,15 @@ namespace KLS.Services
                 };
             }
 
+            if (!customer.IsOrderingEnabled)
+            {
+                return new WebLoginResult
+                {
+                    Success = false,
+                    ErrorMessage = "Your account is not yet enabled to place orders"
+                };
+            }
+
             return GenerateLoginResult(user);
         }
 
@@ -120,7 +129,7 @@ namespace KLS.Services
                 UserId = jwtClaim.UserId,
                 IsOwner = jwtClaim.RoleId == 1,
                 IsAdmin = role.IsAdmin,
-                IsPriceShow = customer?.IsPriceShow ?? false,
+                PriceShow = customer?.PriceShow ?? "Hide",
                 IsEditGuide = customer?.IsEditGuide ?? false,
                 IsPromotionEnabled = customer?.IsPromotionEnabled ?? false
             };
@@ -159,7 +168,7 @@ namespace KLS.Services
                 UserId = user.UserId,
                 IsOwner = user.RoleId == 1,
                 IsAdmin = role.IsAdmin,
-                IsPriceShow = customer?.IsPriceShow ?? false,
+                PriceShow = customer?.PriceShow ?? "Hide",
                 IsEditGuide = customer?.IsEditGuide ?? false,
                 IsPromotionEnabled = customer?.IsPromotionEnabled ?? false
             };

@@ -108,12 +108,18 @@ namespace KLS.Services
                 var exists = Exists(UserContext.EmpId, createReq.ItemId, itemUnitId);
                 if (exists) continue;
 
+                var itemUnit = Uow.ItemUnits.GetById(itemUnitId);
+                var customer = Uow.Customers.GetById(UserContext.EmpId);
+
                 var quote = new ItemQuote
                 {
                     PayeeId = UserContext.EmpId,
                     ItemId = createReq.ItemId,
                     ItemUnitId = itemUnitId
                 };
+
+                if (itemUnit != null && customer != null && !itemUnit.IsBaseUnit && customer.BaseMarkup != 0)
+                    quote.MarkupPercent = 0;
 
                 Uow.ItemQuotes.Add(quote);
             }

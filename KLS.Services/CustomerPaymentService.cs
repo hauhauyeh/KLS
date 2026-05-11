@@ -428,6 +428,28 @@ namespace KLS.Services
                             Last4 = method.Last4
                         };
                     }
+                    else if (chargeReq.Gateway == "MX")
+                    {
+                        var mxResp = _mxMerchantService
+                            .ChargeAsync(method, dueTotal + ccFee, true)
+                            .GetAwaiter()
+                            .GetResult();
+
+                        var referenceId = ExtractMxReferenceId(mxResp);
+
+                        paymentReq = new CreateGatewayPaymentReq
+                        {
+                            PayeeId = chargeReq.PayeeId,
+                            PaymentMethod = "CREDIT CARD",
+                            ReferenceId = referenceId,
+                            PaymentAmount = dueTotal + ccFee,
+                            SalesIds = chargeReq.SalesIds,
+                            Gateway = "MX Merchant Web Payment",
+                            CCFee = ccFee,
+                            CardType = method.AccountType,
+                            Last4 = method.Last4
+                        };
+                    }
                     else
                     {
                         var sqCustId = !string.IsNullOrEmpty(method.SQCustId)

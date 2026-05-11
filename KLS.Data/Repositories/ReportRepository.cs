@@ -175,6 +175,13 @@ namespace KLS.Data.Repositories
             return DbContext.RptSalesCallListRow.FromSqlRaw("[dbo].[Report_SalesCallList]");
         }
 
+        public IQueryable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed)
+        {
+            var IncludeClosedParam = new SqlParameter("@IncludeClosed", includeClosed);
+
+            return DbContext.RptVendorPurchaseSummary.FromSqlRaw("[dbo].[Report_VendorPurchaseSummary] @IncludeClosed", IncludeClosedParam);
+        }
+
         public IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate)
         {
             var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);

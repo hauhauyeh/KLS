@@ -36,6 +36,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<RptSalesCallListRow> SalesCallList();
 
+        IEnumerable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed);
+
         IEnumerable<RptResponsible> Responsible(DateOnly? shipDate);
 
         List<RptDailySummary> DailySummary(DateOnly? shipDate);
