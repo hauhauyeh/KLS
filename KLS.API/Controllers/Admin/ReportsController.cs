@@ -87,6 +87,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.SalesCallList());
         }
 
+        [HttpGet("VendorPurchaseSummary")]
+        [DisplayName("Purchase -> Vendor Purchase Summary")]
+        [PermissionKey("Report.Purchase.VendorPurchaseSummary")]
+        public IActionResult VendorPurchaseSummary([FromQuery] bool IncludeClosed = false)
+        {
+            return Ok(_reportService.VendorPurchaseSummary(IncludeClosed));
+        }
+
 
         [HttpGet("Responsible")]
         [DisplayName("Sales -> Responsible")]
