@@ -27,5 +27,7 @@ namespace KLS.Models
         public decimal? ClosingQty { get; set; }
 
         public decimal? AverageCost { get; set; }
+
+        public bool? IsMismatch { get; set; }
     }
 }
