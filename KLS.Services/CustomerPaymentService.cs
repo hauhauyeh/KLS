@@ -144,13 +144,22 @@ namespace KLS.Services
                 {
                     var incomingPaymentMethod = paymentSaveReq.PaymentMethod?.Trim();
                     var existingPaymentMethod = existingPayment.PaymentMethod?.Trim();
+                    var incomingPaymentType = paymentSaveReq.PaymentType?.Trim();
+                    var existingPaymentType = existingPayment.PaymentType?.Trim();
 
                     if (paymentSaveReq.PayeeId != existingPayment.PayeeId
                         || paymentSaveReq.PaymentAmount != existingPayment.PaymentAmount
                         || paymentSaveReq.PaymentDate != existingPayment.PaymentDate
-                        || !string.Equals(incomingPaymentMethod, existingPaymentMethod, StringComparison.OrdinalIgnoreCase))
+                        || !string.Equals(incomingPaymentMethod, existingPaymentMethod, StringComparison.OrdinalIgnoreCase)
+                        || !string.Equals(incomingPaymentType, existingPaymentType, StringComparison.OrdinalIgnoreCase))
                     {
-                        throw new ValidationException("Deposited payment only allows reapply, notes, and reference updates. Customer, date, method, and amount cannot be changed.");
+                        throw new ValidationException("Deposited payment only allows reapply, notes, and reference updates. Customer, date, method, amount, and payment type cannot be changed.");
+                    }
+
+                    if (string.Equals(existingPaymentType, "Customer Refund", StringComparison.OrdinalIgnoreCase)
+                        && paymentSaveReq.FromAccountId != existingPayment.FromAccountId)
+                    {
+                        throw new ValidationException("Deposited refund cannot change its source/bank account.");
                     }
                 }
             }
