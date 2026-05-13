@@ -117,5 +117,9 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptInventoryIncomingRow> InventoryIncoming();
 
         IQueryable<RptWorksheet> WorksheetPattern(WorksheetPatternReportRequest req);
+
+        RptCheckPrint? CheckPrint(int vendorPaymentId);
+
+        IQueryable<RptCheckPrintDetail> CheckPrintDetail(int vendorPaymentId);
     }
 }

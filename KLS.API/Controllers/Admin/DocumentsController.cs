@@ -188,6 +188,21 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+
+        [HttpGet("Check/{vendorPaymentId}")]
+        [DisplayName("Print Check")]
+        [PermissionKey("Vendor.VendorPayment.PrintCheck")]
+        public IActionResult Check(int vendorPaymentId)
+        {
+            var filePath = _documentService.Check(vendorPaymentId);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
         #endregion
     }
 }

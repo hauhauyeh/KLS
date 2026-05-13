@@ -19,7 +19,6 @@
     <Folder Include="wwwroot\Images\items\" />
     <Folder Include="wwwroot\Images\item\" />
     <Folder Include="wwwroot\KLS\category\" />
-    <Folder Include="wwwroot\Logo\" />
     <Folder Include="wwwroot\Pdf\" />
     <Folder Include="wwwroot\Python\" />
     <Folder Include="wwwroot\Payroll\" />

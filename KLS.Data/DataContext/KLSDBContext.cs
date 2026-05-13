@@ -587,6 +587,10 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptWorksheet> RptWorksheet { get; set; }
 
+        public virtual DbSet<RptCheckPrint> RptCheckPrint { get; set; }
+
+        public virtual DbSet<RptCheckPrintDetail> RptCheckPrintDetail { get; set; }
+
         #endregion
 
         public virtual DbSet<OrderWebList> OrderWebList { get; set; }

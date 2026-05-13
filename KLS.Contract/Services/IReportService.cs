@@ -109,5 +109,9 @@ namespace KLS.Contract.Services
         IEnumerable<RptInventoryIncomingRow> InventoryIncoming();
 
         IEnumerable<RptWorksheetGroup> WorksheetPattern(WorksheetPatternReportRequest req);
+
+        RptCheckPrint? CheckPrint(int vendorPaymentId);
+
+        IQueryable<RptCheckPrintDetail> CheckPrintDetail(int vendorPaymentId);
     }
 }
