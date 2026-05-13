@@ -1046,21 +1046,36 @@ namespace KLS.Services
             var template = "~/Views/Pdf/Check.cshtml";
             var html = _pdfService.RenderTemplate(template, pmt);
 
-            string filePath = Path.Combine(_env.WebRootPath, "Pdf", $"Check-{vendorPaymentId}.pdf");
+            var relativePath = Path.Combine("Pdf", $"Check-{vendorPaymentId}.pdf");
+            string fullPath = Path.Combine(_env.WebRootPath, relativePath);
             using (var pdf = _pdfService.HtmlToPDF(html))
             {
-                pdf.SaveAs(filePath);
+                pdf.SaveAs(fullPath);
             }
 
             _printLogService.Create(new PrintLog
             {
                 DocType = "Check",
                 PrintMode = "S",
-                DocPath = filePath,
+                DocPath = relativePath,
                 PageCount = 1
             });
 
-            return filePath;
+            var vendorPayment = Uow.VendorPayments.GetById(vendorPaymentId);
+
+            if (vendorPayment != null)
+            {
+                vendorPayment.PrintDate = DateOnly.FromDateTime(DateTime.Now);
+                vendorPayment.UpdatedAt = DateTime.UtcNow;
+
+                if (!vendorPayment.MailDate.HasValue)
+                    vendorPayment.MailDate = vendorPayment.PrintDate;
+
+                Uow.VendorPayments.Update(vendorPayment);
+                Uow.Commit();
+            }
+
+            return fullPath;
         }
     }
 }

@@ -787,12 +787,14 @@ namespace KLS.Common
                 groupIndex++;
             }
 
-            var result = whole > 0 ? string.Join(" ", parts) : "Zero";
+            var result = whole > 0 ? string.Join(" ", parts) + " Dollar" : "";
 
             if (cents > 0)
-                result += " and " + ConvertGroup(cents) + " Cents";
+                result += (result.Length > 0 ? " " : "") + ConvertGroup(cents) + " Cents";
 
-            return result;
+            result += " only";
+
+            return char.ToUpper(result[0]) + result.Substring(1).ToLower();
         }
     }
 }
