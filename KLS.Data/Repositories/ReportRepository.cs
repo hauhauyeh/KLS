@@ -524,5 +524,20 @@ namespace KLS.Data.Repositories
         }
 
         #endregion
+
+        public RptCheckPrint? CheckPrint(int vendorPaymentId)
+        {
+            var param = new SqlParameter("@VendorPaymentId", vendorPaymentId);
+            return DbContext.RptCheckPrint
+                .FromSqlRaw("[dbo].[Report_CheckPrint] @VendorPaymentId", param)
+                .AsEnumerable().FirstOrDefault();
+        }
+
+        public IQueryable<RptCheckPrintDetail> CheckPrintDetail(int vendorPaymentId)
+        {
+            var param = new SqlParameter("@VendorPaymentId", vendorPaymentId);
+            return DbContext.RptCheckPrintDetail
+                .FromSqlRaw("[dbo].[Report_CheckPrintDetail] @VendorPaymentId", param);
+        }
     }
 }

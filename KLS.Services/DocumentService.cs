@@ -1018,5 +1018,49 @@ namespace KLS.Services
                 throw new Exception(ex.Message);
             }
         }
+
+        public string Check(int vendorPaymentId)
+        {
+            var check = _reportService.CheckPrint(vendorPaymentId);
+            if (check == null)
+                throw new Exception("Check not found.");
+            if (check.PaymentMethod != "CHECK")
+                throw new Exception("You can only print computer generated check.");
+
+            var billDetails = _reportService.CheckPrintDetail(vendorPaymentId).ToList();
+
+            var accountCode = Uow.Accounts.GetById(check.FromAccountId)?.AccountCode ?? "";
+            var logoPath = Path.Combine(_env.WebRootPath, "logo", accountCode.Replace("@", "") + "-logo.jpg");
+            var bankLogo = new Uri(logoPath).AbsoluteUri;
+
+            var amtInWords = Utilities.CurrencyToWords(check.PaymentAmount);
+
+            var pmt = new RptCheckPayment
+            {
+                VendorInfo = check,
+                BillDetails = billDetails,
+                BankLogo = bankLogo,
+                AmtInWords = amtInWords
+            };
+
+            var template = "~/Views/Pdf/Check.cshtml";
+            var html = _pdfService.RenderTemplate(template, pmt);
+
+            string filePath = Path.Combine(_env.WebRootPath, "Pdf", $"Check-{vendorPaymentId}.pdf");
+            using (var pdf = _pdfService.HtmlToPDF(html))
+            {
+                pdf.SaveAs(filePath);
+            }
+
+            _printLogService.Create(new PrintLog
+            {
+                DocType = "Check",
+                PrintMode = "S",
+                DocPath = filePath,
+                PageCount = 1
+            });
+
+            return filePath;
+        }
     }
 }

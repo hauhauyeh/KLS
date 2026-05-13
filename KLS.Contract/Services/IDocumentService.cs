@@ -37,5 +37,7 @@ namespace KLS.Contract.Services
         string? RouteLoadingList(DocumentReq documentReq);
 
         string? PackingLabel(DocumentReq req);
+
+        string Check(int vendorPaymentId);
     }
 }

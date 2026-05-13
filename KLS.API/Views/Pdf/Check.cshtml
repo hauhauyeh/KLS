@@ -1,0 +1,359 @@
+﻿@model KLS.Models.Reports.RptCheckPayment
+
+<style>
+    /* @@font-face {
+        font-family: 'IDAutomationMICR';
+        src: url('../../wwwroot/fonts/IDAutomationMICR.ttf') format('truetype');
+    }
+
+    @@font-face {
+        font-family: 'IDAutomationHSec1B';
+        src: url('../../wwwroot/fonts/IDAutomationHSec1B.ttf') format('truetype');
+    } */
+
+    .container {
+        width: 8.5in;
+        height: 11in;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        position: relative; /* Needed for absolute positioning of children */
+        font-family: 'Segoe UI';
+    }
+
+    .top {
+        flex: 1;
+        box-sizing: border-box;
+        padding: 0 8px;
+    }
+
+    .dba {
+        font-size: 12px;
+        font-family: Arial;
+        line-height: 1.2;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-end {
+        text-align: end;
+    }
+
+    .w-33 {
+        width: 33.33%;
+    }
+
+    .w-100 {
+        width: 100%;
+    }
+
+    .w-50 {
+        width: 50%;
+    }
+
+    .d-flex {
+        display: flex;
+    }
+
+    .justify-content-between {
+        justify-content: space-between;
+    }
+
+    .float-left {
+        float: left;
+    }
+
+    .label {
+        font-family: Tahoma;
+        font-weight: bold;
+    }
+
+    .ref-num {
+        font-size: 20px;
+        font-family: 'Courier New';
+        padding-right: 30px;
+    }
+
+    .date-section {
+        height: 60px;
+        float: left;
+        width: 100%;
+        text-align: end;
+        padding-top: 10px;
+    }
+
+    .date-label {
+        width: 80%;
+        float: left;
+    }
+
+    .date-wrap {
+        width: 20%;
+        float: left;
+    }
+
+    .pmt-date {
+        border-bottom: 1px solid;
+        text-align: center;
+        font-family: 'Segoe UI';
+        font-weight: bold;
+        font-size: 17px;
+        width: 75%;
+        margin-left: 10px;
+    }
+
+    .pay-section {
+        float: left;
+        width: 100%;
+    }
+
+    .pay-label {
+        float: left;
+        width: 5%;
+    }
+
+    .amt-word {
+        font-family: Arial;
+        font-size: 15px;
+        border-bottom: 1px solid;
+        width: 73%;
+        float: left;
+        height: 28px;
+    }
+
+    .amt {
+        border-bottom: 1px solid;
+        font-size: 22px;
+        text-align: center;
+        font-family: IDAutomationHSec1B;
+        float: left;
+        width: 20%;
+        margin-left: 2%;
+        height: 28px;
+    }
+
+    .payee-section {
+        width: 50%;
+        float: left;
+    }
+
+    .payee-wrap {
+        border: 1px solid;
+        padding: 5px;
+        line-height: 1.2;
+    }
+
+    .payee-name {
+        font-size: 14px;
+        font-family: 'Segoe UI';
+    }
+
+    .payee-address {
+        font-size: 14px;
+        font-family: 'Segoe UI';
+        font-weight: 400;
+    }
+
+    .routing-section {
+        clear: both;
+        display: flex;
+        padding-top: 25px;
+        padding-left: 135px;
+        margin-bottom: 10px;
+    }
+
+    .check-num {
+        font-family: IDAutomationMICR;
+        width: 100px;
+        font-size: 16px;
+    }
+
+    .routing-num {
+        font-family: IDAutomationMICR;
+        width: 145px;
+        font-size: 16px;
+    }
+
+    .account-num {
+        font-family: IDAutomationMICR;
+        font-size: 16px;
+    }
+
+    .check-detail {
+        width: 100%;
+        padding-bottom: 5px;
+        font-family: 'Segoe UI';
+        font-size: 14px;
+    }
+
+    .cmp-section {
+        width: 55%;
+        float: left;
+    }
+
+    .cmp-detail {
+        padding: 40px 0 0 40px;
+        line-height: 1;
+    }
+
+    .payee-detail {
+        padding-top: 90px;
+        padding-left: 40px;
+        display: flex;
+    }
+
+    .to-label {
+        margin-right: 10px;
+        margin-top: 3px;
+    }
+
+    .bill-section {
+        width: 45%;
+        float: left;
+    }
+
+    .bill-detail-wrapper {
+        border: 1px solid;
+        height: 300px;
+        padding: 5px;
+        font-style: italic;
+        font-size: 10px;
+        column-count: 2;
+    }
+
+    .bill-detail {
+        display: flex;
+    }
+
+    .billdate {
+        width: 40%;
+    }
+
+    .billdoc {
+        width: 35%;
+    }
+
+    .void-section {
+        width: 100%;
+        clear: both;
+        height: 40px;
+    }
+
+    .void {
+        text-align: center;
+        font-size: 12px;
+        font-weight: bold;
+        width: 20%;
+    }
+
+    .blank-space {
+        margin-bottom: 10px;
+    }
+
+    @@media print {
+        @@page {
+            margin-top: 0in;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            margin-left: 10px;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="top">
+        <div class="text-center">
+            <div class="float-left w-33">
+                <img src="@Model.BankLogo" width="68px" height="48px" />
+            </div>
+            <div class="float-left w-33 dba">
+                <strong>WORLD GENERAL IMPORT CO. INC.</strong><br />
+                <strong>d/b/a KLS Food Service</strong><br />
+                <span>2250 PRINCIPAL ROW</span><br />
+                <span>ORLANDO, FL 32837</span>
+            </div>
+            <div class="float-left w-33 text-end">
+                <strong class="ref-num">@Model.VendorInfo.ReferenceId</strong>
+            </div>
+        </div>
+        <div class="date-section">
+            <div class="date-label label">Date</div>
+            <div class="date-wrap">
+                <div class="pmt-date">@string.Format("{0:d}", Model.VendorInfo.PaymentDate)</div>
+            </div>
+        </div>
+        <div class="pay-section">
+            <div class="pay-label label">Pay</div>
+            <div class="amt-word">@Model.AmtInWords</div>
+            <div class="amt">@string.Format("{0:c}", Model.VendorInfo.PaymentAmount)</div>
+        </div>
+        <div class="void-section">
+            <div class="float-left" style="width:80%">&nbsp;</div>
+            <div class="void float-left">Void after 180 days</div>
+        </div>
+        <div class="payee-section">
+            <div class="label">To the order of</div>
+            <div class="payee-wrap">
+                <strong>@Model.VendorInfo.CompanyName</strong><br />
+                <span>@Model.VendorInfo.PaymentAddress</span><br />
+                <span>@Model.VendorInfo.PaymentCity, @Model.VendorInfo.PaymentState @Model.VendorInfo.PaymentZipCode</span>
+            </div>
+        </div>
+        <div class="routing-section">
+            <div class="check-num">@string.Concat("c", Model.VendorInfo.ReferenceId, "c")</div>
+            <div class="routing-num">@Model.VendorInfo.RoutingNumber</div>
+            <div class="account-num">@Model.VendorInfo.AccountNumber</div>
+        </div>
+    </div>
+    @for (var i = 0; i < 2; i++)
+    {
+        if (i == 1)
+        {
+            <div class="blank-space">&nbsp;</div>
+        }
+        else
+        {
+            <div style="margin-bottom:5px;">&nbsp;</div>
+        }
+        <div class="top">
+            <div class="check-detail">
+                <div class="float-left" style="width:55%">&nbsp;</div>
+                <div class="d-flex justify-content-between" style="width:45%">
+                    <strong>@string.Format("{0:d}", Model.VendorInfo.PaymentDate)</strong>
+                    <strong>CHECK # &nbsp;@Model.VendorInfo.ReferenceId</strong>
+                    <strong>@string.Format("{0:c}", Model.VendorInfo.PaymentAmount)</strong>
+                </div>
+            </div>
+            <div class="cmp-section">
+                <div class="cmp-detail">
+                    <strong class="dba">WORLD GENERAL IMPORT CO. INC.</strong><br />
+                    <strong class="dba">d/b/a KLS Food Service</strong><br />
+                    <span class="dba">2250 PRINCIPAL ROW</span><br />
+                    <span class="dba">ORLANDO, FL 32837</span>
+                </div>
+                <div class="payee-detail">
+                    <div class="label to-label">To</div>
+                    <div>
+                        <strong>@Model.VendorInfo.CompanyName</strong><br />
+                        <span>@Model.VendorInfo.PaymentAddress</span><br />
+                        <span>@Model.VendorInfo.PaymentCity, @Model.VendorInfo.PaymentState @Model.VendorInfo.PaymentZipCode</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bill-section">
+                <div class="bill-detail-wrapper">
+                    @foreach (var itm in Model.BillDetails)
+                    {
+                        <div class="bill-detail">
+                            <div class="billdate">@string.Format("{0:d}", itm.ArrivalDate)</div>
+                            <div class="billdoc">@itm.VendorDocNumber&nbsp</div>
+                            <div>@string.Format("{0:c}", itm.PurchaseTotal)</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

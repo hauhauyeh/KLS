@@ -752,5 +752,47 @@ namespace KLS.Common
             var random = new Random();
             return new string(Enumerable.Repeat(chars, 12).Select(s => s[random.Next(s.Length)]).ToArray());
         }
+
+        public static string CurrencyToWords(decimal amount)
+        {
+            var ones = new[] { "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+                "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen" };
+            var tens = new[] { "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety" };
+
+            string ConvertGroup(int number)
+            {
+                if (number == 0) return "";
+                if (number < 20) return ones[number];
+                if (number < 100) return tens[number / 10] + (number % 10 > 0 ? " " + ones[number % 10] : "");
+                return ones[number / 100] + " Hundred" + (number % 100 > 0 ? " " + ConvertGroup(number % 100) : "");
+            }
+
+            var whole = (long)Math.Abs(Math.Truncate(amount));
+            var cents = (int)Math.Round((Math.Abs(amount) - Math.Abs(Math.Truncate(amount))) * 100);
+
+            if (whole == 0 && cents == 0)
+                return "Zero";
+
+            var parts = new List<string>();
+            var groups = new[] { "", " Thousand", " Million", " Billion" };
+            int groupIndex = 0;
+
+            long temp = whole;
+            while (temp > 0)
+            {
+                int segment = (int)(temp % 1000);
+                if (segment > 0)
+                    parts.Insert(0, ConvertGroup(segment) + groups[groupIndex]);
+                temp /= 1000;
+                groupIndex++;
+            }
+
+            var result = whole > 0 ? string.Join(" ", parts) : "Zero";
+
+            if (cents > 0)
+                result += " and " + ConvertGroup(cents) + " Cents";
+
+            return result;
+        }
     }
 }

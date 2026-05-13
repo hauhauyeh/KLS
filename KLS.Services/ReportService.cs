@@ -1145,5 +1145,15 @@ namespace KLS.Services
         }
 
         #endregion
+
+        public RptCheckPrint? CheckPrint(int vendorPaymentId)
+        {
+            return Uow.Reports.CheckPrint(vendorPaymentId);
+        }
+
+        public IQueryable<RptCheckPrintDetail> CheckPrintDetail(int vendorPaymentId)
+        {
+            return Uow.Reports.CheckPrintDetail(vendorPaymentId);
+        }
     }
 }
