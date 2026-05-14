@@ -278,5 +278,16 @@ namespace KLS.Services
                 .ThenBy(c => c.PurchaseNumber)
                 .ToList();
         }
+
+        public PurchaseDetailDto? GetPurchaseDetails(int purchaseId)
+        {
+            var details = Uow.Purchases.GetPurchaseDetails(purchaseId);
+
+            return new PurchaseDetailDto
+            {
+                Purchase = GetListById(purchaseId),
+                PurchaseDetails = details?.ToList()
+            };
+        }
     }
 }

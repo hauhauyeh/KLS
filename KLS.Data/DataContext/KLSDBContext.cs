@@ -430,6 +430,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PODetail> PODetail { get; set; }
 
+        public virtual DbSet<PurchaseDetailList> PurchaseDetailList { get; set; }
+
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
 
         public virtual DbSet<InventoryClosingDetail> InventoryClosingDetail { get; set; }
