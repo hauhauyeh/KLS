@@ -184,6 +184,7 @@ namespace KLS.Services
                     oldItem.StorageId = item.StorageId;
                     oldItem.ItemCode = item.ItemCode;
                     oldItem.ItemName = item.ItemName;
+                    oldItem.ItemName2 = item.ItemName2;
                     oldItem.ItemSearchTag = item.ItemSearchTag;
                     oldItem.ItemBoxDesc = item.ItemBoxDesc;
                     oldItem.ItemLongDesc = item.ItemLongDesc;

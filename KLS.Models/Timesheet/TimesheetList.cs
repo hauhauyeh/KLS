@@ -12,6 +12,8 @@ namespace KLS.Models
 
         public string? PayeeName { get; set; }
 
+        public string? HourOrSalary { get; set; }
+
         public double? TotalHours { get; set; }
 
         public decimal? TotalSalary { get; set; }

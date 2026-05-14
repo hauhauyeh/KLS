@@ -113,7 +113,9 @@ namespace KLS.Data.Repositories
 
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Insert] @VendorPaymentId,@PaymentDate,@PaymentMethod,@FromAccountId,@Notes,@PayrollStartDate,@PayrollEndDate,@EmpId", VendorPaymentIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, NotesParam, PayrollStartDateParam, PayrollEndDateParam, EmpIdParam);
+            var BankDateParam = new SqlParameter("@BankDate", DBNull.Value);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Payroll_Insert] @VendorPaymentId,@PaymentDate,@PaymentMethod,@FromAccountId,@Notes,@PayrollStartDate,@PayrollEndDate,@EmpId,@BankDate", VendorPaymentIdParam, PaymentDateParam, PaymentMethodParam, FromAccountIdParam, NotesParam, PayrollStartDateParam, PayrollEndDateParam, EmpIdParam, BankDateParam);
         }
 
         public ImportPayrollResp ImportPayroll(string excelfile)
