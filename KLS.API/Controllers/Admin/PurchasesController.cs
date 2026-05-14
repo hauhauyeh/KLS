@@ -53,6 +53,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("Detail/{purchaseId}")]
+        public IActionResult Detail(int purchaseId)
+        {
+            return Ok(_purchaseService.GetPurchaseDetails(purchaseId));
+        }
+
+
         [HttpPut("UpdateNotes")]
         public IActionResult UpdateNotes([FromBody] PurchaseUpdateReq updateReq)
         {

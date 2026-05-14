@@ -56,6 +56,8 @@ namespace KLS.Models.Reports
 
         public decimal? YTD { get; set; }
 
+        public decimal? Last3M { get; set; }
+
         public DateTime? ExpiryDate { get; set; }
 
         public bool Inactive { get; set; }

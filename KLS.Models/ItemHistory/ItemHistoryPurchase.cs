@@ -23,6 +23,10 @@ namespace KLS.Models
 
         public string? PayeeName { get; set; }
 
+        public int PayeeId { get; set; }
+
+        public int StageId { get; set; }
+
         public decimal? ShipQty { get; set; }
 
         public decimal? FinalQty { get; set; }

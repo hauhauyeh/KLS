@@ -703,6 +703,19 @@ namespace KLS.Services
             return Uow.Reports.VendorPurchaseSummary(includeClosed).ToList();
         }
 
+        public IEnumerable<RptCustomerSalesSummary> CustomerSalesSummary(bool includeClosed, int? salesRepId)
+        {
+            // Sales-role users always see only their own customers, no matter
+            // what the request passed. Same server-trusted override pattern
+            // used by 9 other sales reports in this file (search IsSalesRole).
+            if (UserContext.IsSalesRole)
+            {
+                salesRepId = UserContext.EmpId;
+            }
+
+            return Uow.Reports.CustomerSalesSummary(includeClosed, salesRepId).ToList();
+        }
+
         public IEnumerable<RptResponsible> Responsible(DateOnly? shipDate)
         {
             var data = Uow.Reports.Responsible(shipDate).ToList();

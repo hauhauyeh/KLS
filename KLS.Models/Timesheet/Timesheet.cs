@@ -39,7 +39,8 @@ namespace KLS.Models
         public virtual ICollection<TimesheetDetail>? TimeSheetDetails { get; set; }
 
         // Display-only / computed: NOT MAPPED
-        [NotMapped] public string? PayeeName { get; set; }
+        [NotMapped] 
+        public string? PayeeName { get; set; }
 
         [NotMapped]
         public DateTime InTimeLocal

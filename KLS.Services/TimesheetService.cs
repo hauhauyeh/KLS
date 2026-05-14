@@ -67,6 +67,7 @@ namespace KLS.Services
                     {
                         PayeeId = c.Key.PayeeId,
                         PayeeName = c.Key.PayeeName,
+                        HourOrSalary = Uow.Employees.GetById(c.Key.PayeeId)?.HourOrSalary,
                         TotalHours = c.Aggregate(TimeSpan.Zero, (subtotal, t) => subtotal.Add(t.WorkingHour)).TotalHours,
                         TotalSalary = c.Sum(t => t.TimeSheetDetails.Sum(td => td.ExtTotal)),
                         Timesheets = c.OrderBy(t => t.InTime).ToList()
