@@ -257,6 +257,8 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (6411, 'Report.Sales.SalesCommission2', 'Sales Commission 2', 'Report', 'Sales', 'SalesCommission2', 'page', 6400, 6411, 'Reports-SalesCommission2'),
 -- 2026-05-13: added Customer Sales Summary page.
 (6415, 'Report.Sales.CustomerSalesSummary', 'Customer Sales Summary', 'Report', 'Sales', 'CustomerSalesSummary', 'page', 6400, 6415, NULL),
+-- 2026-05-14: added Sales Summary (period-over-period trend) page.
+(6416, 'Report.Sales.SalesSummary', 'Sales Summary', 'Report', 'Sales', 'SalesSummary', 'page', 6400, 6416, NULL),
 (6450, 'Report.Timesheet', 'Timesheet Report', 'Report', 'Timesheet', '', 'resource', 6000, 6450, NULL),
 (6451, 'Report.Timesheet.Timesheet', 'Timesheet', 'Report', 'Timesheet', 'Timesheet', 'page', 6450, 6451, 'Reports-Timesheet'),
 (6452, 'Report.Timesheet.JobSummary', 'Job Summary', 'Report', 'Timesheet', 'JobSummary', 'page', 6450, 6452, 'Reports-JobSummary'),
