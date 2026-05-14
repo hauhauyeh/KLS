@@ -45,6 +45,11 @@ namespace KLS.Models
 
         public decimal? AsIncome { get; set; }
 
+        // Retired column - no writer, no reader, no live rows. Round 2 audit
+        // 2026-05-13 verified zero usage. Active refund linkage lives on
+        // CustomerPaymentDetail.RefundPaymentId, set per detail row by
+        // CustomerPaymentService.IssueRefund. Left in place (no DB cleanup,
+        // no model removal) per Howard's call; do not populate.
         public int? VendorPaymentId { get; set; }
 
         [NotMapped]
