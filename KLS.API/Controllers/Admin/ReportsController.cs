@@ -105,6 +105,18 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.CustomerSalesSummary(IncludeClosed, SalesRepId));
         }
 
+        [HttpGet("SalesSummary")]
+        [DisplayName("Sales -> Sales Summary")]
+        [PermissionKey("Report.Sales.SalesSummary")]
+        public IActionResult SalesSummary(
+            [FromQuery] string Grain = "month",
+            [FromQuery] DateOnly? StartDate = null,
+            [FromQuery] DateOnly? EndDate = null,
+            [FromQuery] int? SalesRepId = null)
+        {
+            return Ok(_reportService.SalesSummary(Grain, StartDate, EndDate, SalesRepId));
+        }
+
 
         [HttpGet("Responsible")]
         [DisplayName("Sales -> Responsible")]

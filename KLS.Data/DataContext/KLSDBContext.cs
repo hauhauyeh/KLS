@@ -498,6 +498,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptCustomerSalesSummary> RptCustomerSalesSummary { get; set; }
 
+        public virtual DbSet<RptSalesSummary> RptSalesSummary { get; set; }
+
         public virtual DbSet<RptResponsibleRow> RptResponsibleRow { get; set; }
 
         public virtual DbSet<RptDailySummaryRow> RptDailySummaryRow { get; set; }

@@ -48,6 +48,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptCustomerSalesSummary> CustomerSalesSummary(bool includeClosed, int? salesRepId);
 
+        IQueryable<RptSalesSummary> SalesSummary(string grain, DateOnly? startDate, DateOnly? endDate, int? salesRepId);
+
         IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate);
 
         IQueryable<RptDailySummaryRow>? DailySummary(DateOnly? ShipDate);
