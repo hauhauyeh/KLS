@@ -61,6 +61,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Company>().ToTable("Company");
             modelBuilder.Entity<CompanySeo>().ToTable("CompanySeo");
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
+            modelBuilder.Entity<BankFeedAccount>().ToTable("BankFeedAccount");
+            modelBuilder.Entity<BankFeedTransaction>().ToTable("BankFeedTransaction");
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
             modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
             modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
@@ -139,6 +141,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ItemWebRowList>().HasNoKey();
             modelBuilder.Entity<BankReconBalance>().HasNoKey();
             modelBuilder.Entity<BankTx>().HasNoKey();
+            modelBuilder.Entity<BankFeedTransactionList>().HasNoKey();
+            modelBuilder.Entity<BankFeedMatchCandidate>().HasNoKey();
             modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
             modelBuilder.Entity<CustomerPaymentEditEligibility>().HasNoKey();
             modelBuilder.Entity<RptSalesYearlyRow>().HasNoKey();
@@ -218,6 +222,8 @@ namespace KLS.Data.DataContext
         public DbSet<CompanySeo> CompanySeos { get; set; }
 
         public DbSet<BankRecon> BankRecons { get; set; }
+        public DbSet<BankFeedAccount> BankFeedAccounts { get; set; }
+        public DbSet<BankFeedTransaction> BankFeedTransactions { get; set; }
 
         public DbSet<BankReconBalance> BankReconBalances { get; set; }
 
@@ -379,6 +385,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<VendorSearchDTO> VendorSearchDTO { get; set; }
 
         public virtual DbSet<CheckRegister> CheckRegister { get; set; }
+        public virtual DbSet<BankFeedTransactionList> BankFeedTransactionList { get; set; }
+        public virtual DbSet<BankFeedMatchCandidate> BankFeedMatchCandidate { get; set; }
 
         public virtual DbSet<EmpAdvance> EmpAdvance { get; set; }
 
