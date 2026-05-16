@@ -1,0 +1,50 @@
+-- Captured 2026-05-16 from COGENT-2024\SQLEXPRESS / KLS_2026
+-- Customer table tax-related column baseline (pre-cleanup)
+--
+-- Purpose: rollback reference for the sales-tax-cleanup deploy bundle.
+-- Reverse-direction script reverses each line below.
+--
+-- Column definitions (current state, before cleanup):
+--
+--   TaxRate       decimal(5,4)   NULL                          -- (e.g. 0.0650 = 6.5%)
+--   RCExpireDate  date           NULL
+--   RCNumber      nvarchar(50)   NULL
+--   IsHRTaxable   bit            NOT NULL DEFAULT ((0))
+--
+-- After cleanup the Customer table will have:
+--   TaxRate       (unchanged)
+--   RCExpireDate  (unchanged)
+--   RCNumber      (unchanged)
+--   NonHR         bit            NOT NULL DEFAULT ((0))   -- renamed from IsHRTaxable
+--   IsTaxExempt   bit            NOT NULL DEFAULT ((0))   -- NEW
+--
+-- Row counts at capture:
+--   TotalCustomers   = 2171
+--   IsHRTaxable = 1  = 8       (audit script will reset 7 of these to 0; temple gets IsTaxExempt=1 instead)
+--   HasRC (RCNumber IS NOT NULL) = 210
+--
+-- Rows the audit script will touch (current state, captured for rollback):
+--
+--   PayeeId  PayeeName                                   IsHRTaxable  RCNumber          RCExpireDate  TaxRate
+--   -------  ------------------------------------------  -----------  ----------------  ------------  -------
+--   301919   Cash Ticket                                 0            NULL              NULL          0.0650
+--   301067   China Pavilion                              1            GOT               2016-12-31    0.0650
+--   303375   Closed- House of Pho (Deliver before 10:30) 1            5880169336380     2016-12-31    0.0650
+--   301752   Great East (Customer)                       1            NULL              NULL          0.0650
+--   302728   Guang Ming Temple (IBPS-Orlando)            1            123456            2020-11-01    0.0650
+--   303894   MORI LU                                     1            58-816544999-4    NULL          0.0650
+--   303933   Susuru *code 2045*                          1            58-8017590131-4   NULL          0.0650
+--   303329   Test123                                     1            123456            2016-12-31    0.0650
+--   303937   Thai Elephant (Opens @ 10:30)               1            74-8018432051     NULL          0.0650
+--
+-- Rollback (run in reverse order to deploy):
+--
+--   -- 1. Restore data audit state:
+--   UPDATE Customer SET IsTaxExempt = 0 WHERE IsTaxExempt = 1;
+--   UPDATE Customer SET NonHR = 0 WHERE PayeeId = 301919;
+--   UPDATE Customer SET NonHR = 1 WHERE PayeeId IN (301067, 303375, 301752, 302728, 303894, 303933, 303329, 303937);
+--
+--   -- 2. Reverse column ops:
+--   EXEC sp_rename 'Customer.NonHR', 'IsHRTaxable', 'COLUMN';
+--   ALTER TABLE Customer DROP CONSTRAINT <IsTaxExempt_default_constraint_name>;  -- look up actual name
+--   ALTER TABLE Customer DROP COLUMN IsTaxExempt;

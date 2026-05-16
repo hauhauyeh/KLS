@@ -158,7 +158,11 @@ namespace KLS.Models
 
         public string? RCNumber { get; set; }
 
-        public bool IsHRTaxable { get; set; }
+        // 2026-05-16 sales-tax-cleanup: IsHRTaxable renamed to NonHR + IsTaxExempt added.
+        // public bool IsHRTaxable { get; set; }
+        public bool NonHR { get; set; }
+
+        public bool IsTaxExempt { get; set; }
 
         public decimal? CreditLimit { get; set; }
 

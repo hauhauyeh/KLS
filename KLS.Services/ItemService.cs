@@ -206,7 +206,9 @@ namespace KLS.Services
 
                     oldItem.Inactive = item.Inactive;
                     oldItem.IsTaxable = item.IsTaxable;
-                    oldItem.IsHRExempt = item.IsHRExempt;
+                    // 2026-05-16 sales-tax-cleanup
+                    // oldItem.IsHRExempt = item.IsHRExempt;
+                    oldItem.IsHRTaxable = item.IsHRTaxable;
                     oldItem.IsHighlighted = item.IsHighlighted;
 
                     oldItem.UpdatedAt = DateTime.UtcNow;

@@ -91,7 +91,10 @@ namespace KLS.Models
         public bool Inactive { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsTaxable { get; set; }
-        public bool IsHRExempt { get; set; }
+        // 2026-05-16 sales-tax-cleanup: IsHRExempt renamed to IsHRTaxable (name now
+        // matches data -- consumption items HR pays tax on even with valid resale cert).
+        // public bool IsHRExempt { get; set; }
+        public bool IsHRTaxable { get; set; }
         public bool IsHighlighted { get; set; }
         public bool IsCostChange { get; set; }
         public bool IsImport { get; set; }

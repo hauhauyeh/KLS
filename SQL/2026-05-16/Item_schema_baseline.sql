@@ -1,0 +1,28 @@
+-- Captured 2026-05-16 from COGENT-2024\SQLEXPRESS / KLS_2026
+-- Item table tax-related column baseline (pre-cleanup)
+--
+-- Purpose: rollback reference for the sales-tax-cleanup deploy bundle.
+--
+-- Column definitions (current state, before cleanup):
+--
+--   IsTaxable   bit  NOT NULL DEFAULT ((0))
+--   IsHRExempt  bit  NOT NULL DEFAULT ((0))    -- name is misleading; data actually flags
+--                                              -- consumption items HR pays tax on
+--
+-- After cleanup the Item table will have:
+--   IsTaxable    (unchanged)
+--   IsHRTaxable  bit  NOT NULL DEFAULT ((0))   -- renamed from IsHRExempt (name now matches data)
+--
+-- Row counts at capture:
+--   TotalItems        = 3477
+--   IsTaxable = 1     = 275
+--   IsHRExempt = 1    = 67    (all 67 are also IsTaxable = 1 -- strict subset)
+--   BothFlagged       = 67
+--
+-- No data flip needed: the column rename keeps existing 0/1 values, which already
+-- correctly represent "Taxable for HR customer" (consumption items: gloves, bleach,
+-- garbage bags, cleaning supplies, etc.).
+--
+-- Rollback (run in reverse order to deploy):
+--
+--   EXEC sp_rename 'Item.IsHRTaxable', 'IsHRExempt', 'COLUMN';

@@ -278,7 +278,10 @@ namespace KLS.Services
                 customer.TaxRate = dto.TaxRate;
                 customer.RCExpireDate = dto.RCExpireDate;
                 customer.RCNumber = dto.RCNumber;
-                customer.IsHRTaxable = dto.IsHRTaxable;
+                // 2026-05-16 sales-tax-cleanup
+                // customer.IsHRTaxable = dto.IsHRTaxable;
+                customer.NonHR = dto.NonHR;
+                customer.IsTaxExempt = dto.IsTaxExempt;
                 customer.CreditLimit = dto.CreditLimit;
                 customer.MinOrder = dto.MinOrder;
                 customer.ShippingCarrierId = dto.ShippingCarrierId;

@@ -73,8 +73,13 @@ namespace KLS.Models
         
         public string? RCNumber { get; set; }
         
-        public bool IsHRTaxable { get; set; }
-        
+        // 2026-05-16 sales-tax-cleanup: IsHRTaxable renamed to NonHR (semantic flip,
+        // default 0 now means "is HR" -- the typical customer), and IsTaxExempt added.
+        // public bool IsHRTaxable { get; set; }
+        public bool NonHR { get; set; }
+
+        public bool IsTaxExempt { get; set; }
+
         public decimal? CreditLimit { get; set; }
         
         public string? OGSort { get; set; }
