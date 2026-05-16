@@ -117,6 +117,10 @@ namespace KLS.Data.Repositories
 
         public IBankReconRepository BankRecons { get { return new BankReconRepository(DbContext); } }
 
+        public IBankFeedAccountRepository BankFeedAccounts { get { return new BankFeedAccountRepository(DbContext); } }
+
+        public IBankFeedTransactionRepository BankFeedTransactions { get { return new BankFeedTransactionRepository(DbContext); } }
+
         public IVendorPaymentRepository VendorPayments { get { return new VendorPaymentRepository(DbContext); } }
 
         public IPaymentOptionRepository PaymentOptions { get { return new PaymentOptionRepository(DbContext); } }
