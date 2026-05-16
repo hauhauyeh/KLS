@@ -716,6 +716,21 @@ namespace KLS.Services
             return Uow.Reports.CustomerSalesSummary(includeClosed, salesRepId).ToList();
         }
 
+        public IEnumerable<RptSalesSummary> SalesSummary(string grain, DateOnly? startDate, DateOnly? endDate, int? salesRepId)
+        {
+            // Sales-role users always see only their own sales, no matter what
+            // the request passed. Filters Sales.SalesRepId (transactional credit)
+            // rather than Customer.SalesRepId; this matches the convention used by
+            // Report_SalesDaily, Report_SalesCommission, and the rest of the
+            // transactional sales reports.
+            if (UserContext.IsSalesRole)
+            {
+                salesRepId = UserContext.EmpId;
+            }
+
+            return Uow.Reports.SalesSummary(grain, startDate, endDate, salesRepId).ToList();
+        }
+
         public IEnumerable<RptResponsible> Responsible(DateOnly? shipDate)
         {
             var data = Uow.Reports.Responsible(shipDate).ToList();

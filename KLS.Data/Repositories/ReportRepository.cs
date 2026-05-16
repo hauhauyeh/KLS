@@ -195,6 +195,24 @@ namespace KLS.Data.Repositories
                 SalesRepIdParam);
         }
 
+        public IQueryable<RptSalesSummary> SalesSummary(string grain, DateOnly? startDate, DateOnly? endDate, int? salesRepId)
+        {
+            var GrainParam     = new SqlParameter("@Grain", string.IsNullOrWhiteSpace(grain) ? "month" : grain);
+            var StartDateParam = startDate.HasValue
+                ? new SqlParameter("@StartDate", startDate.Value)
+                : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam   = endDate.HasValue
+                ? new SqlParameter("@EndDate", endDate.Value)
+                : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepIdParam = salesRepId.HasValue
+                ? new SqlParameter("@SalesRepId", salesRepId.Value)
+                : new SqlParameter("@SalesRepId", DBNull.Value);
+
+            return DbContext.RptSalesSummary.FromSqlRaw(
+                "[dbo].[Report_SalesSummary] @Grain, @StartDate, @EndDate, @SalesRepId",
+                GrainParam, StartDateParam, EndDateParam, SalesRepIdParam);
+        }
+
         public IQueryable<RptResponsibleRow>? Responsible(DateOnly? ShipDate)
         {
             var ShipDateParam = ShipDate.HasValue ? new SqlParameter("@ShipDate", ShipDate) : new SqlParameter("@ShipDate", DBNull.Value);
