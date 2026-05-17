@@ -39,7 +39,7 @@ namespace KLS.Contract.Services
 
         void UpdateInventorySettings(ItemInventorySettingsReq req);
 
-        IEnumerable<ItemSearch> GetSearchList(int payeeId);
+        IEnumerable<ItemSearch> GetSearchList(int payeeId, string mode = "customer");
 
 
         PagingResponse<ItemWebList> GetWebPagedList(ItemWebListReq webListReq);

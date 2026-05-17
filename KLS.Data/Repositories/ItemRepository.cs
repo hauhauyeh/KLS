@@ -166,12 +166,13 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Item_UpdateBaseP1] @ItemUnitId,@BaseP1", ItemUnitIdParam, BaseP1Param);
         }
 
-        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
+        public IEnumerable<ItemSearch> GetSearchList(int payeeId, string mode = "customer")
         {
             var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+            var ModeParam    = new SqlParameter("@Mode", string.IsNullOrWhiteSpace(mode) ? "customer" : mode);
 
             return DbContext.ItemSearch
-                .FromSqlRaw("[dbo].[Item_ListActiveForKeybox] @PayeeId", PayeeIdParam)
+                .FromSqlRaw("[dbo].[Item_ListActiveForKeybox] @PayeeId, @Mode", PayeeIdParam, ModeParam)
                 .ToList();
         }
 

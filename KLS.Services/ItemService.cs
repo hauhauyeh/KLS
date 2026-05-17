@@ -344,9 +344,9 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        public IEnumerable<ItemSearch> GetSearchList(int payeeId)
+        public IEnumerable<ItemSearch> GetSearchList(int payeeId, string mode = "customer")
         {
-            return Uow.Items.GetSearchList(payeeId);
+            return Uow.Items.GetSearchList(payeeId, mode);
         }
 
 

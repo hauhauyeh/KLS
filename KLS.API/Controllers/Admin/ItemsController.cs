@@ -51,9 +51,9 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("ListActiveForKeybox/{payeeId}")]
-        public IActionResult ListActiveForKeybox(int payeeId)
+        public IActionResult ListActiveForKeybox(int payeeId, [FromQuery] string mode = "customer")
         {
-            return Ok(_itemService.GetSearchList(payeeId));
+            return Ok(_itemService.GetSearchList(payeeId, mode));
         }
 
 

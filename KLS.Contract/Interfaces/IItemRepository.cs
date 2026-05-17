@@ -27,6 +27,6 @@ namespace KLS.Contract.Interfaces
 
         int WebCount(ItemWebListReq webListReq);
 
-        IEnumerable<ItemSearch> GetSearchList(int payeeId);
+        IEnumerable<ItemSearch> GetSearchList(int payeeId, string mode = "customer");
     }
 }
