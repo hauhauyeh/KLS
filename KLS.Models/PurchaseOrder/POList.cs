@@ -63,6 +63,8 @@ namespace KLS.Models
 
         public string? PaymentStatusName { get; set; }
 
+        public bool IsDropShip { get; set; }
+
         public bool IsBillStage => StageId == 6;
 
         [NotMapped]

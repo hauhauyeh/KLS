@@ -6,8 +6,10 @@ namespace KLS.Contract.Services
     {
         DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req);
 
-        void UpdateShipQty(DropShipmentUpdateShipQtyReq req);
+        void UpdateShipQty(int purchaseId);
 
-        void ConvertPOToBill(DropShipmentConvertReq req);
+        void ConvertPOToBill(int purchaseId);
+
+        void ReverseBill(int salesId);
     }
 }

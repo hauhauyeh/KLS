@@ -78,20 +78,22 @@ namespace KLS.Data.Repositories
                 purchaseIdParam, empIdParam);
         }
 
-        public void ConvertPOToBill(DropShipmentConvertReq req)
+        public void ConvertPOToBill(int purchaseId)
         {
-            var purchaseIdParam = new SqlParameter("@PurchaseId", req.PurchaseId);
-            var vendorDocNumberParam = !string.IsNullOrEmpty(req.VendorDocNumber)
-                ? new SqlParameter("@VendorDocNumber", req.VendorDocNumber)
-                : new SqlParameter("@VendorDocNumber", DBNull.Value);
-            var invoiceDateParam = req.InvoiceDate.HasValue
-                ? new SqlParameter("@InvoiceDate", req.InvoiceDate)
-                : new SqlParameter("@InvoiceDate", DBNull.Value);
+            var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
             var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_ConvertPOToBill] @PurchaseId,@VendorDocNumber,@InvoiceDate,@EmpId",
-                purchaseIdParam, vendorDocNumberParam, invoiceDateParam, empIdParam);
+                "[DropShipment_ConvertPOToBill] @PurchaseId,@EmpId",
+                purchaseIdParam, empIdParam);
+        }
+
+        public void ReverseBill(int salesId)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", salesId);
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[DropShipment_ReverseBill] @SalesId", salesIdParam);
         }
     }
 }

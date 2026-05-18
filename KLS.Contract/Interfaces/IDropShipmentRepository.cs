@@ -8,6 +8,8 @@ namespace KLS.Contract.Interfaces
 
         void UpdateShipQty(int purchaseId);
 
-        void ConvertPOToBill(DropShipmentConvertReq req);
+        void ConvertPOToBill(int purchaseId);
+
+        void ReverseBill(int salesId);
     }
 }

@@ -16,14 +16,19 @@ namespace KLS.Services
             return Uow.DropShipments.InsertSalesAndPO(req);
         }
 
-        public void UpdateShipQty(DropShipmentUpdateShipQtyReq req)
+        public void UpdateShipQty(int purchaseId)
         {
-            Uow.DropShipments.UpdateShipQty(req.PurchaseId);
+            Uow.DropShipments.UpdateShipQty(purchaseId);
         }
 
-        public void ConvertPOToBill(DropShipmentConvertReq req)
+        public void ConvertPOToBill(int purchaseId)
         {
-            Uow.DropShipments.ConvertPOToBill(req);
+            Uow.DropShipments.ConvertPOToBill(purchaseId);
+        }
+
+        public void ReverseBill(int salesId)
+        {
+            Uow.DropShipments.ReverseBill(salesId);
         }
     }
 }
