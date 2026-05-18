@@ -2,6 +2,7 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Services.Items;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -262,11 +263,19 @@ namespace KLS.Services
                 }
 
                 Uow.Commit();
+
+                // Backend is authoritative on SetPacking. Reload units fresh
+                // (newly Added units may not be reflected in oldItem.ItemUnits
+                // navigation) and write the canonical value.
+                ItemSetPackingRecomputer.Apply(Uow, item.ItemId);
             }
             else
             {
                 Uow.Items.Add(item);
                 Uow.Commit();
+
+                // Canonicalize SetPacking from the persisted units.
+                ItemSetPackingRecomputer.Apply(Uow, item.ItemId);
             }
 
             //var mapItems = Uow.ItemCatalogMap.Filter(c => c.ItemId == item.ItemId).ToList();

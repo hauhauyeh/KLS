@@ -1,6 +1,8 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Contract.Dtos.Item;
+using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Services.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,10 +88,10 @@ namespace KLS.Services
             return Uow.ItemUnits.GetUnitViewList(itemIds);
         }
 
-        public void UpdateUnit(ItemUnitUpdateReq req)
+        public ItemUnitMutationResult UpdateUnit(ItemUnitUpdateReq req)
         {
             var unit = Uow.ItemUnits.GetById(req.ItemUnitId);
-            if (unit == null) return;
+            if (unit == null) return new ItemUnitMutationResult();
 
             // Base unit FactorToBase must remain 1
             if (unit.IsBaseUnit && req.FactorToBase.HasValue && req.FactorToBase.Value != 1)
@@ -144,9 +146,16 @@ namespace KLS.Services
 
             Uow.ItemUnits.Update(unit);
             Uow.Commit();
+
+            var setPacking = ItemSetPackingRecomputer.Apply(Uow, unit.ItemId);
+            return new ItemUnitMutationResult
+            {
+                ItemId = unit.ItemId,
+                SetPacking = setPacking
+            };
         }
 
-        public ItemUnit CreateUnit(int itemId)
+        public ItemUnitMutationResult CreateUnit(int itemId)
         {
             var baseUnit = GetBaseUnit(itemId);
             var baseP1 = baseUnit?.P1 ?? 0;
@@ -181,7 +190,13 @@ namespace KLS.Services
             Uow.ItemUnits.Add(unit);
             Uow.Commit();
 
-            return unit;
+            var setPacking = ItemSetPackingRecomputer.Apply(Uow, itemId);
+            return new ItemUnitMutationResult
+            {
+                ItemId = itemId,
+                SetPacking = setPacking,
+                Unit = unit
+            };
         }
 
         private static decimal CalcRetailP1(decimal baseP1, decimal factorToBase, decimal markup)
@@ -191,7 +206,7 @@ namespace KLS.Services
             return Math.Round((baseP1 / (1 - markup)) / factorToBase, 2);
         }
 
-        public void DeleteUnit(int itemUnitId)
+        public ItemUnitMutationResult DeleteUnit(int itemUnitId)
         {
             //var unit = Uow.ItemUnits.GetById(itemUnitId);
 
@@ -200,7 +215,20 @@ namespace KLS.Services
             //if (unit.IsBaseUnit)
             //    throw new InvalidOperationException("Cannot delete base unit.");
 
+            // Capture ItemId before delete so we can recompute SetPacking after.
+            var existing = Uow.ItemUnits.GetById(itemUnitId);
+            var itemId = existing?.ItemId ?? 0;
+
             Uow.ItemUnits.Delete(itemUnitId);
+
+            if (itemId == 0) return new ItemUnitMutationResult();
+
+            var setPacking = ItemSetPackingRecomputer.Apply(Uow, itemId);
+            return new ItemUnitMutationResult
+            {
+                ItemId = itemId,
+                SetPacking = setPacking
+            };
         }
     }
 }

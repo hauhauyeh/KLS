@@ -164,8 +164,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Product.Item.UpdateItemUnit")]
         public IActionResult UpdateItemUnit([FromBody] ItemUnitUpdateReq req)
         {
-            _itemUnitService.UpdateUnit(req);
-            return Ok();
+            return Ok(_itemUnitService.UpdateUnit(req));
         }
 
 
@@ -174,8 +173,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Product.Item.CreateItemUnit")]
         public IActionResult CreateItemUnit(int itemId)
         {
-            var unit = _itemUnitService.CreateUnit(itemId);
-            return Ok(unit);
+            return Ok(_itemUnitService.CreateUnit(itemId));
         }
 
 
@@ -184,8 +182,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Product.Item.DeleteItemUnit")]
         public IActionResult DeleteItemUnit(int itemUnitId)
         {
-            _itemUnitService.DeleteUnit(itemUnitId);
-            return Ok();
+            return Ok(_itemUnitService.DeleteUnit(itemUnitId));
         }
 
 
