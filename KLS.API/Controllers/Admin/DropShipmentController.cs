@@ -38,22 +38,32 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("UpdateShipQty")]
+        [HttpPost("UpdateShipQty/{purchaseId}")]
         [DisplayName("Update Ship Qty")]
         [PermissionKey("Vendor.DropShipment.UpdateShipQty")]
-        public IActionResult UpdateShipQty([FromBody] DropShipmentUpdateShipQtyReq req)
+        public IActionResult UpdateShipQty(int purchaseId)
         {
-            _dropShipmentService.UpdateShipQty(req);
+            _dropShipmentService.UpdateShipQty(purchaseId);
             return Ok();
         }
 
 
-        [HttpPost("ConvertPOToBill")]
+        [HttpPost("ConvertPOToBill/{purchaseId}")]
         [DisplayName("Convert PO to Bill")]
         [PermissionKey("Vendor.DropShipment.ConvertToBill")]
-        public IActionResult ConvertPOToBill([FromBody] DropShipmentConvertReq req)
+        public IActionResult ConvertPOToBill(int purchaseId)
         {
-            _dropShipmentService.ConvertPOToBill(req);
+            _dropShipmentService.ConvertPOToBill(purchaseId);
+            return Ok();
+        }
+
+
+        [HttpPost("ReverseBill/{salesId}")]
+        [DisplayName("Reverse Drop Ship Bill")]
+        [PermissionKey("Vendor.DropShipment.ReverseBill")]
+        public IActionResult ReverseBill(int salesId)
+        {
+            _dropShipmentService.ReverseBill(salesId);
             return Ok();
         }
 

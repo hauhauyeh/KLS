@@ -2,15 +2,10 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
-    var itemsize = 14;
-    var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails.Count, itemsize);
     var isCreditMemo = Model.Invoice?.DocType == "CM";
     var docLabel = isCreditMemo ? "Credit Memo" : "Sales Order";
     var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Sales Order #";
     var docDateLabel = isCreditMemo ? "Credit Memo Date" : "Order Date";
-
-    if (totalpage == 0)
-        totalpage = 1;
 
     var colSpan = 6;
 }
@@ -113,6 +108,11 @@
         font-size: 14px;
         padding-bottom: 4px !important;
         vertical-align: top;
+    }
+
+    .main-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 
     .main-table tbody tr.item-header {
@@ -416,91 +416,71 @@
     }
 </style>
 
-@for (int i = 0; i < totalpage; i++)
-{
-    var page = (i + 1) * itemsize;
-
-    <div style="display: flex;">
-        <div class="left-width">
-            <table class="main-table">
-                <colgroup>
-                    <col style="width: 11%;">
-                    <col style="width: 10%;">
-                    <col style="width: 45%;">
-                    <col style="width: 16%;">
-                    <col style="width: 8%;">
-                    <col style="width: 10%;">
-                </colgroup>
-                <thead>
-                    <tr>
-                        <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="item-header">
-                        <td>Code</td>
-                        <td>Qty</td>
-                        <td>Description</td>
-                        <td class="text-center">UPC</td>
-                        <td class="text-center">Price</td>
-                        <td class="text-right">Amount</td>
-                    </tr>
-                    @for (int j = (i * itemsize); j < page; j++)
+<div style="display: flex;">
+    <div class="left-width">
+        <table class="main-table">
+            <colgroup>
+                <col style="width: 11%;">
+                <col style="width: 10%;">
+                <col style="width: 45%;">
+                <col style="width: 16%;">
+                <col style="width: 8%;">
+                <col style="width: 10%;">
+            </colgroup>
+            <thead>
+                <tr>
+                    <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="item-header">
+                    <td>Code</td>
+                    <td>Qty</td>
+                    <td>Description</td>
+                    <td class="text-center">UPC</td>
+                    <td class="text-center">Price</td>
+                    <td class="text-right">Amount</td>
+                </tr>
+                @foreach (var itmdetail in Model.InvoiceDetails)
+                {
+                    if (!itmdetail.IsGroup)
                     {
-                        if (j >= Model.InvoiceDetails.Count)
-                        {
-                        }
-                        else
-                        {
-                            var itmdetail = Model.InvoiceDetails[j];
-
-                            if (itmdetail.IsGroup)
-                            {
-                                @* <tr>
-                <td colspan="@colSpan">
-                <div class="invoice-item-group">@itmdetail.ItemDesc1</div>
-                </td>
-                </tr> *@
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td><span>@itmdetail.ItemCode</span></td>
-                                    <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
-                                    <td>
-                                        <span style="line-height:1;">
-                                            <strong>@itmdetail.ItemName</strong><br />
-                                            <span class="font10 chinese">@itmdetail.ItemName2</span>&nbsp;
-                                            <span class="font10 upparcase">@itmdetail.PackSize</span>
-                                            @if (!string.IsNullOrEmpty(itmdetail.Notes))
-                                            {
-                                                <span class="highlight-small font12">
-                                                    @itmdetail.Notes
-                                                </span>
-                                            }
-                                            @if (!string.IsNullOrEmpty(itmdetail.FIFOHistoryOrder))
-                                            {
-                                                <span class="font12">
-                                                    @itmdetail.FIFOHistoryOrder
-                                                </span>
-                                            }
+                        <tr>
+                            <td><span>@itmdetail.ItemCode</span></td>
+                            <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
+                            <td>
+                                <span style="line-height:1;">
+                                    <strong>@itmdetail.ItemName</strong><br />
+                                    <span class="font10 chinese">@itmdetail.ItemName2</span>&nbsp;
+                                    <span class="font10 upparcase">@itmdetail.PackSize</span>
+                                    @if (!string.IsNullOrEmpty(itmdetail.Notes))
+                                    {
+                                        <span class="highlight-small font12">
+                                            @itmdetail.Notes
                                         </span>
-                                    </td>
+                                    }
+                                    @if (!string.IsNullOrEmpty(itmdetail.FIFOHistoryOrder))
+                                    {
+                                        <span class="font12">
+                                            @itmdetail.FIFOHistoryOrder
+                                        </span>
+                                    }
+                                </span>
+                            </td>
 
-                                    <td class="text-center"><span class="ean-code">@itmdetail.EncodedBarcode</span></td>
-                                    <td class="text-center"><span>@string.Format("{0:c}", itmdetail.UnitPrice)</span></td>
-                                    <td class="text-right"><span>@string.Format("{0:c}", itmdetail.ExtTotal)</span></td>
-                                </tr>
-                            }
-                        }
+                            <td class="text-center"><span class="ean-code">@itmdetail.EncodedBarcode</span></td>
+                            <td class="text-center"><span>@string.Format("{0:c}", itmdetail.UnitPrice)</span></td>
+                            <td class="text-right"><span>@string.Format("{0:c}", itmdetail.ExtTotal)</span></td>
+                        </tr>
                     }
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="@colSpan"><div class="footer-height">&nbsp;</div></td>
-                    </tr>
-                </tfoot>
-            </table>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="@colSpan"><div class="footer-height">&nbsp;</div></td>
+                </tr>
+            </tfoot>
+        </table>
 
             <div class="main-table-header-grid left-width header-height">
                 <div class="comp-logo-grid">
@@ -643,7 +623,6 @@
                 <div class="fineprint-grid">
                     @Model.Company.InvoiceFinePrint
                 </div>
-            </div>
         </div>
     </div>
-}
+</div>
