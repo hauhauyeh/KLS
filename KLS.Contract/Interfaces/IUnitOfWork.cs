@@ -74,6 +74,10 @@ namespace KLS.Contract.Interfaces
 
         IBankReconRepository BankRecons { get; }
 
+        IBankFeedAccountRepository BankFeedAccounts { get; }
+
+        IBankFeedTransactionRepository BankFeedTransactions { get; }
+
         IPaymentOptionRepository PaymentOptions { get; }
 
         IEmpAdvanceRepository EmpAdvances { get; }

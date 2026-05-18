@@ -1,0 +1,48 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace KLS.Models
+{
+    public class BankFeedTransactionList
+    {
+        [Key]
+        public long BankFeedTransactionId { get; set; }
+
+        public long BankFeedAccountId { get; set; }
+
+        public int AccountId { get; set; }
+
+        public string? AccountName { get; set; }
+
+        public Guid ImportBatchId { get; set; }
+
+        public int RowNo { get; set; }
+
+        public DateOnly PostedDate { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string Description { get; set; } = string.Empty;
+
+        public string? ReferenceNo { get; set; }
+
+        public string? CheckNumber { get; set; }
+
+        public decimal? Balance { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+
+        public long? MatchedTxId { get; set; }
+
+        public long? MatchedTxDetailId { get; set; }
+
+        public DateOnly? ClearedBankDate { get; set; }
+
+        public string? MatchedSourceDocType { get; set; }
+
+        public int? MatchedSourceDocNumber { get; set; }
+
+        public DateOnly? MatchedTxDate { get; set; }
+
+        public int MatchCount { get; set; }
+    }
+}

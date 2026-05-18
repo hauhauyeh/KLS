@@ -243,20 +243,24 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (6353, 'Report.PL.Ledger', 'Ledger by Account', 'Report', 'PL', 'Ledger', 'page', 6350, 6353, 'Reports-Ledger'),
 (6354, 'Report.PL.LedgerByPayee', 'Ledger By Payee', 'Report', 'PL', 'LedgerByPayee', 'page', 6350, 6354, 'Reports-LedgerByPayee'),
 (6400, 'Report.Sales', 'Sales Report', 'Report', 'Sales', '', 'resource', 6000, 6400, NULL),
-(6401, 'Report.Sales.SalesDaily', 'Sales Daily', 'Report', 'Sales', 'SalesDaily', 'page', 6400, 6401, 'Reports-SalesDaily'),
+-- 2026-05-14 soft-retired (nav hidden, role grants revoked). Keep PermissionId 6401 reserved.
+-- (6401, 'Report.Sales.SalesDaily', 'Sales Daily', 'Report', 'Sales', 'SalesDaily', 'page', 6400, 6401, 'Reports-SalesDaily'),
 (6402, 'Report.Sales.SalesTax', 'Sales Tax', 'Report', 'Sales', 'SalesTax', 'page', 6400, 6402, 'Reports-SalesTax'),
 (6403, 'Report.Sales.Responsible', 'Sales by Responsible', 'Report', 'Sales', 'Responsible', 'page', 6400, 6403, 'Reports-Responsible'),
 (6404, 'Report.Sales.DailySummary', 'Daily Summary', 'Report', 'Sales', 'DailySummary', 'page', 6400, 6404, 'Reports-DailySummary'),
 (6405, 'Report.Sales.CreditMemo', 'Credit Memo', 'Report', 'Sales', 'CreditMemo', 'page', 6400, 6405, 'Reports-CreditMemo'),
 (6406, 'Report.Sales.SalesByItem', 'Sales By Item', 'Report', 'Sales', 'SalesByItem', 'page', 6400, 6406, 'Reports-SalesByItem'),
 (6407, 'Report.Sales.SalesDetail', 'Sales Detail', 'Report', 'Sales', 'SalesDetail', 'page', 6400, 6407, 'Reports-SalesDetail'),
-(6408, 'Report.Sales.SalesDaily2', 'Sales Daily 2', 'Report', 'Sales', 'SalesDaily2', 'page', 6400, 6408, 'Reports-SalesDaily2'),
+-- 2026-05-14 soft-retired (nav hidden). Keep PermissionId 6408 reserved.
+-- (6408, 'Report.Sales.SalesDaily2', 'Sales Daily 2', 'Report', 'Sales', 'SalesDaily2', 'page', 6400, 6408, 'Reports-SalesDaily2'),
 (6412, 'Report.Sales.SalesByInvoice', 'Sales By Invoice', 'Report', 'Sales', 'SalesByInvoice', 'page', 6400, 6412, 'Reports-SalesByInvoice'),
 (6409, 'Report.Sales.SalesYearly', 'Sales Yearly', 'Report', 'Sales', 'SalesYearly', 'page', 6400, 6409, 'Reports-SalesYearly'),
 (6410, 'Report.Sales.SalesCommission', 'Sales Commission', 'Report', 'Sales', 'SalesCommission', 'page', 6400, 6410, 'Reports-SalesCommission'),
 (6411, 'Report.Sales.SalesCommission2', 'Sales Commission 2', 'Report', 'Sales', 'SalesCommission2', 'page', 6400, 6411, 'Reports-SalesCommission2'),
 -- 2026-05-13: added Customer Sales Summary page.
 (6415, 'Report.Sales.CustomerSalesSummary', 'Customer Sales Summary', 'Report', 'Sales', 'CustomerSalesSummary', 'page', 6400, 6415, NULL),
+-- 2026-05-14: added Sales Summary (period-over-period trend) page.
+(6416, 'Report.Sales.SalesSummary', 'Sales Summary', 'Report', 'Sales', 'SalesSummary', 'page', 6400, 6416, NULL),
 (6450, 'Report.Timesheet', 'Timesheet Report', 'Report', 'Timesheet', '', 'resource', 6000, 6450, NULL),
 (6451, 'Report.Timesheet.Timesheet', 'Timesheet', 'Report', 'Timesheet', 'Timesheet', 'page', 6450, 6451, 'Reports-Timesheet'),
 (6452, 'Report.Timesheet.JobSummary', 'Job Summary', 'Report', 'Timesheet', 'JobSummary', 'page', 6450, 6452, 'Reports-JobSummary'),
