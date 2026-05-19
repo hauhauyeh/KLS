@@ -87,6 +87,8 @@ namespace KLS.Services
 
                             tempItem.UnitPrice = itemPrice?.DefaultPrice;
                         }
+
+                        tempItem.ListPrice = resolvedUnit.P1;
                     }
                 }
 
@@ -257,6 +259,7 @@ namespace KLS.Services
                 tempItem.IsFree = existing.IsFree;
                 tempItem.IsOut = existing.IsOut;
                 tempItem.IsCRCG = existing.IsCRCG;
+                tempItem.ListPrice = itemUnit.P1;
             }
 
             return tempItem;

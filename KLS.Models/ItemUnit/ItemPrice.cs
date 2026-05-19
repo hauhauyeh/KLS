@@ -24,8 +24,9 @@ namespace KLS.Models
 
         public bool IsTaxable { get; set; }
 
-        public decimal? OrgPrice { get; set; }
+        //public decimal? ListPrice { get; set; }
 
-        public decimal? Discount { get; set; }
+        //[Column(TypeName = "decimal(18, 4)")]
+        //public decimal? Discount { get; set; }
     }
 }
