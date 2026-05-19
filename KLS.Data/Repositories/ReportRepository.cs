@@ -277,6 +277,16 @@ namespace KLS.Data.Repositories
                 PayeeIdParam, StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptPurchaseHistoryRow> PurchaseHistory(ReportRequest reportReq)
+        {
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            return DbContext.RptPurchaseHistoryRow.FromSqlRaw("[dbo].[Report_PurchaseHistory] @PayeeId,@StartDate,@EndDate",
+                PayeeIdParam, StartDateParam, EndDateParam);
+        }
+
         public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);

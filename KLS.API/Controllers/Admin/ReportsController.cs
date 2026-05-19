@@ -240,6 +240,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.SalesHistory(reportReq));
         }
 
+        [HttpGet("PurchaseHistory")]
+        [DisplayName("Vendor -> Purchase History")]
+        [PermissionKey("Report.Vendor.PurchaseHistory")]
+        public IActionResult PurchaseHistory([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.PurchaseHistory(reportReq));
+        }
+
         [HttpGet("CustPayment")]
         [DisplayName("Customer -> Customer Payment")]
         [PermissionKey("Report.Customer.CustPayment")]
