@@ -76,6 +76,18 @@ namespace KLS.Models
 
         public string? BaseUnit { get; set; }
 
+        public decimal? ListPrice { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? Discount
+        {
+            get
+            {
+                return ListPrice.HasValue && ListPrice != 0 ?
+                    Utilities.Rounding((ListPrice - UnitPrice) / ListPrice, 4) : 0;
+            }
+        }
+
         public decimal? CaseTotal
         {
             get

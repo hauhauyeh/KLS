@@ -14,7 +14,7 @@ namespace KLS.Services
         {
             var configured = Uow.BankFeedAccounts.GetAll();
             var accounts = Uow.Accounts.GetAll()
-                .Where(c => (c.TypeName == "Bank" || c.TypeName == "Cash") && !c.Inactive);
+                .Where(c => (c.TypeName == "Bank" || c.TypeName == "Credit Card") && !c.Inactive);
 
             var qry =
                 from acct in accounts

@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.Contract.Dtos.Item;
+using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,10 +24,10 @@ namespace KLS.Contract.Services
 
         IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds);
 
-        ItemUnit CreateUnit(int itemId);
+        ItemUnitMutationResult CreateUnit(int itemId);
 
-        void UpdateUnit(ItemUnitUpdateReq req);
+        ItemUnitMutationResult UpdateUnit(ItemUnitUpdateReq req);
 
-        void DeleteUnit(int itemUnitId);
+        ItemUnitMutationResult DeleteUnit(int itemUnitId);
     }
 }
