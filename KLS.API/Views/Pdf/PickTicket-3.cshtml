@@ -2,12 +2,6 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
-    var itemsize = 16;
-    var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails.Count, itemsize);
-
-    if (totalpage == 0)
-        totalpage = 1;
-
     var colSpan = 4;
 }
 
@@ -111,11 +105,11 @@
         vertical-align: top;
     }
 
-    .main-table tbody tr.item-header {
+    .main-table thead tr.item-header {
         background-color: #333333;
     }
 
-        .main-table tbody tr.item-header td {
+        .main-table thead tr.item-header td {
             color: white;
             font-size: 14px;
             font-weight: 500;
@@ -406,210 +400,197 @@
     }
 </style>
 
-@for (int i = 0; i < totalpage; i++)
-{
-    var page = (i + 1) * itemsize;
-
-    <div style="display: flex;">
-        <div class="left-width">
-            <table class="main-table">
-                <colgroup>
-                    <col style="width: 15%;">
-                    <col style="width: 15%;">
-                    <col style="width: 55%;">
-                    <col style="width: 15%;">
-                </colgroup>
-                <thead>
-                    <tr>
-                        <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="item-header">
-                        <td>Code</td>
-                        <td>Qty</td>
-                        <td>Description</td>
-                        <td>UPC</td>
-                    </tr>
-                    @for (int j = (i * itemsize); j < page; j++)
+<div style="display: flex;">
+    <div class="left-width">
+        <table class="main-table">
+            <colgroup>
+                <col style="width: 15%;">
+                <col style="width: 15%;">
+                <col style="width: 55%;">
+                <col style="width: 15%;">
+            </colgroup>
+            <thead>
+                <tr>
+                    <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
+                </tr>
+                <tr class="item-header">
+                    <td>Code</td>
+                    <td>Qty</td>
+                    <td>Description</td>
+                    <td>UPC</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var itmdetail in Model.InvoiceDetails)
+                {
+                    if (itmdetail.IsGroup)
                     {
-                        if (j >= Model.InvoiceDetails.Count)
+                        @* <tr>
+                            <td colspan="@colSpan">
+                                <div class="invoice-item-group">@itmdetail.ItemDesc1</div>
+                            </td>
+                        </tr> *@
+                    }
+                    else
+                    {
+                        <tr>
+                            <td><span>@itmdetail.ItemCode</span></td>
+                            <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
+                            <td>
+                                <span style="line-height:1;">
+                                    <strong>@itmdetail.ItemName</strong><br />
+                                    <span class="font10 chinese">@itmdetail.ItemName2</span>&nbsp;
+                                    <span class="font10 upparcase">@itmdetail.PackSize</span>
+                                    @if (!string.IsNullOrEmpty(itmdetail.Notes))
+                                    {
+                                        <span class="highlight-small font12">
+                                            @itmdetail.Notes
+                                        </span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(itmdetail.FIFOHistory))
+                                    {
+                                        <span class="font12">
+                                            @itmdetail.FIFOHistory
+                                        </span>
+                                    }
+                                </span>
+                            </td>
+                            <td class="text-center"><span class="upc-code">@itmdetail.EncodedBarcode</span></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="main-table-header-grid left-width header-height">
+            <div class="comp-logo-grid">
+                <div class="comp-name">
+                    <div>
+                        @if (Model.Company.HasLogo)
                         {
+                            <img src="@Model.Company.LogoUrl" class="img-fluid" height="55" />
                         }
                         else
                         {
-                            var itmdetail = Model.InvoiceDetails[j];
-
-                            if (itmdetail.IsGroup)
-                            {
-                                @* <tr>
-                <td colspan="@colSpan">
-                <div class="invoice-item-group">@itmdetail.ItemDesc1</div>
-                </td>
-                </tr> *@
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td><span>@itmdetail.ItemCode</span></td>
-                                    <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
-                                    <td>
-                                        <span style="line-height:1;">
-                                            <strong>@itmdetail.ItemName</strong><br />
-                                            <span class="font10 chinese">@itmdetail.ItemName2</span>&nbsp;
-                                            <span class="font10 upparcase">@itmdetail.PackSize</span>
-                                            @if (!string.IsNullOrEmpty(itmdetail.Notes))
-                                            {
-                                                <span class="highlight-small font12">
-                                                    @itmdetail.Notes
-                                                </span>
-                                            }
-                                            @if (!string.IsNullOrEmpty(itmdetail.FIFOHistory))
-                                            {
-                                                <span class="font12">
-                                                    @itmdetail.FIFOHistory
-                                                </span>
-                                            }
-                                        </span>
-                                    </td>
-                                    <td class="text-center"><span class="upc-code">@itmdetail.EncodedBarcode</span></td>
-                                </tr>
-                            }
+                            <span style="font-family: 'Segoe UI'; font-size: 28px; font-weight:bold;">@Model.Company.CompanyName</span>
                         }
-                    }
-                </tbody>
-            </table>
+                    </div>
 
-            <div class="main-table-header-grid left-width header-height">
-                <div class="comp-logo-grid">
-                    <div class="comp-name">
-                        <div>
-                            @if (Model.Company.HasLogo)
-                            {
-                                <img src="@Model.Company.LogoUrl" class="img-fluid" height="55" />
-                            }
-                            else
-                            {
-                                <span style="font-family: 'Segoe UI'; font-size: 28px; font-weight:bold;">@Model.Company.CompanyName</span>
-                            }
-                        </div>
-
-                        <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
-                    </div>
-                    <div class="comp-address">
-                        @Model.Company.AddressLine1<br />
-                        @Model.Company.City @Model.Company.State
-                        @Model.Company.ZipCode<br />
-                        @Model.Company.Phone<br />
-                        <strong>@Model.Company.Website</strong>
-                    </div>
+                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
                 </div>
-                <div class="inv-info-grid">
-                    <div class="d-flex justify-content-between">
-                        <div class="invoice-label">Ticket</div>
-                    </div>
-                    <table>
-                        <colgroup>
-                            <col style="width: 40%;">
-                            <col style="width: 60%;">
-                        </colgroup>
-                        <tr>
-                            <td class="invoice-info-label">Invoice #</td>
-                            <td class="invoice-info">@Model.Invoice.SalesNumber</td>
-                        </tr>
-                        <tr>
-                            <td class="invoice-info-label">Invoice Date</td>
-                            <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
-                        </tr>
-                        <tr>
-                            <td class="invoice-info-label">Terms</td>
-                            <td class="invoice-info" style="white-space:nowrap;">
-                                @Model.Invoice.TermName
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="invoice-info-label">PO</td>
-                            @if (string.IsNullOrEmpty(Model.Invoice.CustPONumber))
-                            {
-                                <td class="invoice-info">&nbsp;</td>
-                            }
-                            else
-                            {
-                                <td class="invoice-info">@Model.Invoice.CustPONumber</td>
-                            }
-                        </tr>
-                    </table>
-                </div>
-                <div class="route-info-grid">
-                    <div class="d-flex justify-content-end">
-                        <div class="invoice-barcode">
-                            *@Model.Invoice.SalesNumber*
-                        </div>
-                    </div>
-                    <table class="route-info-table">
-                        <colgroup>
-                            <col style="width: 40%;">
-                            <col style="width: 60%;">
-                        </colgroup>
-                        <tr>
-                            <td class="route-info-label">Route</td>
-                            <td class="route-info">
-                                @if (Model.Invoice.IsLoadSeparate)
-                                {
-                                    <strong class="load-separate">@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder</strong>
-                                }
-                                else
-                                {
-                                    <strong>@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder</strong>
-                                }
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="route-info-label">Sales Rep</td>
-                            <td class="route-info">@Model.Invoice.SalesRepName</td>
-                        </tr>
-                        <tr>
-                            <td class="route-info-label">Truck #</td>
-                            @if (string.IsNullOrEmpty(Model.Invoice.TruckNumber))
-                            {
-                                <td class="route-info">&nbsp;</td>
-                            }
-                            else
-                            {
-                                <td class="route-info">@Model.Invoice.TruckNumber</td>
-                            }
-                        </tr>
-                        <tr>
-                            <td class="route-info-label">Driver</td>
-                            @if (string.IsNullOrEmpty(Model.Invoice.DriverName))
-                            {
-                                <td class="route-info">&nbsp;</td>
-                            }
-                            else
-                            {
-                                <td class="route-info">@Model.Invoice.DriverName</td>
-                            }
-                        </tr>
-                    </table>
-                </div>
-
-                <div class="ship-to-grid">
-                    <div class="ship-to-label highlight-dark">Ship To</div>
-                    <div class="cust-name">
-                        @Model.Invoice.ShipName
-                    </div>
-                    <div class="cust-address">
-                        @Model.Invoice.ShipAddress<br />
-                        @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
-                        @Model.Invoice.ShipPhone1
-                    </div>
-                </div>
-                <div class="instruction-grid">
-                    <div class="instruction-label highlight-dark">Instruction</div>
-                    <div class="instruction">@Model.Invoice.Instruction</div>
+                <div class="comp-address">
+                    @Model.Company.AddressLine1<br />
+                    @Model.Company.City @Model.Company.State
+                    @Model.Company.ZipCode<br />
+                    @Model.Company.Phone<br />
+                    <strong>@Model.Company.Website</strong>
                 </div>
             </div>
+            <div class="inv-info-grid">
+                <div class="d-flex justify-content-between">
+                    <div class="invoice-label">Ticket</div>
+                </div>
+                <table>
+                    <colgroup>
+                        <col style="width: 40%;">
+                        <col style="width: 60%;">
+                    </colgroup>
+                    <tr>
+                        <td class="invoice-info-label">Invoice #</td>
+                        <td class="invoice-info">@Model.Invoice.SalesNumber</td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Invoice Date</td>
+                        <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Terms</td>
+                        <td class="invoice-info" style="white-space:nowrap;">
+                            @Model.Invoice.TermName
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">PO</td>
+                        @if (string.IsNullOrEmpty(Model.Invoice.CustPONumber))
+                        {
+                            <td class="invoice-info">&nbsp;</td>
+                        }
+                        else
+                        {
+                            <td class="invoice-info">@Model.Invoice.CustPONumber</td>
+                        }
+                    </tr>
+                </table>
+            </div>
+            <div class="route-info-grid">
+                <div class="d-flex justify-content-end">
+                    <div class="invoice-barcode">
+                        *@Model.Invoice.SalesNumber*
+                    </div>
+                </div>
+                <table class="route-info-table">
+                    <colgroup>
+                        <col style="width: 40%;">
+                        <col style="width: 60%;">
+                    </colgroup>
+                    <tr>
+                        <td class="route-info-label">Route</td>
+                        <td class="route-info">
+                            @if (Model.Invoice.IsLoadSeparate)
+                            {
+                                <strong class="load-separate">@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder</strong>
+                            }
+                            else
+                            {
+                                <strong>@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder</strong>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="route-info-label">Sales Rep</td>
+                        <td class="route-info">@Model.Invoice.SalesRepName</td>
+                    </tr>
+                    <tr>
+                        <td class="route-info-label">Truck #</td>
+                        @if (string.IsNullOrEmpty(Model.Invoice.TruckNumber))
+                        {
+                            <td class="route-info">&nbsp;</td>
+                        }
+                        else
+                        {
+                            <td class="route-info">@Model.Invoice.TruckNumber</td>
+                        }
+                    </tr>
+                    <tr>
+                        <td class="route-info-label">Driver</td>
+                        @if (string.IsNullOrEmpty(Model.Invoice.DriverName))
+                        {
+                            <td class="route-info">&nbsp;</td>
+                        }
+                        else
+                        {
+                            <td class="route-info">@Model.Invoice.DriverName</td>
+                        }
+                    </tr>
+                </table>
+            </div>
 
+            <div class="ship-to-grid">
+                <div class="ship-to-label highlight-dark">Ship To</div>
+                <div class="cust-name">
+                    @Model.Invoice.ShipName
+                </div>
+                <div class="cust-address">
+                    @Model.Invoice.ShipAddress<br />
+                    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
+                    @Model.Invoice.ShipPhone1
+                </div>
+            </div>
+            <div class="instruction-grid">
+                <div class="instruction-label highlight-dark">Instruction</div>
+                <div class="instruction">@Model.Invoice.Instruction</div>
+            </div>
         </div>
+
     </div>
-}
+</div>

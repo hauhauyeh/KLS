@@ -553,6 +553,10 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptSalesHistoryRow> RptSalesHistoryRow { get; set; }
 
+        public virtual DbSet<RptPurchaseHistoryRow> RptPurchaseHistoryRow { get; set; }
+
+        public virtual DbSet<RptItemCustomerAnalysisRow> RptItemCustomerAnalysisRow { get; set; }
+
         public virtual DbSet<RptCustPayment> RptCustPayment { get; set; }
 
         public virtual DbSet<RptCreditMemo> RptCreditMemo { get; set; }

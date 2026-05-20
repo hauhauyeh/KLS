@@ -65,6 +65,14 @@ namespace KLS.Services
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
+        public bool DocNumberExists(int purchaseId, int payeeId, string? docNumber)
+        {
+            if (string.IsNullOrEmpty(docNumber))
+                return false;
+
+            return Uow.Purchases.Exists(c => c.VendorDocNumber == docNumber && c.PayeeId == payeeId && c.PurchaseId != purchaseId);
+        }
+
         public void UpdateDocNumber(int purchaseId, string? docNumber)
         {
             var purchase = GetById(purchaseId);

@@ -80,7 +80,7 @@ namespace KLS.Data.Repositories
 
             var FromAccountIdParam = new SqlParameter("@FromAccountId", incomingPaymentReq.FromAccountId);
 
-            var ReferenceIdParam = new SqlParameter("@ReferenceId", incomingPaymentReq.ReferenceId);
+            var ReferenceIdParam = (!string.IsNullOrEmpty(incomingPaymentReq.ReferenceId)) ? new SqlParameter("@ReferenceId", incomingPaymentReq.ReferenceId) : new SqlParameter("@ReferenceId", DBNull.Value);
 
             var PaymentAmountParam = new SqlParameter("@PaymentAmount", incomingPaymentReq.PaymentAmount);
 

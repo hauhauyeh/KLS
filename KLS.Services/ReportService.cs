@@ -799,6 +799,16 @@ namespace KLS.Services
             return Uow.Reports.SalesHistory(reportReq);
         }
 
+        public IQueryable<RptPurchaseHistoryRow> PurchaseHistory(ReportRequest reportReq)
+        {
+            return Uow.Reports.PurchaseHistory(reportReq);
+        }
+
+        public IQueryable<RptItemCustomerAnalysisRow> ItemCustomerAnalysis(ItemCustomerAnalysisRequest reportReq)
+        {
+            return Uow.Reports.ItemCustomerAnalysis(reportReq);
+        }
+
         public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
         {
             return Uow.Reports.CustPayment(reportReq);

@@ -46,7 +46,7 @@ namespace KLS.API.Controllers.Admin
             var incomingPayment = _incomingPaymentService.GetById(id);
 
             if (incomingPayment == null)
-                return NotFound($"General journal not found.");
+                return NotFound($"Incoming payment not found.");
 
             return Ok(incomingPayment);
         }

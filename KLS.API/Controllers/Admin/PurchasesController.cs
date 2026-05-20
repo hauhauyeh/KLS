@@ -1,7 +1,6 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
-using KLS.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -74,6 +73,9 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Vendor.Purchase.UpdateDocNumber")]
         public IActionResult UpdateDocNumber([FromBody] PurchaseUpdateReq updateReq)
         {
+            if (_purchaseService.DocNumberExists(updateReq.PurchaseId, updateReq.PayeeId ?? 0, updateReq.VendorDocNumber))
+                return Conflict("Doc# already exists");
+
             _purchaseService.UpdateDocNumber(updateReq.PurchaseId, updateReq.VendorDocNumber);
 
             return Ok();
@@ -222,6 +224,13 @@ namespace KLS.API.Controllers.Admin
         public IActionResult OpenBills(int payeeId)
         {
             return Ok(_purchaseService.GetOpenBills(payeeId));
+        }
+
+
+        [HttpPost("DocNumberExists")]
+        public IActionResult DocNumberExists([FromBody] VendorDocCheckReq checkReq)
+        {
+            return Ok(_purchaseService.DocNumberExists(0, checkReq.PayeeId, checkReq.VendorDocNumber));
         }
 
         #endregion
