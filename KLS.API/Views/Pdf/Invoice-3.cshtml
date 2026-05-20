@@ -2,15 +2,10 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
-    var itemsize = 13;
-    var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails.Count, itemsize);
     var isCreditMemo = Model.Invoice?.DocType == "CM";
     var docLabel = isCreditMemo ? "CREDIT MEMO" : "INVOICE";
     var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Invoice #";
     var docDateLabel = isCreditMemo ? "Credit Memo Date" : "Invoice Date";
-
-    if (totalpage == 0)
-        totalpage = 1;
 
     var colSpan = 6;
 }

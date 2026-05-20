@@ -2,12 +2,6 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
-    var itemsize = 28;
-    var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails.Count, itemsize);
-
-    if (totalpage == 0)
-        totalpage = 1;
-
     var colSpan = 3;
 }
 
@@ -106,11 +100,11 @@
         padding-bottom: 6px !important;
     }
 
-    .main-table tbody tr.item-header {
+    .main-table thead tr.item-header {
         background-color: #333333;
     }
 
-        .main-table tbody tr.item-header td {
+        .main-table thead tr.item-header td {
             color: white;
             font-size: 14px;
             font-weight: 500;
@@ -386,146 +380,131 @@
     }
 </style>
 
-@for (int i = 0; i < totalpage; i++)
-{
-    var page = (i + 1) * itemsize;
-
-    <div style="display: flex;">
-        <div class="left-width">
-            <table class="main-table">
-                <colgroup>
-                    <col style="width: 15%;">
-                    <col style="width: 15%;">
-                    <col style="width: 70%;">
-                </colgroup>
-                <thead>
-                    <tr>
-                        <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="item-header">
-                        <td>Qty</td>
-                        <td>Code</td>
-                        <td>Description</td>
-                    </tr>
-                    @for (int j = (i * itemsize); j < page; j++)
+<div style="display: flex;">
+    <div class="left-width">
+        <table class="main-table">
+            <colgroup>
+                <col style="width: 15%;">
+                <col style="width: 15%;">
+                <col style="width: 70%;">
+            </colgroup>
+            <thead>
+                <tr>
+                    <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
+                </tr>
+                <tr class="item-header">
+                    <td>Qty</td>
+                    <td>Code</td>
+                    <td>Description</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var itmdetail in Model.InvoiceDetails)
+                {
+                    if (itmdetail.IsGroup)
                     {
-                        if (j >= Model.InvoiceDetails.Count)
-                        {
-                        }
-                        else
-                        {
-                            var itmdetail = Model.InvoiceDetails[j];
-
-                            if (itmdetail.IsGroup)
-                            {
-                                <tr>
-                                    <td colspan="@colSpan">
-                                        <div class="invoice-item-group">@itmdetail.ItemName</div>
-                                    </td>
-                                </tr>
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
-                                    <td><span>@itmdetail.ItemCode</span></td>
-                                    <td>
-                                        <span>@itmdetail.ItemName</span>
-                                        <span class="font12 chinese">@itmdetail.ItemName2</span>
-
-                                        @if (!string.IsNullOrEmpty(itmdetail.Notes))
-                                        {
-                                            <span class="highlight-small font12">
-                                                @itmdetail.Notes
-                                            </span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    }
-                </tbody>
-            </table>
-
-            <div class="main-table-header-grid left-width header-height">
-                <div class="comp-logo-grid">
-                    <div class="comp-name">
-                        @if (Model.HasDiscount)
-                        {
-                            <div>
-                                <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bold;">@Model.Company.CompanyName</span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div>
-                                <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bolder; font-style: italic;">KLS</span>
-                                <span> FOOD SERVICE</span>
-                            </div>
-                        }
-
-                        <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
-                    </div>
-                    <div class="comp-address">
-                        @Model.Company.AddressLine1<br />
-                        @Model.Company.City @Model.Company.State
-                        @Model.Company.ZipCode<br />
-                        @Model.Company.Phone<br />
-                        <strong>@Model.Company.Website</strong>
-                    </div>
-                </div>
-                <div class="inv-info-grid">
-                    <div class="d-flex justify-content-between">
-                        <div class="invoice-label">Ticket</div>
-                        <div class="invoice-barcode">
-                            *@Model.Invoice.SalesNumber*
-                        </div>
-                    </div>
-                    <table>
-                        <colgroup>
-                            <col style="width: 40%;">
-                            <col style="width: 60%;">
-                        </colgroup>
                         <tr>
-                            <td class="invoice-info-label">Invoice #</td>
-                            <td class="invoice-info">@Model.Invoice.SalesNumber</td>
-                        </tr>
-                        <tr>
-                            <td class="invoice-info-label">Invoice Date</td>
-                            <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
-                        </tr>
-                        <tr>
-                            <td class="invoice-info-label">Terms</td>
-                            <td class="invoice-info" style="white-space:nowrap;">
-                                @Model.Invoice.TermName
+                            <td colspan="@colSpan">
+                                <div class="invoice-item-group">@itmdetail.ItemName</div>
                             </td>
                         </tr>
+                    }
+                    else
+                    {
                         <tr>
-                            <td class="invoice-info-label">Total Weight</td>
-                            <td class="invoice-info">@string.Format("{0:0.00}", Model.TotalWeight)</td>
+                            <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
+                            <td><span>@itmdetail.ItemCode</span></td>
+                            <td>
+                                <span>@itmdetail.ItemName</span>
+                                <span class="font12 chinese">@itmdetail.ItemName2</span>
+                                @if (!string.IsNullOrEmpty(itmdetail.Notes))
+                                {
+                                    <span class="highlight-small font12">
+                                        @itmdetail.Notes
+                                    </span>
+                                }
+                            </td>
                         </tr>
-                    </table>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="main-table-header-grid left-width header-height">
+            <div class="comp-logo-grid">
+                <div class="comp-name">
+                    @if (Model.HasDiscount)
+                    {
+                        <div>
+                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bold;">@Model.Company.CompanyName</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bolder; font-style: italic;">KLS</span>
+                            <span> FOOD SERVICE</span>
+                        </div>
+                    }
+
+                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
                 </div>
-                <div class="ship-to-grid">
-                    <div class="ship-to-label highlight-dark">Ship To</div>
-                    <div class="cust-name">
-                        @Model.Invoice.ShipName
-                    </div>
-                    <div class="cust-address">
-                        @Model.Invoice.ShipAddress<br />
-                        @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
-                        @Model.Invoice.ShipPhone1
-                    </div>
-                </div>
-                <div class="instruction-grid">
-                    <div class="instruction-label highlight-dark">Instruction</div>
-                    <div class="instruction">@Model.Invoice.Instruction</div>
+                <div class="comp-address">
+                    @Model.Company.AddressLine1<br />
+                    @Model.Company.City @Model.Company.State
+                    @Model.Company.ZipCode<br />
+                    @Model.Company.Phone<br />
+                    <strong>@Model.Company.Website</strong>
                 </div>
             </div>
-
-
+            <div class="inv-info-grid">
+                <div class="d-flex justify-content-between">
+                    <div class="invoice-label">Ticket</div>
+                    <div class="invoice-barcode">
+                        *@Model.Invoice.SalesNumber*
+                    </div>
+                </div>
+                <table>
+                    <colgroup>
+                        <col style="width: 40%;">
+                        <col style="width: 60%;">
+                    </colgroup>
+                    <tr>
+                        <td class="invoice-info-label">Invoice #</td>
+                        <td class="invoice-info">@Model.Invoice.SalesNumber</td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Invoice Date</td>
+                        <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Terms</td>
+                        <td class="invoice-info" style="white-space:nowrap;">
+                            @Model.Invoice.TermName
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="invoice-info-label">Total Weight</td>
+                        <td class="invoice-info">@string.Format("{0:0.00}", Model.TotalWeight)</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="ship-to-grid">
+                <div class="ship-to-label highlight-dark">Ship To</div>
+                <div class="cust-name">
+                    @Model.Invoice.ShipName
+                </div>
+                <div class="cust-address">
+                    @Model.Invoice.ShipAddress<br />
+                    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
+                    @Model.Invoice.ShipPhone1
+                </div>
+            </div>
+            <div class="instruction-grid">
+                <div class="instruction-label highlight-dark">Instruction</div>
+                <div class="instruction">@Model.Invoice.Instruction</div>
+            </div>
         </div>
+
     </div>
-}
+</div>
