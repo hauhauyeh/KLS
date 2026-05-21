@@ -46,6 +46,11 @@ namespace KLS.Services
             };
         }
 
+        public RptVendStmt VendStmt(int payeeId)
+        {
+            return Uow.Reports.VendStmt(payeeId);
+        }
+
         public RptCustStmt CustStmt(int payeeId)
         {
             return Uow.Reports.CustStmt(payeeId);

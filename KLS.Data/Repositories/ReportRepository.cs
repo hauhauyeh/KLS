@@ -34,6 +34,30 @@ namespace KLS.Data.Repositories
             return DbContext.InvoiceDetail.FromSqlRaw("[dbo].[Report_InvoiceDetail] @SalesId", SalesIdParam).AsNoTracking();
         }
 
+        public RptVendStmt VendStmt(int payeeId)
+        {
+            // Refresh AP-side cache for this vendor before reading Payee.
+            // Mirrors CustStmt pattern. Rule 5 contract guarantees cached
+            // Payee.* fields equal what View_Vendor would compute.
+            var payeeIdParam = new SqlParameter("@PayeeId", payeeId);
+            var isSalesParam = new SqlParameter("@IsSales", false);
+            DbContext.Database.ExecuteSqlRaw("EXEC [dbo].[Payee_UpdateAging] @PayeeId, @IsSales", payeeIdParam, isSalesParam);
+
+            var details = DbContext.Purchases.Where(p => p.PayeeId == payeeId && p.AmountDue != 0)
+                .GroupBy(p => new { p.ArrivalDate.Value.Year, p.ArrivalDate.Value.Month })
+                .Select(g => new RptVendStmtDetail
+                {
+                    ArrivalMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
+                    Purchases = g.OrderBy(p => p.ArrivalDate).ToList()
+                }).ToList();
+
+            return new RptVendStmt
+            {
+                Details = details,
+                Payee = DbContext.Payees.Find(payeeId)
+            };
+        }
+
         public RptCustStmt CustStmt(int payeeId)
         {
             // Recalculate aging on demand before reading Payee
