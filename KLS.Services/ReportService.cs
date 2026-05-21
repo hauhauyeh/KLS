@@ -814,6 +814,11 @@ namespace KLS.Services
             return Uow.Reports.ItemCustomerAnalysis(reportReq);
         }
 
+        public IQueryable<RptItemVendorAnalysisRow> ItemVendorAnalysis(ItemCustomerAnalysisRequest reportReq)
+        {
+            return Uow.Reports.ItemVendorAnalysis(reportReq);
+        }
+
         public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
         {
             return Uow.Reports.CustPayment(reportReq);

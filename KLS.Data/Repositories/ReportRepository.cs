@@ -322,6 +322,17 @@ namespace KLS.Data.Repositories
                 ItemIdParam, PayeeIdParam, StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptItemVendorAnalysisRow> ItemVendorAnalysis(ItemCustomerAnalysisRequest reportReq)
+        {
+            var ItemIdParam    = new SqlParameter("@ItemId", reportReq.ItemId);
+            var PayeeIdParam   = reportReq.PayeeId.HasValue   ? new SqlParameter("@PayeeId",   reportReq.PayeeId)   : new SqlParameter("@PayeeId",   DBNull.Value);
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam   = reportReq.EndDate.HasValue   ? new SqlParameter("@EndDate",   reportReq.EndDate)   : new SqlParameter("@EndDate",   DBNull.Value);
+
+            return DbContext.RptItemVendorAnalysisRow.FromSqlRaw("[dbo].[Report_ItemVendorAnalysis] @ItemId,@PayeeId,@StartDate,@EndDate",
+                ItemIdParam, PayeeIdParam, StartDateParam, EndDateParam);
+        }
+
         public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
