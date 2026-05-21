@@ -18,6 +18,8 @@ namespace KLS.Contract.Interfaces
 
         RptVendStmt VendStmt(int payeeId);
 
+        IQueryable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq);
+
         RptPO ReportPO(int purchaseId);
 
         IQueryable<RptPODetail> ReportPODetail(int purchaseId);

@@ -16,6 +16,8 @@ namespace KLS.Contract.Services
 
         RptVendStmt VendStmt(int payeeId);
 
+        IEnumerable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq);
+
         RptPackingList PackingList(DocumentReq req);
 
         // TotalSplit is a new standalone packing-style report that can split

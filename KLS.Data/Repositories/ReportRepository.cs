@@ -532,6 +532,21 @@ namespace KLS.Data.Repositories
             return DbContext.RptDescDollar.FromSqlRaw("[dbo].[Report_DescDollar] @PayeeId,@StartDate,@EndDate,@SortField,@SortOrder", PayeeIdParam, StartDateParam, EndDateParam, SortFieldParam, SortOrderParam);
         }
 
+        public IQueryable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq)
+        {
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            var SortFieldParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", reportReq.SortField);
+
+            var SortOrderParam = string.IsNullOrEmpty(reportReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", reportReq.SortOrder);
+
+            return DbContext.RptDescDollar.FromSqlRaw("[dbo].[Report_VendorDescDollar] @PayeeId,@StartDate,@EndDate,@SortField,@SortOrder", PayeeIdParam, StartDateParam, EndDateParam, SortFieldParam, SortOrderParam);
+        }
+
         #region --- Inventory Reports ---
 
         public IQueryable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req)

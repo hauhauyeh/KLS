@@ -1111,6 +1111,11 @@ namespace KLS.Services
             return Uow.Reports.DescDollar(reportReq);
         }
 
+        public IEnumerable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq)
+        {
+            return Uow.Reports.VendorDescDollar(reportReq);
+        }
+
         public IEnumerable<RptPaymentHistory>? PaymentHistory(int payeeId)
         {
             return Uow.CustomerPayments.Find(s => s.PayeeId == payeeId).OrderByDescending(c => c.PaymentDate).ToList()

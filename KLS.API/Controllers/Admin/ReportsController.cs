@@ -256,6 +256,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.VendStmt(PayeeId));
         }
 
+        [HttpGet("VendorDescDollar")]
+        [DisplayName("Vendor -> Descending Dollar")]
+        [PermissionKey("Report.Vendor.DescDollar")]
+        public IActionResult VendorDescDollar([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.VendorDescDollar(reportReq));
+        }
+
         [HttpGet("ItemCustomerAnalysis")]
         [DisplayName("Item -> Item Customer Analysis")]
         [PermissionKey("Report.Item.ItemCustomerAnalysis")]
