@@ -27,10 +27,8 @@ BEGIN
       Extra columns (PhoneDesc1/Phone1, OwedSince, UnAppliedAmt) come from inline
       sub-selects because View_Customer doesn't surface them.
 
-      Inv0 is returned as 0 for legacy frontend shape compatibility (the report
-      component still has IsFirstColumn logic that conditionally renders a split
-      column). Inv30 carries the full new 0-30 bucket. The frontend can be
-      simplified later to drop Inv0 + IsFirstColumn entirely.
+      Inv0 column dropped (Step 7 frontend cleanup) — Frankenstein split is
+      gone; InvoiceAge30 is the full 0-30 bucket for every customer.
     */
 
     SELECT
@@ -53,8 +51,7 @@ BEGIN
         vc.TermId,
         t.DueDays,
 
-        CAST(0 AS DECIMAL(18,2)) AS Inv0,   -- legacy: Frankenstein split removed
-        vc.InvoiceAge30          AS Inv30
+        vc.InvoiceAge30     AS Inv30
 
     FROM dbo.View_Customer vc
     INNER JOIN dbo.Payee    p ON p.PayeeId = vc.PayeeId

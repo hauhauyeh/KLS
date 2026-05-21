@@ -1,11 +1,3 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
--- Round 2 for this SP — _prev already exists from AR round, so DROP + CREATE only.
-DROP PROCEDURE IF EXISTS [dbo].[Payee_UpdateAging];
-GO
 
 CREATE PROCEDURE [dbo].[Payee_UpdateAging]
     @PayeeId INT,
@@ -17,15 +9,15 @@ BEGIN
     /*
       Cache writer for Payee.* AR/AP aggregate fields.
 
-      AR branch (from AR round): inline DATEDIFF math matching View_Customer.
-      AP branch (this round): same treatment — inline DATEDIFF math matching
-      View_Vendor. FirstDueDate writes MIN(DueDate) (was MIN(ArrivalDate)).
-      MaxInvoiceAgingDays uses inline DATEDIFF over ISNULL(InvoiceDate,
-      PurchaseDate), not the bugged stored Purchase.InvoiceAging column.
+      AR branch (this round): rewritten to use inline DATEDIFF math matching
+      View_Customer exactly. No more SUM over stored Sales.Aging / InvoiceAging.
+      FirstDueDate writes MIN(DueDate) (Bug H fix). Adds Payee30Volume write
+      (formerly unmaintained — Blocker 2 resolution).
 
-      Rule 1: per-customer (ShipId) for AR, per-vendor (PayeeId) for AP.
-      Rule 5: every cached Payee.* field written here matches the matching view
-              column row-for-row.
+      AP branch (@IsSales = 0): unchanged this round. AP plan owns the equivalent
+      rewrite. See view-vendor-realtime-aging-plan.md.
+
+      Rule 1: ShipId is the AR aggregation key (BillId belongs to corp payment module).
     */
 
     DECLARE @TodayDate DATE = CAST(GETDATE() AS DATE);
@@ -57,10 +49,8 @@ BEGIN
 
     IF @IsSales = 1
     BEGIN
-        /* ----------------------------------------------------------------
-           AR branch — UNCHANGED FROM AR ROUND.
-           Inline DATEDIFF matching View_Customer.
-           ---------------------------------------------------------------- */
+        /* Single pass over Sales — buckets use inline DATEDIFF, matching View_Customer.
+           Stored Sales.Aging / Sales.InvoiceAging columns are NOT read here. */
         SELECT
             @PayeeCurrent        = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, DueDate,  @TodayDate) <= 0              THEN AmountDue ELSE 0 END), 0),
             @Payee30             = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, DueDate,  @TodayDate) BETWEEN 1  AND 30 THEN AmountDue ELSE 0 END), 0),
@@ -75,7 +65,7 @@ BEGIN
 
             @PayeeTotalDue       = ISNULL(SUM(AmountDue), 0),
             @PayeePastDue        = ISNULL(SUM(CASE WHEN DueDate < @TodayDate THEN AmountDue END), 0),
-            @FirstDueDate        = MIN(DueDate),
+            @FirstDueDate        = MIN(DueDate),  -- Rule 4 / Bug H: was MIN(ShipDate)
             @MaxInvoiceAgingDays = MAX(DATEDIFF(DAY, ShipDate, @TodayDate)),
             @MaxAging            = ISNULL(MAX(CASE WHEN DATEDIFF(DAY, DueDate, @TodayDate) > 0
                                                    THEN DATEDIFF(DAY, DueDate, @TodayDate)
@@ -131,7 +121,7 @@ BEGIN
             WHERE NextPmtDate IS NOT NULL;
         END
 
-        /* 30-day rolling customer sales volume */
+        /* 30-day rolling customer sales volume (Blocker 2 resolution — formerly unwritten). */
         SELECT
             @Payee30Volume = ISNULL(SUM(SalesTotal), 0)
         FROM Sales
@@ -144,7 +134,7 @@ BEGIN
             p.PayeeCurrent        = @PayeeCurrent,
             p.Payee30             = @Payee30,
             p.Payee60             = @Payee60,
-            p.Payee90             = @Payee90,
+            p.Payee90             = @Payee90,          -- fixed missing assignment
             p.PayeeOver90         = @PayeeOver90,
             p.PayeeTotalDue       = @PayeeTotalDue,
             p.PayeePastDue        = @PayeePastDue,
@@ -167,7 +157,7 @@ BEGIN
             p.LastPaymentAmount   = @LastPaymentAmount,
             p.AvgPaymentDays      = @AvgPaymentDays,
             p.MaxInvoiceAgingDays = @MaxInvoiceAgingDays,
-            p.Payee30Volume       = @Payee30Volume
+            p.Payee30Volume       = @Payee30Volume     -- Blocker 2: now actively maintained
         FROM Payee p
         LEFT JOIN Customer c ON c.PayeeId = p.PayeeId
         WHERE p.PayeeId = @PayeeId;
@@ -175,35 +165,35 @@ BEGIN
     ELSE
     BEGIN
         /* ----------------------------------------------------------------
-           AP branch — rewritten this round.
-           Inline DATEDIFF matching View_Vendor. Invoice-date basis is
-           ISNULL(InvoiceDate, PurchaseDate). Stored Purchase.Aging /
-           Purchase.InvoiceAging columns are NOT read here.
-           FirstDueDate now writes MIN(DueDate) (was MIN(ArrivalDate)).
+           AP branch — UNCHANGED THIS ROUND.
+           Preserved verbatim from baseline (KLS\SQL\2026-05-21\Payee_UpdateAging_live_baseline.sql).
+           AP plan round rewrites this to match the same inline DATEDIFF pattern.
            ---------------------------------------------------------------- */
-        SELECT
-            @PayeeCurrent        = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, DueDate, @TodayDate) <= 0                                                  THEN AmountDue ELSE 0 END), 0),
-            @Payee30             = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, DueDate, @TodayDate) BETWEEN 1  AND 30                                     THEN AmountDue ELSE 0 END), 0),
-            @Payee60             = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, DueDate, @TodayDate) BETWEEN 31 AND 60                                     THEN AmountDue ELSE 0 END), 0),
-            @Payee90             = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, DueDate, @TodayDate) BETWEEN 61 AND 90                                     THEN AmountDue ELSE 0 END), 0),
-            @PayeeOver90         = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, DueDate, @TodayDate) > 90                                                  THEN AmountDue ELSE 0 END), 0),
 
-            @Invoice30           = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, ISNULL(InvoiceDate, PurchaseDate), @TodayDate) BETWEEN 0  AND 30           THEN AmountDue ELSE 0 END), 0),
-            @Invoice60           = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, ISNULL(InvoiceDate, PurchaseDate), @TodayDate) BETWEEN 31 AND 60           THEN AmountDue ELSE 0 END), 0),
-            @Invoice90           = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, ISNULL(InvoiceDate, PurchaseDate), @TodayDate) BETWEEN 61 AND 90           THEN AmountDue ELSE 0 END), 0),
-            @InvoiceOver90       = ISNULL(SUM(CASE WHEN DATEDIFF(DAY, ISNULL(InvoiceDate, PurchaseDate), @TodayDate) > 90                        THEN AmountDue ELSE 0 END), 0),
+        /* Single pass over Purchase */
+        SELECT
+            @PayeeCurrent        = ISNULL(SUM(CASE WHEN Aging = 0 THEN AmountDue END), 0),
+            @Payee30             = ISNULL(SUM(CASE WHEN Aging BETWEEN 1 AND 30 THEN AmountDue END), 0),
+            @Payee60             = ISNULL(SUM(CASE WHEN Aging BETWEEN 31 AND 60 THEN AmountDue END), 0),
+            @Payee90             = ISNULL(SUM(CASE WHEN Aging BETWEEN 61 AND 90 THEN AmountDue END), 0),
+            @PayeeOver90         = ISNULL(SUM(CASE WHEN Aging >= 91 THEN AmountDue END), 0),
+
+            @Invoice30           = ISNULL(SUM(CASE WHEN InvoiceAging BETWEEN 0 AND 30 THEN AmountDue END), 0),
+            @Invoice60           = ISNULL(SUM(CASE WHEN InvoiceAging BETWEEN 31 AND 60 THEN AmountDue END), 0),
+            @Invoice90           = ISNULL(SUM(CASE WHEN InvoiceAging BETWEEN 61 AND 90 THEN AmountDue END), 0),
+            @InvoiceOver90       = ISNULL(SUM(CASE WHEN InvoiceAging >= 91 THEN AmountDue END), 0),
 
             @PayeeTotalDue       = ISNULL(SUM(AmountDue), 0),
             @PayeePastDue        = ISNULL(SUM(CASE WHEN DueDate < @TodayDate THEN AmountDue END), 0),
-            @FirstDueDate        = MIN(DueDate),  -- Rule 4 / Bug H: was MIN(ArrivalDate)
-            @MaxInvoiceAgingDays = MAX(DATEDIFF(DAY, ISNULL(InvoiceDate, PurchaseDate), @TodayDate))
+            @FirstDueDate        = MIN(CASE WHEN AmountDue > 0 THEN ArrivalDate END),
+            @MaxInvoiceAgingDays = MAX(InvoiceAging)
         FROM Purchase
         WHERE PayeeId = @PayeeId
           AND AmountDue <> 0;
 
-        SET @Balance = @PayeeTotalDue;   -- AP has no UnappliedAmount on VendorPayment
+        SET @Balance = @PayeeTotalDue;
 
-        /* Latest order (delivery) */
+        /* Latest order */
         SELECT TOP (1)
             @LastOrderDate   = ArrivalDate,
             @LastOrderAmount = PurchaseTotal
@@ -265,4 +255,4 @@ BEGIN
         WHERE p.PayeeId = @PayeeId;
     END
 END
-GO
+

@@ -891,14 +891,12 @@ namespace KLS.Services
                     {
                         TermName = term?.TermName ?? "No Term",
                         DueDays = dueDays,
-                        IsFirstColumn = dueDays > 0 && dueDays < 30,
                         Payee = g.Select(r => new RptARInvoiceRow
                         {
                             PayeeId = r.PayeeId,
                             PayeeName = r.PayeeName,
                             PhoneDesc1 = r.PhoneDesc1,
                             Phone1 = r.Phone1,
-                            Inv0 = r.Inv0,
                             Inv30 = r.Inv30,
                             Invoice60 = r.Invoice60,
                             Invoice90 = r.Invoice90,
@@ -1047,7 +1045,6 @@ namespace KLS.Services
                     {
                         TermName = termName,
                         DueDays = dueDays,
-                        IsFirstColumn = dueDays > 0 && dueDays < 30,
                         Payee = g.ToList()
                     };
                 })

@@ -73,8 +73,6 @@ namespace KLS.Models.Reports
 
         public int? DueDays { get; set; }
 
-        public decimal? Inv0 { get; set; }
-
         public decimal? Inv30 { get; set; }
     }
 }

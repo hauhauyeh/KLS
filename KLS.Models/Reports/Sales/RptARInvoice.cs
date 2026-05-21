@@ -16,8 +16,6 @@ namespace KLS.Models.Reports
 
         public string? Phone1 { get; set; }
 
-        public decimal? Inv0 { get; set; }
-
         public decimal? Inv30 { get; set; }
 
         public decimal? Invoice60 { get; set; }
@@ -70,8 +68,6 @@ namespace KLS.Models.Reports
         public string? TermName { get; set; }
 
         public int? DueDays { get; set; }
-
-        public bool IsFirstColumn { get; set; }
 
         public List<RptARInvoiceRow>? Payee { get; set; }
     }
