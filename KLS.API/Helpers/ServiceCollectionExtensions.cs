@@ -176,6 +176,10 @@ namespace KLS.API.Helpers
             services.AddScoped<ShipStationConnectionService>();
             services.AddScoped<ShipStationOrderService>();
 
+            // SalesQuote
+            services.AddScoped<ISalesQuoteService, SalesQuoteService>();
+            services.AddScoped<ITempSalesQuoteService, TempSalesQuoteService>();
+
             return services;
         }
     }

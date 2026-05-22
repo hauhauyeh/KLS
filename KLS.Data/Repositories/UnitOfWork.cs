@@ -263,5 +263,8 @@ namespace KLS.Data.Repositories
         public IMarketSyncLogRepository MarketSyncLogs { get { return new MarketSyncLogRepository(DbContext); } }
 
         public IDropShipmentRepository DropShipments { get { return new DropShipmentRepository(DbContext); } }
+
+        public ISalesQuoteRepository SalesQuotes { get { return new SalesQuoteRepository(DbContext); } }
+        public ITempSalesQuoteRepository TempSalesQuotes { get { return new TempSalesQuoteRepository(DbContext); } }
     }
 }

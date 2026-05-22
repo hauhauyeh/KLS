@@ -23,5 +23,13 @@ namespace KLS.Models
         public DateOnly? EndDate { get; set; }
 
         public bool IsActive { get; set; }
+
+        public decimal? RecentCost { get; set; }
+
+        public decimal? P1 { get; set; }
+
+        public decimal? PromoPrice { get; set; }
+
+        public decimal? AfterPromoPrice { get; set; }
     }
 }

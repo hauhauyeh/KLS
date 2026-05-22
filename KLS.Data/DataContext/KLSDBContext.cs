@@ -147,6 +147,11 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<CustomerPaymentEditEligibility>().HasNoKey();
             modelBuilder.Entity<RptSalesYearlyRow>().HasNoKey();
 
+            // SalesQuote tables
+            modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
+            modelBuilder.Entity<SalesQuoteDetail>().ToTable("SalesQuoteDetail");
+            modelBuilder.Entity<TempSalesQuote>().ToTable("TempSalesQuote");
+
             // Marketplace tables
             modelBuilder.Entity<MarketAccount>().ToTable("MarketAccount");
             modelBuilder.Entity<MarketItemMap>().ToTable("MarketItemMap");
@@ -483,6 +488,9 @@ namespace KLS.Data.DataContext
         public virtual DbSet<SalesExport> SalesExport { get; set; }
 
         public virtual DbSet<SalesDetailList> SalesDetailList { get; set; }
+
+        public virtual DbSet<SalesQuoteList> SalesQuoteList { get; set; }
+        public virtual DbSet<TempSalesQuoteItem> TempSalesQuoteItem { get; set; }
 
         #endregion
 
