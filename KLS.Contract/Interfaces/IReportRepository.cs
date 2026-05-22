@@ -16,6 +16,10 @@ namespace KLS.Contract.Interfaces
 
         RptCustStmt CustStmt(int payeeId);
 
+        RptVendStmt VendStmt(int payeeId);
+
+        IQueryable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq);
+
         RptPO ReportPO(int purchaseId);
 
         IQueryable<RptPODetail> ReportPODetail(int purchaseId);
@@ -77,6 +81,8 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptPurchaseHistoryRow> PurchaseHistory(ReportRequest reportReq);
 
         IQueryable<RptItemCustomerAnalysisRow> ItemCustomerAnalysis(ItemCustomerAnalysisRequest reportReq);
+
+        IQueryable<RptItemVendorAnalysisRow> ItemVendorAnalysis(ItemCustomerAnalysisRequest reportReq);
 
         IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq);
 

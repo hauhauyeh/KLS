@@ -248,12 +248,36 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.PurchaseHistory(reportReq));
         }
 
+        [HttpGet("VendStmt/{PayeeId}")]
+        [DisplayName("Vendor -> Statement")]
+        [PermissionKey("Report.Vendor.Statement")]
+        public IActionResult VendStmt(int PayeeId)
+        {
+            return Ok(_reportService.VendStmt(PayeeId));
+        }
+
+        [HttpGet("VendorDescDollar")]
+        [DisplayName("Vendor -> Descending Dollar")]
+        [PermissionKey("Report.Vendor.DescDollar")]
+        public IActionResult VendorDescDollar([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.VendorDescDollar(reportReq));
+        }
+
         [HttpGet("ItemCustomerAnalysis")]
         [DisplayName("Item -> Item Customer Analysis")]
         [PermissionKey("Report.Item.ItemCustomerAnalysis")]
         public IActionResult ItemCustomerAnalysis([FromQuery] ItemCustomerAnalysisRequest reportReq)
         {
             return Ok(_reportService.ItemCustomerAnalysis(reportReq));
+        }
+
+        [HttpGet("ItemVendorAnalysis")]
+        [DisplayName("Item -> Item Vendor Analysis")]
+        [PermissionKey("Report.Item.ItemVendorAnalysis")]
+        public IActionResult ItemVendorAnalysis([FromQuery] ItemCustomerAnalysisRequest reportReq)
+        {
+            return Ok(_reportService.ItemVendorAnalysis(reportReq));
         }
 
         [HttpGet("CustPayment")]

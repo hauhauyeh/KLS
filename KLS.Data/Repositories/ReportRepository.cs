@@ -34,6 +34,30 @@ namespace KLS.Data.Repositories
             return DbContext.InvoiceDetail.FromSqlRaw("[dbo].[Report_InvoiceDetail] @SalesId", SalesIdParam).AsNoTracking();
         }
 
+        public RptVendStmt VendStmt(int payeeId)
+        {
+            // Refresh AP-side cache for this vendor before reading Payee.
+            // Mirrors CustStmt pattern. Rule 5 contract guarantees cached
+            // Payee.* fields equal what View_Vendor would compute.
+            var payeeIdParam = new SqlParameter("@PayeeId", payeeId);
+            var isSalesParam = new SqlParameter("@IsSales", false);
+            DbContext.Database.ExecuteSqlRaw("EXEC [dbo].[Payee_UpdateAging] @PayeeId, @IsSales", payeeIdParam, isSalesParam);
+
+            var details = DbContext.Purchases.Where(p => p.PayeeId == payeeId && p.AmountDue != 0)
+                .GroupBy(p => new { p.ArrivalDate.Value.Year, p.ArrivalDate.Value.Month })
+                .Select(g => new RptVendStmtDetail
+                {
+                    ArrivalMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
+                    Purchases = g.OrderBy(p => p.ArrivalDate).ToList()
+                }).ToList();
+
+            return new RptVendStmt
+            {
+                Details = details,
+                Payee = DbContext.Payees.Find(payeeId)
+            };
+        }
+
         public RptCustStmt CustStmt(int payeeId)
         {
             // Recalculate aging on demand before reading Payee
@@ -298,6 +322,17 @@ namespace KLS.Data.Repositories
                 ItemIdParam, PayeeIdParam, StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptItemVendorAnalysisRow> ItemVendorAnalysis(ItemCustomerAnalysisRequest reportReq)
+        {
+            var ItemIdParam    = new SqlParameter("@ItemId", reportReq.ItemId);
+            var PayeeIdParam   = reportReq.PayeeId.HasValue   ? new SqlParameter("@PayeeId",   reportReq.PayeeId)   : new SqlParameter("@PayeeId",   DBNull.Value);
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam   = reportReq.EndDate.HasValue   ? new SqlParameter("@EndDate",   reportReq.EndDate)   : new SqlParameter("@EndDate",   DBNull.Value);
+
+            return DbContext.RptItemVendorAnalysisRow.FromSqlRaw("[dbo].[Report_ItemVendorAnalysis] @ItemId,@PayeeId,@StartDate,@EndDate",
+                ItemIdParam, PayeeIdParam, StartDateParam, EndDateParam);
+        }
+
         public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
@@ -506,6 +541,21 @@ namespace KLS.Data.Repositories
             var SortOrderParam = string.IsNullOrEmpty(reportReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", reportReq.SortOrder);
 
             return DbContext.RptDescDollar.FromSqlRaw("[dbo].[Report_DescDollar] @PayeeId,@StartDate,@EndDate,@SortField,@SortOrder", PayeeIdParam, StartDateParam, EndDateParam, SortFieldParam, SortOrderParam);
+        }
+
+        public IQueryable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq)
+        {
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+
+            var SortFieldParam = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", reportReq.SortField);
+
+            var SortOrderParam = string.IsNullOrEmpty(reportReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", reportReq.SortOrder);
+
+            return DbContext.RptDescDollar.FromSqlRaw("[dbo].[Report_VendorDescDollar] @PayeeId,@StartDate,@EndDate,@SortField,@SortOrder", PayeeIdParam, StartDateParam, EndDateParam, SortFieldParam, SortOrderParam);
         }
 
         #region --- Inventory Reports ---

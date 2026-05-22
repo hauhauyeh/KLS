@@ -29,8 +29,6 @@ namespace KLS.Models
 
         public decimal? PayeeCurrent { get; set; }
 
-        public decimal? Payee5 { get; set; }
-
         public decimal? Payee30 { get; set; }
 
         public decimal? Payee60 { get; set; }
@@ -69,8 +67,6 @@ namespace KLS.Models
 
         public int? MaxDueAgingDays { get; set; }
 
-        public decimal? InvoiceAgeCurrent { get; set; }
-        public decimal? InvoiceAge5 { get; set; }
         public decimal? InvoiceAge30 { get; set; }
         public decimal? InvoiceAge60 { get; set; }
         public decimal? InvoiceAge90 { get; set; }

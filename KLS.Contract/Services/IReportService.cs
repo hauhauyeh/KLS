@@ -14,6 +14,10 @@ namespace KLS.Contract.Services
 
         RptCustStmt CustStmt(int payeeId);
 
+        RptVendStmt VendStmt(int payeeId);
+
+        IEnumerable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq);
+
         RptPackingList PackingList(DocumentReq req);
 
         // TotalSplit is a new standalone packing-style report that can split
@@ -69,6 +73,8 @@ namespace KLS.Contract.Services
         IQueryable<RptPurchaseHistoryRow> PurchaseHistory(ReportRequest reportReq);
 
         IQueryable<RptItemCustomerAnalysisRow> ItemCustomerAnalysis(ItemCustomerAnalysisRequest reportReq);
+
+        IQueryable<RptItemVendorAnalysisRow> ItemVendorAnalysis(ItemCustomerAnalysisRequest reportReq);
 
         IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq);
 
