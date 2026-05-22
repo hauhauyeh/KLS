@@ -28,5 +28,12 @@ namespace KLS.Models
         public string? CardType { get; set; }
 
         public string? Last4 { get; set; }
+
+        /// <summary>
+        /// Optional user-entered note, forwarded from PaymentChargeReq.Notes.
+        /// Distinct from the auto-generated Gateway label so the SP can
+        /// compose the final Notes string deterministically.
+        /// </summary>
+        public string? UserNotes { get; set; }
     }
 }
