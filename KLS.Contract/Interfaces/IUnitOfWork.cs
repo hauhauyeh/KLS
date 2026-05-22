@@ -221,6 +221,9 @@ namespace KLS.Contract.Interfaces
 
         IDropShipmentRepository DropShipments { get; }
 
+        ISalesQuoteRepository SalesQuotes { get; }
+        ITempSalesQuoteRepository TempSalesQuotes { get; }
+
         void Commit();
         void ExecuteInTransaction(Action action);
     }

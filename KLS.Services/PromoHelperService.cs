@@ -1024,13 +1024,17 @@ namespace KLS.Services
             };
 
         // Effective UnitPrice the customer pays for a BOGO reward row.
-        //   FREE       → 0
+        //   FREE       → PromoPrice when present, otherwise 0
         //   FLAT       → max(0, P1 - DiscountValue)
         //   PERCENTAGE → max(0, P1 * (1 - DiscountValue/100))
-        private static decimal ComputeBogoRewardUnitPrice(decimal rewardP1, EnumHelper.DiscountType discountType, decimal discountValue) =>
+        private static decimal ComputeBogoRewardUnitPrice(
+            decimal rewardP1,
+            EnumHelper.DiscountType discountType,
+            decimal discountValue,
+            decimal? promoPrice = null) =>
             discountType switch
             {
-                EnumHelper.DiscountType.FREE => 0m,
+                EnumHelper.DiscountType.FREE => promoPrice ?? 0m,
                 EnumHelper.DiscountType.FLAT => Math.Max(0m, rewardP1 - Math.Max(0m, discountValue)),
                 EnumHelper.DiscountType.PERCENTAGE => Math.Max(0m, rewardP1 * (1 - Math.Clamp(discountValue, 0m, 100m) / 100m)),
                 _ => rewardP1
@@ -1114,7 +1118,11 @@ namespace KLS.Services
                 sets = Math.Min(sets, maxRepeats);
 
                 var rewardP1 = GetRewardItemBasePrice(resolvedRewardItemId.Value);
-                var rewardUnitPrice = ComputeBogoRewardUnitPrice(rewardP1, discountType, rule.DiscountValue ?? 0m);
+                var rewardUnitPrice = ComputeBogoRewardUnitPrice(
+                    rewardP1,
+                    discountType,
+                    rule.DiscountValue ?? 0m,
+                    rule.PromoPrice);
                 var isFreeReward = discountType == EnumHelper.DiscountType.FREE;
 
                 if (conditionType == EnumHelper.ConditionType.CART)
