@@ -39,5 +39,7 @@ namespace KLS.Contract.Services
         string? PackingLabel(DocumentReq req);
 
         string Check(int vendorPaymentId);
+
+        string SalesQuote(int salesQuoteId);
     }
 }

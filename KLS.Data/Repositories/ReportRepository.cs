@@ -641,5 +641,12 @@ namespace KLS.Data.Repositories
             return DbContext.RptCheckPrintDetail
                 .FromSqlRaw("[dbo].[Report_CheckPrintDetail] @VendorPaymentId", param);
         }
+
+        public IQueryable<InvoiceDetail>? SalesQuoteDetail(int salesQuoteId)
+        {
+            var param = new SqlParameter("@SalesQuoteId", salesQuoteId);
+            return DbContext.InvoiceDetail
+                .FromSqlRaw("[dbo].[Report_SalesQuote] @SalesQuoteId", param).AsNoTracking();
+        }
     }
 }

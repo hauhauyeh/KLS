@@ -214,13 +214,17 @@ namespace KLS.Data.Repositories
 
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
+            var UserNotesParam = string.IsNullOrWhiteSpace(paymentReq.UserNotes)
+                ? new SqlParameter("@UserNotes", DBNull.Value)
+                : new SqlParameter("@UserNotes", paymentReq.UserNotes);
+
             var NewPaymentIdParam = new SqlParameter("@NewPaymentId", System.Data.SqlDbType.Int)
             {
                 Direction = System.Data.ParameterDirection.Output
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[CustomerPayment_InsertFromGateway] @PayeeId,@PaymentMethod,@ReferenceId,@PaymentAmount,@SalesIds,@Gateway,@CCFee,@CardType,@Last4,@EmpId,@NewPaymentId OUTPUT",
+                "[dbo].[CustomerPayment_InsertFromGateway] @PayeeId,@PaymentMethod,@ReferenceId,@PaymentAmount,@SalesIds,@Gateway,@CCFee,@CardType,@Last4,@EmpId,@UserNotes,@NewPaymentId OUTPUT",
                 PayeeIdParam,
                 PaymentMethodParam,
                 ReferenceIdParam,
@@ -231,6 +235,7 @@ namespace KLS.Data.Repositories
                 CardTypeParam,
                 Last4Param,
                 EmpIdParam,
+                UserNotesParam,
                 NewPaymentIdParam
             );
 

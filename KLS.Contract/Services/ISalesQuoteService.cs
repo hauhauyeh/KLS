@@ -7,8 +7,8 @@ namespace KLS.Contract.Services
         PagingResponse<SalesQuoteList>? GetPagedList(SalesQuoteListReq req);
         SalesQuote GetById(int salesQuoteId);
         SalesQuoteDetailDto? GetDetail(int salesQuoteId);
-        SalesQuoteList Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId);
-        SalesQuoteList Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes);
+        int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId);
+        void Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes);
         void Inject(int salesQuoteId);
         void Delete(int salesQuoteId);
         void UpdateStatus(int salesQuoteId, int statusId);

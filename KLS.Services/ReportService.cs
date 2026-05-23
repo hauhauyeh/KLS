@@ -46,6 +46,27 @@ namespace KLS.Services
             };
         }
 
+        public RptSalesQuote SalesQuote(int salesQuoteId)
+        {
+            var quote = Uow.SalesQuotes.GetById(salesQuoteId);
+            var customer = Uow.Payees.GetById(quote.PayeeId);
+            string? salesRepName = null;
+            if (quote.SalesRepId.HasValue)
+            {
+                var rep = Uow.Payees.GetById(quote.SalesRepId.Value);
+                salesRepName = rep?.PayeeName;
+            }
+
+            return new RptSalesQuote
+            {
+                Quote = quote,
+                Details = Uow.Reports.SalesQuoteDetail(salesQuoteId)?.ToList(),
+                Customer = customer,
+                SalesRepName = salesRepName,
+                Company = _companyService.GetDefault(),
+            };
+        }
+
         public RptVendStmt VendStmt(int payeeId)
         {
             return Uow.Reports.VendStmt(payeeId);

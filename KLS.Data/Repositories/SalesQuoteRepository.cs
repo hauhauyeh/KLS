@@ -32,17 +32,23 @@ namespace KLS.Data.Repositories
 
         public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId)
         {
+            var newIdParam = new SqlParameter("@NewSalesQuoteId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
             DbContext.Database.ExecuteSqlRaw(
-                "EXEC [SalesQuote_Insert] @SalesQuoteId,@PayeeId,@EmpId,@ExpiryDate,@Notes,@StatusId",
+                "EXEC [SalesQuote_Insert] @SalesQuoteId,@PayeeId,@EmpId,@ExpiryDate,@Notes,@StatusId,@NewSalesQuoteId OUTPUT",
                 new SqlParameter("@SalesQuoteId", salesQuoteId),
                 new SqlParameter("@PayeeId", payeeId),
                 new SqlParameter("@EmpId", UserContext.EmpId),
                 expiryDate.HasValue ? new SqlParameter("@ExpiryDate", expiryDate.Value) : new SqlParameter("@ExpiryDate", DBNull.Value),
                 string.IsNullOrEmpty(notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", notes),
-                new SqlParameter("@StatusId", statusId)
+                new SqlParameter("@StatusId", statusId),
+                newIdParam
             );
 
-            return salesQuoteId;
+            return Convert.ToInt32(newIdParam.Value);
         }
 
         public int Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes)

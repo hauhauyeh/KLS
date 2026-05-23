@@ -1077,5 +1077,24 @@ namespace KLS.Services
 
             return fullPath;
         }
+
+        public string SalesQuote(int salesQuoteId)
+        {
+            var report = _reportService.SalesQuote(salesQuoteId);
+
+            var template = "~/Views/Pdf/SalesQuote.cshtml";
+            var html = _pdfService.RenderTemplate(template, report);
+
+            var fileName = "SalesQuote-" + report.Quote!.QuoteNumber + ".pdf";
+            string filePath = Path.Combine(_env.WebRootPath, "Pdf", fileName);
+
+            using (var pdf = _pdfService.HtmlToPDF(html))
+            {
+                _pdfService.AddPageFooter(pdf);
+                pdf.SaveAs(filePath);
+            }
+
+            return filePath;
+        }
     }
 }

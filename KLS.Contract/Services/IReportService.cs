@@ -12,6 +12,8 @@ namespace KLS.Contract.Services
     {
         RptInvoice Invoice(int salesId);
 
+        RptSalesQuote SalesQuote(int salesQuoteId);
+
         RptCustStmt CustStmt(int payeeId);
 
         RptVendStmt VendStmt(int payeeId);

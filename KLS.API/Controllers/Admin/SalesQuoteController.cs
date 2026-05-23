@@ -55,7 +55,8 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.SalesQuote.Update")]
         public IActionResult Update(int id, [FromBody] SalesQuoteSaveReq req)
         {
-            return Ok(_service.Update(id, req.PayeeId, req.ExpiryDate, req.Notes));
+            _service.Update(id, req.PayeeId, req.ExpiryDate, req.Notes);
+            return Ok();
         }
 
         [HttpPost("Inject/{id}")]

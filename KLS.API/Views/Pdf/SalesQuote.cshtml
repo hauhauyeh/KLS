@@ -1,0 +1,427 @@
+@using KLS.Models.Reports
+@model RptSalesQuote
+@{
+    var colSpan = 5;
+    var expiryDisplay = Model.Quote?.ExpiryDate?.ToString("MM/dd/yyyy") ?? "";
+    var quoteDateDisplay = Model.Quote?.QuoteDate?.ToString("MM/dd/yyyy") ?? "";
+}
+
+<style>
+    @@media print {
+        @@page {
+            size: letter;
+            margin-top: 0.2in;
+            margin-bottom: 0.2in;
+            margin-left: 0.2in;
+            margin-right: 0.2in;
+        }
+    }
+
+    body {
+        margin: 0;
+        font-size: 15px;
+        font-family: Calibri;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        padding: 0;
+        table-layout: fixed !important;
+    }
+
+    .header-height {
+        height: 245px;
+    }
+
+    .footer-height {
+        height: 120px;
+    }
+
+    .highlight-dark {
+        background-color: #333333;
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .highlight-small {
+        background-color: #e6e6e6;
+        border-radius: 4px;
+        padding: 0px 6px 1px 6px;
+    }
+
+    .font10 { font-size: 10px; }
+    .font11 { font-size: 11px; }
+    .font12 { font-size: 12px; }
+    .upparcase { text-transform: uppercase; }
+    .font600 { font-weight: 600; }
+
+    .chinese {
+        font-family: 'Microsoft YaHei';
+    }
+
+    .text-left { text-align: left; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+
+    .no-overflow {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .main-table tbody td {
+        font-size: 14px;
+        padding-bottom: 4px !important;
+        vertical-align: top;
+    }
+
+    .main-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    .main-table tbody tr.item-header {
+        background-color: #333333;
+    }
+
+    .main-table tbody tr.item-header td {
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 2px;
+    }
+
+    /* HEADER */
+    .main-table-header-grid {
+        position: fixed;
+        top: 0;
+        display: grid;
+        grid-template-rows: 135px 110px;
+        grid-template-columns: 50% 10% 40%;
+        width: 100%;
+    }
+
+    .comp-logo-grid {
+        grid-column: 1 / span 2;
+    }
+
+    .comp-name {
+        font-family: "Impact";
+        font-size: 18px;
+        line-height: 1;
+        padding-left: 10px;
+        margin-bottom: 10px;
+    }
+
+    .comp-address {
+        font-size: 12px;
+        line-height: 1.3;
+        padding-left: 10px;
+    }
+
+    .inv-info-grid {
+        grid-column: 3 / span 1;
+    }
+
+    .invoice-label {
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .invoice-info-label {
+        font-size: 11px !important;
+        font-weight: bold;
+        text-align: left;
+        border: 1px solid;
+        padding: 3px 5px !important;
+    }
+
+    .invoice-info {
+        font-size: 12.5px;
+        text-align: center;
+        border: 1px solid;
+        padding: 3px 5px !important;
+    }
+
+    .ship-to-grid {
+        grid-column: 1 / span 2;
+    }
+
+    .ship-to-label {
+        padding: 3px 5px;
+        padding-left: 10px;
+        margin-bottom: 5px;
+    }
+
+    .cust-name {
+        font-size: 15px;
+        font-weight: bold;
+        line-height: 1.2;
+        padding-left: 5px;
+        padding-bottom: 3px;
+    }
+
+    .cust-address {
+        font-size: 13px;
+        padding-left: 5px;
+        line-height: 1.3;
+    }
+
+    .notes-grid {
+        grid-column: 3 / span 1;
+    }
+
+    .notes-label {
+        padding: 3px 5px;
+        padding-left: 0px;
+        margin-bottom: 3px;
+    }
+
+    .notes-content {
+        font-size: 11px;
+        line-height: 1.1;
+        padding-left: 5px;
+    }
+
+    /* FOOTER */
+    .main-table-footer-grid {
+        position: fixed;
+        bottom: 0;
+        display: grid;
+        grid-template-rows: 20px 60px 30px;
+        grid-template-columns: 28% 28% 22% 22%;
+        width: 100%;
+    }
+
+    .validity-grid {
+        grid-column: 1 / span 2;
+        font-size: 13px;
+        font-weight: bold;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+    }
+
+    .total-grid {
+        grid-column: 3 / span 1;
+    }
+
+    .inv-total-grid {
+        grid-column: 4 / span 1;
+    }
+
+    .t2 {
+        width: 100%;
+        height: 100%;
+        border-spacing: 0;
+    }
+
+    .t2 td {
+        font-size: 12px;
+        font-weight: bold;
+        border: 1px solid black;
+        padding-left: 3px;
+        padding-right: 5px;
+    }
+
+    .fineprint-grid {
+        grid-column: 1 / span 4;
+        margin-top: 2px;
+        text-align: justify;
+        font-size: 9px;
+        line-height: 1.1;
+        color: #333333 !important;
+    }
+
+    .border-right-0 {
+        border-right: 0 !important;
+    }
+
+    .d-flex {
+        display: flex;
+    }
+
+    .justify-content-between {
+        justify-content: space-between;
+    }
+</style>
+
+<div>
+    <table class="main-table">
+        <colgroup>
+            <col style="width: 15%;">
+            <col style="width: 15%;">
+            <col style="width: 50%;">
+            @* <col style="width: 16%;"> *@
+            <col style="width: 10%;">
+            <col style="width: 10%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="item-header">
+                <td>Code</td>
+                <td>Qty</td>
+                <td>Description</td>
+                @* <td class="text-center">UPC</td> *@
+                <td class="text-center">Price</td>
+                <td class="text-right">Amount</td>
+            </tr>
+            @if (Model.Details != null)
+            {
+                @foreach (var item in Model.Details)
+                {
+                    <tr>
+                        <td><span>@item.ItemCode</span></td>
+                        <td class="no-overflow"><strong>@string.Format("{0:0.##}", item.ShipQty)</strong> @item.Unit</td>
+                        <td>
+                            <span style="line-height:1;">
+                                <strong>@item.ItemName</strong><br />
+                                <span class="font10 chinese">@item.ItemName2</span>&nbsp;
+                                <span class="font10 upparcase">@item.PackSize</span>
+                                @if (!string.IsNullOrEmpty(item.Notes))
+                                {
+                                    <span class="highlight-small font12">@item.Notes</span>
+                                }
+                            </span>
+                        </td>
+                        @* <td class="text-center"><span>@item.Barcode</span></td> *@
+                        <td class="text-center"><span>@string.Format("{0:c}", item.UnitPrice)</span></td>
+                        <td class="text-right"><span>@string.Format("{0:c}", item.ExtTotal)</span></td>
+                    </tr>
+                }
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="@colSpan"><div class="footer-height">&nbsp;</div></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- HEADER -->
+    <div class="main-table-header-grid header-height">
+        <div class="comp-logo-grid">
+            <div class="comp-name">
+                <div>
+                    @if (Model.Company!.HasLogo)
+                    {
+                        <img src="@Model.Company.LogoUrl" class="img-fluid" height="55" />
+                    }
+                    else
+                    {
+                        <span style="font-family: 'Segoe UI'; font-size: 28px; font-weight:bold;">@Model.Company.CompanyName</span>
+                    }
+                </div>
+                <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+            </div>
+            <div class="comp-address">
+                @Model.Company.AddressLine1<br />
+                @Model.Company.City @Model.Company.State @Model.Company.ZipCode<br />
+                @Model.Company.Phone<br />
+                <strong>@Model.Company.Website</strong>
+            </div>
+        </div>
+        <div class="inv-info-grid">
+            <div class="invoice-label">Sales Quote</div>
+            <table>
+                <colgroup>
+                    <col style="width: 40%;">
+                    <col style="width: 60%;">
+                </colgroup>
+                <tr>
+                    <td class="invoice-info-label">Quote #</td>
+                    <td class="invoice-info">@Model.Quote?.QuoteNumber</td>
+                </tr>
+                <tr>
+                    <td class="invoice-info-label">Quote Date</td>
+                    <td class="invoice-info">@quoteDateDisplay</td>
+                </tr>
+                <tr>
+                    <td class="invoice-info-label">Expiry Date</td>
+                    <td class="invoice-info">@expiryDisplay</td>
+                </tr>
+                <tr>
+                    <td class="invoice-info-label">Sales Rep</td>
+                    <td class="invoice-info">@Model.SalesRepName</td>
+                </tr>
+            </table>
+        </div>
+        <div class="ship-to-grid">
+            <div class="ship-to-label highlight-dark">Customer</div>
+            <div class="cust-name">@Model.Customer?.PayeeName</div>
+            <div class="cust-address">
+                @Model.Customer?.Address<br />
+                @Model.Customer?.City @Model.Customer?.State @Model.Customer?.ZipCode<br />
+                @Model.Customer?.Phone1
+            </div>
+        </div>
+        <div class="notes-grid">
+            @if (!string.IsNullOrEmpty(Model.Quote?.Notes))
+            {
+                <div class="notes-label highlight-dark">Notes</div>
+                <div class="notes-content">@Model.Quote.Notes</div>
+            }
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="main-table-footer-grid footer-height">
+        <div class="validity-grid">
+            @if (!string.IsNullOrEmpty(expiryDisplay))
+            {
+                <span>Valid until @expiryDisplay</span>
+            }
+        </div>
+        <div class="total-grid">
+            <table class="t2">
+                <colgroup>
+                    <col style="width: 50%;">
+                    <col style="width: 50%;">
+                </colgroup>
+                <tr>
+                    <td class="text-center">Total Items</td>
+                    <td class="text-center border-right-0">@Model.TotalItems</td>
+                </tr>
+                <tr>
+                    <td class="text-center">Total Cases</td>
+                    <td class="text-center border-right-0">@string.Format("{0:0.##}", Model.TotalCases)</td>
+                </tr>
+                <tr>
+                    <td class="text-center">Total Weight</td>
+                    <td class="text-center border-right-0">@string.Format("{0:0.00}", Model.TotalWeight) lbs</td>
+                </tr>
+            </table>
+        </div>
+        <div class="inv-total-grid">
+            <table class="t2">
+                <colgroup>
+                    <col style="width: 40%;">
+                    <col style="width: 60%;">
+                </colgroup>
+                <tr>
+                    <td class="text-right">Subtotal</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.Quote?.SubTotal)</td>
+                </tr>
+                <tr>
+                    <td class="text-right">Tax</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.Quote?.TaxTotal)</td>
+                </tr>
+                <tr>
+                    <td class="text-right">Total</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.Quote?.QuoteTotal)</td>
+                </tr>
+            </table>
+        </div>
+        <div class="fineprint-grid">
+            @Model.Company?.InvoiceFinePrint
+        </div>
+    </div>
+</div>

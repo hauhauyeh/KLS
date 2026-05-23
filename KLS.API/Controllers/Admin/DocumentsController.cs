@@ -203,6 +203,20 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("SalesQuote/{id}")]
+        [DisplayName("Gen Sales Quote")]
+        [PermissionKey("Customer.SalesQuote.SeePdf")]
+        public IActionResult SalesQuote(int id)
+        {
+            var filePath = _documentService.SalesQuote(id);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
         #endregion
     }
 }
