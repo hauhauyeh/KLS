@@ -24,6 +24,15 @@
       - DROP + CREATE the working proc.
 */
 
+-- SET options must match the live SP's compile-time options, otherwise
+-- writes against tables with filtered indexes / computed columns / indexed
+-- views throw Msg 1934 at runtime. See kls-sql-standard.md Part 1
+-- "Required SP Header".
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
 -- _prev rename: one-time only (CLAUDE.md feedback_sp_rename_once).
 IF EXISTS (SELECT 1 FROM sys.procedures WHERE name = 'Promotion_GetAllList')
    AND NOT EXISTS (SELECT 1 FROM sys.procedures WHERE name = 'Promotion_GetAllList_prev')
