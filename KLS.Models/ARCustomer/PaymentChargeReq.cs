@@ -30,5 +30,11 @@ namespace KLS.Models
         public PaymentMethod? PaymentMethod { get; set; }
 
         public string? Gateway { get; set; }
+
+        /// <summary>
+        /// Optional user-entered note. Captured at charge time and appended
+        /// to the gateway label when written to CustomerPayment.Notes.
+        /// </summary>
+        public string? Notes { get; set; }
     }
 }

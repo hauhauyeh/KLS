@@ -24,8 +24,19 @@ BEGIN
            with Notes='Auto Sync $1,234.56' where the dollar amount is the
            route's total Sales for that ShipDate+ShipRoute (same calc as
            Report_JobSummary's RouteTotal column).
-        3. Idempotent — if a TimesheetDetail already exists for the same
-           Timesheet + Route, skip it. Manual reruns won't duplicate.
+        3. Idempotent — duplicate guard is scoped to (TimesheetId, JobCode='D',
+           Route). A Driver row and a Loader row on the same route are
+           different jobs; both can coexist. The earlier coarse (TimesheetId,
+           Route) guard silently swallowed the Driver insert when a Loader
+           detail already existed on the same route (e.g. Alexis on every
+           route, Abdel as Loader on his own driving route).
+
+      Source filter:
+        - SalesRoute.DriverId IS NOT NULL (the real FK; Driver is just a
+          display-name string and can be stale/mismatched without a real
+          driver assignment).
+        - Route NOT IN ('P', 'CM') — these route codes are scheduling artifacts
+          that should never produce a driver timesheet entry.
     */
 
     DECLARE @TimeTable AS TABLE
@@ -52,10 +63,13 @@ BEGIN
     SELECT @CompanyTimezone = Timezone FROM Company
     SELECT @JobRate = JobRate FROM EmpJob WHERE JobCode = 'D'
 
+    -- Source filter: real FK + exclude non-driver scheduling codes.
     INSERT INTO @TimeTable
     SELECT s.ShipDate, s.ShipRoute, s.DriverId
     FROM SalesRoute AS s
-    WHERE s.ShipDate = CONVERT(date, GETDATE()) AND s.Driver IS NOT NULL
+    WHERE s.ShipDate = CONVERT(date, GETDATE())
+      AND s.DriverId IS NOT NULL
+      AND s.ShipRoute NOT IN ('P', 'CM')
 
     SELECT @MaxRow = COUNT(*) FROM @TimeTable
 
@@ -111,11 +125,13 @@ BEGIN
         -- Build the marker + formatted dollar amount: 'Auto Sync $1,234.56'.
         SET @DetailNotes = 'Auto Sync ' + FORMAT(@RouteTotal, 'C', 'en-US');
 
-        -- Insert the route as a TimesheetDetail, but only if one doesn't
-        -- already exist for this Timesheet + Route. Dedup guard for reruns.
+        -- Insert the route as a TimesheetDetail. Dedup guard is scoped to
+        -- JobCode='D' so a Driver detail can coexist with a Loader detail
+        -- on the same route.
         IF NOT EXISTS (
             SELECT 1 FROM [dbo].[TimesheetDetail]
             WHERE TimesheetId = @TimesheetId
+              AND JobCode = 'D'
               AND Route = @ShipRoute
         )
         BEGIN

@@ -415,10 +415,26 @@ namespace KLS.Services
                     if (method == null)
                         throw new Exception("Payment method not found.");
 
+                    // "Charge now, Apply later": user typed a different amount
+                    // than the selected total. Clear SalesIds so the SP routes
+                    // it as unapplied credit, and base the gateway charge on
+                    // the user-entered amount instead of dueTotal.
+                    if (chargeReq.IsPaymentChange)
+                    {
+                        chargeReq.SalesIds = "";
+                        ccFee = method.IsACH
+                            ? 0m
+                            : Utilities.Rounding(chargeReq.CCFeePercent * chargeReq.PaymentAmount, 2) ?? 0m;
+                        paymentAmount = chargeReq.PaymentAmount + ccFee;
+                        paymentAmountCent = Convert.ToInt64(paymentAmount * 100m);
+                    }
+
                     if (method.IsACH)
                     {
+                        var achCharge = chargeReq.IsPaymentChange ? chargeReq.PaymentAmount : dueTotal;
+
                         var mxResp = _mxMerchantService
-                            .ChargeAsync(method, dueTotal, true)
+                            .ChargeAsync(method, achCharge, true)
                             .GetAwaiter()
                             .GetResult();
 
@@ -429,7 +445,7 @@ namespace KLS.Services
                             PayeeId = chargeReq.PayeeId,
                             PaymentMethod = "E-CHECK",
                             ReferenceId = referenceId,
-                            PaymentAmount = dueTotal,
+                            PaymentAmount = achCharge,
                             SalesIds = chargeReq.SalesIds,
                             Gateway = "MX Merchant" + sortName,
                             CCFee = 0m,
@@ -439,8 +455,12 @@ namespace KLS.Services
                     }
                     else if (chargeReq.Gateway == "MX")
                     {
+                        var ccCharge = chargeReq.IsPaymentChange
+                            ? chargeReq.PaymentAmount + ccFee
+                            : dueTotal + ccFee;
+
                         var mxResp = _mxMerchantService
-                            .ChargeAsync(method, dueTotal + ccFee, true)
+                            .ChargeAsync(method, ccCharge, true)
                             .GetAwaiter()
                             .GetResult();
 
@@ -451,7 +471,7 @@ namespace KLS.Services
                             PayeeId = chargeReq.PayeeId,
                             PaymentMethod = "CREDIT CARD",
                             ReferenceId = referenceId,
-                            PaymentAmount = dueTotal + ccFee,
+                            PaymentAmount = ccCharge,
                             SalesIds = chargeReq.SalesIds,
                             Gateway = "MX Merchant Web Payment",
                             CCFee = ccFee,
@@ -472,12 +492,16 @@ namespace KLS.Services
 
                         ValidateSquareResponse(paymentResponse);
 
+                        var sqCharge = chargeReq.IsPaymentChange
+                            ? chargeReq.PaymentAmount + ccFee
+                            : dueTotal + ccFee;
+
                         paymentReq = new CreateGatewayPaymentReq
                         {
                             PayeeId = chargeReq.PayeeId,
                             PaymentMethod = "CREDIT CARD",
                             ReferenceId = paymentResponse.Payment?.Id,
-                            PaymentAmount = dueTotal + ccFee,
+                            PaymentAmount = sqCharge,
                             SalesIds = chargeReq.SalesIds,
                             Gateway = "Square Payment" + sortName,
                             CCFee = ccFee,
@@ -560,6 +584,12 @@ namespace KLS.Services
                 {
                     throw new Exception("Payment method or Square token is required.");
                 }
+
+                // Forward user-entered note (from the charge dialog) to the
+                // gateway insert SP, which composes it with the Gateway label
+                // into the final CustomerPayment.Notes string.
+                if (paymentReq != null)
+                    paymentReq.UserNotes = chargeReq.Notes;
 
                 var paymentId = Uow.CustomerPayments.SaveGatewayPayment(paymentReq);
 
