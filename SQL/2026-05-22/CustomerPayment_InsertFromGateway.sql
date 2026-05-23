@@ -25,6 +25,15 @@
         _prev already exists from a prior round, so this is DROP + CREATE only.
 */
 
+-- SET options must match the live SP's compile-time options, otherwise
+-- DELETE/UPDATE statements that touch filtered indexes throw at runtime
+-- (Msg 1934: "DELETE failed because the following SET options have incorrect
+-- settings: 'QUOTED_IDENTIFIER'").
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
 DROP PROCEDURE IF EXISTS [dbo].[CustomerPayment_InsertFromGateway];
 GO
 
