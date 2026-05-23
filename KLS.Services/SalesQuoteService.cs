@@ -1,12 +1,29 @@
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.AspNetCore.Hosting;
 
 namespace KLS.Services
 {
     public class SalesQuoteService : BaseService, ISalesQuoteService
     {
-        public SalesQuoteService(IUnitOfWork uow) : base(uow) { }
+        private readonly IDocumentService _documentService;
+        private readonly IEmailSettingService _emailSettingService;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _env;
+
+        public SalesQuoteService(IUnitOfWork uow,
+            IDocumentService documentService,
+            IEmailSettingService emailSettingService,
+            IEmailService emailService,
+            IWebHostEnvironment env) : base(uow)
+        {
+            _documentService = documentService;
+            _emailSettingService = emailSettingService;
+            _emailService = emailService;
+            _env = env;
+        }
 
         public PagingResponse<SalesQuoteList>? GetPagedList(SalesQuoteListReq req)
         {
@@ -40,18 +57,14 @@ namespace KLS.Services
             };
         }
 
-        public SalesQuoteList Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId)
+        public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId)
         {
-            var newId = Uow.SalesQuotes.Insert(salesQuoteId, payeeId, expiryDate, notes, statusId);
-            var listReq = new SalesQuoteListReq { Search = newId.ToString(), Pageno = 1, Pagesize = 1 };
-            return Uow.SalesQuotes.GetPagedList(listReq).AsEnumerable().FirstOrDefault()!;
+            return Uow.SalesQuotes.Insert(salesQuoteId, payeeId, expiryDate, notes, statusId);
         }
 
-        public SalesQuoteList Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes)
+        public void Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes)
         {
             Uow.SalesQuotes.Update(salesQuoteId, payeeId, expiryDate, notes);
-            var listReq = new SalesQuoteListReq { Search = salesQuoteId.ToString(), Pageno = 1, Pagesize = 1 };
-            return Uow.SalesQuotes.GetPagedList(listReq).AsEnumerable().FirstOrDefault()!;
         }
 
         public void Inject(int salesQuoteId)
@@ -77,7 +90,38 @@ namespace KLS.Services
 
         public void EmailPdf(int salesQuoteId)
         {
-            // TODO: Implement PDF email (same pattern as SalesService.EmailPdf)
+            var quote = GetById(salesQuoteId);
+            if (quote == null) return;
+
+            var pdfFile = _documentService.SalesQuote(salesQuoteId);
+            var payee = Uow.Payees.GetById(quote.PayeeId);
+
+            if (payee != null && !string.IsNullOrEmpty(payee.EmailInvoice))
+            {
+                string toEmails = payee.EmailInvoice;
+                string subject = "Sales Quote #" + quote.QuoteNumber;
+                string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Please find attached your sales quote #" + quote.QuoteNumber + ".<br/><br/>";
+                string[] attcfiles = [pdfFile];
+
+                var setting = _emailSettingService.GetSetting();
+
+                Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailbody, attcfiles), TaskCreationOptions.LongRunning)
+                    .ContinueWith((t) =>
+                    {
+                        var log = new EmailLog
+                        {
+                            PayeeId = quote.PayeeId,
+                            Email = toEmails,
+                            SentDate = DateTime.UtcNow,
+                            EventType = EnumHelper.EmailLogEvent.Invoice.ToString(),
+                            ErrorMessage = t.Result,
+                            Status = string.IsNullOrEmpty(t.Result)
+                        };
+
+                        Uow.EmailLogs.Add(log);
+                        Uow.Commit();
+                    });
+            }
         }
     }
 }

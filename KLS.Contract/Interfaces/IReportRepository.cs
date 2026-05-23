@@ -135,5 +135,7 @@ namespace KLS.Contract.Interfaces
         RptCheckPrint? CheckPrint(int vendorPaymentId);
 
         IQueryable<RptCheckPrintDetail> CheckPrintDetail(int vendorPaymentId);
+
+        IQueryable<InvoiceDetail>? SalesQuoteDetail(int salesQuoteId);
     }
 }
