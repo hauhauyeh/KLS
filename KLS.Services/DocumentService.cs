@@ -163,6 +163,28 @@ namespace KLS.Services
 
                 merged.SaveAs(filePath);
 
+                // Route-level print only — bump SalesRoute.PrintCount after the merged
+                // file is safely on disk. Per-invoice GenerateInvoice success is NOT
+                // enough; Merge or SaveAs above can still throw and leave us with no
+                // returnable document, so the increment must sit below SaveAs. Single-
+                // invoice prints (req.SalesId.HasValue) never carried PrintCount before
+                // this move either — that branch stays uncounted on purpose.
+                if (req.IsPrint
+                    && !req.SalesId.HasValue
+                    && req.ShipDate.HasValue
+                    && !string.IsNullOrEmpty(req.ShipRoute))
+                {
+                    var route = Uow.SalesRoutes
+                        .Find(r => r.ShipDate == req.ShipDate.Value && r.ShipRoute == req.ShipRoute)
+                        .FirstOrDefault();
+                    if (route != null)
+                    {
+                        route.PrintCount = (route.PrintCount ?? 0) + 1;
+                        Uow.SalesRoutes.Update(route);
+                        Uow.Commit();
+                    }
+                }
+
                 return filePath;
             }
             finally

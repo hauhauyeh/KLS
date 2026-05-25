@@ -77,7 +77,8 @@ namespace KLS.Services
                 existingRoute.FuelCard = salesRoute.FuelCard;
                 existingRoute.BeginMileage = salesRoute.BeginMileage;
                 existingRoute.TruckIssue = salesRoute.TruckIssue;
-                existingRoute.PrintCount = (existingRoute.PrintCount ?? 0) + 1;
+                // PrintCount increment moved to DocumentService.Invoice (after merged.SaveAs)
+                // so Save Only no longer counts as a print and failed PDF gen doesn't either.
 
                 Uow.SalesRoutes.Update(existingRoute);
                 Uow.Commit();
