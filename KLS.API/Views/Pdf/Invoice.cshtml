@@ -6,7 +6,7 @@
     var isCreditMemo = Model.Invoice?.DocType == "CM";
     var docLabel = isCreditMemo ? "CREDIT MEMO" : "INVOICE";
     var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Invoice #";
-    var docDateLabel = isCreditMemo ? "Credit Memo Date" : "Invoice Date";
+    var docDateLabel = isCreditMemo ? "Date" : "Invoice Date";
 
     if (Model.HasDiscount)
         colSpan = 7;
