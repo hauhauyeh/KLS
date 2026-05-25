@@ -64,7 +64,11 @@ namespace KLS.Services
                     Uow.Sales.Update(sales);
                 }
 
-                existingRoute.Loader = salesRoute.Loader;
+                // Loader: resolve from LoaderId when set, mirroring DriverId pattern.
+                // LoaderId is the source of truth; Loader text is a denormalized
+                // PayeeName cache for read-side speed (reports + invoice PDF).
+                existingRoute.LoaderId = salesRoute.LoaderId;
+                existingRoute.Loader = ResolveLoaderName(salesRoute.LoaderId, salesRoute.Loader);
                 existingRoute.Checker = salesRoute.Checker;
                 existingRoute.FuelCash = salesRoute.FuelCash;
                 existingRoute.FuelCard = salesRoute.FuelCard;
@@ -316,6 +320,16 @@ namespace KLS.Services
                 return Uow.Payees.GetById(driverId.Value)?.PayeeName;
 
             return string.IsNullOrWhiteSpace(fallbackDriverName) ? null : fallbackDriverName.Trim();
+        }
+
+        // Mirrors ResolveDriverName. LoaderId added 2026-05-25; same source-of-truth
+        // pattern (FK is canonical, text column is a denormalized PayeeName cache).
+        private string? ResolveLoaderName(int? loaderId, string? fallbackLoaderName)
+        {
+            if (loaderId.HasValue)
+                return Uow.Payees.GetById(loaderId.Value)?.PayeeName;
+
+            return string.IsNullOrWhiteSpace(fallbackLoaderName) ? null : fallbackLoaderName.Trim();
         }
 
         private static int? ResolveDriverId(Dictionary<string, int> driverLookup, string? driverName)
