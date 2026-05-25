@@ -69,7 +69,10 @@ namespace KLS.Services
                 // PayeeName cache for read-side speed (reports + invoice PDF).
                 existingRoute.LoaderId = salesRoute.LoaderId;
                 existingRoute.Loader = ResolveLoaderName(salesRoute.LoaderId, salesRoute.Loader);
-                existingRoute.Checker = salesRoute.Checker;
+
+                // Checker: same FK pattern (CheckerId added 2026-05-25).
+                existingRoute.CheckerId = salesRoute.CheckerId;
+                existingRoute.Checker = ResolveCheckerName(salesRoute.CheckerId, salesRoute.Checker);
                 existingRoute.FuelCash = salesRoute.FuelCash;
                 existingRoute.FuelCard = salesRoute.FuelCard;
                 existingRoute.BeginMileage = salesRoute.BeginMileage;
@@ -87,7 +90,11 @@ namespace KLS.Services
 
             if (existingRoute != null)
             {
-                existingRoute.Officer = salesRoute.Officer;
+                // Officer: same FK pattern as Driver/Loader/Checker.
+                // OfficerId is the source of truth; Officer text is the
+                // denormalized PayeeName cache for reports + driver sheet PDF.
+                existingRoute.OfficerId = salesRoute.OfficerId;
+                existingRoute.Officer = ResolveOfficerName(salesRoute.OfficerId, salesRoute.Officer);
                 existingRoute.FuelReceipt = salesRoute.FuelReceipt;
                 existingRoute.CashChangeBack = salesRoute.CashChangeBack;
                 existingRoute.HandTruckBack = salesRoute.HandTruckBack;
@@ -330,6 +337,24 @@ namespace KLS.Services
                 return Uow.Payees.GetById(loaderId.Value)?.PayeeName;
 
             return string.IsNullOrWhiteSpace(fallbackLoaderName) ? null : fallbackLoaderName.Trim();
+        }
+
+        // CheckerId and OfficerId added 2026-05-25 alongside Loader to finish
+        // the FK upgrade across all four crew-role fields on SalesRoute.
+        private string? ResolveCheckerName(int? checkerId, string? fallbackCheckerName)
+        {
+            if (checkerId.HasValue)
+                return Uow.Payees.GetById(checkerId.Value)?.PayeeName;
+
+            return string.IsNullOrWhiteSpace(fallbackCheckerName) ? null : fallbackCheckerName.Trim();
+        }
+
+        private string? ResolveOfficerName(int? officerId, string? fallbackOfficerName)
+        {
+            if (officerId.HasValue)
+                return Uow.Payees.GetById(officerId.Value)?.PayeeName;
+
+            return string.IsNullOrWhiteSpace(fallbackOfficerName) ? null : fallbackOfficerName.Trim();
         }
 
         private static int? ResolveDriverId(Dictionary<string, int> driverLookup, string? driverName)
