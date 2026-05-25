@@ -120,6 +120,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptAPInvoiceRow> APInvoice(ReportRequest reportReq);
 
+        IQueryable<RptAPAgingRow> APAging(RptAPAgingReq req);
+
         IQueryable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req);
 
         IQueryable<RptReorderRow> Reorder(InventoryReportRequest req);
