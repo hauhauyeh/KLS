@@ -29,9 +29,15 @@ namespace KLS.Models
 
         public string? Loader { get; set; }
 
+        public int? LoaderId { get; set; }
+
         public string? Checker { get; set; }
 
+        public int? CheckerId { get; set; }
+
         public string? Officer { get; set; }
+
+        public int? OfficerId { get; set; }
 
         public string? TruckNumber { get; set; }
 

@@ -450,6 +450,18 @@ namespace KLS.Data.Repositories
                 TermParam, SortbyParam, FilterbyParam);
         }
 
+        public IQueryable<RptAPAgingRow> APAging(RptAPAgingReq req)
+        {
+            var AsOfDateParam = req.AsOfDate.HasValue ? new SqlParameter("@AsOfDate", req.AsOfDate.Value) : new SqlParameter("@AsOfDate", DBNull.Value);
+            var AgeBasisParam = new SqlParameter("@AgeBasis", string.IsNullOrEmpty(req.AgeBasis) ? "DueDate" : req.AgeBasis);
+            var VendorIdParam = req.VendorId.HasValue ? new SqlParameter("@VendorId", req.VendorId.Value) : new SqlParameter("@VendorId", DBNull.Value);
+            var TermIdParam   = req.TermId.HasValue   ? new SqlParameter("@TermId",   req.TermId.Value)   : new SqlParameter("@TermId",   DBNull.Value);
+
+            return DbContext.RptAPAgingRow.FromSqlRaw(
+                "[dbo].[Report_APAging] @AsOfDate,@AgeBasis,@VendorId,@TermId",
+                AsOfDateParam, AgeBasisParam, VendorIdParam, TermIdParam);
+        }
+
         public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);

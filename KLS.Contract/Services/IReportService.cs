@@ -98,6 +98,8 @@ namespace KLS.Contract.Services
 
         RptARInvoice APInvoice(ReportRequest reportReq);
 
+        IQueryable<RptAPAgingRow> APAging(RptAPAgingReq req);
+
         IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
 
         IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);

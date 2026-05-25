@@ -603,6 +603,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptAPInvoiceRow> RptAPInvoiceRow { get; set; }
 
+        public virtual DbSet<RptAPAgingRow> RptAPAgingRow { get; set; }
+
         public virtual DbSet<RptInventoryStatusRow> RptInventoryStatusRow { get; set; }
 
         public virtual DbSet<RptReorderRow> RptReorderRow { get; set; }

@@ -953,6 +953,14 @@ namespace KLS.Services
             };
         }
 
+        // Per-invoice AP Aging — passthrough. SP already filters to Stage=6 Billed
+        // + AmountDue<>0 and returns mirror bucket columns; frontend groups by
+        // vendor + computes subtotals/totals client-side.
+        public IQueryable<RptAPAgingRow> APAging(RptAPAgingReq req)
+        {
+            return Uow.Reports.APAging(req);
+        }
+
         public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
         {
             if (UserContext.IsSalesRole)

@@ -1,6 +1,7 @@
 ﻿using KLS.API.Helpers;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Models.Reports;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -332,6 +333,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult APInvoice([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.APInvoice(reportReq));
+        }
+
+        [HttpGet("APAging")]
+        [DisplayName("AP -> AP Aging")]
+        [PermissionKey("Report.AP.Aging")]
+        public IActionResult APAging([FromQuery] RptAPAgingReq req)
+        {
+            return Ok(_reportService.APAging(req));
         }
 
         #endregion
