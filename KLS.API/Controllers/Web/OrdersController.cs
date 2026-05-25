@@ -14,15 +14,17 @@ namespace KLS.API.Controllers.Web
         #region --- Member(s) ---
 
         private readonly ISalesService _salesService;
+        private readonly IDocumentService _documentService;
         private readonly IWebHostEnvironment _env;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public OrdersController(ISalesService salesService, IWebHostEnvironment env)
+        public OrdersController(ISalesService salesService, IDocumentService documentService, IWebHostEnvironment env)
         {
             _salesService = salesService;
+            _documentService = documentService;
             _env = env;
         }
 
@@ -48,11 +50,20 @@ namespace KLS.API.Controllers.Web
 
             var filePath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
 
-            if (!System.IO.File.Exists(filePath))
+            if (System.IO.File.Exists(filePath))
+            {
+                var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                return File(fileStream, "application/pdf");
+            }
+
+            // Fallback: generate invoice PDF on-the-fly
+            var generatedPath = _documentService.Invoice(new DocumentReq { SalesId = sales.SalesId, SalesNumber = sales.SalesNumber });
+
+            if (string.IsNullOrEmpty(generatedPath) || !System.IO.File.Exists(generatedPath))
                 return NotFound("File not found.");
 
-            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            return File(fileStream, "application/pdf");
+            var generatedStream = new FileStream(generatedPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(generatedStream, "application/pdf");
         }
 
 

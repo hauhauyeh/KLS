@@ -64,13 +64,21 @@ namespace KLS.Services
                     Uow.Sales.Update(sales);
                 }
 
-                existingRoute.Loader = salesRoute.Loader;
-                existingRoute.Checker = salesRoute.Checker;
+                // Loader: resolve from LoaderId when set, mirroring DriverId pattern.
+                // LoaderId is the source of truth; Loader text is a denormalized
+                // PayeeName cache for read-side speed (reports + invoice PDF).
+                existingRoute.LoaderId = salesRoute.LoaderId;
+                existingRoute.Loader = ResolveLoaderName(salesRoute.LoaderId, salesRoute.Loader);
+
+                // Checker: same FK pattern (CheckerId added 2026-05-25).
+                existingRoute.CheckerId = salesRoute.CheckerId;
+                existingRoute.Checker = ResolveCheckerName(salesRoute.CheckerId, salesRoute.Checker);
                 existingRoute.FuelCash = salesRoute.FuelCash;
                 existingRoute.FuelCard = salesRoute.FuelCard;
                 existingRoute.BeginMileage = salesRoute.BeginMileage;
                 existingRoute.TruckIssue = salesRoute.TruckIssue;
-                existingRoute.PrintCount = (existingRoute.PrintCount ?? 0) + 1;
+                // PrintCount increment moved to DocumentService.Invoice (after merged.SaveAs)
+                // so Save Only no longer counts as a print and failed PDF gen doesn't either.
 
                 Uow.SalesRoutes.Update(existingRoute);
                 Uow.Commit();
@@ -83,7 +91,11 @@ namespace KLS.Services
 
             if (existingRoute != null)
             {
-                existingRoute.Officer = salesRoute.Officer;
+                // Officer: same FK pattern as Driver/Loader/Checker.
+                // OfficerId is the source of truth; Officer text is the
+                // denormalized PayeeName cache for reports + driver sheet PDF.
+                existingRoute.OfficerId = salesRoute.OfficerId;
+                existingRoute.Officer = ResolveOfficerName(salesRoute.OfficerId, salesRoute.Officer);
                 existingRoute.FuelReceipt = salesRoute.FuelReceipt;
                 existingRoute.CashChangeBack = salesRoute.CashChangeBack;
                 existingRoute.HandTruckBack = salesRoute.HandTruckBack;
@@ -316,6 +328,34 @@ namespace KLS.Services
                 return Uow.Payees.GetById(driverId.Value)?.PayeeName;
 
             return string.IsNullOrWhiteSpace(fallbackDriverName) ? null : fallbackDriverName.Trim();
+        }
+
+        // Mirrors ResolveDriverName. LoaderId added 2026-05-25; same source-of-truth
+        // pattern (FK is canonical, text column is a denormalized PayeeName cache).
+        private string? ResolveLoaderName(int? loaderId, string? fallbackLoaderName)
+        {
+            if (loaderId.HasValue)
+                return Uow.Payees.GetById(loaderId.Value)?.PayeeName;
+
+            return string.IsNullOrWhiteSpace(fallbackLoaderName) ? null : fallbackLoaderName.Trim();
+        }
+
+        // CheckerId and OfficerId added 2026-05-25 alongside Loader to finish
+        // the FK upgrade across all four crew-role fields on SalesRoute.
+        private string? ResolveCheckerName(int? checkerId, string? fallbackCheckerName)
+        {
+            if (checkerId.HasValue)
+                return Uow.Payees.GetById(checkerId.Value)?.PayeeName;
+
+            return string.IsNullOrWhiteSpace(fallbackCheckerName) ? null : fallbackCheckerName.Trim();
+        }
+
+        private string? ResolveOfficerName(int? officerId, string? fallbackOfficerName)
+        {
+            if (officerId.HasValue)
+                return Uow.Payees.GetById(officerId.Value)?.PayeeName;
+
+            return string.IsNullOrWhiteSpace(fallbackOfficerName) ? null : fallbackOfficerName.Trim();
         }
 
         private static int? ResolveDriverId(Dictionary<string, int> driverLookup, string? driverName)
