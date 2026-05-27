@@ -310,7 +310,7 @@ namespace KLS.API.Controllers.Admin
         #region --- AP ---
 
         [HttpGet("APCheck")]
-        [DisplayName("AP -> AP Check")]
+        [DisplayName("AP -> AP Outstanding Checks")]
         [PermissionKey("Report.AP.APCheck")]
         public IActionResult APCheck([FromQuery] ReportRequest reportReq)
         {

@@ -470,10 +470,6 @@
                             <tr>
                                 <td class="no-overflow">
                                     <strong>
-                                        @if (itmdetail.IsTaxable)
-                                        {
-                                            <span>*</span>
-                                        }
                                         @string.Format("{0:0.##}", itmdetail.ShipQty)
                                     </strong> @itmdetail.Unit
                                 </td>
@@ -494,7 +490,13 @@
                                     <td class="text-right font11">@string.Format("{0:0.#%}", itmdetail.Discount)</td> *@
                                 }
                                 <td class="text-right font12">@string.Format("{0:c}", itmdetail.UnitPrice)</td>
-                                <td class="text-right font12">@string.Format("{0:c}", itmdetail.ExtTotal)</td>
+                                <td class="text-right font12">
+                                    @string.Format("{0:c}", itmdetail.ExtTotal)
+                                    @if (itmdetail.IsTaxable)
+                                    {
+                                        <strong class="font11"> T</strong>
+                                    }
+                                </td>
                             </tr>
                         }
                     }

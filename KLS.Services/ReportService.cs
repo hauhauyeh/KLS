@@ -411,16 +411,10 @@ namespace KLS.Services
                 .ToList();
         }
 
-        private static int GetPackingStorageSortOrder(string? storageName)
-        {
-            if (string.Equals(storageName, "Cooler", StringComparison.OrdinalIgnoreCase))
-                return 0;
-
-            if (string.Equals(storageName, "Prepack", StringComparison.OrdinalIgnoreCase))
-                return 1;
-
-            return 2;
-        }
+        // Section sort order now lives in KLS.Common.PackingStorageOrder so the
+        // single-invoice and route-wide paths share one source of truth. Previous
+        // local copy returned 0/1/2 (Cooler/Prepack/rest) which fell through to
+        // alphabetical for non-Cooler sections — that's the bug the consolidation fixes.
 
         // Shared packing-style report model builder. Standalone PackingList remains the
         // source of truth, and filtered reports such as Harvills / Store Total now reuse
@@ -442,7 +436,7 @@ namespace KLS.Services
 
             var packingStorage = itemList
                 .GroupBy(c => c.StorageName)
-                .OrderBy(g => GetPackingStorageSortOrder(g.Key))
+                .OrderBy(g => PackingStorageOrder.GetSortOrder(g.Key))
                 .ThenBy(g => g.Key)
                 .Select(g => new PackingListStorage
                 {
