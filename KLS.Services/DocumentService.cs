@@ -721,7 +721,7 @@ namespace KLS.Services
         {
             var packingStorage = routeData
                 .GroupBy(c => c.StorageName)
-                .OrderBy(g => GetPackingStorageSortOrder(g.Key))
+                .OrderBy(g => PackingStorageOrder.GetSortOrder(g.Key))
                 .ThenBy(g => g.Key)
                 .Select(g => new PackingListStorage
                 {
@@ -769,31 +769,8 @@ namespace KLS.Services
                 .ToList();
         }
 
-        private static int GetPackingStorageSortOrder(string? storageName)
-        {
-            if (string.Equals(storageName, "Cooler", StringComparison.OrdinalIgnoreCase))
-                return 0;
-
-            if (string.Equals(storageName, "Prepack", StringComparison.OrdinalIgnoreCase))
-                return 1;
-
-            if (string.Equals(storageName, "Freezer", StringComparison.OrdinalIgnoreCase))
-                return 2;
-
-            if (string.Equals(storageName, "Warehouse", StringComparison.OrdinalIgnoreCase))
-                return 3;
-
-            if (string.Equals(storageName, "Driver", StringComparison.OrdinalIgnoreCase))
-                return 4;
-
-            if (string.Equals(storageName, "Store", StringComparison.OrdinalIgnoreCase))
-                return 5;
-
-            if (string.Equals(storageName, "Customer", StringComparison.OrdinalIgnoreCase))
-                return 6;
-
-            return 99;
-        }
+        // Section sort order lives in KLS.Common.PackingStorageOrder so this path
+        // and the standalone packing path share one source of truth.
 
         // Default behavior keeps the historical product box merge:
         // ItemName + Comment.
