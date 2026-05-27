@@ -479,34 +479,5 @@ namespace KLS.Services
 
             return baseUrl;
         }
-
-        //public void SendCostChangeNotification(Item item)
-        //{
-        //    var perc = (item.DefaultCost - item.DefaultCostB4) / (item.DefaultCostB4 == 0 ? 1 : item.DefaultCostB4);
-
-        //    perc = Math.Abs(Utilities.Rounding(perc, 2) ?? 0) * 100;
-
-        //    if (perc > 10)
-        //    {
-        //        var msg = "";
-
-        //        if (item.DefaultCost > item.DefaultCostB4)
-        //            msg = "(" + item.ItemCode + ") " + item.ItemName + " +" + perc + "% to " + string.Format("{0:c}", item.DefaultCost);
-        //        else
-        //            msg = "(" + item.ItemCode + ") " + item.ItemName + " -" + perc + "% to " + string.Format("{0:c}", item.DefaultCost);
-
-        //        var employee = (from p in Uow.Payees.GetAll()
-        //                        join e in Uow.Employees.GetAll()
-        //                        on p.PayeeId equals e.PayeeId
-        //                        where e.IsPriceChangeNotify == true && p.IsClosed == false
-        //                        select p).AsEnumerable();
-
-        //        foreach (var emp in employee)
-        //        {
-        //            if (!string.IsNullOrEmpty(emp.Phone1))
-        //                _twilioService.SendMessage(emp.Phone1, msg);
-        //        }
-        //    }
-        //}
     }
 }

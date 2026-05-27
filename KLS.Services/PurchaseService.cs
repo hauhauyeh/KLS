@@ -16,14 +16,14 @@ namespace KLS.Services
     public class PurchaseService : BaseService, IPurchaseService
     {
         private readonly IWebHostEnvironment _env;
-        private readonly IItemService _itemService;
         private readonly IDeleteLogService _deleteLogService;
+        private readonly ITwilioService _twilioService;
 
-        public PurchaseService(IUnitOfWork uow, IWebHostEnvironment env, IItemService itemService, IDeleteLogService deleteLogService) : base(uow)
+        public PurchaseService(IUnitOfWork uow, IWebHostEnvironment env, IDeleteLogService deleteLogService, ITwilioService twilioService) : base(uow)
         {
             _env = env;
-            _itemService = itemService;
             _deleteLogService = deleteLogService;
+            _twilioService = twilioService;
         }
 
         public PagingResponse<PurchaseList> GetPagedList(PurchaseListReq purchaseListReq)
@@ -120,12 +120,9 @@ namespace KLS.Services
             var purchaseId = Uow.Purchases.Checkout(checkoutReq);
 
             //send cost change notification
-            var itemCostChange = Uow.Items.Find(c => c.IsCostChange == true).ToList();
+            var itemCosts = Uow.Purchases.GetItemCostChange(purchaseId).ToList();
 
-            //foreach (var item in itemCostChange)
-            //{
-            //    //_itemService.SendCostChangeNotification(item);
-            //}
+            SendCostChangeNotification(itemCosts);
 
             return GetListById(purchaseId);
         }
@@ -296,6 +293,34 @@ namespace KLS.Services
                 Purchase = GetListById(purchaseId),
                 PurchaseDetails = details?.ToList()
             };
+        }
+
+        public void SendCostChangeNotification(List<PurchaseItemCostList> items)
+        {
+            if (items == null || !items.Any())
+                return;
+
+            var employees = (from p in Uow.Payees.GetAll()
+                             join e in Uow.Employees.GetAll()
+                             on p.PayeeId equals e.PayeeId
+                             where e.IsPriceChangeNotify == true
+                                   && p.IsClosed == false
+                                   && !string.IsNullOrEmpty(p.Phone1)
+                             select p).AsEnumerable();
+
+            foreach (var item in items)
+            {
+                var perc = Math.Round(item.CostChangePercent ?? 0, 2);
+
+                var sign = perc >= 0 ? "+" : "";
+
+                var msg = $"({item.ItemCode}) {item.ItemName} {sign}{perc:N2}% to {string.Format("{0:c}", item.RecentCost)}";
+
+                foreach (var emp in employees)
+                {
+                    _twilioService.SendMessage(emp.Phone1, msg);
+                }
+            }
         }
     }
 }

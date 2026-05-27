@@ -490,7 +490,10 @@ namespace KLS.Data.DataContext
         public virtual DbSet<SalesDetailList> SalesDetailList { get; set; }
 
         public virtual DbSet<SalesQuoteList> SalesQuoteList { get; set; }
+
         public virtual DbSet<TempSalesQuoteItem> TempSalesQuoteItem { get; set; }
+
+        public virtual DbSet<PurchaseItemCostList> PurchaseItemCostList { get; set; }
 
         #endregion
 
