@@ -39,8 +39,6 @@ namespace KLS.Models.Reports
 
         public string? Notes { get; set; }
 
-        //public string? ItemDescX1 { get; set; }
-
         public bool IsGroup { get; set; }
 
         public decimal? ItemWeight { get; set; }
@@ -58,5 +56,7 @@ namespace KLS.Models.Reports
         public string? CatInvoiceDesc { get; set; }
 
         public string? EncodedBarcode { get { return Utilities.EAN13(Barcode); } }
+
+        public bool IsTaxable { get; set; }
     }
 }

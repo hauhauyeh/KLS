@@ -469,7 +469,13 @@
                         {
                             <tr>
                                 <td class="no-overflow">
-                                    <strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit
+                                    <strong>
+                                        @if (itmdetail.IsTaxable)
+                                        {
+                                            <span>*</span>
+                                        }
+                                        @string.Format("{0:0.##}", itmdetail.ShipQty)
+                                    </strong> @itmdetail.Unit
                                 </td>
                                 <td>
                                     <span style="line-height:1;">

@@ -26,5 +26,7 @@ namespace KLS.Contract.Interfaces
         IQueryable<AssignedShipmentRow> AssignedShipments(int purchaseId, bool isShipment);
 
         IQueryable<PurchaseDetailList> GetPurchaseDetails(int purchaseId);
+
+        IQueryable<PurchaseItemCostList> GetItemCostChange(int purchaseId);
     }
 }

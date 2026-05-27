@@ -164,6 +164,13 @@ namespace KLS.Data.Repositories
             return DbContext.PurchaseDetailList.FromSqlRaw("[dbo].[Purchase_GetDetail] @PurchaseId", PurchaseIdParam);
         }
 
+        public IQueryable<PurchaseItemCostList> GetItemCostChange(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            return DbContext.PurchaseItemCostList.FromSqlRaw("[dbo].[Purchase_GetItemCostChange] @PurchaseId", PurchaseIdParam);
+        }
+
         private static object[] BuildParam(PurchaseListReq purchaseListReq)
         {
             object[] param = {
@@ -201,6 +208,5 @@ namespace KLS.Data.Repositories
 
             return param;
         }
-
     }
 }
