@@ -24,6 +24,8 @@ namespace KLS.Models.Reports
 
         public string? Term { get; set; }
 
+        public string? DefaultPaymentMethod { get; set; }
+
         public decimal? OriginalAmount { get; set; }
 
         public decimal? OpenBalance { get; set; }
