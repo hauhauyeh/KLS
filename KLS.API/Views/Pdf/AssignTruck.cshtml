@@ -46,7 +46,10 @@
     .route-wrap {
         border: 1px solid grey;
         padding-left: 5px;
+        padding-right: 5px;
         page-break-inside: avoid;
+        display: flex;
+        justify-content: space-between;
     }
 
     .route {
@@ -72,6 +75,7 @@
                 {
                     <div class="route-wrap">
                         <strong class="route">@item.ShipRoute</strong>
+                        <strong class="route">@item.Driver</strong>
                     </div>
                 }
             }
