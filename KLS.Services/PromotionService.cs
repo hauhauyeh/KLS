@@ -112,10 +112,12 @@ namespace KLS.Services
                 oldpromo.DiscountValue = promotion.DiscountValue;
                 oldpromo.MaxDiscountAmount = promotion.MaxDiscountAmount;
                 oldpromo.MinOrderAmount = promotion.MinOrderAmount;
+                oldpromo.MinQty = promotion.MinQty;
                 oldpromo.StartDate = promotion.StartDate;
                 oldpromo.EndDate = promotion.EndDate;
                 oldpromo.IsActive = promotion.IsActive;
                 oldpromo.IsFirstOrderOnly = promotion.IsFirstOrderOnly;
+                oldpromo.IsExclusive = promotion.IsExclusive;
                 oldpromo.BogoMaxRewardRepeats = promotion.BogoMaxRewardRepeats;
                 oldpromo.UpdatedAt = promotion.UpdatedAt;
 

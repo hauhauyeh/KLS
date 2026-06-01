@@ -155,7 +155,9 @@ namespace KLS.Services
                     DisplayName = promo.DisplayName,
                     PromotionType = promo.PromotionType,
                     DiscountValue = promo.DiscountValue,
-                    MaxDiscountAmount = promo.MaxDiscountAmount
+                    MaxDiscountAmount = promo.MaxDiscountAmount,
+                    MinQty = promo.MinQty,
+                    BadgeText = BuildItemDiscountBadgeText(promo)
                 };
 
                 foreach (var itemId in targetItemIds)
@@ -351,6 +353,67 @@ namespace KLS.Services
             return request.Enable ? ToggleOn(request) : ToggleOff(request);
         }
 
+        public void ApplyItemLevelDiscounts(int salesId, int payeeId)
+        {
+            if (!IsPromoEligibleCustomer(payeeId)) return;
+
+            var paidRows = LoadPaidRows(salesId, payeeId);
+            if (!paidRows.Any()) return;
+
+            var bogoOwnerIds = Uow.TempSalesPromos
+                .Find(l => paidRows.Select(r => r.TempSalesId).Contains(l.OwnerTempSalesId))
+                .Select(l => l.OwnerTempSalesId)
+                .ToHashSet();
+
+            foreach (var row in paidRows.Where(r =>
+                (r.DiscountPercent > 0 || (r.OrgPrice != null && r.OrgPrice > 0)) &&
+                !bogoOwnerIds.Contains(r.TempSalesId)))
+            {
+                row.UnitPrice = row.OrgPrice;
+                row.DiscountPercent = 0;
+                row.OrgPrice = null;
+                Uow.TempSales.Update(row);
+            }
+            Uow.Commit();
+
+            paidRows = LoadPaidRows(salesId, payeeId);
+            if (!paidRows.Any()) return;
+
+            var subtotal = paidRows.Sum(t => t.ExtTotal ?? 0m);
+            var ownListItemIds = GetOwnListItemIds(payeeId);
+            var promoRows = ExcludeOwnListRows(paidRows, ownListItemIds);
+            var itemCategoryMap = BuildItemCategoryMap(promoRows);
+            var nowLocal = GetLocalNow();
+            var today = DateOnly.FromDateTime(nowLocal);
+
+            var promotions = LoadActivePromos(today, subtotal)
+                .Where(p => p.PromotionType == nameof(EnumHelper.PromotionType.DISCOUNT_ITEM_FLAT) ||
+                            p.PromotionType == nameof(EnumHelper.PromotionType.DISCOUNT_ITEM_PERCENTAGE))
+                .ToList();
+
+            if (!promotions.Any()) return;
+
+            var qualifying = FilterQualifyingPromos(promotions, promoRows, itemCategoryMap, subtotal, nowLocal, payeeId);
+
+            foreach (var promo in qualifying)
+            {
+                if (!Enum.TryParse<EnumHelper.PromotionType>(promo.PromotionType, out var promoType))
+                    continue;
+
+                switch (promoType)
+                {
+                    case EnumHelper.PromotionType.DISCOUNT_ITEM_FLAT:
+                        ApplyItemFlatDiscount(promo, promoRows, itemCategoryMap);
+                        break;
+                    case EnumHelper.PromotionType.DISCOUNT_ITEM_PERCENTAGE:
+                        ApplyItemPercentageDiscount(promo, promoRows, itemCategoryMap);
+                        break;
+                }
+            }
+
+            Uow.Commit();
+        }
+
         #endregion
 
 
@@ -413,10 +476,10 @@ namespace KLS.Services
                 EnumHelper.PromotionType.DISCOUNT_FLAT or
                 EnumHelper.PromotionType.DISCOUNT_PERCENTAGE => true,
 
-                // Item/category discounts: at least one matching cart row.
+                // Item/category discounts: at least one matching cart row + MinQty gate.
                 EnumHelper.PromotionType.DISCOUNT_ITEM_FLAT or
                 EnumHelper.PromotionType.DISCOUNT_ITEM_PERCENTAGE =>
-                    FilterPaidRowsByPromo(promo, paidRows, itemCategoryMap).Any(),
+                    QualifiesItemDiscount(promo, paidRows, itemCategoryMap),
 
                 // BOGO: at least one rule must meet its condition.
                 EnumHelper.PromotionType.BOGO_ITEM_CATEGORY or
@@ -428,6 +491,19 @@ namespace KLS.Services
 
                 _ => false
             };
+        }
+
+        private bool QualifiesItemDiscount(Promotion promo, List<TempSales> paidRows, Dictionary<int, int?> itemCategoryMap)
+        {
+            var eligible = FilterPaidRowsByPromo(promo, paidRows, itemCategoryMap).ToList();
+            if (!eligible.Any()) return false;
+
+            if (promo.MinQty.HasValue && promo.MinQty.Value > 0)
+            {
+                var totalQty = eligible.Sum(row => row.OrdQty ?? 0m);
+                return totalQty >= promo.MinQty.Value;
+            }
+            return true;
         }
 
         #endregion
@@ -662,6 +738,21 @@ namespace KLS.Services
         #endregion
 
 
+        private static string BuildItemDiscountBadgeText(Promotion promo)
+        {
+            var prefix = promo.MinQty.HasValue && promo.MinQty.Value > 0
+                ? $"Buy {promo.MinQty.Value:0.##} Get "
+                : "";
+
+            if (promo.PromotionType == nameof(EnumHelper.PromotionType.DISCOUNT_ITEM_FLAT))
+                return $"{prefix}{promo.DiscountValue:C} off (Each)";
+
+            if (promo.PromotionType == nameof(EnumHelper.PromotionType.DISCOUNT_ITEM_PERCENTAGE))
+                return $"{prefix}{promo.DiscountValue:0.##}% off";
+
+            return promo.DisplayName ?? promo.Name ?? "";
+        }
+
         #region --- Schedule Check ---
 
         private bool IsPromoValidForSchedule(Promotion promo, DateTime nowLocal)
@@ -809,6 +900,10 @@ namespace KLS.Services
             var eligible = FilterPaidRowsByPromo(promo, paidRows, itemCategoryMap).ToList();
             if (!eligible.Any()) return 0m;
 
+            if (promo.MinQty.HasValue && promo.MinQty.Value > 0 &&
+                eligible.Sum(r => r.OrdQty ?? 0m) < promo.MinQty.Value)
+                return 0m;
+
             return eligible.Sum(row => ComputeItemFlatRow(row, promo.DiscountValue.Value).RowDiscount);
         }
 
@@ -821,6 +916,10 @@ namespace KLS.Services
 
             var eligible = FilterPaidRowsByPromo(promo, paidRows, itemCategoryMap).ToList();
             if (!eligible.Any()) return 0m;
+
+            if (promo.MinQty.HasValue && promo.MinQty.Value > 0 &&
+                eligible.Sum(r => r.OrdQty ?? 0m) < promo.MinQty.Value)
+                return 0m;
 
             var total = eligible.Sum(row => ComputeItemPercentageRow(row, promo.DiscountValue.Value).RowDiscount);
 
@@ -839,6 +938,10 @@ namespace KLS.Services
 
             var eligible = FilterPaidRowsByPromo(promo, paidRows, itemCategoryMap).ToList();
             if (!eligible.Any()) return 0m;
+
+            if (promo.MinQty.HasValue && promo.MinQty.Value > 0 &&
+                eligible.Sum(r => r.OrdQty ?? 0m) < promo.MinQty.Value)
+                return 0m;
 
             decimal totalDiscount = 0m;
 
@@ -873,6 +976,10 @@ namespace KLS.Services
 
             var eligible = FilterPaidRowsByPromo(promo, paidRows, itemCategoryMap).ToList();
             if (!eligible.Any()) return 0m;
+
+            if (promo.MinQty.HasValue && promo.MinQty.Value > 0 &&
+                eligible.Sum(r => r.OrdQty ?? 0m) < promo.MinQty.Value)
+                return 0m;
 
             decimal totalDiscount = 0m;
 

@@ -36,7 +36,7 @@
     }
 
     .footer-height {
-        height: 120px;
+        height: 160px;
     }
 
     .highlight-dark {
@@ -52,19 +52,41 @@
         padding: 0px 6px 1px 6px;
     }
 
-    .font10 { font-size: 10px; }
-    .font11 { font-size: 11px; }
-    .font12 { font-size: 12px; }
-    .upparcase { text-transform: uppercase; }
-    .font600 { font-weight: 600; }
+    .font10 {
+        font-size: 10px;
+    }
+
+    .font11 {
+        font-size: 11px;
+    }
+
+    .font12 {
+        font-size: 12px;
+    }
+
+    .upparcase {
+        text-transform: uppercase;
+    }
+
+    .font600 {
+        font-weight: 600;
+    }
 
     .chinese {
         font-family: 'Microsoft YaHei';
     }
 
-    .text-left { text-align: left; }
-    .text-center { text-align: center; }
-    .text-right { text-align: right; }
+    .text-left {
+        text-align: left;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
 
     .no-overflow {
         overflow: hidden;
@@ -87,12 +109,12 @@
         background-color: #333333;
     }
 
-    .main-table tbody tr.item-header td {
-        color: white;
-        font-size: 14px;
-        font-weight: 500;
-        padding: 2px;
-    }
+        .main-table tbody tr.item-header td {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 2px;
+        }
 
     /* HEADER */
     .main-table-header-grid {
@@ -192,26 +214,30 @@
         position: fixed;
         bottom: 0;
         display: grid;
-        grid-template-rows: 20px 60px 30px;
+        grid-template-rows: 20px 80px 60px;
         grid-template-columns: 28% 28% 22% 22%;
         width: 100%;
     }
 
     .validity-grid {
-        grid-column: 1 / span 2;
+        grid-row: 1;
+        grid-column: 1 / span 4;
         font-size: 13px;
         font-weight: bold;
         padding: 5px;
         display: flex;
         align-items: center;
+        justify-content: center;
     }
 
     .total-grid {
-        grid-column: 3 / span 1;
+        grid-row: 2;
+        grid-column: 1 / span 2;
     }
 
     .inv-total-grid {
-        grid-column: 4 / span 1;
+        grid-row: 2;
+        grid-column: 3 / span 2;
     }
 
     .t2 {
@@ -220,15 +246,16 @@
         border-spacing: 0;
     }
 
-    .t2 td {
-        font-size: 12px;
-        font-weight: bold;
-        border: 1px solid black;
-        padding-left: 3px;
-        padding-right: 5px;
-    }
+        .t2 td {
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid black;
+            padding-left: 3px;
+            padding-right: 5px;
+        }
 
     .fineprint-grid {
+        grid-row: 3;
         grid-column: 1 / span 4;
         margin-top: 2px;
         text-align: justify;

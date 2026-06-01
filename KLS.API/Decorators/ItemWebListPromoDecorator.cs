@@ -52,6 +52,9 @@ namespace KLS.API.Decorators
                     unit.Price = Utilities.Rounding(newPrice, 2);                      // discounted price, rounded to cents
                     unit.Discount = Math.Round(((originalPrice - newPrice) / originalPrice) * 100m, 0);
                 }
+
+                if (!string.IsNullOrEmpty(promo.BadgeText) && string.IsNullOrEmpty(item.PromoBadgeText))
+                    item.PromoBadgeText = promo.BadgeText;
             }
         }
     }

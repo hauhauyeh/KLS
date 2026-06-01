@@ -19,5 +19,9 @@ namespace KLS.Models
         public decimal? DiscountValue { get; set; }
 
         public decimal? MaxDiscountAmount { get; set; }
+
+        public decimal? MinQty { get; set; }
+
+        public string? BadgeText { get; set; }
     }
 }

@@ -55,6 +55,13 @@ namespace KLS.Contract.Services
         PromotionResult ApplyPromotion(int salesId, int payeeId);
 
         /// <summary>
+        /// Apply only item-level discounts (DISCOUNT_ITEM_FLAT / DISCOUNT_ITEM_PERCENTAGE)
+        /// to the cart. Does NOT touch BOGO reward rows or TempSalesPromo links.
+        /// Safe to call on every admin cart mutation without disrupting manual BOGO toggles.
+        /// </summary>
+        void ApplyItemLevelDiscounts(int salesId, int payeeId);
+
+        /// <summary>
         /// Per-user opt-in/out for BOGO promos. Toggling on reprices the owner line
         /// to PromoPrice and injects a linked reward line; toggling off restores the
         /// owner and removes the reward. Migrated from IPromotionEvaluationService.
