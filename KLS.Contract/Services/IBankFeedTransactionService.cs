@@ -18,6 +18,8 @@ namespace KLS.Contract.Services
 
         void Exclude(BankFeedExcludeReq req);
 
+        void UnExclude(long bankFeedTransactionId);
+
         void Delete(long bankFeedTransactionId);
     }
 }

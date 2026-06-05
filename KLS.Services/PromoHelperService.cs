@@ -183,7 +183,7 @@ namespace KLS.Services
             return result;
         }
 
-        public Dictionary<int, string> GetActiveItemOfferBadges()
+        public Dictionary<int, BogoOfferInfo> GetActiveItemOfferBadges()
         {
             var nowLocal = GetLocalNow();
             var today = DateOnly.FromDateTime(nowLocal);
@@ -203,10 +203,10 @@ namespace KLS.Services
                 .OrderBy(p => p.PromotionId)
                 .ToList();
 
-            if (!candidates.Any()) return new Dictionary<int, string>();
+            if (!candidates.Any()) return new Dictionary<int, BogoOfferInfo>();
 
             var categoryItemMap = BuildCategoryItemIndex(candidates);
-            var result = new Dictionary<int, string>();
+            var result = new Dictionary<int, BogoOfferInfo>();
 
             foreach (var promo in candidates)
             {
@@ -217,11 +217,38 @@ namespace KLS.Services
                     var label = BuildCatalogBogoBadgeText(promo, rule);
                     if (string.IsNullOrWhiteSpace(label)) continue;
 
+                    decimal? afterPromoPrice = null;
+                    decimal? savings = null;
+                    decimal? conditionQty = rule.ConditionQty;
+
+                    if (rule.PromoPrice.HasValue && rule.ConditionQty is > 0m)
+                    {
+                        var total = rule.ConditionQty.Value + (rule.RewardQty ?? 0m);
+                        if (total > 0m)
+                        {
+                            afterPromoPrice = Math.Round((rule.PromoPrice.Value * rule.ConditionQty.Value) / total, 2);
+                            savings = Math.Round(rule.PromoPrice.Value - afterPromoPrice.Value, 2);
+                        }
+                    }
+
+                    var info = new BogoOfferInfo
+                    {
+                        BadgeText = label,
+                        ConditionQty = conditionQty,
+                        AfterPromoPrice = afterPromoPrice,
+                        Savings = savings
+                    };
+
                     foreach (var itemId in ResolveConditionTargetItemIds(rule, categoryItemMap))
                     {
-                        if (!result.ContainsKey(itemId))
+                        if (!result.TryGetValue(itemId, out var existing))
                         {
-                            result[itemId] = label;
+                            result[itemId] = info;
+                        }
+                        else if (afterPromoPrice.HasValue &&
+                                 (!existing.AfterPromoPrice.HasValue || afterPromoPrice.Value < existing.AfterPromoPrice.Value))
+                        {
+                            result[itemId] = info;
                         }
                     }
                 }
@@ -1256,6 +1283,15 @@ namespace KLS.Services
                         int rowSets = (int)Math.Floor(rowQty / rule.ConditionQty!.Value);
                         rowSets = Math.Min(rowSets, maxRepeats);
                         if (rowSets <= 0) continue;
+
+                        if (rule.PromoPrice.HasValue)
+                        {
+                            if (qualRow.OrgPrice is null || qualRow.OrgPrice <= 0)
+                                qualRow.OrgPrice = qualRow.UnitPrice;
+
+                            qualRow.UnitPrice = rule.PromoPrice;
+                            Uow.TempSales.Update(qualRow);
+                        }
 
                         decimal rowRewardQty = rowSets * (rule.RewardQty ?? 1);
                         InsertBogoRewardRow(

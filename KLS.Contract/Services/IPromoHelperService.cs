@@ -35,7 +35,7 @@ namespace KLS.Contract.Services
         /// that should be advertised as an offer message instead of a direct price
         /// markdown, such as BOGO item/category rules.
         /// </summary>
-        Dictionary<int, string> GetActiveItemOfferBadges();
+        Dictionary<int, BogoOfferInfo> GetActiveItemOfferBadges();
 
         /// <summary>
         /// ItemIds from the customer's active ItemQuote list. Used to suppress

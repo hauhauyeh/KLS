@@ -26,6 +26,10 @@ namespace KLS.Models
 
         public string? PromoBadgeText { get; set; }
 
+        public decimal? BogoConditionQty { get; set; }
+        public decimal? BogoAfterPromoPrice { get; set; }
+        public decimal? BogoSavings { get; set; }
+
         public ICollection<ItemWebUnitList>? ItemUnits { get; set; }
     }
 }
