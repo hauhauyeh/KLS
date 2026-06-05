@@ -43,14 +43,18 @@ namespace KLS.API.Controllers.Admin
         [HttpPost]
         public IActionResult Create([FromBody] TempSalesItem tempItem)
         {
-            return Ok(_tempSalesService.Create(tempItem));
+            var result = _tempSalesService.Create(tempItem);
+            _promoService.ApplyItemLevelDiscounts(result.SalesId, result.PayeeId);
+            return Ok(result);
         }
 
 
         [HttpPut]
         public IActionResult Update([FromBody] TempSalesItem tempItem)
         {
-            return Ok(_tempSalesService.Update(tempItem));
+            var result = _tempSalesService.Update(tempItem);
+            _promoService.ApplyItemLevelDiscounts(result.SalesId, result.PayeeId);
+            return Ok(result);
         }
 
 
@@ -64,14 +68,19 @@ namespace KLS.API.Controllers.Admin
         [HttpPut("UpdateUnit")]
         public IActionResult UpdateUnit([FromBody] TempSalesItem tempItem)
         {
-            return Ok(_tempSalesService.UpdateUnit(tempItem));
+            var result = _tempSalesService.UpdateUnit(tempItem);
+            _promoService.ApplyItemLevelDiscounts(result.SalesId, result.PayeeId);
+            return Ok(result);
         }
 
 
         [HttpDelete("{tempId}")]
         public IActionResult Delete(int tempId)
         {
+            var temp = _tempSalesService.GetById(tempId);
             _tempSalesService.Delete(tempId);
+            if (temp != null)
+                _promoService.ApplyItemLevelDiscounts(temp.SalesId, temp.PayeeId);
             return Ok();
         }
 
@@ -101,7 +110,10 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("AddLine")]
         public IActionResult AddLine([FromBody] AddLineRequest req)
         {
-            return Ok(_tempSalesService.AddLine(req));
+            var result = _tempSalesService.AddLine(req);
+            if (result != null)
+                _promoService.ApplyItemLevelDiscounts(req.SalesId, req.PayeeId);
+            return Ok(result);
         }
 
 

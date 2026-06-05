@@ -77,6 +77,9 @@ namespace KLS.Models
         [JsonPropertyName("entryClass")]
         public string? EntryClass { get; init; } // "CCD" / "PPD" / "TEL" / "WEB"
 
+        [JsonPropertyName("customerName")]
+        public string? CustomerName { get; set; }
+
         [JsonPropertyName("cardAccount")]
         public MxCardAccount? CardAccount { get; set; }
 

@@ -62,12 +62,15 @@ namespace KLS.Services
 
             var isAch = paymentMethod.IsACH;
 
+            var payee = Uow.Payees.GetById(paymentMethod.PayeeId);
+
             var mxReq = new MxCreatePaymentRequest
             {
                 MerchantId = gateway.MerchantId!,
                 Amount = finalAmount,
                 TenderType = isAch ? "ACH" : "Card",
                 PaymentType = "Sale",
+                CustomerName = payee?.PayeeName,
 
                 // These are shown in ACH example; safe to omit for card
                 AuthOnly = isAch ? false : null,

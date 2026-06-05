@@ -19,5 +19,7 @@ namespace KLS.Models.Reports
         public string? ShipRoute { get; set; }
 
         public string? TruckName { get; set; }
+
+        public string? Driver { get; set; }
     }
 }

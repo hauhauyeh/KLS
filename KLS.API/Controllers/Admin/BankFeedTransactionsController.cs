@@ -88,6 +88,15 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        [HttpPost("UnExclude/{id}")]
+        [DisplayName("Un-Exclude Bank Feed Transaction")]
+        [PermissionKey("Accounting.BankFeed.Exclude")]
+        public IActionResult UnExclude(long id)
+        {
+            _bankFeedTransactionService.UnExclude(id);
+            return Ok();
+        }
+
         [HttpDelete("{id}")]
         [DisplayName("Delete Bank Feed Transaction")]
         [PermissionKey("Accounting.BankFeed.Delete")]

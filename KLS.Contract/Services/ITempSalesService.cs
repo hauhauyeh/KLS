@@ -12,6 +12,8 @@ namespace KLS.Contract.Services
     {
         IEnumerable<TempSalesItem>? GetList(TempSalesReq tempReq);
 
+        TempSales? GetById(int tempId);
+
         TempSalesItem Create(TempSalesItem tempItem);
 
         TempSalesItem Update(TempSalesItem tempItem);

@@ -35,7 +35,7 @@ namespace KLS.Contract.Services
         /// that should be advertised as an offer message instead of a direct price
         /// markdown, such as BOGO item/category rules.
         /// </summary>
-        Dictionary<int, string> GetActiveItemOfferBadges();
+        Dictionary<int, BogoOfferInfo> GetActiveItemOfferBadges();
 
         /// <summary>
         /// ItemIds from the customer's active ItemQuote list. Used to suppress
@@ -53,6 +53,13 @@ namespace KLS.Contract.Services
         /// inserts BOGO reward rows, returns the applied totals. Called on checkout.
         /// </summary>
         PromotionResult ApplyPromotion(int salesId, int payeeId);
+
+        /// <summary>
+        /// Apply only item-level discounts (DISCOUNT_ITEM_FLAT / DISCOUNT_ITEM_PERCENTAGE)
+        /// to the cart. Does NOT touch BOGO reward rows or TempSalesPromo links.
+        /// Safe to call on every admin cart mutation without disrupting manual BOGO toggles.
+        /// </summary>
+        void ApplyItemLevelDiscounts(int salesId, int payeeId);
 
         /// <summary>
         /// Per-user opt-in/out for BOGO promos. Toggling on reprices the owner line

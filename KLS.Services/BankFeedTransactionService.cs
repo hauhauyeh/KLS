@@ -10,7 +10,6 @@ namespace KLS.Services
 {
     public class BankFeedTransactionService : BaseService, IBankFeedTransactionService
     {
-        private const int PreviewRowLimit = 20;
         private static readonly string TempRoot = Path.Combine(Path.GetTempPath(), "KLS", "BankFeed");
 
         public BankFeedTransactionService(IUnitOfWork uow) : base(uow)
@@ -51,7 +50,7 @@ namespace KLS.Services
                         Name = $"Column {i + 1}"
                     })
                     .ToList(),
-                Rows = rows.Take(PreviewRowLimit)
+                Rows = rows
                     .Select((values, idx) => new BankFeedPreviewRow
                     {
                         RowNo = idx + 1,
@@ -165,6 +164,20 @@ namespace KLS.Services
 
             bankTx.Status = "Excluded";
             bankTx.ExcludeReason = req.ExcludeReason;
+            Uow.BankFeedTransactions.Update(bankTx);
+            Uow.Commit();
+        }
+
+        public void UnExclude(long bankFeedTransactionId)
+        {
+            var bankTx = Uow.BankFeedTransactions.GetByLongId(bankFeedTransactionId)
+                ?? throw new Exception("Bank feed transaction was not found.");
+
+            if (bankTx.Status != "Excluded")
+                throw new Exception("Only excluded transactions can be un-excluded.");
+
+            bankTx.Status = "Pending";
+            bankTx.ExcludeReason = null;
             Uow.BankFeedTransactions.Update(bankTx);
             Uow.Commit();
         }

@@ -31,6 +31,8 @@ namespace KLS.Models
 
         public decimal? MinOrderAmount { get; set; }
 
+        public decimal? MinQty { get; set; }
+
         public DateOnly? StartDate { get; set; }
 
         public DateOnly? EndDate { get; set; }

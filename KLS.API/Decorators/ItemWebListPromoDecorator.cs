@@ -16,15 +16,18 @@ namespace KLS.API.Decorators
         public static void ApplyPromoDecoration(
             this IEnumerable<ItemWebList>? items,
             Dictionary<int, ItemPromoDiscount>? discountMap,
-            Dictionary<int, string>? offerBadgeMap = null)
+            Dictionary<int, BogoOfferInfo>? offerBadgeMap = null)
         {
             if (items == null) return;
 
             foreach (var item in items)
             {
-                if (offerBadgeMap != null && offerBadgeMap.TryGetValue(item.ItemId, out var badgeText))
+                if (offerBadgeMap != null && offerBadgeMap.TryGetValue(item.ItemId, out var bogoInfo))
                 {
-                    item.PromoBadgeText = badgeText;
+                    item.PromoBadgeText = bogoInfo.BadgeText;
+                    item.BogoConditionQty = bogoInfo.ConditionQty;
+                    item.BogoAfterPromoPrice = bogoInfo.AfterPromoPrice;
+                    item.BogoSavings = bogoInfo.Savings;
                 }
 
                 if (discountMap == null || !discountMap.TryGetValue(item.ItemId, out var promo)) continue;
@@ -52,6 +55,9 @@ namespace KLS.API.Decorators
                     unit.Price = Utilities.Rounding(newPrice, 2);                      // discounted price, rounded to cents
                     unit.Discount = Math.Round(((originalPrice - newPrice) / originalPrice) * 100m, 0);
                 }
+
+                if (!string.IsNullOrEmpty(promo.BadgeText) && string.IsNullOrEmpty(item.PromoBadgeText))
+                    item.PromoBadgeText = promo.BadgeText;
             }
         }
     }

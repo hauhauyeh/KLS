@@ -95,16 +95,21 @@
     }
 
     /*INVOICE DETAIL*/
+    .main-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
     .main-table tbody td {
         font-size: 14px;
         padding-bottom: 6px !important;
     }
 
-    .main-table thead tr.item-header {
+    .main-table tr.item-header {
         background-color: #333333;
     }
 
-        .main-table thead tr.item-header td {
+        .main-table tr.item-header td {
             color: white;
             font-size: 14px;
             font-weight: 500;
@@ -392,13 +397,13 @@
                 <tr>
                     <td colspan="@colSpan"><div class="header-height">&nbsp;</div></td>
                 </tr>
+            </thead>
+            <tbody>
                 <tr class="item-header">
                     <td>Qty</td>
                     <td>Code</td>
                     <td>Description</td>
                 </tr>
-            </thead>
-            <tbody>
                 @foreach (var itmdetail in Model.InvoiceDetails)
                 {
                     if (itmdetail.IsGroup)
