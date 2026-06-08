@@ -13,6 +13,9 @@ namespace KLS.Models
         public string ItemCode { get; set; }
         public string ItemName { get; set; }
         public string? ItemName2 { get; set; }
+
+        public string? ItemLongDesc { get; set; }
+
         public string? SetPacking { get; set; }
         public string? PackSize { get; set; }
         public decimal? LCloseQty { get; set; }
