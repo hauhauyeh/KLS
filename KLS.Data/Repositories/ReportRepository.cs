@@ -462,6 +462,19 @@ namespace KLS.Data.Repositories
                 AsOfDateParam, AgeBasisParam, VendorIdParam, TermIdParam);
         }
 
+        public IQueryable<RptARAgingRow> ARAging(RptARAgingReq req)
+        {
+            var AsOfDateParam   = req.AsOfDate.HasValue   ? new SqlParameter("@AsOfDate", req.AsOfDate.Value)     : new SqlParameter("@AsOfDate", DBNull.Value);
+            var AgeBasisParam   = new SqlParameter("@AgeBasis", string.IsNullOrEmpty(req.AgeBasis) ? "DueDate" : req.AgeBasis);
+            var CustomerIdParam = req.CustomerId.HasValue ? new SqlParameter("@CustomerId", req.CustomerId.Value) : new SqlParameter("@CustomerId", DBNull.Value);
+            var TermIdParam     = req.TermId.HasValue     ? new SqlParameter("@TermId",     req.TermId.Value)     : new SqlParameter("@TermId",     DBNull.Value);
+            var SalesRepIdParam = req.SalesRepId.HasValue ? new SqlParameter("@SalesRepId", req.SalesRepId.Value) : new SqlParameter("@SalesRepId", DBNull.Value);
+
+            return DbContext.RptARAgingRow.FromSqlRaw(
+                "[dbo].[Report_ARAging] @AsOfDate,@AgeBasis,@CustomerId,@TermId,@SalesRepId",
+                AsOfDateParam, AgeBasisParam, CustomerIdParam, TermIdParam, SalesRepIdParam);
+        }
+
         public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
