@@ -375,7 +375,6 @@ namespace KLS.Services
 
         private PagingResponse<ItemWebList> BuildWebPagedList(ItemWebListReq webListReq, bool forceBasePrice)
         {
-
             var rows = Uow.Items.GetWebPagedList(webListReq).ToList();
             var totalRecords = Uow.Items.WebCount(webListReq);
             var unitIds = rows.Where(x => x.ItemUnitId > 0).Select(x => x.ItemUnitId).Distinct().ToArray();
@@ -397,6 +396,7 @@ namespace KLS.Services
                         ItemCode = row.ItemCode,
                         ItemName = row.ItemName,
                         ItemName2 = row.ItemName2,
+                        ItemLongDesc = row.ItemLongDesc,
                         SetPacking = row.SetPacking,
                         PackSize = row.PackSize,
                         LCloseQty = row.LCloseQty,
