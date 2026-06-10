@@ -1,6 +1,7 @@
 ﻿using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Models;
+using KLS.Models.Reports;
 using KLS.Contract.Services;
 using Microsoft.EntityFrameworkCore;
 using IronPdf;
@@ -263,6 +264,15 @@ namespace KLS.Services
         public void AssignShipment(POCopyToBillReq copyToBillReq)
         {
             Uow.Shipments.AssignShipment(copyToBillReq);
+        }
+
+        // Vendor purchase history panel — passthrough. SP returns 1-year per-item
+        // rollup of the vendor's purchase history (all stages, denormalized
+        // LastPurchaseStage chip data). Frontend drawer in po-add-edit and
+        // purchase-add-edit consumes this for the side history panel.
+        public IEnumerable<VendorPurchaseHistoryPanelRow> VendorPurchaseHistoryPanel(int payeeId)
+        {
+            return Uow.Reports.VendorPurchaseHistoryPanel(payeeId).ToList();
         }
 
         public IEnumerable<PurchaseOpenBill>? GetOpenBills(int payeeId)

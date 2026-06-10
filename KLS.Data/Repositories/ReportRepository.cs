@@ -279,6 +279,13 @@ namespace KLS.Data.Repositories
             return DbContext.CustBoughtItemPanelRows.FromSqlRaw("[dbo].[CustBoughtItems_GetPanel] @PayeeId", PayeeIdParam);
         }
 
+        public IQueryable<VendorPurchaseHistoryPanelRow> VendorPurchaseHistoryPanel(int payeeId)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", payeeId);
+
+            return DbContext.VendorPurchaseHistoryPanelRows.FromSqlRaw("[dbo].[VendorPurchaseHistory_GetPanel] @PayeeId", PayeeIdParam);
+        }
+
         public IQueryable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq)
         {
             var SearchParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", reportReq.Search);

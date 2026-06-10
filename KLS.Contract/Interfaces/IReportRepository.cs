@@ -74,6 +74,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<CustBoughtItemPanelRow> CustBoughtItemsPanel(int payeeId);
 
+        IQueryable<VendorPurchaseHistoryPanelRow> VendorPurchaseHistoryPanel(int payeeId);
+
         IQueryable<RptCustSalesByItem>? CustSalesByItem(ReportRequest reportReq);
 
         IQueryable<RptSalesHistoryRow> SalesHistory(ReportRequest reportReq);

@@ -226,6 +226,16 @@ namespace KLS.API.Controllers.Admin
             return Ok(_purchaseService.GetOpenBills(payeeId));
         }
 
+        // Vendor purchase history panel — feeds the side drawer in
+        // po-add-edit and purchase-add-edit. No per-action [PermissionKey];
+        // gated only by the class-level [AuthorizeAdmin]. Matches the
+        // sales-side precedent at SalesController.CustBoughtItemsPanel.
+        [HttpGet("VendorPurchaseHistoryPanel/{payeeId}")]
+        public IActionResult VendorPurchaseHistoryPanel(int payeeId)
+        {
+            return Ok(_purchaseService.VendorPurchaseHistoryPanel(payeeId));
+        }
+
 
         [HttpPost("DocNumberExists")]
         public IActionResult DocNumberExists([FromBody] VendorDocCheckReq checkReq)
