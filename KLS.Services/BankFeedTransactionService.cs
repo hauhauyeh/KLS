@@ -137,64 +137,113 @@ namespace KLS.Services
             return Uow.BankFeedTransactions.GetMatchCandidates(bankFeedTransactionId).ToList();
         }
 
-        public void Match(BankFeedMatchReq req)
+        public void Match(List<BankFeedMatchReq> reqs)
         {
-            if (!req.TxId.HasValue || !req.TxDetailId.HasValue)
-                throw new Exception("Please select a transaction to match.");
+            if (reqs == null || !reqs.Any())
+                throw new Exception("Please select at least one transaction to match.");
 
-            Uow.BankFeedTransactions.MatchTx(
-                req.BankFeedTransactionId,
-                req.TxId.Value,
-                req.TxDetailId.Value,
-                UserContext.EmpId);
+            foreach (var req in reqs)
+            {
+                if (!req.TxId.HasValue || !req.TxDetailId.HasValue)
+                    throw new Exception("Please select a transaction to match.");
+
+                Uow.BankFeedTransactions.MatchTx(
+                    req.BankFeedTransactionId,
+                    req.TxId.Value,
+                    req.TxDetailId.Value,
+                    UserContext.EmpId);
+            }
         }
 
-        public void Unmatch(BankFeedMatchReq req)
+        public int Unmatch(BankFeedBulkActionReq req)
         {
-            Uow.BankFeedTransactions.UnMatchTx(req.BankFeedTransactionId);
+            if (req.BankFeedTransactionIds == null || !req.BankFeedTransactionIds.Any())
+                throw new Exception("Please select at least one transaction.");
+
+            var transactions = Uow.BankFeedTransactions
+                .Find(t => req.BankFeedTransactionIds.Contains(t.BankFeedTransactionId)
+                          && t.Status == "Matched")
+                .ToList();
+
+            if (!transactions.Any())
+                throw new Exception("No eligible transactions found to unmatch.");
+
+            foreach (var tx in transactions)
+            {
+                Uow.BankFeedTransactions.UnMatchTx(tx.BankFeedTransactionId);
+            }
+
+            return transactions.Count;
         }
 
-        public void Exclude(BankFeedExcludeReq req)
+        public int Exclude(BankFeedBulkExcludeReq req)
         {
-            var bankTx = Uow.BankFeedTransactions.GetByLongId(req.BankFeedTransactionId)
-                ?? throw new Exception("Bank feed transaction was not found.");
+            if (req.BankFeedTransactionIds == null || !req.BankFeedTransactionIds.Any())
+                throw new Exception("Please select at least one transaction.");
 
-            if (bankTx.Status == "Matched")
-                throw new Exception("Please unmatch the transaction before excluding it.");
+            var transactions = Uow.BankFeedTransactions
+                .Find(t => req.BankFeedTransactionIds.Contains(t.BankFeedTransactionId)
+                          && t.Status != "Matched" && t.Status != "Excluded")
+                .ToList();
 
-            bankTx.Status = "Excluded";
-            bankTx.ExcludeReason = req.ExcludeReason;
-            Uow.BankFeedTransactions.Update(bankTx);
+            if (!transactions.Any())
+                throw new Exception("No eligible transactions found to exclude.");
+
+            foreach (var tx in transactions)
+            {
+                tx.Status = "Excluded";
+                tx.ExcludeReason = req.ExcludeReason ?? "Excluded by user";
+                Uow.BankFeedTransactions.Update(tx);
+            }
+
             Uow.Commit();
+            return transactions.Count;
         }
 
-        public void UnExclude(long bankFeedTransactionId)
+        public int UnExclude(BankFeedBulkActionReq req)
         {
-            var bankTx = Uow.BankFeedTransactions.GetByLongId(bankFeedTransactionId)
-                ?? throw new Exception("Bank feed transaction was not found.");
+            if (req.BankFeedTransactionIds == null || !req.BankFeedTransactionIds.Any())
+                throw new Exception("Please select at least one transaction.");
 
-            if (bankTx.Status != "Excluded")
-                throw new Exception("Only excluded transactions can be un-excluded.");
+            var transactions = Uow.BankFeedTransactions
+                .Find(t => req.BankFeedTransactionIds.Contains(t.BankFeedTransactionId)
+                          && t.Status == "Excluded")
+                .ToList();
 
-            bankTx.Status = "Pending";
-            bankTx.ExcludeReason = null;
-            Uow.BankFeedTransactions.Update(bankTx);
+            if (!transactions.Any())
+                throw new Exception("No eligible transactions found to un-exclude.");
+
+            foreach (var tx in transactions)
+            {
+                tx.Status = "Pending";
+                tx.ExcludeReason = null;
+                Uow.BankFeedTransactions.Update(tx);
+            }
+
             Uow.Commit();
+            return transactions.Count;
         }
 
-        public void Delete(long bankFeedTransactionId)
+        public int Delete(BankFeedBulkActionReq req)
         {
-            var bankTx = Uow.BankFeedTransactions.GetByLongId(bankFeedTransactionId)
-                ?? throw new Exception("Bank feed transaction was not found.");
+            if (req.BankFeedTransactionIds == null || !req.BankFeedTransactionIds.Any())
+                throw new Exception("Please select at least one transaction.");
 
-            if (bankTx.Status == "Matched")
-                throw new Exception("Matched transactions cannot be deleted. Please unmatch first.");
+            var transactions = Uow.BankFeedTransactions
+                .Find(t => req.BankFeedTransactionIds.Contains(t.BankFeedTransactionId)
+                          && t.Status == "Excluded")
+                .ToList();
 
-            if (bankTx.Status != "Excluded")
-                throw new Exception("Only excluded transactions can be deleted.");
+            if (!transactions.Any())
+                throw new Exception("No eligible transactions found to delete.");
 
-            Uow.BankFeedTransactions.Remove(bankTx);
+            foreach (var tx in transactions)
+            {
+                Uow.BankFeedTransactions.Remove(tx);
+            }
+
             Uow.Commit();
+            return transactions.Count;
         }
 
         private BankFeedAccount EnsureBankFeedAccount(int accountId)

@@ -44,5 +44,17 @@ namespace KLS.Models
         public DateOnly? MatchedTxDate { get; set; }
 
         public int MatchCount { get; set; }
+
+        public string? MatchPayeeName { get; set; }
+
+        public DateOnly? MatchTxDate { get; set; }
+
+        public decimal? MatchAmount { get; set; }
+
+        public string? MatchReferenceId { get; set; }
+
+        public long? MatchCandidateTxId { get; set; }
+
+        public long? MatchCandidateTxDetailId { get; set; }
     }
 }

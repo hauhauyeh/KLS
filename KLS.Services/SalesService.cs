@@ -28,6 +28,7 @@ namespace KLS.Services
         private readonly ISquareService _squareService;
         private readonly IMxMerchantService _mxMerchantService;
         private readonly IMemoryCache _memoryCache;
+        private readonly ISystemSettingService _systemSettingService;
 
         public SalesService(IUnitOfWork uow,
             IWebHostEnvironment env,
@@ -39,7 +40,8 @@ namespace KLS.Services
             IPortalModeService portalModeService,
             ISquareService squareService,
             IMxMerchantService mxMerchantService,
-            IMemoryCache memoryCache) : base(uow)
+            IMemoryCache memoryCache,
+            ISystemSettingService systemSettingService) : base(uow)
         {
             _env = env;
             _documentService = documentService;
@@ -51,6 +53,7 @@ namespace KLS.Services
             _squareService = squareService;
             _mxMerchantService = mxMerchantService;
             _memoryCache = memoryCache;
+            _systemSettingService = systemSettingService;
         }
 
         public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
@@ -226,8 +229,10 @@ namespace KLS.Services
         public SalesList Checkout(SalesCheckoutReq checkoutReq)
         {
             var salesId = Uow.Sales.Checkout(checkoutReq);
+            var sales = GetListById(salesId)!;
+            AutoPrintPickTicket(sales.SalesId, sales.SalesNumber);
 
-            return GetListById(salesId)!;
+            return sales;
         }
 
         public SalesList UpdatePartially(int salesId)
@@ -567,6 +572,7 @@ namespace KLS.Services
             }
 
             EmailOrderDetail(salesId);
+            AutoPrintPickTicket(sales.SalesId, sales.SalesNumber);
 
             return sales.SalesId;
         }
@@ -624,6 +630,7 @@ namespace KLS.Services
             }
 
             EmailOrderDetail(salesIdCreated);
+            AutoPrintPickTicket(salesIdCreated, sales.SalesNumber);
             _memoryCache.Set(cacheKey, salesIdCreated, TimeSpan.FromMinutes(30));
 
             return salesIdCreated;
@@ -645,6 +652,19 @@ namespace KLS.Services
                 customer.TextOrderConfirm = webCheckoutReq.Phone;
                 Uow.Customers.Update(customer);
             }
+        }
+
+        private void AutoPrintPickTicket(int salesId, int salesNumber)
+        {
+            var autoPrint = _systemSettingService.GetByKey<bool>(GlobalKey.AUTO_PRINTINVOICE);
+            if (!autoPrint) return;
+
+            _documentService.PickTicket(new DocumentReq
+            {
+                SalesId = salesId,
+                SalesNumber = salesNumber,
+                IsPrint = true
+            });
         }
 
         private void SaveGatewayPaymentForSales(B2CPaymentResult payment, int salesId, int payeeId)
@@ -718,6 +738,8 @@ namespace KLS.Services
 
             if (webCheckoutReq.PaymentMethod == null)
                 throw new InvalidOperationException("Payment method is required.");
+
+            webCheckoutReq.PaymentMethod.PayeeId = UserContext.EmpId;
 
             if (webCheckoutReq.PaymentMethod.IsACH)
             {

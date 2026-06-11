@@ -544,6 +544,8 @@ namespace KLS.Services
                 }
                 else if (chargeReq.PaymentMethod != null)
                 {
+                    chargeReq.PaymentMethod.PayeeId = chargeReq.PayeeId;
+
                     //if payment amount change dont applied to invoice just save payment
                     if (chargeReq.IsPaymentChange)
                     {
