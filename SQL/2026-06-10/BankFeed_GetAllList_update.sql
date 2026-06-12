@@ -1,5 +1,4 @@
-SET QUOTED_IDENTIFIER ON;
-GO
+
 
 ALTER PROCEDURE [dbo].[BankFeed_GetAllList]
     @Pageno INT,
@@ -36,7 +35,7 @@ BEGIN
     );
 
     IF @AccountId IS NOT NULL AND (@IsCount = 0 OR @Status = 'MatchFound')
-        INSERT INTO #MatchTx EXEC dbo.sp_TxDetailEnriched @AccountId;
+        INSERT INTO #MatchTx EXEC dbo.Bank_TxDetail @AccountId;
 
     DECLARE @Qry NVARCHAR(MAX);
 
@@ -57,25 +56,38 @@ BEGIN
     bft.CheckNumber,
     bft.Balance,
     bft.Status,
-    bft.MatchedTxId,
-    bft.MatchedTxDetailId,
     bft.ClearedBankDate,
-    tx.SourceDocType AS MatchedSourceDocType,
-    tx.SourceDocNumber AS MatchedSourceDocNumber,
-    tx.TxDate AS MatchedTxDate,
-    CASE WHEN bft.MatchedTxDetailId IS NOT NULL THEN 1 ELSE ISNULL(tm.MatchCount, 0) END AS MatchCount,
-    COALESCE(tm.MatchPayeeName, mtx.PayeeName)     AS MatchPayeeName,
-    COALESCE(tm.MatchTxDate, mtx.TxDate)           AS MatchTxDate,
-    COALESCE(tm.MatchAmount, mtx.Amount)           AS MatchAmount,
-    COALESCE(tm.MatchReferenceId, mtx.ReferenceId) AS MatchReferenceId,
+    CASE
+        WHEN bft.Status = ''Matched'' THEN ISNULL(mdet.MatchedCount, 0)
+        ELSE ISNULL(tm.MatchCount, 0)
+    END AS MatchCount,
+    COALESCE(tm.MatchPayeeName, mdet.PayeeName)     AS MatchPayeeName,
+    COALESCE(tm.MatchTxDate, mdet.TxDate)           AS MatchTxDate,
+    COALESCE(tm.MatchAmount, mdet.Amount)           AS MatchAmount,
+    COALESCE(tm.MatchReferenceId, mdet.ReferenceId) AS MatchReferenceId,
     tm.MatchCandidateTxId,
     tm.MatchCandidateTxDetailId'
 
     SET @Qry += ' FROM BankFeedTransaction AS bft
     JOIN BankFeedAccount AS bfa ON bfa.BankFeedAccountId = bft.BankFeedAccountId
-    JOIN Account AS acct ON acct.AccountId = bfa.AccountId
-    LEFT JOIN TransactionJournal AS tx ON tx.TxId = bft.MatchedTxId
-    LEFT JOIN #MatchTx AS mtx ON mtx.TxDetailId = bft.MatchedTxDetailId'
+    JOIN Account AS acct ON acct.AccountId = bfa.AccountId'
+
+    IF @IsCount = 0
+        SET @Qry += '
+    OUTER APPLY (
+        SELECT TOP 1 mt.PayeeName, mt.TxDate, mt.Amount, mt.ReferenceId,
+               cnt.MatchedCount
+        FROM BankFeedMatch bfm
+        JOIN #MatchTx mt ON mt.TxDetailId = bfm.TxDetailId
+        CROSS JOIN (
+            SELECT COUNT(*) AS MatchedCount
+            FROM BankFeedMatch
+            WHERE BankFeedTransactionId = bft.BankFeedTransactionId
+        ) cnt
+        WHERE bfm.BankFeedTransactionId = bft.BankFeedTransactionId
+          AND bft.Status = ''Matched''
+        ORDER BY bfm.BankFeedMatchId
+    ) mdet'
 
     IF @IsCount = 0 OR @Status = 'MatchFound'
         SET @Qry += '
@@ -105,10 +117,7 @@ BEGIN
             FROM #MatchTx e
             WHERE bft.Status != ''Matched''
               AND e.IsLocked = 0
-              AND e.TxDetailId NOT IN (
-                  SELECT MatchedTxDetailId FROM BankFeedTransaction
-                  WHERE Status = ''Matched'' AND MatchedTxDetailId IS NOT NULL
-              )
+              AND e.TxDetailId NOT IN (SELECT TxDetailId FROM BankFeedMatch)
               AND (
                   (e.Amount = bft.Amount)
                   OR (bft.CheckNumber IS NOT NULL AND e.SourceDocNumber IS NOT NULL

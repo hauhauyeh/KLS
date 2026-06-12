@@ -12,7 +12,7 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<BankFeedMatchCandidate> GetMatchCandidates(long bankFeedTransactionId);
 
-        void MatchTx(long bankFeedTransactionId, long txId, long txDetailId, int matchedBy);
+        void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy);
 
         void UnMatchTx(long bankFeedTransactionId);
     }

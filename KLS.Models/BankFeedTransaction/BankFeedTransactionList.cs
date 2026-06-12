@@ -31,17 +31,7 @@ namespace KLS.Models
 
         public string Status { get; set; } = string.Empty;
 
-        public long? MatchedTxId { get; set; }
-
-        public long? MatchedTxDetailId { get; set; }
-
         public DateOnly? ClearedBankDate { get; set; }
-
-        public string? MatchedSourceDocType { get; set; }
-
-        public int? MatchedSourceDocNumber { get; set; }
-
-        public DateOnly? MatchedTxDate { get; set; }
 
         public int MatchCount { get; set; }
 

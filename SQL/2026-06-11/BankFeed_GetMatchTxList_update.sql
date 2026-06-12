@@ -1,5 +1,4 @@
-SET QUOTED_IDENTIFIER ON;
-GO
+
 
 ALTER PROCEDURE [dbo].[BankFeed_GetMatchTxList]
     @BankFeedTransactionId BIGINT
@@ -40,15 +39,13 @@ BEGIN
         [PaymentMethod] NVARCHAR(255) NULL
     );
 
-    INSERT INTO #EnrichedTx EXEC dbo.sp_TxDetailEnriched @AccountId;
+    INSERT INTO #EnrichedTx EXEC dbo.Bank_TxDetail @AccountId;
 
     -- TxDetailIds already matched by other bank feed rows
     ;WITH AlreadyMatched AS (
-        SELECT MatchedTxDetailId
-        FROM BankFeedTransaction
-        WHERE Status = 'Matched'
-          AND BankFeedTransactionId != @BankFeedTransactionId
-          AND MatchedTxDetailId IS NOT NULL
+        SELECT TxDetailId
+        FROM BankFeedMatch
+        WHERE BankFeedTransactionId != @BankFeedTransactionId
     )
 
     SELECT
@@ -62,7 +59,7 @@ BEGIN
         e.PayeeName
     FROM #EnrichedTx e
     WHERE e.IsLocked = 0
-      AND e.TxDetailId NOT IN (SELECT MatchedTxDetailId FROM AlreadyMatched)
+      AND e.TxDetailId NOT IN (SELECT TxDetailId FROM AlreadyMatched)
     ORDER BY
         CASE WHEN ISNULL(e.Amount, 0) = @Amount THEN 0 ELSE 1 END,
         CASE WHEN e.TxDate = @PostedDate AND ISNULL(e.Amount, 0) = @Amount THEN 0 ELSE 1 END,

@@ -43,13 +43,12 @@ namespace KLS.Data.Repositories
                 "[dbo].[BankFeed_GetMatchTxList] @BankFeedTransactionId", param);
         }
 
-        public void MatchTx(long bankFeedTransactionId, long txId, long txDetailId, int matchedBy)
+        public void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy)
         {
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[BankFeed_MatchTx] @BankFeedTransactionId, @TxId, @TxDetailId, @MatchedBy",
+                "[dbo].[BankFeed_MatchTx] @BankFeedTransactionId, @MatchItemsJson, @MatchedBy",
                 new SqlParameter("@BankFeedTransactionId", bankFeedTransactionId),
-                new SqlParameter("@TxId", txId),
-                new SqlParameter("@TxDetailId", txDetailId),
+                new SqlParameter("@MatchItemsJson", matchItemsJson),
                 new SqlParameter("@MatchedBy", matchedBy));
         }
 

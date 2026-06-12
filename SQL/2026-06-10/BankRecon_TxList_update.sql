@@ -1,5 +1,4 @@
-SET QUOTED_IDENTIFIER ON;
-GO
+
 
 ALTER PROCEDURE [dbo].[BankRecon_TxList]
     @BankReconId INT
@@ -72,7 +71,7 @@ BEGIN
         SET @PrevReconDate = DATEADD(DAY, 1, @PrevReconDate);
 
     -- Get all enriched transactions via shared SP
-    INSERT INTO #AllTx EXEC dbo.sp_TxDetailEnriched @AccountId;
+    INSERT INTO #AllTx EXEC dbo.Bank_TxDetail @AccountId;
 
     -- Apply BankRecon-specific date filters
     INSERT INTO #TxTable (TxId, TxDate, SourceDocType, SourceDocNumber, Amount, IsLocked, BankDate, PayeeName, ReferenceId, PayeeId, IsVoid, PaymentMethod)

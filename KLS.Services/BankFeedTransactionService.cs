@@ -142,16 +142,17 @@ namespace KLS.Services
             if (reqs == null || !reqs.Any())
                 throw new Exception("Please select at least one transaction to match.");
 
-            foreach (var req in reqs)
-            {
-                if (!req.TxId.HasValue || !req.TxDetailId.HasValue)
-                    throw new Exception("Please select a transaction to match.");
+            if (reqs.Any(r => !r.TxId.HasValue || !r.TxDetailId.HasValue))
+                throw new Exception("Please select a transaction to match.");
 
-                Uow.BankFeedTransactions.MatchTx(
-                    req.BankFeedTransactionId,
-                    req.TxId.Value,
-                    req.TxDetailId.Value,
-                    UserContext.EmpId);
+            var groups = reqs.GroupBy(r => r.BankFeedTransactionId);
+
+            foreach (var group in groups)
+            {
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    group.Select(r => new { r.TxId, r.TxDetailId }));
+
+                Uow.BankFeedTransactions.MatchTx(group.Key, json, UserContext.EmpId);
             }
         }
 
