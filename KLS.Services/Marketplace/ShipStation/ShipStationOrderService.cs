@@ -53,7 +53,7 @@ namespace KLS.Services.Marketplace.ShipStation
                 DateTime? createDateStart = null;
                 if (account.LastSyncAt == null)
                 {
-                    createDateStart = since ?? DateTime.UtcNow.AddDays(-30);
+                    createDateStart = since ?? DateTime.UtcNow.AddDays(-4);
                 }
                 else
                 {
@@ -191,6 +191,8 @@ namespace KLS.Services.Marketplace.ShipStation
 
             if (src.items == null || src.items.Count == 0) return;
 
+            var newItems = new List<MarketOrderItem>();
+
             foreach (var line in src.items)
             {
                 var externalLineId = line.orderItemId.ToString();
@@ -201,6 +203,7 @@ namespace KLS.Services.Marketplace.ShipStation
                     MarketOrderId = order.MarketOrderId,
                     ExternalLineId = externalLineId,
                     ExternalSku = string.IsNullOrWhiteSpace(line.sku) ? null : line.sku,
+                    ExternalUpc = string.IsNullOrWhiteSpace(line.upc) ? null : line.upc,
                     ExternalItemName = line.name,
                     Qty = qty,
                     UnitPrice = unitPrice,
@@ -209,7 +212,6 @@ namespace KLS.Services.Marketplace.ShipStation
                     MatchStatus = "unmatched"
                 };
 
-                // Restore match state if we had one for this ExternalLineId
                 if (matchState.TryGetValue(externalLineId, out var prior))
                 {
                     item.MatchStatus = prior.MatchStatus;
@@ -217,11 +219,68 @@ namespace KLS.Services.Marketplace.ShipStation
                     item.ItemUnitId = prior.ItemUnitId;
                     item.MarketItemMapId = prior.MarketItemMapId;
                 }
+                else
+                {
+                    newItems.Add(item);
+                }
 
                 Uow.MarketOrderItems.Add(item);
             }
 
             Uow.Commit();
+
+            // Calculate Subtotal from item line totals
+            order.Subtotal = src.items.Sum(l => l.unitPrice.HasValue ? l.unitPrice.Value * l.quantity : 0m);
+            Uow.MarketOrders.Update(order);
+            Uow.Commit();
+
+            // Auto-match new items by SKU map then UPC/barcode fallback
+            if (newItems.Count > 0)
+            {
+                AutoMatchItems(order.MarketAccountId, newItems);
+            }
+        }
+        private void AutoMatchItems(int marketAccountId, List<MarketOrderItem> items)
+        {
+            bool changed = false;
+            foreach (var item in items)
+            {
+                // 1) Try MarketItemMap by SKU
+                MarketItemMap? map = null;
+                if (!string.IsNullOrEmpty(item.ExternalSku))
+                {
+                    map = Uow.MarketItemMaps.Find(m =>
+                        m.MarketAccountId == marketAccountId &&
+                        m.ExternalSku == item.ExternalSku).FirstOrDefault();
+                }
+
+                if (map != null)
+                {
+                    item.ItemId = map.ItemId;
+                    item.ItemUnitId = map.ItemUnitId;
+                    item.MarketItemMapId = map.MarketItemMapId;
+                    item.MatchStatus = "matched";
+                    Uow.MarketOrderItems.Update(item);
+                    changed = true;
+                }
+                // 2) Fallback: match ExternalUpc against ItemUnit.Barcode
+                else if (!string.IsNullOrEmpty(item.ExternalUpc))
+                {
+                    var unitMatch = Uow.ItemUnits.Find(u =>
+                        u.Barcode == item.ExternalUpc).FirstOrDefault();
+
+                    if (unitMatch != null)
+                    {
+                        item.ItemId = unitMatch.ItemId;
+                        item.ItemUnitId = unitMatch.ItemUnitId;
+                        item.MarketItemMapId = null;
+                        item.MatchStatus = "matched_upc";
+                        Uow.MarketOrderItems.Update(item);
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) Uow.Commit();
         }
     }
 }

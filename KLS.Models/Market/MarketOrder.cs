@@ -109,5 +109,11 @@ namespace KLS.Models
         public DateTime? UpdatedAt { get; set; }
 
         public virtual ICollection<MarketOrderItem>? Items { get; set; }
+
+        [NotMapped]
+        public int TotalItems { get; set; }
+
+        [NotMapped]
+        public int MatchedItems { get; set; }
     }
 }

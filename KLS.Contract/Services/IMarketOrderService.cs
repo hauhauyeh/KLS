@@ -9,6 +9,8 @@ namespace KLS.Contract.Services
 {
     public interface IMarketOrderService
     {
+        PagingResponse<MarketOrder> GetPagedList(MarketOrderListReq req);
+
         IEnumerable<MarketOrder> GetByAccount(int marketAccountId);
 
         MarketOrder? GetById(int id);
@@ -16,6 +18,8 @@ namespace KLS.Contract.Services
         MarketOrder? GetByExternalId(int marketAccountId, string externalOrderId);
 
         void MatchSkus(int marketOrderId);
+
+        void LinkOrderItem(int marketOrderItemId, int itemId, int itemUnitId);
 
         Task<int> ConvertToSalesAsync(int marketOrderId);
     }

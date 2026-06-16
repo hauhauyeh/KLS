@@ -28,6 +28,9 @@ namespace KLS.Models
         [StringLength(100)]
         public string? ExternalSku { get; set; }
 
+        [StringLength(50)]
+        public string? ExternalUpc { get; set; }
+
         [StringLength(200)]
         public string? ExternalListingId { get; set; }
 

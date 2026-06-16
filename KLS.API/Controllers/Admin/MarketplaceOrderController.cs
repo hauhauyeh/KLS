@@ -1,6 +1,7 @@
 using KLS.API.Helpers;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using KLS.Models;
 using KLS.Services.Marketplace.Common;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
@@ -20,12 +21,12 @@ namespace KLS.API.Controllers.Admin
             _orderService = orderService;
         }
 
-        [HttpGet("{marketAccountId}")]
+        [HttpGet]
         [DisplayName("List Orders")]
         [PermissionKey("Marketplace.Order.List")]
-        public IActionResult List(int marketAccountId)
+        public IActionResult List([FromQuery] MarketOrderListReq req)
         {
-            return Ok(_orderService.GetByAccount(marketAccountId));
+            return Ok(_orderService.GetPagedList(req));
         }
 
         [HttpGet("Detail/{id}")]
@@ -58,6 +59,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult MatchSkus(int marketOrderId)
         {
             _orderService.MatchSkus(marketOrderId);
+            return Ok();
+        }
+
+        [HttpPost("LinkItem")]
+        [PermissionKey("Marketplace.Order.List")]
+        public IActionResult LinkItem([FromBody] LinkOrderItemReq req)
+        {
+            _orderService.LinkOrderItem(req.MarketOrderItemId, req.ItemId, req.ItemUnitId);
             return Ok();
         }
 
