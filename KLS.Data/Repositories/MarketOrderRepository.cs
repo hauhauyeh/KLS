@@ -1,8 +1,12 @@
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Data.DataContext;
 using KLS.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -84,6 +88,20 @@ namespace KLS.Data.Repositories
         public int Count(MarketOrderListReq req)
         {
             return BuildQuery(req).Count();
+        }
+
+        public int ConvertToSales(int marketAccountId, DateOnly orderDate)
+        {
+            var accountIdParam = new SqlParameter("@MarketAccountId", marketAccountId);
+            var dateParam = new SqlParameter("@OrderDate", orderDate.ToDateTime(TimeOnly.MinValue));
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var newSalesIdOut = new SqlParameter("@NewSalesId", SqlDbType.Int) { Direction = ParameterDirection.Output };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[MarketPlaceOrder_Convert] @MarketAccountId, @OrderDate, @EmpId, @NewSalesId OUTPUT",
+                accountIdParam, dateParam, empIdParam, newSalesIdOut);
+
+            return (int)newSalesIdOut.Value;
         }
     }
 }

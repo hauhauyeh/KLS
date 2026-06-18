@@ -142,11 +142,9 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        public Task<int> ConvertToSalesAsync(int marketOrderId)
+        public int ConvertToSales(int marketAccountId, DateOnly orderDate)
         {
-            // TODO: Create TempSales + TempSalesDetail, then inject via Sales_Inject SP
-            // Full implementation deferred — requires detailed design pass on existing Sales flow
-            throw new NotImplementedException("ConvertToSales not yet implemented");
+            return Uow.MarketOrders.ConvertToSales(marketAccountId, orderDate);
         }
     }
 }

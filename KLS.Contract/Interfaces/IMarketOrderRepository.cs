@@ -11,5 +11,6 @@ namespace KLS.Contract.Interfaces
     {
         IQueryable<MarketOrder> GetPagedList(MarketOrderListReq req);
         int Count(MarketOrderListReq req);
+        int ConvertToSales(int marketAccountId, DateOnly orderDate);
     }
 }

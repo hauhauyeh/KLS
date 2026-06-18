@@ -158,6 +158,7 @@ namespace KLS.Services.Marketplace.ShipStation
             order.OrderTotal = src.orderTotal;
             order.ShippingAmount = src.shippingAmount;
             order.TaxAmount = src.taxAmount;
+            order.SalesChannel = !string.IsNullOrWhiteSpace(src.advancedOptions?.source) ? src.advancedOptions.source : "ShipStation";
             order.RawJson = JsonSerializer.Serialize(src);
             order.LastSyncAt = DateTime.UtcNow;
             order.LastSyncStatus = MarketSyncStatus.Success.ToValue();

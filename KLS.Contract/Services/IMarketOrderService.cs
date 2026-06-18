@@ -21,6 +21,6 @@ namespace KLS.Contract.Services
 
         void LinkOrderItem(int marketOrderItemId, int itemId, int itemUnitId);
 
-        Task<int> ConvertToSalesAsync(int marketOrderId);
+        int ConvertToSales(int marketAccountId, DateOnly orderDate);
     }
 }

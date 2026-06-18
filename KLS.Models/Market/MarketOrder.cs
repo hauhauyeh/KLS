@@ -105,6 +105,9 @@ namespace KLS.Models
         [StringLength(1000)]
         public string? LastError { get; set; }
 
+        [StringLength(50)]
+        public string? SalesChannel { get; set; }
+
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

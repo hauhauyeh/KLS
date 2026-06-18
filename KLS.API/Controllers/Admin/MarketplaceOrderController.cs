@@ -70,17 +70,17 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
-        [HttpPost("ConvertToSales/{marketOrderId}")]
+        [HttpPost("ConvertToSales")]
         [DisplayName("Convert to ERP Sales")]
         [PermissionKey("Marketplace.Order.Convert")]
-        public async Task<IActionResult> ConvertToSales(int marketOrderId)
+        public IActionResult ConvertToSales([FromBody] ConvertToSalesReq req)
         {
             try
             {
-                var salesId = await _orderService.ConvertToSalesAsync(marketOrderId);
+                var salesId = _orderService.ConvertToSales(req.MarketAccountId, req.OrderDate);
+                if (salesId == 0) return BadRequest("No convertible orders found for this date");
                 return Ok(new { SalesId = salesId });
             }
-            catch (NotImplementedException) { return BadRequest("ConvertToSales not yet implemented"); }
             catch (Exception ex) { return BadRequest(ex.Message); }
         }
     }
