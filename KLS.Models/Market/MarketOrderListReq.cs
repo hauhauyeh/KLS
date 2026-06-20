@@ -11,5 +11,6 @@ namespace KLS.Models
         public int? MarketAccountId { get; set; }
         public string? OrderStatus { get; set; }
         public bool? ImportedToErp { get; set; }
+        public string? MatchFilter { get; set; }
     }
 }

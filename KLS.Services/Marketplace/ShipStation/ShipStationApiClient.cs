@@ -50,10 +50,10 @@ namespace KLS.Services.Marketplace.ShipStation
                 sb.Append($"&storeId={storeId.Value}");
             sb.Append("&sortBy=ModifyDate&sortDir=ASC");
 
-            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, sb.ToString(), ct);
-            if (string.IsNullOrWhiteSpace(body)) return null;
+            var responseBody = await ExecuteAsync(marketAccountId, HttpMethod.Get, sb.ToString(), ct);
+            if (string.IsNullOrWhiteSpace(responseBody)) return null;
 
-            return JsonSerializer.Deserialize<ShipStationOrdersResponse>(body, new JsonSerializerOptions
+            return JsonSerializer.Deserialize<ShipStationOrdersResponse>(responseBody, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
@@ -63,7 +63,7 @@ namespace KLS.Services.Marketplace.ShipStation
         {
             try
             {
-                var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, "/orders?pageSize=1", ct);
+                var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, "/orders?pageSize=1", null, ct);
                 return !string.IsNullOrWhiteSpace(body);
             }
             catch
@@ -72,7 +72,33 @@ namespace KLS.Services.Marketplace.ShipStation
             }
         }
 
-        private async Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, CancellationToken ct)
+        public async Task<ShipStationProduct?> GetProductAsync(int marketAccountId, int productId, CancellationToken ct = default)
+        {
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, $"/products/{productId}", null, ct);
+            if (string.IsNullOrWhiteSpace(body)) return null;
+            return JsonSerializer.Deserialize<ShipStationProduct>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+
+        public async Task<bool> UpdateProductUpcAsync(int marketAccountId, int productId, string upc, CancellationToken ct = default)
+        {
+            var product = await GetProductAsync(marketAccountId, productId, ct);
+            if (product == null) return false;
+
+            product.upc = upc;
+
+            var response = await ExecuteAsync(marketAccountId, HttpMethod.Put, $"/products/{productId}", product, ct);
+            return !string.IsNullOrWhiteSpace(response);
+        }
+
+        private Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, CancellationToken ct)
+        {
+            return ExecuteAsync(marketAccountId, method, endpoint, null, ct);
+        }
+
+        private async Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, object? body, CancellationToken ct)
         {
             var limiter = _accountLimiters.GetOrAdd(marketAccountId, _ => new SemaphoreSlim(1, 1));
 
@@ -92,6 +118,15 @@ namespace KLS.Services.Marketplace.ShipStation
                     var basic = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{settings.ApiKey}:{settings.ApiSecret}"));
                     request.Headers.Authorization = new AuthenticationHeaderValue("Basic", basic);
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    if (body != null)
+                    {
+                        var json = JsonSerializer.Serialize(body, new JsonSerializerOptions
+                        {
+                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                        });
+                        request.Content = new StringContent(json, Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
+                    }
 
                     HttpResponseMessage response;
                     try
@@ -132,7 +167,7 @@ namespace KLS.Services.Marketplace.ShipStation
                     }
 
                     response.EnsureSuccessStatusCode();
-                    var body = await response.Content.ReadAsStringAsync(ct);
+                    var responseText = await response.Content.ReadAsStringAsync(ct);
 
                     // Post-response soft throttle: only if header is present AND remaining < 5
                     if (TryReadRemaining(response, out var remaining) && remaining < 5)
@@ -140,7 +175,7 @@ namespace KLS.Services.Marketplace.ShipStation
                         await Task.Delay(TimeSpan.FromSeconds(2), ct);
                     }
 
-                    return body;
+                    return responseText;
                 }
                 finally
                 {

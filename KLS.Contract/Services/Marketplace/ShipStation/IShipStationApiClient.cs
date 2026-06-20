@@ -17,5 +17,9 @@ namespace KLS.Contract.Services.Marketplace.ShipStation
             CancellationToken ct = default);
 
         Task<bool> TestConnectionAsync(int marketAccountId, CancellationToken ct = default);
+
+        Task<ShipStationProduct?> GetProductAsync(int marketAccountId, int productId, CancellationToken ct = default);
+
+        Task<bool> UpdateProductUpcAsync(int marketAccountId, int productId, string upc, CancellationToken ct = default);
     }
 }

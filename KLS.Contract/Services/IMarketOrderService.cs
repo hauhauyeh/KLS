@@ -19,7 +19,8 @@ namespace KLS.Contract.Services
 
         void MatchSkus(int marketOrderId);
 
-        void LinkOrderItem(int marketOrderItemId, int itemId, int itemUnitId);
+        Task LinkOrderItemAsync(int marketOrderItemId, int itemId, int itemUnitId,
+            string? barcodeAction = null, string? newBarcode = null);
 
         int ConvertToSales(int marketAccountId, DateOnly orderDate);
     }

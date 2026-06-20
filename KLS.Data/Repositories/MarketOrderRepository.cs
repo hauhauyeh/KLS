@@ -47,6 +47,17 @@ namespace KLS.Data.Repositories
                     (o.ShipToCity != null && o.ShipToCity.Contains(term)));
             }
 
+            if (!string.IsNullOrEmpty(req.MatchFilter))
+            {
+                query = req.MatchFilter switch
+                {
+                    "matched" => query.Where(o => o.Items != null && o.Items.Any() && o.Items.All(i => i.MatchStatus != "unmatched")),
+                    "unmatched" => query.Where(o => o.Items == null || !o.Items.Any() || o.Items.All(i => i.MatchStatus == "unmatched")),
+                    "partial" => query.Where(o => o.Items != null && o.Items.Any(i => i.MatchStatus != "unmatched") && o.Items.Any(i => i.MatchStatus == "unmatched")),
+                    _ => query
+                };
+            }
+
             return query;
         }
 
@@ -69,6 +80,7 @@ namespace KLS.Data.Repositories
                 {
                     MarketOrderId = o.MarketOrderId,
                     MarketAccountId = o.MarketAccountId,
+                    SalesChannel = o.SalesChannel,
                     ExternalOrderId = o.ExternalOrderId,
                     ExternalOrderNo = o.ExternalOrderNo,
                     OrderDate = o.OrderDate,

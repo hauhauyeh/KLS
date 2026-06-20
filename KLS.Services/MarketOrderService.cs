@@ -1,5 +1,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using KLS.Contract.Services.Marketplace.ShipStation;
 using KLS.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,7 +13,12 @@ namespace KLS.Services
 {
     public class MarketOrderService : BaseService, IMarketOrderService
     {
-        public MarketOrderService(IUnitOfWork uow) : base(uow) { }
+        private readonly IShipStationApiClient _ssClient;
+
+        public MarketOrderService(IUnitOfWork uow, IShipStationApiClient ssClient) : base(uow)
+        {
+            _ssClient = ssClient;
+        }
 
         public PagingResponse<MarketOrder> GetPagedList(MarketOrderListReq req)
         {
@@ -93,7 +99,8 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        public void LinkOrderItem(int marketOrderItemId, int itemId, int itemUnitId)
+        public async Task LinkOrderItemAsync(int marketOrderItemId, int itemId, int itemUnitId,
+            string? barcodeAction = null, string? newBarcode = null)
         {
             var orderItem = Uow.MarketOrderItems.GetById(marketOrderItemId)
                 ?? throw new Exception("Market order item not found");
@@ -140,6 +147,46 @@ namespace KLS.Services
             orderItem.UpdatedAt = DateTime.UtcNow;
             Uow.MarketOrderItems.Update(orderItem);
             Uow.Commit();
+
+            // Barcode sync
+            if (string.IsNullOrEmpty(barcodeAction)) return;
+
+            string? barcodeToSet = barcodeAction switch
+            {
+                "use_shipstation" => orderItem.ExternalUpc,
+                "new" => newBarcode?.Trim(),
+                "use_system" => Uow.ItemUnits.GetById(itemUnitId)?.Barcode,
+                _ => null
+            };
+
+            if (string.IsNullOrEmpty(barcodeToSet)) return;
+
+            // Update system DB (for "use_shipstation" and "new")
+            if (barcodeAction != "use_system")
+            {
+                var unit = Uow.ItemUnits.GetById(itemUnitId);
+                if (unit != null && unit.Barcode != barcodeToSet)
+                {
+                    var duplicate = Uow.ItemUnits
+                        .Find(u => u.Barcode == barcodeToSet && u.ItemUnitId != itemUnitId)
+                        .Any();
+                    if (duplicate)
+                        throw new InvalidOperationException("Barcode already exists on another unit.");
+
+                    unit.Barcode = barcodeToSet;
+                    Uow.ItemUnits.Update(unit);
+                    Uow.Commit();
+                }
+            }
+
+            // Update ShipStation product UPC (for "use_system" and "new")
+            if (barcodeAction != "use_shipstation"
+                && !string.IsNullOrEmpty(orderItem.ExternalListingId)
+                && int.TryParse(orderItem.ExternalListingId, out var ssProductId))
+            {
+                await _ssClient.UpdateProductUpcAsync(
+                    order.MarketAccountId, ssProductId, barcodeToSet);
+            }
         }
 
         public int ConvertToSales(int marketAccountId, DateOnly orderDate)

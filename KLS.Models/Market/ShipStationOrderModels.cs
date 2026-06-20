@@ -52,6 +52,7 @@ namespace KLS.Models
     public class ShipStationOrderItem
     {
         public long orderItemId { get; set; }
+        public int? productId { get; set; }
         public string? lineItemKey { get; set; }
         public string? sku { get; set; }
         public string? name { get; set; }
@@ -68,5 +69,41 @@ namespace KLS.Models
         public int? storeId { get; set; }
         public string? source { get; set; }
         public int? warehouseId { get; set; }
+    }
+
+    public class ShipStationProduct
+    {
+        public int productId { get; set; }
+        public string? sku { get; set; }
+        public string? name { get; set; }
+        public decimal? price { get; set; }
+        public decimal? defaultCost { get; set; }
+        public decimal? length { get; set; }
+        public decimal? width { get; set; }
+        public decimal? height { get; set; }
+        public decimal? weightOz { get; set; }
+        public string? internalNotes { get; set; }
+        public string? fulfillmentSku { get; set; }
+        public bool? active { get; set; }
+        public object? productCategory { get; set; }
+        public object? productType { get; set; }
+        public string? warehouseLocation { get; set; }
+        public string? defaultCarrierCode { get; set; }
+        public string? defaultServiceCode { get; set; }
+        public string? defaultPackageCode { get; set; }
+        public string? defaultIntlCarrierCode { get; set; }
+        public string? defaultIntlServiceCode { get; set; }
+        public string? defaultIntlPackageCode { get; set; }
+        public string? defaultConfirmation { get; set; }
+        public string? defaultIntlConfirmation { get; set; }
+        public string? customsDescription { get; set; }
+        public decimal? customsValue { get; set; }
+        public string? customsTariffNo { get; set; }
+        public string? customsCountryCode { get; set; }
+        public bool? noCustoms { get; set; }
+        public List<object>? tags { get; set; }
+        public string? upc { get; set; }
+        public string? thumbnailURL { get; set; }
+        public List<object>? aliases { get; set; }
     }
 }

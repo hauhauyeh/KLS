@@ -205,6 +205,7 @@ namespace KLS.Services.Marketplace.ShipStation
                     ExternalLineId = externalLineId,
                     ExternalSku = string.IsNullOrWhiteSpace(line.sku) ? null : line.sku,
                     ExternalUpc = string.IsNullOrWhiteSpace(line.upc) ? null : line.upc,
+                    ExternalListingId = line.productId?.ToString(),
                     ExternalItemName = line.name,
                     Qty = qty,
                     UnitPrice = unitPrice,
