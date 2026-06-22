@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using KLS.Services.Marketplace.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -69,6 +70,18 @@ namespace KLS.API.Controllers.Admin
             await _orderService.LinkOrderItemAsync(req.MarketOrderItemId, req.ItemId, req.ItemUnitId,
                                                     req.BarcodeAction, req.NewBarcode);
             return Ok();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("BackfillProductIds/{marketAccountId}")]
+        public async Task<IActionResult> BackfillProductIds(int marketAccountId, CancellationToken ct)
+        {
+            try
+            {
+                var updated = await _orderService.BackfillProductIdsAsync(marketAccountId, ct);
+                return Ok(new { Updated = updated });
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPost("ConvertToSales")]

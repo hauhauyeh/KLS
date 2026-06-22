@@ -193,5 +193,48 @@ namespace KLS.Services
         {
             return Uow.MarketOrders.ConvertToSales(marketAccountId, orderDate);
         }
+
+        public async Task<int> BackfillProductIdsAsync(int marketAccountId, CancellationToken ct = default)
+        {
+            var orders = Uow.MarketOrders
+                .Find(o => o.MarketAccountId == marketAccountId)
+                .Include(o => o.Items)
+                    .Where(o => o.Items != null && o.Items.Any(i => string.IsNullOrEmpty(i.ExternalListingId)))
+                .Select(o => new { o.MarketOrderId, o.ExternalOrderId })
+                .ToList();
+
+            if (orders.Count == 0) return 0;
+
+            int updated = 0;
+
+            foreach (var order in orders)
+            {
+                ct.ThrowIfCancellationRequested();
+
+                if (!int.TryParse(order.ExternalOrderId, out var ssOrderId)) continue;
+
+                var ssOrder = await _ssClient.GetOrderByIdAsync(marketAccountId, ssOrderId, ct);
+                if (ssOrder?.items == null) continue;
+
+                var items = Uow.MarketOrderItems
+                    .Find(i => i.MarketOrderId == order.MarketOrderId && string.IsNullOrEmpty(i.ExternalListingId))
+                    .ToList();
+
+                foreach (var item in items)
+                {
+                    var ssItem = ssOrder.items.FirstOrDefault(s =>
+                        s.orderItemId.ToString() == item.ExternalLineId && s.productId.HasValue);
+                    if (ssItem == null) continue;
+
+                    item.ExternalListingId = ssItem.productId.ToString();
+                    Uow.MarketOrderItems.Update(item);
+                    updated++;
+                }
+
+                if (updated > 0) Uow.Commit();
+            }
+
+            return updated;
+        }
     }
 }

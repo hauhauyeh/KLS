@@ -71,6 +71,14 @@ namespace KLS.Models
         public int? warehouseId { get; set; }
     }
 
+    public class ShipStationProductsResponse
+    {
+        public List<ShipStationProduct>? products { get; set; }
+        public int total { get; set; }
+        public int page { get; set; }
+        public int pages { get; set; }
+    }
+
     public class ShipStationProduct
     {
         public int productId { get; set; }

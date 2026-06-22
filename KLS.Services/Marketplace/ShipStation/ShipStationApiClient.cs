@@ -93,6 +93,16 @@ namespace KLS.Services.Marketplace.ShipStation
             return !string.IsNullOrWhiteSpace(response);
         }
 
+        public async Task<ShipStationOrder?> GetOrderByIdAsync(int marketAccountId, int orderId, CancellationToken ct = default)
+        {
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, $"/orders/{orderId}", null, ct);
+            if (string.IsNullOrWhiteSpace(body)) return null;
+            return JsonSerializer.Deserialize<ShipStationOrder>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+
         private Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, CancellationToken ct)
         {
             return ExecuteAsync(marketAccountId, method, endpoint, null, ct);

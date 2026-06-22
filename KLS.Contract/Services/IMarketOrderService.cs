@@ -23,5 +23,7 @@ namespace KLS.Contract.Services
             string? barcodeAction = null, string? newBarcode = null);
 
         int ConvertToSales(int marketAccountId, DateOnly orderDate);
+
+        Task<int> BackfillProductIdsAsync(int marketAccountId, CancellationToken ct = default);
     }
 }
