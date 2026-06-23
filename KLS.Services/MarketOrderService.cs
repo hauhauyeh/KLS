@@ -20,11 +20,11 @@ namespace KLS.Services
             _ssClient = ssClient;
         }
 
-        public PagingResponse<MarketOrder> GetPagedList(MarketOrderListReq req)
+        public PagingResponse<MarketOrderList> GetPagedList(MarketOrderListReq req)
         {
             var list = Uow.MarketOrders.GetPagedList(req).ToList();
             var totalRecords = Uow.MarketOrders.Count(req);
-            return new PagingResponse<MarketOrder>(totalRecords, req.Pageno, req.Pagesize)
+            return new PagingResponse<MarketOrderList>(totalRecords, req.Pageno, req.Pagesize)
             {
                 RowData = list
             };

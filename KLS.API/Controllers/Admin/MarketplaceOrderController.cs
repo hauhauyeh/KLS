@@ -67,8 +67,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Marketplace.Order.List")]
         public async Task<IActionResult> LinkItem([FromBody] LinkOrderItemReq req)
         {
-            await _orderService.LinkOrderItemAsync(req.MarketOrderItemId, req.ItemId, req.ItemUnitId,
-                                                    req.BarcodeAction, req.NewBarcode);
+            await _orderService.LinkOrderItemAsync(req.MarketOrderItemId, req.ItemId, req.ItemUnitId, req.BarcodeAction, req.NewBarcode);
             return Ok();
         }
 

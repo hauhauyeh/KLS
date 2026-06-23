@@ -19,87 +19,41 @@ namespace KLS.Data.Repositories
         {
         }
 
-        private IQueryable<MarketOrder> BuildQuery(MarketOrderListReq req)
+        public IQueryable<MarketOrderList> GetPagedList(MarketOrderListReq req)
         {
-            var query = DbContext.MarketOrders.AsQueryable();
-
-            if (req.MarketAccountId.HasValue && req.MarketAccountId.Value > 0)
-                query = query.Where(o => o.MarketAccountId == req.MarketAccountId.Value);
-
-            if (!string.IsNullOrEmpty(req.OrderStatus))
-                query = query.Where(o => o.OrderStatus == req.OrderStatus);
-
-            if (req.ImportedToErp.HasValue)
-                query = query.Where(o => o.ImportedToErp == req.ImportedToErp.Value);
-
-            if (req.StartDate.HasValue)
-                query = query.Where(o => o.OrderDate >= req.StartDate.Value.ToDateTime(TimeOnly.MinValue));
-
-            if (req.EndDate.HasValue)
-                query = query.Where(o => o.OrderDate < req.EndDate.Value.ToDateTime(TimeOnly.MinValue).AddDays(1));
-
-            if (!string.IsNullOrEmpty(req.Search))
-            {
-                var term = req.Search.Trim();
-                query = query.Where(o =>
-                    (o.ExternalOrderId != null && o.ExternalOrderId.Contains(term)) ||
-                    (o.CustomerName != null && o.CustomerName.Contains(term)) ||
-                    (o.ShipToCity != null && o.ShipToCity.Contains(term)));
-            }
-
-            if (!string.IsNullOrEmpty(req.MatchFilter))
-            {
-                query = req.MatchFilter switch
-                {
-                    "matched" => query.Where(o => o.Items != null && o.Items.Any() && o.Items.All(i => i.MatchStatus != "unmatched")),
-                    "unmatched" => query.Where(o => o.Items == null || !o.Items.Any() || o.Items.All(i => i.MatchStatus == "unmatched")),
-                    "partial" => query.Where(o => o.Items != null && o.Items.Any(i => i.MatchStatus != "unmatched") && o.Items.Any(i => i.MatchStatus == "unmatched")),
-                    _ => query
-                };
-            }
-
-            return query;
-        }
-
-        public IQueryable<MarketOrder> GetPagedList(MarketOrderListReq req)
-        {
-            var query = BuildQuery(req);
-
-            query = req.SortField?.ToLower() switch
-            {
-                "externalorderid" => req.SortOrder == "desc" ? query.OrderByDescending(o => o.ExternalOrderId) : query.OrderBy(o => o.ExternalOrderId),
-                "customername" => req.SortOrder == "desc" ? query.OrderByDescending(o => o.CustomerName) : query.OrderBy(o => o.CustomerName),
-                "ordertotal" => req.SortOrder == "desc" ? query.OrderByDescending(o => o.OrderTotal) : query.OrderBy(o => o.OrderTotal),
-                "orderstatus" => req.SortOrder == "desc" ? query.OrderByDescending(o => o.OrderStatus) : query.OrderBy(o => o.OrderStatus),
-                "orderdate" => req.SortOrder == "desc" ? query.OrderByDescending(o => o.OrderDate) : query.OrderBy(o => o.OrderDate),
-                _ => query.OrderByDescending(o => o.OrderDate)
-            };
-
-            return query.Skip((req.Pageno - 1) * req.Pagesize).Take(req.Pagesize)
-                .Select(o => new MarketOrder
-                {
-                    MarketOrderId = o.MarketOrderId,
-                    MarketAccountId = o.MarketAccountId,
-                    SalesChannel = o.SalesChannel,
-                    ExternalOrderId = o.ExternalOrderId,
-                    ExternalOrderNo = o.ExternalOrderNo,
-                    OrderDate = o.OrderDate,
-                    OrderStatus = o.OrderStatus,
-                    CustomerName = o.CustomerName,
-                    ShipToCity = o.ShipToCity,
-                    ShipToState = o.ShipToState,
-                    CurrencyCode = o.CurrencyCode,
-                    OrderTotal = o.OrderTotal,
-                    ImportedToErp = o.ImportedToErp,
-                    ErpSalesId = o.ErpSalesId,
-                    TotalItems = o.Items != null ? o.Items.Count : 0,
-                    MatchedItems = o.Items != null ? o.Items.Count(i => i.MatchStatus != "unmatched") : 0
-                });
+            var param = BuildPagedList(req);
+            return DbContext.MarketOrderList.FromSqlRaw(
+                "[dbo].[MarketOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@MarketAccountId,@OrderStatus,@ImportedToErp,@MatchFilter,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
         }
 
         public int Count(MarketOrderListReq req)
         {
-            return BuildQuery(req).Count();
+            req.IsCount = true;
+            var param = BuildPagedList(req);
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[MarketOrder_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@MarketAccountId,@OrderStatus,@ImportedToErp,@MatchFilter,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            var output = param[12] as SqlParameter;
+            return Convert.ToInt32(output?.Value);
+        }
+
+        private static object[] BuildPagedList(MarketOrderListReq req)
+        {
+            object[] param = {
+                new SqlParameter("@Pageno", req.Pageno),
+                new SqlParameter("@Pagesize", req.Pagesize),
+                string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", req.Search),
+                req.StartDate.HasValue ? new SqlParameter("@StartDate", req.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+                req.EndDate.HasValue ? new SqlParameter("@EndDate", req.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+                req.MarketAccountId.HasValue && req.MarketAccountId.Value > 0 ? new SqlParameter("@MarketAccountId", req.MarketAccountId) : new SqlParameter("@MarketAccountId", DBNull.Value),
+                string.IsNullOrEmpty(req.OrderStatus) ? new SqlParameter("@OrderStatus", DBNull.Value) : new SqlParameter("@OrderStatus", req.OrderStatus),
+                req.ImportedToErp.HasValue ? new SqlParameter("@ImportedToErp", req.ImportedToErp) : new SqlParameter("@ImportedToErp", DBNull.Value),
+                string.IsNullOrEmpty(req.MatchFilter) ? new SqlParameter("@MatchFilter", DBNull.Value) : new SqlParameter("@MatchFilter", req.MatchFilter),
+                string.IsNullOrEmpty(req.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", req.SortField),
+                string.IsNullOrEmpty(req.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", req.SortOrder),
+                new SqlParameter("@IsCount", req.IsCount),
+                new SqlParameter("@TotalCount", SqlDbType.Int) { Direction = ParameterDirection.Output }
+            };
+            return param;
         }
 
         public int ConvertToSales(int marketAccountId, DateOnly orderDate)

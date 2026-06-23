@@ -495,6 +495,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PurchaseItemCostList> PurchaseItemCostList { get; set; }
 
+        public virtual DbSet<MarketOrderList> MarketOrderList { get; set; }
+
         #endregion
 
         #region ---Report DBSET---

@@ -9,7 +9,7 @@ namespace KLS.Contract.Services
 {
     public interface IMarketOrderService
     {
-        PagingResponse<MarketOrder> GetPagedList(MarketOrderListReq req);
+        PagingResponse<MarketOrderList> GetPagedList(MarketOrderListReq req);
 
         IEnumerable<MarketOrder> GetByAccount(int marketAccountId);
 

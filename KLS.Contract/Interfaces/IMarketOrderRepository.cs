@@ -9,7 +9,7 @@ namespace KLS.Contract.Interfaces
 {
     public interface IMarketOrderRepository : IRepository<MarketOrder>
     {
-        IQueryable<MarketOrder> GetPagedList(MarketOrderListReq req);
+        IQueryable<MarketOrderList> GetPagedList(MarketOrderListReq req);
         int Count(MarketOrderListReq req);
         int ConvertToSales(int marketAccountId, DateOnly orderDate);
     }
