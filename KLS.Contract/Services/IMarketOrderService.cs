@@ -9,6 +9,8 @@ namespace KLS.Contract.Services
 {
     public interface IMarketOrderService
     {
+        PagingResponse<MarketOrderList> GetPagedList(MarketOrderListReq req);
+
         IEnumerable<MarketOrder> GetByAccount(int marketAccountId);
 
         MarketOrder? GetById(int id);
@@ -17,6 +19,11 @@ namespace KLS.Contract.Services
 
         void MatchSkus(int marketOrderId);
 
-        Task<int> ConvertToSalesAsync(int marketOrderId);
+        Task LinkOrderItemAsync(int marketOrderItemId, int itemId, int itemUnitId,
+            string? barcodeAction = null, string? newBarcode = null);
+
+        int ConvertToSales(int marketAccountId, DateOnly orderDate);
+
+        Task<int> BackfillProductIdsAsync(int marketAccountId, CancellationToken ct = default);
     }
 }

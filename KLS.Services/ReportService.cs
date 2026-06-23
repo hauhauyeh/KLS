@@ -955,6 +955,16 @@ namespace KLS.Services
             return Uow.Reports.APAging(req);
         }
 
+        // Per-invoice AR Aging — passthrough. SP filters by ShipId
+        // (portal/admin AR identity model) + AmountDue<>0 (no stage filter,
+        // matches View_Customer aggregation) and returns mirror bucket columns
+        // + denormalized LastPaymentDate/Amount per row. Frontend groups by
+        // customer + computes subtotals/totals/PastDueOnly client-side.
+        public IQueryable<RptARAgingRow> ARAging(RptARAgingReq req)
+        {
+            return Uow.Reports.ARAging(req);
+        }
+
         public IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq)
         {
             if (UserContext.IsSalesRole)

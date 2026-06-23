@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildSalesParam(salesListReq);
 
-            return DbContext.SalesList.FromSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@ShipRoute,@Id,@Filterby,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.SalesList.FromSqlRaw("[dbo].[Sales_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@ShipRoute,@Id,@Filterby,@EmpId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param).AsNoTracking();
         }
 
         public int Count(SalesListReq salesListReq)

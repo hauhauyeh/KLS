@@ -39,6 +39,8 @@ namespace KLS.Models
 
         public string? SettingsJson { get; set; }
 
+        public int? PayeeId { get; set; }
+
         public bool IsActive { get; set; }
         public DateTime? LastSyncAt { get; set; }
 

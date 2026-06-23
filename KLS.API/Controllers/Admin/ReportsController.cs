@@ -477,6 +477,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.ARMonth(reportReq));
         }
 
+        [HttpGet("ARAging")]
+        [DisplayName("AR -> AR Aging")]
+        [PermissionKey("Report.AR.Aging")]
+        public IActionResult ARAging([FromQuery] RptARAgingReq req)
+        {
+            return Ok(_reportService.ARAging(req));
+        }
+
         #endregion
 
         #region --- Inventory ---

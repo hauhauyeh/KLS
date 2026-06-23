@@ -12,14 +12,14 @@ namespace KLS.Contract.Services
 
         List<BankFeedMatchCandidate> GetMatchCandidates(long bankFeedTransactionId);
 
-        void Match(BankFeedMatchReq req);
+        void Match(List<BankFeedMatchReq> reqs);
 
-        void Unmatch(BankFeedMatchReq req);
+        int Unmatch(BankFeedBulkActionReq req);
 
-        void Exclude(BankFeedExcludeReq req);
+        int Exclude(BankFeedBulkExcludeReq req);
 
-        void UnExclude(long bankFeedTransactionId);
+        int UnExclude(BankFeedBulkActionReq req);
 
-        void Delete(long bankFeedTransactionId);
+        int Delete(BankFeedBulkActionReq req);
     }
 }

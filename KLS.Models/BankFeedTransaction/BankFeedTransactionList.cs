@@ -31,18 +31,20 @@ namespace KLS.Models
 
         public string Status { get; set; } = string.Empty;
 
-        public long? MatchedTxId { get; set; }
-
-        public long? MatchedTxDetailId { get; set; }
-
         public DateOnly? ClearedBankDate { get; set; }
 
-        public string? MatchedSourceDocType { get; set; }
-
-        public int? MatchedSourceDocNumber { get; set; }
-
-        public DateOnly? MatchedTxDate { get; set; }
-
         public int MatchCount { get; set; }
+
+        public string? MatchPayeeName { get; set; }
+
+        public DateOnly? MatchTxDate { get; set; }
+
+        public decimal? MatchAmount { get; set; }
+
+        public string? MatchReferenceId { get; set; }
+
+        public long? MatchCandidateTxId { get; set; }
+
+        public long? MatchCandidateTxDetailId { get; set; }
     }
 }

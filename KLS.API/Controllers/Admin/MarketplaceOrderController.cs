@@ -1,7 +1,9 @@
 using KLS.API.Helpers;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using KLS.Models;
 using KLS.Services.Marketplace.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -20,12 +22,12 @@ namespace KLS.API.Controllers.Admin
             _orderService = orderService;
         }
 
-        [HttpGet("{marketAccountId}")]
+        [HttpGet]
         [DisplayName("List Orders")]
         [PermissionKey("Marketplace.Order.List")]
-        public IActionResult List(int marketAccountId)
+        public IActionResult List([FromQuery] MarketOrderListReq req)
         {
-            return Ok(_orderService.GetByAccount(marketAccountId));
+            return Ok(_orderService.GetPagedList(req));
         }
 
         [HttpGet("Detail/{id}")]
@@ -61,17 +63,37 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
-        [HttpPost("ConvertToSales/{marketOrderId}")]
-        [DisplayName("Convert to ERP Sales")]
-        [PermissionKey("Marketplace.Order.Convert")]
-        public async Task<IActionResult> ConvertToSales(int marketOrderId)
+        [HttpPost("LinkItem")]
+        [PermissionKey("Marketplace.Order.List")]
+        public async Task<IActionResult> LinkItem([FromBody] LinkOrderItemReq req)
+        {
+            await _orderService.LinkOrderItemAsync(req.MarketOrderItemId, req.ItemId, req.ItemUnitId, req.BarcodeAction, req.NewBarcode);
+            return Ok();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("BackfillProductIds/{marketAccountId}")]
+        public async Task<IActionResult> BackfillProductIds(int marketAccountId, CancellationToken ct)
         {
             try
             {
-                var salesId = await _orderService.ConvertToSalesAsync(marketOrderId);
+                var updated = await _orderService.BackfillProductIdsAsync(marketAccountId, ct);
+                return Ok(new { Updated = updated });
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
+        }
+
+        [HttpPost("ConvertToSales")]
+        [DisplayName("Convert to ERP Sales")]
+        [PermissionKey("Marketplace.Order.Convert")]
+        public IActionResult ConvertToSales([FromBody] ConvertToSalesReq req)
+        {
+            try
+            {
+                var salesId = _orderService.ConvertToSales(req.MarketAccountId, req.OrderDate);
+                if (salesId == 0) return BadRequest("No convertible orders found for this date");
                 return Ok(new { SalesId = salesId });
             }
-            catch (NotImplementedException) { return BadRequest("ConvertToSales not yet implemented"); }
             catch (Exception ex) { return BadRequest(ex.Message); }
         }
     }

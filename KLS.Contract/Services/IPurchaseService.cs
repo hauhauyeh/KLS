@@ -1,4 +1,5 @@
 ﻿using KLS.Models;
+using KLS.Models.Reports;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,6 +49,8 @@ namespace KLS.Contract.Services
         void AssignShipment(POCopyToBillReq copyToBillReq);
 
         IEnumerable<PurchaseOpenBill>? GetOpenBills(int payeeId);
+
+        IEnumerable<VendorPurchaseHistoryPanelRow> VendorPurchaseHistoryPanel(int payeeId);
 
         PurchaseDetailDto? GetPurchaseDetails(int purchaseId);
     }

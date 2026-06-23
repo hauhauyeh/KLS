@@ -64,46 +64,42 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("Match")]
         [DisplayName("Match Bank Feed")]
         [PermissionKey("Accounting.BankFeed.Match")]
-        public IActionResult Match([FromBody] BankFeedMatchReq req)
+        public IActionResult Match([FromBody] List<BankFeedMatchReq> reqs)
         {
-            _bankFeedTransactionService.Match(req);
+            _bankFeedTransactionService.Match(reqs);
             return Ok();
         }
 
         [HttpPost("Unmatch")]
         [DisplayName("Unmatch Bank Feed")]
         [PermissionKey("Accounting.BankFeed.Match")]
-        public IActionResult Unmatch([FromBody] BankFeedMatchReq req)
+        public IActionResult Unmatch([FromBody] BankFeedBulkActionReq req)
         {
-            _bankFeedTransactionService.Unmatch(req);
-            return Ok();
+            return Ok(_bankFeedTransactionService.Unmatch(req));
         }
 
         [HttpPost("Exclude")]
         [DisplayName("Exclude Bank Feed Transaction")]
         [PermissionKey("Accounting.BankFeed.Exclude")]
-        public IActionResult Exclude([FromBody] BankFeedExcludeReq req)
+        public IActionResult Exclude([FromBody] BankFeedBulkExcludeReq req)
         {
-            _bankFeedTransactionService.Exclude(req);
-            return Ok();
+            return Ok(_bankFeedTransactionService.Exclude(req));
         }
 
-        [HttpPost("UnExclude/{id}")]
+        [HttpPost("UnExclude")]
         [DisplayName("Un-Exclude Bank Feed Transaction")]
         [PermissionKey("Accounting.BankFeed.Exclude")]
-        public IActionResult UnExclude(long id)
+        public IActionResult UnExclude([FromBody] BankFeedBulkActionReq req)
         {
-            _bankFeedTransactionService.UnExclude(id);
-            return Ok();
+            return Ok(_bankFeedTransactionService.UnExclude(req));
         }
 
-        [HttpDelete("{id}")]
+        [HttpPost("Delete")]
         [DisplayName("Delete Bank Feed Transaction")]
         [PermissionKey("Accounting.BankFeed.Delete")]
-        public IActionResult Delete(long id)
+        public IActionResult Delete([FromBody] BankFeedBulkActionReq req)
         {
-            _bankFeedTransactionService.Delete(id);
-            return Ok();
+            return Ok(_bankFeedTransactionService.Delete(req));
         }
 
         #endregion

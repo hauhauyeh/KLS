@@ -100,6 +100,8 @@ namespace KLS.Contract.Services
 
         IQueryable<RptAPAgingRow> APAging(RptAPAgingReq req);
 
+        IQueryable<RptARAgingRow> ARAging(RptARAgingReq req);
+
         IQueryable<RptSalesDetailRow> SalesDetail(ReportRequest reportReq);
 
         IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);

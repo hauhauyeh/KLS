@@ -495,6 +495,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PurchaseItemCostList> PurchaseItemCostList { get; set; }
 
+        public virtual DbSet<MarketOrderList> MarketOrderList { get; set; }
+
         #endregion
 
         #region ---Report DBSET---
@@ -560,6 +562,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<CustBoughtItemPanelRow> CustBoughtItemPanelRows { get; set; }
 
+        public virtual DbSet<VendorPurchaseHistoryPanelRow> VendorPurchaseHistoryPanelRows { get; set; }
+
         public virtual DbSet<RptCustSalesByItem> RptCustSalesByItem { get; set; }
 
         public virtual DbSet<RptSalesHistoryRow> RptSalesHistoryRow { get; set; }
@@ -607,6 +611,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptAPInvoiceRow> RptAPInvoiceRow { get; set; }
 
         public virtual DbSet<RptAPAgingRow> RptAPAgingRow { get; set; }
+
+        public virtual DbSet<RptARAgingRow> RptARAgingRow { get; set; }
 
         public virtual DbSet<RptInventoryStatusRow> RptInventoryStatusRow { get; set; }
 

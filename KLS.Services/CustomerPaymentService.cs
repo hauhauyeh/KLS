@@ -544,6 +544,8 @@ namespace KLS.Services
                 }
                 else if (chargeReq.PaymentMethod != null)
                 {
+                    chargeReq.PaymentMethod.PayeeId = chargeReq.PayeeId;
+
                     //if payment amount change dont applied to invoice just save payment
                     if (chargeReq.IsPaymentChange)
                     {
@@ -593,8 +595,21 @@ namespace KLS.Services
 
                 var paymentId = Uow.CustomerPayments.SaveGatewayPayment(paymentReq);
 
-                EmailReceipt(paymentId);
-                SendMessage(paymentId);
+                // Suppress receipt/SMS when the gateway SP could not apply the
+                // payment to any invoice/debit-memo (auto-credit fallback). A
+                // "payment received" receipt while invoices remain open would
+                // mislead the customer. Office staff sees the "Auto-credit"
+                // marker in Notes and reconciles via the manual edit UI.
+                // Primary signal is on-disk apply rows, not Notes text.
+                var hasApplyRows = Uow.CustomerPaymentDetails.GetAll()
+                    .Any(d => d.CustomerPaymentId == paymentId
+                           && (d.DetailRole == "Invoice" || d.DetailRole == "DebitMemo"));
+
+                if (hasApplyRows)
+                {
+                    EmailReceipt(paymentId);
+                    SendMessage(paymentId);
+                }
 
                 return Uow.CustomerPayments.GetById(paymentId);
             }

@@ -3,6 +3,7 @@ using KLS.Contract.Services.Marketplace.ShipStation;
 using KLS.Models;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
@@ -50,10 +51,10 @@ namespace KLS.Services.Marketplace.ShipStation
                 sb.Append($"&storeId={storeId.Value}");
             sb.Append("&sortBy=ModifyDate&sortDir=ASC");
 
-            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, sb.ToString(), ct);
-            if (string.IsNullOrWhiteSpace(body)) return null;
+            var responseBody = await ExecuteAsync(marketAccountId, HttpMethod.Get, sb.ToString(), ct);
+            if (string.IsNullOrWhiteSpace(responseBody)) return null;
 
-            return JsonSerializer.Deserialize<ShipStationOrdersResponse>(body, new JsonSerializerOptions
+            return JsonSerializer.Deserialize<ShipStationOrdersResponse>(responseBody, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
@@ -63,7 +64,7 @@ namespace KLS.Services.Marketplace.ShipStation
         {
             try
             {
-                var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, "/orders?pageSize=1", ct);
+                var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, "/orders?pageSize=1", null, ct);
                 return !string.IsNullOrWhiteSpace(body);
             }
             catch
@@ -72,7 +73,100 @@ namespace KLS.Services.Marketplace.ShipStation
             }
         }
 
-        private async Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, CancellationToken ct)
+        public async Task<ShipStationProduct?> GetProductAsync(int marketAccountId, int productId, CancellationToken ct = default)
+        {
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, $"/products/{productId}", null, ct);
+            if (string.IsNullOrWhiteSpace(body)) return null;
+            return JsonSerializer.Deserialize<ShipStationProduct>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+
+        public async Task<bool> UpdateProductUpcAsync(int marketAccountId, int productId, string upc, CancellationToken ct = default)
+        {
+            var product = await GetProductAsync(marketAccountId, productId, ct);
+            if (product == null) return false;
+
+            product.upc = upc;
+
+            var response = await ExecuteAsync(marketAccountId, HttpMethod.Put, $"/products/{productId}", product, ct);
+            return !string.IsNullOrWhiteSpace(response);
+        }
+
+        public async Task<ShipStationOrder?> GetOrderByIdAsync(int marketAccountId, int orderId, CancellationToken ct = default)
+        {
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, $"/orders/{orderId}", null, ct);
+            if (string.IsNullOrWhiteSpace(body)) return null;
+            return JsonSerializer.Deserialize<ShipStationOrder>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+
+        public async Task<string?> GetByResourceUrlAsync(int marketAccountId, string resourceUrl, CancellationToken ct = default)
+        {
+            if (!resourceUrl.StartsWith(BaseUrl, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Invalid resource URL: must originate from ShipStation API");
+
+            var endpoint = resourceUrl.Substring(BaseUrl.Length);
+            return await ExecuteAsync(marketAccountId, HttpMethod.Get, endpoint, null, ct);
+        }
+
+        public async Task<int> SubscribeWebhookAsync(int marketAccountId, string targetUrl, string eventType, int? storeId = null, CancellationToken ct = default)
+        {
+            var marketAccount = _uow.MarketAccounts.GetById(marketAccountId);
+
+            var request = new ShipStationWebhookSubscribeRequest
+            {
+                TargetUrl = targetUrl,
+                Event = eventType,
+                StoreId = storeId,
+                FriendlyName = $"{marketAccount?.StoreCode} {eventType}"
+            };
+
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Post, "/webhooks/subscribe", request, ct);
+            if (string.IsNullOrWhiteSpace(body))
+                throw new InvalidOperationException("Empty response from ShipStation webhook subscribe");
+
+            var response = JsonSerializer.Deserialize<ShipStationWebhookSubscribeResponse>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            return response?.id ?? 0;
+        }
+
+        public async Task<bool> UnsubscribeWebhookAsync(int marketAccountId, int webhookId, CancellationToken ct = default)
+        {
+            try
+            {
+                await ExecuteAsync(marketAccountId, HttpMethod.Delete, $"/webhooks/{webhookId}", null, ct);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<List<ShipStationWebhookInfo>> ListWebhooksAsync(int marketAccountId, CancellationToken ct = default)
+        {
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, "/webhooks", null, ct);
+            if (string.IsNullOrWhiteSpace(body)) return new List<ShipStationWebhookInfo>();
+
+            var response = JsonSerializer.Deserialize<ShipStationWebhooksListResponse>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            return response?.webhooks ?? new List<ShipStationWebhookInfo>();
+        }
+
+        private Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, CancellationToken ct)
+        {
+            return ExecuteAsync(marketAccountId, method, endpoint, null, ct);
+        }
+
+        private async Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, object? body, CancellationToken ct)
         {
             var limiter = _accountLimiters.GetOrAdd(marketAccountId, _ => new SemaphoreSlim(1, 1));
 
@@ -92,6 +186,15 @@ namespace KLS.Services.Marketplace.ShipStation
                     var basic = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{settings.ApiKey}:{settings.ApiSecret}"));
                     request.Headers.Authorization = new AuthenticationHeaderValue("Basic", basic);
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    if (body != null)
+                    {
+                        var json = JsonSerializer.Serialize(body, new JsonSerializerOptions
+                        {
+                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                        });
+                        request.Content = new StringContent(json, Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
+                    }
 
                     HttpResponseMessage response;
                     try
@@ -132,7 +235,7 @@ namespace KLS.Services.Marketplace.ShipStation
                     }
 
                     response.EnsureSuccessStatusCode();
-                    var body = await response.Content.ReadAsStringAsync(ct);
+                    var responseText = await response.Content.ReadAsStringAsync(ct);
 
                     // Post-response soft throttle: only if header is present AND remaining < 5
                     if (TryReadRemaining(response, out var remaining) && remaining < 5)
@@ -140,7 +243,7 @@ namespace KLS.Services.Marketplace.ShipStation
                         await Task.Delay(TimeSpan.FromSeconds(2), ct);
                     }
 
-                    return body;
+                    return responseText;
                 }
                 finally
                 {
