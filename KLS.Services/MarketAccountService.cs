@@ -105,6 +105,23 @@ namespace KLS.Services
             Uow.Commit();
         }
 
+        private static bool HasActiveWebhooks(MarketAccount a)
+        {
+            if (!string.Equals(a.MarketType, "ShipStation", StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (string.IsNullOrEmpty(a.SettingsJson))
+                return false;
+            try
+            {
+                var settings = ShipStationSettings.FromEncrypted(a.SettingsJson);
+                return settings.OrderNotifyWebhookId.HasValue || settings.ShipNotifyWebhookId.HasValue;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private static MarketAccountDto ToDto(MarketAccount a)
         {
             return new MarketAccountDto
@@ -123,6 +140,7 @@ namespace KLS.Services
                 Notes = a.Notes,
                 CreatedAt = a.CreatedAt,
                 UpdatedAt = a.UpdatedAt,
+                HasWebhookSubscription = HasActiveWebhooks(a),
             };
         }
     }

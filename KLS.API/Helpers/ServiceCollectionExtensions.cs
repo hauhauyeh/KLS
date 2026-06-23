@@ -175,6 +175,7 @@ namespace KLS.API.Helpers
             services.AddScoped<KLS.Contract.Services.Marketplace.ShipStation.IShipStationApiClient, ShipStationApiClient>();
             services.AddScoped<ShipStationConnectionService>();
             services.AddScoped<ShipStationOrderService>();
+            services.AddScoped<ShipStationWebhookService>();
 
             // SalesQuote
             services.AddScoped<ISalesQuoteService, SalesQuoteService>();

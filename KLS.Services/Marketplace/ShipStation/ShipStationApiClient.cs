@@ -3,6 +3,7 @@ using KLS.Contract.Services.Marketplace.ShipStation;
 using KLS.Models;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
@@ -101,6 +102,63 @@ namespace KLS.Services.Marketplace.ShipStation
             {
                 PropertyNameCaseInsensitive = true
             });
+        }
+
+        public async Task<string?> GetByResourceUrlAsync(int marketAccountId, string resourceUrl, CancellationToken ct = default)
+        {
+            if (!resourceUrl.StartsWith(BaseUrl, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Invalid resource URL: must originate from ShipStation API");
+
+            var endpoint = resourceUrl.Substring(BaseUrl.Length);
+            return await ExecuteAsync(marketAccountId, HttpMethod.Get, endpoint, null, ct);
+        }
+
+        public async Task<int> SubscribeWebhookAsync(int marketAccountId, string targetUrl, string eventType, int? storeId = null, CancellationToken ct = default)
+        {
+            var marketAccount = _uow.MarketAccounts.GetById(marketAccountId);
+
+            var request = new ShipStationWebhookSubscribeRequest
+            {
+                TargetUrl = targetUrl,
+                Event = eventType,
+                StoreId = storeId,
+                FriendlyName = $"{marketAccount?.StoreCode} {eventType}"
+            };
+
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Post, "/webhooks/subscribe", request, ct);
+            if (string.IsNullOrWhiteSpace(body))
+                throw new InvalidOperationException("Empty response from ShipStation webhook subscribe");
+
+            var response = JsonSerializer.Deserialize<ShipStationWebhookSubscribeResponse>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            return response?.id ?? 0;
+        }
+
+        public async Task<bool> UnsubscribeWebhookAsync(int marketAccountId, int webhookId, CancellationToken ct = default)
+        {
+            try
+            {
+                await ExecuteAsync(marketAccountId, HttpMethod.Delete, $"/webhooks/{webhookId}", null, ct);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<List<ShipStationWebhookInfo>> ListWebhooksAsync(int marketAccountId, CancellationToken ct = default)
+        {
+            var body = await ExecuteAsync(marketAccountId, HttpMethod.Get, "/webhooks", null, ct);
+            if (string.IsNullOrWhiteSpace(body)) return new List<ShipStationWebhookInfo>();
+
+            var response = JsonSerializer.Deserialize<ShipStationWebhooksListResponse>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            return response?.webhooks ?? new List<ShipStationWebhookInfo>();
         }
 
         private Task<string?> ExecuteAsync(int marketAccountId, HttpMethod method, string endpoint, CancellationToken ct)

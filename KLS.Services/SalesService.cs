@@ -389,26 +389,40 @@ namespace KLS.Services
 
         public IEnumerable<SalesList>? OpenInvoices(int payeeId)
         {
-            return Uow.Sales.GetPagedList(new SalesListReq
+            var sales = Uow.Sales.GetPagedList(new SalesListReq
             {
                 Pagesize = 500,
                 PayeeId = payeeId,
                 Filterby = "unpaid",
                 SortField = "ShipDate",
                 SortOrder = "Asc"
-            });
+            }).ToList();
+
+            foreach (var invoice in sales)
+            {
+                invoice.IsPdfExist = IsInvoicePdfExist(invoice.SalesNumber);
+            }
+
+            return sales;
         }
 
         public IEnumerable<SalesList>? PastDueInvoices(int payeeId)
         {
-            return Uow.Sales.GetPagedList(new SalesListReq
+            var sales = Uow.Sales.GetPagedList(new SalesListReq
             {
                 Pagesize = 500,
                 PayeeId = payeeId,
                 Filterby = "pastdue",
                 SortField = "ShipDate",
                 SortOrder = "Asc"
-            });
+            }).ToList();
+
+            foreach (var invoice in sales)
+            {
+                invoice.IsPdfExist = IsInvoicePdfExist(invoice.SalesNumber);
+            }
+
+            return sales;
         }
 
         public IEnumerable<CustBoughtItemPanelRow> CustBoughtItemsPanel(int payeeId)

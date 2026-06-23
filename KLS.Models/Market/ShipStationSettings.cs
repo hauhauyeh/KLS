@@ -9,6 +9,10 @@ namespace KLS.Models
         public string? ApiSecret { get; set; }
         public int? StoreId { get; set; }
 
+        public string? WebhookSecret { get; set; }
+        public int? OrderNotifyWebhookId { get; set; }
+        public int? ShipNotifyWebhookId { get; set; }
+
         public static ShipStationSettings FromEncrypted(string? encryptedJson)
         {
             if (string.IsNullOrEmpty(encryptedJson)) return new ShipStationSettings();
