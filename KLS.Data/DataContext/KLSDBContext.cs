@@ -497,6 +497,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<MarketOrderList> MarketOrderList { get; set; }
 
+        public virtual DbSet<MarketSyncLogList> MarketSyncLogList { get; set; }
+
         #endregion
 
         #region ---Report DBSET---
