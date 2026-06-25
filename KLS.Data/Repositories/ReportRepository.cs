@@ -680,5 +680,15 @@ namespace KLS.Data.Repositories
             return DbContext.InvoiceDetail
                 .FromSqlRaw("[dbo].[Report_SalesQuote] @SalesQuoteId", param).AsNoTracking();
         }
+
+        public IQueryable<RptMarketOrder> MarketOrder(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var AccountIdParam = reportReq.AccountId.HasValue ? new SqlParameter("@AccountId", reportReq.AccountId) : new SqlParameter("@AccountId", DBNull.Value);
+
+            return DbContext.RptMarketOrder.FromSqlRaw("[dbo].[Report_MarketOrder] @StartDate,@EndDate,@AccountId",
+                StartDateParam, EndDateParam, AccountIdParam);
+        }
     }
 }

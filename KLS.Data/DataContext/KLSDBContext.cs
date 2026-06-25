@@ -531,6 +531,7 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptDescDollar> RptDescDollar { get; set; }
 
+        public virtual DbSet<RptMarketOrder> RptMarketOrder { get; set; }
 
 
         public virtual DbSet<RptPackingItem> RptPackingItem { get; set; }
