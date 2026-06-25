@@ -43,6 +43,8 @@ namespace KLS.Models
 
         public string? MatchReferenceId { get; set; }
 
+        public string? MatchSourceDocType { get; set; }
+
         public long? MatchCandidateTxId { get; set; }
 
         public long? MatchCandidateTxDetailId { get; set; }

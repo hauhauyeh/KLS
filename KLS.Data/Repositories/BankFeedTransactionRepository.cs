@@ -21,7 +21,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildListParam(req);
             return DbContext.BankFeedTransactionList.FromSqlRaw(
-                "[dbo].[BankFeed_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@AccountId,@Status,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[BankFeed_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@AccountId,@Status,@AmountDirection,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT",
                 param);
         }
 
@@ -30,9 +30,9 @@ namespace KLS.Data.Repositories
             req.IsCount = true;
             var param = BuildListParam(req);
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[BankFeed_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@AccountId,@Status,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[BankFeed_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@AccountId,@Status,@AmountDirection,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT",
                 param);
-            var output = param[10] as SqlParameter;
+            var output = param[11] as SqlParameter;
             return Convert.ToInt32(output!.Value);
         }
 
@@ -69,6 +69,7 @@ namespace KLS.Data.Repositories
                 req.EndDate.HasValue ? new SqlParameter("@EndDate", req.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
                 req.AccountId.HasValue ? new SqlParameter("@AccountId", req.AccountId) : new SqlParameter("@AccountId", DBNull.Value),
                 !string.IsNullOrEmpty(req.Status) ? new SqlParameter("@Status", req.Status) : new SqlParameter("@Status", DBNull.Value),
+                !string.IsNullOrEmpty(req.AmountDirection) ? new SqlParameter("@AmountDirection", req.AmountDirection) : new SqlParameter("@AmountDirection", DBNull.Value),
                 !string.IsNullOrEmpty(req.SortField) ? new SqlParameter("@SortField", req.SortField) : new SqlParameter("@SortField", DBNull.Value),
                 !string.IsNullOrEmpty(req.SortOrder) ? new SqlParameter("@SortOrder", req.SortOrder) : new SqlParameter("@SortOrder", DBNull.Value),
                 new SqlParameter("@IsCount", req.IsCount),
