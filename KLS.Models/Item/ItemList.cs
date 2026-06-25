@@ -52,6 +52,12 @@ namespace KLS.Models
 
         public decimal? BaseRecentCost { get; set; }
 
+        // 2026-06-25: recent-cost breakdown surfaced from the View_RecentCost pivot
+        // (BaseRecentCost = BaseGoodsCost + BaseLandingCost; landing is 0 when none).
+        public decimal? BaseGoodsCost { get; set; }
+
+        public decimal? BaseLandingCost { get; set; }
+
         // 2026-05-11: cost-trend restore. SP fills these from a pivot of
         // View_RecentCost (RN=1 vs RN=2). Naming parallels BaseRecentCost --
         // "Base" prefix marks per-base-unit values. TotalCost in the view
