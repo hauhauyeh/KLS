@@ -35,6 +35,16 @@ namespace KLS.Services
             Uow.Commit();
         }
 
+        public PagingResponse<MarketSyncLogList> GetPagedList(MarketSyncLogListReq req)
+        {
+            var list = Uow.MarketSyncLogs.GetPagedList(req).ToList();
+            var totalRecords = Uow.MarketSyncLogs.Count(req);
+            return new PagingResponse<MarketSyncLogList>(totalRecords, req.Pageno, req.Pagesize)
+            {
+                RowData = list
+            };
+        }
+
         public IEnumerable<MarketSyncLog> GetRecent(int marketAccountId, int count = 20)
         {
             return Uow.MarketSyncLogs.Find(l => l.MarketAccountId == marketAccountId)

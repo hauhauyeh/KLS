@@ -13,6 +13,8 @@ namespace KLS.Contract.Services
 
         void CompleteLog(int logId, bool success, int processed, int succeeded, int failed, string? error = null);
 
+        PagingResponse<MarketSyncLogList> GetPagedList(MarketSyncLogListReq req);
+
         IEnumerable<MarketSyncLog> GetRecent(int marketAccountId, int count = 20);
 
         IEnumerable<MarketSyncLog> GetByAccount(int marketAccountId);

@@ -543,5 +543,17 @@ namespace KLS.API.Controllers.Admin
         }
 
         #endregion
+
+        #region --- Marketplace ---
+
+        [HttpGet("MarketOrder")]
+        [DisplayName("Marketplace -> Order Report")]
+        [PermissionKey("Report.Marketplace.OrderReport")]
+        public IActionResult MarketOrder([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.MarketOrder(reportReq));
+        }
+
+        #endregion
     }
 }

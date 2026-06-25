@@ -133,5 +133,7 @@ namespace KLS.Contract.Services
         RptCheckPrint? CheckPrint(int vendorPaymentId);
 
         IQueryable<RptCheckPrintDetail> CheckPrintDetail(int vendorPaymentId);
+
+        IEnumerable<RptMarketOrder> MarketOrder(ReportRequest reportReq);
     }
 }

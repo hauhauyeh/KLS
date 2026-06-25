@@ -9,5 +9,7 @@ namespace KLS.Contract.Interfaces
 {
     public interface IMarketSyncLogRepository : IRepository<MarketSyncLog>
     {
+        IQueryable<MarketSyncLogList> GetPagedList(MarketSyncLogListReq req);
+        int Count(MarketSyncLogListReq req);
     }
 }

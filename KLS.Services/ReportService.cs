@@ -1238,5 +1238,10 @@ namespace KLS.Services
         {
             return Uow.Reports.CheckPrintDetail(vendorPaymentId);
         }
+
+        public IEnumerable<RptMarketOrder> MarketOrder(ReportRequest reportReq)
+        {
+            return Uow.Reports.MarketOrder(reportReq);
+        }
     }
 }
