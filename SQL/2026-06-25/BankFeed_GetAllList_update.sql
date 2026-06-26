@@ -124,9 +124,23 @@ BEGIN
               AND e.IsLocked = 0
               AND e.TxDetailId NOT IN (SELECT TxDetailId FROM BankFeedMatch)
               AND (
-                  (e.Amount = bft.Amount)
-                  OR (bft.CheckNumber IS NOT NULL AND e.SourceDocNumber IS NOT NULL
-                      AND CAST(e.SourceDocNumber AS VARCHAR(50)) = bft.CheckNumber)
+                  CASE
+                      WHEN bft.CheckNumber IS NOT NULL
+                           AND EXISTS (
+                               SELECT 1 FROM #MatchTx x
+                               WHERE x.IsLocked = 0
+                                 AND x.TxDetailId NOT IN (SELECT TxDetailId FROM BankFeedMatch)
+                                 AND x.Amount = bft.Amount
+                                 AND x.ReferenceId = bft.CheckNumber
+                           )
+                      THEN
+                          CASE WHEN e.Amount = bft.Amount AND e.ReferenceId = bft.CheckNumber THEN 1 ELSE 0 END
+                      ELSE
+                          CASE WHEN (e.Amount = bft.Amount)
+                               OR (bft.CheckNumber IS NOT NULL AND e.SourceDocNumber IS NOT NULL
+                                   AND CAST(e.SourceDocNumber AS VARCHAR(50)) = bft.CheckNumber)
+                               THEN 1 ELSE 0 END
+                  END = 1
               )
         ) ranked
     ) tm'
