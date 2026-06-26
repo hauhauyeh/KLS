@@ -45,6 +45,7 @@ namespace KLS.API.Controllers.Web
                 Keywords = seo?.Keywords,
                 GoogleTagId = seo?.GoogleTagId,
                 JsonLd = seo?.JsonLd,
+                OrderCheckoutHour = _systemSettingService.GetByKey<int>(GlobalKey.WEB_ORDER_CHECKOUT_HOUR),
             });
         }
 

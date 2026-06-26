@@ -778,108 +778,105 @@ namespace KLS.Services
 
                 var itemFolder = GetItemFolder(itemId);
                 maxSortOrder++;
-                string? orgExt = null;
-                bool hasOrg = false;
-                bool has300 = false;
 
-                // Handle duplicate originals — prefer largest file
-                var orgFiles = files.Where(f => f.fileType == "org").ToList();
-                string? chosenOrgPath = null;
-                if (orgFiles.Count > 1)
-                {
-                    chosenOrgPath = orgFiles
-                        .OrderByDescending(f => new FileInfo(f.filePath).Length)
-                        .First().filePath;
-                    result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: {orgFiles.Count} originals, chose largest");
-                }
-                else if (orgFiles.Count == 1)
-                {
-                    chosenOrgPath = orgFiles[0].filePath;
-                }
+                // 2026-06-25: dimension-aware master selection (replaces the old "-Org is the only
+                // high-res source" logic). Clients keep their best resolution in different files --
+                // KLS in -Org, ABC in the main file (ABC mains are full 1200x1200; only ~6% ship a
+                // -Org). So instead of assuming -Org is largest, MEASURE every candidate (org / main
+                // / 900) and treat the one with the greatest pixel dimensions as the master for ALL
+                // generated sizes. Generate up to the master's native resolution only -- never
+                // upscale (kills the old fake-2000 from a 1200 source). The master is also copied as
+                // the canonical -org so every migrated image gets an OriginalUrl + a background-
+                // removal source, not just the ones that shipped a -Org file.
+                // (Prior -Org-only / main->300 / upscale logic preserved in git history.)
 
-                // Copy original as-is (preserve format)
-                if (chosenOrgPath != null)
-                {
-                    orgExt = Path.GetExtension(chosenOrgPath).ToLowerInvariant();
-                    File.Copy(chosenOrgPath, Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"), overwrite: true);
-                    hasOrg = true;
-                }
-
-                // Convert main/display file to PNG
+                // Gather every usable source candidate for this image (originals, main, 900 ref).
+                var candidates = new List<(string filePath, string fileType)>();
+                candidates.AddRange(files.Where(f => f.fileType == "org"));
                 var mainFile = files.FirstOrDefault(f => f.fileType == "main");
-                if (mainFile.filePath != null)
+                if (mainFile.filePath != null) candidates.Add(mainFile);
+                var file900 = files.FirstOrDefault(f => f.fileType == "900");
+                if (file900.filePath != null) candidates.Add(file900);
+
+                // Pick the master = candidate with the largest max(width,height). Image.Identify
+                // reads only the header (cheap). Tie -> prefer an -Org file (truest "original").
+                string? masterPath = null;
+                int masterMax = 0;
+                foreach (var c in candidates)
                 {
                     try
                     {
-                        using var image = Image.Load(mainFile.filePath);
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
-                        has300 = true;
+                        var info = Image.Identify(c.filePath);
+                        int m = Math.Max(info.Width, info.Height);
+                        if (m > masterMax || (m == masterMax && c.fileType == "org"))
+                        {
+                            masterMax = m;
+                            masterPath = c.filePath;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: main decode failed: {ex.Message}");
+                        result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: cannot read {Path.GetFileName(c.filePath)}: {ex.Message}");
                     }
                 }
 
-                // Copy 900 as reference
-                var file900 = files.FirstOrDefault(f => f.fileType == "900");
+                // No decodable source -> nothing to migrate for this image.
+                if (masterPath == null)
+                {
+                    result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: no decodable source, skipped");
+                    result.Skipped++;
+                    continue;
+                }
+
+                // Copy the master as the canonical original (preserve its format).
+                var orgExt = Path.GetExtension(masterPath).ToLowerInvariant();
+                File.Copy(masterPath, Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"), overwrite: true);
+
+                // Generate sizes from the master: 300 always; 1200/2000 only when the master is
+                // natively big enough -- no upscaling above native resolution.
+                bool has300 = false, has1200 = false, has2000 = false;
+                try
+                {
+                    using var image = Image.Load(masterPath);
+                    SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
+                    has300 = true;
+                    if (masterMax >= 1200)
+                    {
+                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-1200.png"), 1200);
+                        has1200 = true;
+                    }
+                    if (masterMax >= 2000)
+                    {
+                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-2000.png"), 2000);
+                        has2000 = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: resize failed: {ex.Message}");
+                }
+
+                // Keep the -900 as a raw reference copy (unchanged behavior).
                 if (file900.filePath != null)
                 {
                     var srcExt = Path.GetExtension(file900.filePath).ToLowerInvariant();
                     File.Copy(file900.filePath, Path.Combine(itemFolder, $"{imageIndex}-900{srcExt}"), overwrite: true);
                 }
 
-                // If original exists but no main, generate 300 from original
-                if (hasOrg && !has300)
-                {
-                    try
-                    {
-                        using var image = Image.Load(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
-                        has300 = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: org decode failed: {ex.Message}");
-                    }
-                }
-
-                // Skip DB record if no 300px was produced — clean up orphaned files
+                // No 300 produced (resize failed) -> clean up + skip the DB row.
                 if (!has300)
                 {
-                    if (hasOrg) TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
-                    if (file900.filePath != null)
-                    {
-                        var ext900 = Path.GetExtension(file900.filePath).ToLowerInvariant();
-                        TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-900{ext900}"));
-                    }
+                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
                     result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: no 300px produced, skipped + cleaned up");
                     result.Skipped++;
                     continue;
-                }
-
-                // Generate 1200 + 2000 ONLY if original exists
-                bool has1200 = false, has2000 = false;
-                if (hasOrg)
-                {
-                    try
-                    {
-                        var path1200 = Path.Combine(itemFolder, $"{imageIndex}-1200.png");
-                        var path2000 = Path.Combine(itemFolder, $"{imageIndex}-2000.png");
-                        using var image = Image.Load(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
-                        SaveResized(image, path1200, 1200);
-                        SaveResized(image, path2000, 2000);
-                        has1200 = File.Exists(path1200);
-                        has2000 = File.Exists(path2000);
-                    }
-                    catch { /* 1200/2000 are non-critical */ }
                 }
 
                 var entity = new ItemImage
                 {
                     ItemId = itemId,
                     ImageIndex = imageIndex,
-                    OriginalExtension = hasOrg ? orgExt : null,
+                    OriginalExtension = orgExt,
                     SortOrder = maxSortOrder,
                     IsPrimary = (maxSortOrder == 1 && !existingIndexes.Any()),
                     IsProcessed = false,

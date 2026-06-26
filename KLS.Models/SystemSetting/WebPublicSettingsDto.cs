@@ -19,5 +19,7 @@ namespace KLS.Models
         public string? GoogleTagId { get; set; }
 
         public string? JsonLd { get; set; }
+
+        public int OrderCheckoutHour { get; set; }
     }
 }
