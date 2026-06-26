@@ -389,15 +389,6 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Sales By Item / Detail ---
 
-        [HttpGet("SalesByItem")]
-        [DisplayName("Sales -> Sales By Item")]
-        [PermissionKey("Report.Sales.SalesByItem")]
-        public IActionResult SalesByItem([FromQuery] ReportRequest reportReq)
-        {
-            return Ok(_reportService.CustSalesByItem(reportReq));
-        }
-
-
         [HttpGet("SalesDetail")]
         [DisplayName("Sales -> Sales Detail")]
         [PermissionKey("Report.Sales.SalesDetail")]
