@@ -577,6 +577,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptItemVendorAnalysisRow> RptItemVendorAnalysisRow { get; set; }
 
+        public virtual DbSet<RptItemAnalysis> RptItemAnalysis { get; set; }
+
         public virtual DbSet<RptCustPayment> RptCustPayment { get; set; }
 
         public virtual DbSet<RptCreditMemo> RptCreditMemo { get; set; }

@@ -340,6 +340,21 @@ namespace KLS.Data.Repositories
                 ItemIdParam, PayeeIdParam, StartDateParam, EndDateParam);
         }
 
+        public IQueryable<RptItemAnalysis> ItemAnalysis(ItemAnalysisRequest reportReq)
+        {
+            var SearchParam     = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Search", DBNull.Value) : new SqlParameter("@Search", reportReq.Search);
+            var CategoryIdParam = reportReq.CategoryId.HasValue ? new SqlParameter("@CategoryId", reportReq.CategoryId) : new SqlParameter("@CategoryId", DBNull.Value);
+            var StartDateParam  = reportReq.StartDate.HasValue  ? new SqlParameter("@StartDate",  reportReq.StartDate)  : new SqlParameter("@StartDate",  DBNull.Value);
+            var EndDateParam    = reportReq.EndDate.HasValue    ? new SqlParameter("@EndDate",    reportReq.EndDate)    : new SqlParameter("@EndDate",    DBNull.Value);
+            // default grouping to 'category' when the caller omits it (the SP default doesn't apply via positional FromSqlRaw)
+            var GroupByParam    = new SqlParameter("@GroupBy", string.IsNullOrEmpty(reportReq.GroupBy) ? "category" : reportReq.GroupBy);
+            // SortField maps to the SP's @Sortby (mostordered | itemname | sales | expiry)
+            var SortbyParam     = string.IsNullOrEmpty(reportReq.SortField) ? new SqlParameter("@Sortby", DBNull.Value) : new SqlParameter("@Sortby", reportReq.SortField);
+
+            return DbContext.RptItemAnalysis.FromSqlRaw("[dbo].[Report_ItemAnalysis] @Search,@CategoryId,@StartDate,@EndDate,@GroupBy,@Sortby",
+                SearchParam, CategoryIdParam, StartDateParam, EndDateParam, GroupByParam, SortbyParam);
+        }
+
         public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
         {
             var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
