@@ -106,6 +106,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
 
+        IQueryable<RptSalesCommission3Row> SalesCommission3(ReportRequest reportReq);
+
         IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
 
         IQueryable<RptSalesByInvoiceRow> SalesByInvoice(ReportRequest reportReq);

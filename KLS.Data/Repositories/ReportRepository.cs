@@ -553,6 +553,16 @@ namespace KLS.Data.Repositories
                 StartDateParam, EndDateParam, SalesRepParam);
         }
 
+        public IQueryable<RptSalesCommission3Row> SalesCommission3(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var SalesRepParam = reportReq.SalesRepId.HasValue ? new SqlParameter("@SalesRep", reportReq.SalesRepId) : new SqlParameter("@SalesRep", DBNull.Value);
+
+            return DbContext.RptSalesCommission3Row.FromSqlRaw("[dbo].[Report_SalesCommission3] @StartDate,@EndDate,@SalesRep",
+                StartDateParam, EndDateParam, SalesRepParam);
+        }
+
         public IQueryable<RptARInvoiceRow> ARInvoice(ReportRequest reportReq)
         {
             var TermParam = string.IsNullOrEmpty(reportReq.Search) ? new SqlParameter("@Term", DBNull.Value) : new SqlParameter("@Term", reportReq.Search);

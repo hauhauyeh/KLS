@@ -116,6 +116,8 @@ namespace KLS.Contract.Services
 
         IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
 
+        IQueryable<RptSalesCommission3Row> SalesCommission3(ReportRequest reportReq);
+
         RptARInvoice ARInvoice(ReportRequest reportReq);
 
         RptARMonth ARMonth(ReportRequest reportReq);

@@ -455,6 +455,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.SalesCommission2(reportReq));
         }
 
+        [HttpGet("SalesCommission3")]
+        [DisplayName("Sales -> Sales Commission 3")]
+        [PermissionKey("Report.Sales.SalesCommission3")]
+        public IActionResult SalesCommission3([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesCommission3(reportReq));
+        }
+
         #endregion
 
         #region --- AR ---

@@ -1073,6 +1073,17 @@ namespace KLS.Services
             return Uow.Reports.SalesCommission2(reportReq);
         }
 
+        public IQueryable<RptSalesCommission3Row> SalesCommission3(ReportRequest reportReq)
+        {
+            // self-scoping matches v2: a Sales-role user only sees their own rows
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
+            return Uow.Reports.SalesCommission3(reportReq);
+        }
+
         public RptARInvoice ARInvoice(ReportRequest reportReq)
         {
             if (UserContext.IsSalesRole)
