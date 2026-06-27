@@ -432,6 +432,22 @@ namespace KLS.Services
                 }
             }
 
+            var itemIds = dict.Keys.ToArray();
+            var allImages = Uow.ItemImages
+                .Find(c => itemIds.Contains(c.ItemId))
+                .OrderBy(c => c.SortOrder)
+                .ToList();
+            var imagesByItem = allImages.GroupBy(c => c.ItemId);
+
+            foreach (var group in imagesByItem)
+            {
+                if (dict.TryGetValue(group.Key, out var item))
+                {
+                    var imageCount = group.Count();
+                    item.Images = group.Select(c => ItemImageService.BuildImageDto(c, baseUrl, imageCount)).ToList();
+                }
+            }
+
             return new PagingResponse<ItemWebList>(totalRecords, webListReq.Pageno, webListReq.Pagesize)
             {
                 RowData = dict.Values.ToList(),
