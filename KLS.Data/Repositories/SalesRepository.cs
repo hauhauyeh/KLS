@@ -220,7 +220,9 @@ namespace KLS.Data.Repositories
         {
             var SalesIdParam = new SqlParameter("@SalesId", salesId);
 
-            DbContext.Database.ExecuteSqlRaw("[FIFO_Single_Allocation] @SalesId", SalesIdParam);
+            // 2026-06-28: cutover to unified allocator (final stage). Old call kept commented.
+            // DbContext.Database.ExecuteSqlRaw("[FIFO_Single_Allocation] @SalesId", SalesIdParam);
+            DbContext.Database.ExecuteSqlRaw("[FIFO_Single_Allocation_Unified] @SalesId, @Stage='final'", SalesIdParam);
         }
 
         public int MergeOrder(SalesMergeReq mergeReq)
