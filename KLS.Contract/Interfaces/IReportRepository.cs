@@ -86,6 +86,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptItemVendorAnalysisRow> ItemVendorAnalysis(ItemCustomerAnalysisRequest reportReq);
 
+        IQueryable<RptItemAnalysis> ItemAnalysis(ItemAnalysisRequest reportReq);
+
         IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq);
 
         IQueryable<RptCreditMemo> CreditMemo(ReportRequest reportReq);
@@ -103,6 +105,8 @@ namespace KLS.Contract.Interfaces
         IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq);
 
         IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);
+
+        IQueryable<RptSalesCommission3Row> SalesCommission3(ReportRequest reportReq);
 
         IQueryable<RptSalesDaily2Row> SalesDaily2(ReportRequest reportReq);
 

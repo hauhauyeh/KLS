@@ -281,6 +281,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.ItemVendorAnalysis(reportReq));
         }
 
+        [HttpGet("ItemAnalysis")]
+        [DisplayName("Item -> Item Analysis")]
+        [PermissionKey("Report.Item.ItemAnalysis")]
+        public IActionResult ItemAnalysis([FromQuery] ItemAnalysisRequest reportReq)
+        {
+            return Ok(_reportService.ItemAnalysis(reportReq));
+        }
+
         [HttpGet("CustPayment")]
         [DisplayName("Customer -> Customer Payment")]
         [PermissionKey("Report.Customer.CustPayment")]
@@ -389,15 +397,6 @@ namespace KLS.API.Controllers.Admin
 
         #region --- Sales By Item / Detail ---
 
-        [HttpGet("SalesByItem")]
-        [DisplayName("Sales -> Sales By Item")]
-        [PermissionKey("Report.Sales.SalesByItem")]
-        public IActionResult SalesByItem([FromQuery] ReportRequest reportReq)
-        {
-            return Ok(_reportService.CustSalesByItem(reportReq));
-        }
-
-
         [HttpGet("SalesDetail")]
         [DisplayName("Sales -> Sales Detail")]
         [PermissionKey("Report.Sales.SalesDetail")]
@@ -454,6 +453,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult SalesCommission2([FromQuery] ReportRequest reportReq)
         {
             return Ok(_reportService.SalesCommission2(reportReq));
+        }
+
+        [HttpGet("SalesCommission3")]
+        [DisplayName("Sales -> Sales Commission 3")]
+        [PermissionKey("Report.Sales.SalesCommission3")]
+        public IActionResult SalesCommission3([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.SalesCommission3(reportReq));
         }
 
         #endregion
