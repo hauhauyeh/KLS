@@ -31,5 +31,6 @@ namespace KLS.Models
         public decimal? BogoSavings { get; set; }
 
         public ICollection<ItemWebUnitList>? ItemUnits { get; set; }
+        public ICollection<ItemImageList>? Images { get; set; }
     }
 }

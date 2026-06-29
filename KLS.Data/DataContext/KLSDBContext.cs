@@ -577,6 +577,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptItemVendorAnalysisRow> RptItemVendorAnalysisRow { get; set; }
 
+        public virtual DbSet<RptItemAnalysis> RptItemAnalysis { get; set; }
+
         public virtual DbSet<RptCustPayment> RptCustPayment { get; set; }
 
         public virtual DbSet<RptCreditMemo> RptCreditMemo { get; set; }
@@ -594,6 +596,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptSalesCommissionRow> RptSalesCommissionRow { get; set; }
 
         public virtual DbSet<RptSalesCommission2Row> RptSalesCommission2Row { get; set; }
+
+        public virtual DbSet<RptSalesCommission3Row> RptSalesCommission3Row { get; set; }
 
         public virtual DbSet<RptSalesDaily2Row> RptSalesDaily2Row { get; set; }
 

@@ -56,7 +56,7 @@ namespace KLS.Services
             return $"{request.Scheme}://{request.Host}";
         }
 
-        private static ItemImageList BuildImageDto(ItemImage entity, string baseUrl, int imageCount)
+        internal static ItemImageList BuildImageDto(ItemImage entity, string baseUrl, int imageCount)
         {
             var itemId = entity.ItemId;
             var idx = entity.ImageIndex;

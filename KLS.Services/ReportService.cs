@@ -834,6 +834,11 @@ namespace KLS.Services
             return Uow.Reports.ItemVendorAnalysis(reportReq);
         }
 
+        public IQueryable<RptItemAnalysis> ItemAnalysis(ItemAnalysisRequest reportReq)
+        {
+            return Uow.Reports.ItemAnalysis(reportReq);
+        }
+
         public IQueryable<RptCustPayment> CustPayment(ReportRequest reportReq)
         {
             return Uow.Reports.CustPayment(reportReq);
@@ -1066,6 +1071,17 @@ namespace KLS.Services
             }
 
             return Uow.Reports.SalesCommission2(reportReq);
+        }
+
+        public IQueryable<RptSalesCommission3Row> SalesCommission3(ReportRequest reportReq)
+        {
+            // self-scoping matches v2: a Sales-role user only sees their own rows
+            if (UserContext.IsSalesRole)
+            {
+                reportReq.SalesRepId = UserContext.EmpId;
+            }
+
+            return Uow.Reports.SalesCommission3(reportReq);
         }
 
         public RptARInvoice ARInvoice(ReportRequest reportReq)
