@@ -31,6 +31,12 @@ namespace KLS.Contract.Interfaces
 
         List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);
 
+        // 2026-06-29: shipment-scoped validation (Plan 1) — same SPs called with @ShipmentId so the
+        // coverage matches the allocation guard's scope (all bills in the shipment).
+        AllocationValidationResult ValidateAllocationByShipment(int shipmentId);
+
+        List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
+
         IEnumerable<AllocationResultItem> AllocationResult(int purchaseId);
     }
 }

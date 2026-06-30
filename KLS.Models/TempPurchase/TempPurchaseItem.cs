@@ -95,6 +95,16 @@ namespace KLS.Models
 
         public decimal? CaseWeight { get; set; }
 
+        // 2026-06-29 (Plan 2b): aggregate landed cost per case from View_PurchaseHistory (post-allocation),
+        // surfaced for the inline cart display. Already returned by TempPurchase_GetList.
+        public decimal? LandedCostPerCase { get; set; }
+
+        // 2026-06-29 (Plan 2c): per-charge-type landed cost per case (from ShipmentAllocation by
+        // ChargeType), for the inline "Freight $/cs · Duty $/cs" split. NULL when that charge type
+        // isn't allocated on the line.
+        public decimal? FreightPerCase { get; set; }
+        public decimal? DutyPerCase { get; set; }
+
         [Column(TypeName = "decimal(18,6)")]
         public decimal? BaseFinalQty { get; set; }
 
