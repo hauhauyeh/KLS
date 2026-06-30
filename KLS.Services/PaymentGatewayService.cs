@@ -35,5 +35,24 @@ namespace KLS.Services
                 Environment = gateway.Environment
             };
         }
+
+        public StripeInfo GetStripeInfo()
+        {
+            var gateway = Uow.PaymentGateways.Find(c => c.GatewayCode == "STRIPE" && c.IsActive)?.FirstOrDefault();
+            if (gateway == null) return null;
+
+            return new StripeInfo
+            {
+                PublishableKey = gateway.ClientKey,
+                Environment = gateway.Environment
+            };
+        }
+
+        public List<ActiveGateway> GetActiveGateways()
+        {
+            return Uow.PaymentGateways.Find(c => c.IsActive)
+                .Select(g => new ActiveGateway { GatewayCode = g.GatewayCode, GatewayName = g.GatewayName })
+                .ToList();
+        }
     }
 }

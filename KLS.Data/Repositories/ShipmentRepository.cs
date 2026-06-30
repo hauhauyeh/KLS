@@ -91,6 +91,17 @@ namespace KLS.Data.Repositories
         }
 
         public AllocationValidationResult ValidateAllocation(int purchaseId)
+            => RunValidateAllocation(new SqlParameter("@PurchaseId", purchaseId));
+
+        // 2026-06-29: shipment-scoped variant (Plan 1) — same SP, called with @ShipmentId so the
+        // coverage is over all bills in the shipment (the allocation guard's scope).
+        public AllocationValidationResult ValidateAllocationByShipment(int shipmentId)
+            => RunValidateAllocation(new SqlParameter("@ShipmentId", shipmentId));
+
+        // Shared runner for [Shipment_ValidateAllocation]. The SP accepts either @PurchaseId (bill
+        // scope) or @ShipmentId (shipment scope); the caller passes whichever applies (the other
+        // defaults to NULL in the SP). Bound by name, so parameter order is irrelevant.
+        private AllocationValidationResult RunValidateAllocation(params SqlParameter[] parameters)
         {
             var result = new AllocationValidationResult();
             var conn = DbContext.Database.GetDbConnection();
@@ -102,7 +113,7 @@ namespace KLS.Data.Repositories
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "[dbo].[Shipment_ValidateAllocation]";
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                cmd.Parameters.Add(new SqlParameter("@PurchaseId", purchaseId));
+                cmd.Parameters.AddRange(parameters);
 
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -126,6 +137,15 @@ namespace KLS.Data.Repositories
         }
 
         public List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method)
+            => RunValidateAllocationDetail(method, new SqlParameter("@PurchaseId", purchaseId), new SqlParameter("@Method", method));
+
+        // 2026-06-29: shipment-scoped variant (Plan 1) — same SP, called with @ShipmentId.
+        public List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method)
+            => RunValidateAllocationDetail(method, new SqlParameter("@ShipmentId", shipmentId), new SqlParameter("@Method", method));
+
+        // Shared runner for [Shipment_ValidateAllocationDetail]. Bill scope (@PurchaseId) or shipment
+        // scope (@ShipmentId); @Method is always supplied. Bound by name.
+        private List<AllocationMissingItem> RunValidateAllocationDetail(string method, params SqlParameter[] parameters)
         {
             var items = new List<AllocationMissingItem>();
             var conn = DbContext.Database.GetDbConnection();
@@ -137,8 +157,7 @@ namespace KLS.Data.Repositories
                 using var cmd = conn.CreateCommand();
                 cmd.CommandText = "[dbo].[Shipment_ValidateAllocationDetail]";
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
-                cmd.Parameters.Add(new SqlParameter("@PurchaseId", purchaseId));
-                cmd.Parameters.Add(new SqlParameter("@Method", method));
+                cmd.Parameters.AddRange(parameters);
 
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())

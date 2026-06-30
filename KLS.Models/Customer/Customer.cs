@@ -101,7 +101,9 @@ namespace KLS.Models
         public decimal? MinOrder { get; set; }
         
         public string? SquareId { get; set; }
-        
+
+        public string? StripeId { get; set; }
+
         public bool IsPromotionEnabled { get; set; }
 
         public int? ShippingCarrierId { get; set; }

@@ -102,6 +102,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IPDFService, PDFService>();
             services.AddScoped<ISquareService, SquareService>();
             services.AddScoped<IMxMerchantService, MxMerchantService>();
+            services.AddScoped<IStripeService, StripeService>();
             services.AddScoped<IExportService, ExportService>();
 
             services.AddScoped<IPromotionService, PromotionService>();

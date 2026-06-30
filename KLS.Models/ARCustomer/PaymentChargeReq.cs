@@ -29,6 +29,8 @@ namespace KLS.Models
 
         public PaymentMethod? PaymentMethod { get; set; }
 
+        public string? StripeToken { get; set; }
+
         public string? Gateway { get; set; }
 
         /// <summary>
