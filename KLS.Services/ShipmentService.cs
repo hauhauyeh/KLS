@@ -248,6 +248,17 @@ namespace KLS.Services
             return Uow.Shipments.ValidateAllocationDetail(purchaseId, method);
         }
 
+        // 2026-06-29: shipment-scoped validation (Plan 1) — pass-through to the repository.
+        public AllocationValidationResult ValidateAllocationByShipment(int shipmentId)
+        {
+            return Uow.Shipments.ValidateAllocationByShipment(shipmentId);
+        }
+
+        public List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method)
+        {
+            return Uow.Shipments.ValidateAllocationByShipmentDetail(shipmentId, method);
+        }
+
         public ReallocateResponse Reallocate(ReallocateReq req)
         {
             // Update charge methods via direct SQL — avoids EF tracking conflicts

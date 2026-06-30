@@ -86,6 +86,9 @@ namespace KLS.Services
                 existing.CustomDutyRate = dto.CustomDutyRate;
                 existing.TariffPercent = dto.TariffPercent;
                 existing.ImportCommission = dto.ImportCommission;
+                // 2026-06-29 (Plan 2a): persist ItemVolume so the cart can resync the volume snapshot
+                // from the item after an item-master edit (keeps the readiness chip honest).
+                existing.ItemVolume = dto.ItemVolume;
 
                 Uow.TempPurchases.Update(existing);
                 Uow.Commit();

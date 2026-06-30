@@ -147,6 +147,22 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        // 2026-06-29: shipment-scoped validation (Plan 1) — coverage over all bills in the shipment
+        // (the allocation guard's scope), so the UI can warn truthfully at assignment time.
+        [HttpGet("ValidateAllocationByShipment/{shipmentId}")]
+        public IActionResult ValidateAllocationByShipment(int shipmentId)
+        {
+            return Ok(_shipmentService.ValidateAllocationByShipment(shipmentId));
+        }
+
+
+        [HttpGet("ValidateAllocationByShipmentDetail/{shipmentId}/{method}")]
+        public IActionResult ValidateAllocationByShipmentDetail(int shipmentId, string method)
+        {
+            return Ok(_shipmentService.ValidateAllocationByShipmentDetail(shipmentId, method));
+        }
+
+
         [HttpPost("Reallocate")]
         public IActionResult Reallocate([FromBody] ReallocateReq req)
         {

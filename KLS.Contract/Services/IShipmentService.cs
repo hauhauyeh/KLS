@@ -37,6 +37,11 @@ namespace KLS.Contract.Services
 
         List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);
 
+        // 2026-06-29: shipment-scoped validation (Plan 1) — coverage at the guard's scope.
+        AllocationValidationResult ValidateAllocationByShipment(int shipmentId);
+
+        List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
+
         ReallocateResponse Reallocate(ReallocateReq req);
     }
 }
