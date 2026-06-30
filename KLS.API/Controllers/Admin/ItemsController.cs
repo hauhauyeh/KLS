@@ -150,12 +150,16 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpGet("GetItemUnitList")]
-        public IActionResult GetItemUnitList(string? itemIds)
+        // 2026-06-29: POST (was GET). Switching to Unit view with many loaded items (e.g. 500) put
+        // all item IDs in the query string and overflowed the server URL/query-string length limit,
+        // failing the call. IDs now travel in the request body. Service/SP unchanged (SP STRING_SPLITs
+        // the CSV), so we re-join the list here.
+        [HttpPost("GetItemUnitList")]
+        public IActionResult GetItemUnitList([FromBody] List<int>? itemIds)
         {
-            if (string.IsNullOrWhiteSpace(itemIds))
+            if (itemIds == null || itemIds.Count == 0)
                 return Ok(Array.Empty<ItemUnitListRow>());
-            return Ok(_itemUnitService.GetUnitViewList(itemIds));
+            return Ok(_itemUnitService.GetUnitViewList(string.Join(",", itemIds)));
         }
 
 
