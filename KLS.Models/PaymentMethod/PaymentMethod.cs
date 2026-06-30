@@ -51,6 +51,8 @@ namespace KLS.Models
 
         public string? SQNonce { get; set; }
 
+        public string? StripePmId { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 }

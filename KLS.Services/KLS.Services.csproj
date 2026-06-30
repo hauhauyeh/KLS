@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.12.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Razor.Templating.Core" Version="2.0.0" />
+    <PackageReference Include="Stripe.net" Version="52.1.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.1" />
     <PackageReference Include="Twilio" Version="7.13.6" />
     <PackageReference Include="ValueInjecter" Version="3.2.0" />

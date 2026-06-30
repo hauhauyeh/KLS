@@ -20,5 +20,8 @@ namespace KLS.Contract.Services
         void SetPrimary(int paymentMethodId);
 
         void Encrypt();
+
+        PaymentMethod CreateStripeCard(int payeeId, StripeSaveCardResult result);
+        IEnumerable<SavedMethodView> GetSavedMethodsForWeb(int payeeId);
     }
 }

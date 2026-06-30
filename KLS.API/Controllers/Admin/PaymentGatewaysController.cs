@@ -31,6 +31,18 @@ namespace KLS.API.Controllers.Admin
             return Ok(_paymentGatewayService.GetSQInfo());
         }
 
+        [HttpGet("StripeInfo")]
+        public IActionResult GetStripeInfo()
+        {
+            return Ok(_paymentGatewayService.GetStripeInfo());
+        }
+
+        [HttpGet("Active")]
+        public IActionResult GetActive()
+        {
+            return Ok(_paymentGatewayService.GetActiveGateways());
+        }
+
         #endregion
     }
 }

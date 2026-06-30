@@ -177,6 +177,36 @@ namespace KLS.Services
             Uow.Commit();
         }
 
+        public PaymentMethod CreateStripeCard(int payeeId, StripeSaveCardResult result)
+        {
+            var pm = new PaymentMethod
+            {
+                PayeeId = payeeId,
+                StripePmId = Utilities.Encrypt(result.StripePaymentMethodId),
+                AccountType = result.CardBrand,
+                Last4 = result.Last4,
+                IsACH = false
+            };
+            Uow.PaymentMethods.Add(pm);
+            Uow.Commit();
+            return pm;
+        }
+
+        public IEnumerable<SavedMethodView> GetSavedMethodsForWeb(int payeeId)
+        {
+            return Uow.PaymentMethods.Find(m => m.PayeeId == payeeId)
+                .Select(m => new SavedMethodView
+                {
+                    PaymentMethodId = m.PaymentMethodId,
+                    AccountType = m.AccountType,
+                    Last4 = m.Last4,
+                    Gateway = m.StripePmId != null ? "STRIPE"
+                            : m.SQCardId != null ? "SQUARE"
+                            : "MX"
+                })
+                .ToList();
+        }
+
         public void Encrypt()
         {
             var methods = Uow.PaymentMethods

@@ -48,6 +48,7 @@ namespace KLS.Services
         private readonly ICompanyService _companyService;
         private readonly ISquareService _squareService;
         private readonly IMxMerchantService _mxMerchantService;
+        private readonly IStripeService _stripeService;
         private readonly ITwilioService _twilioService;
 
         public CustomerPaymentService(IUnitOfWork uow,
@@ -58,6 +59,7 @@ namespace KLS.Services
             ICompanyService companyService,
             ISquareService squareService,
             IMxMerchantService mxMerchantService,
+            IStripeService stripeService,
             ITwilioService twilioService) : base(uow)
         {
             _deleteLogService = deleteLogService;
@@ -67,6 +69,7 @@ namespace KLS.Services
             _companyService = companyService;
             _squareService = squareService;
             _mxMerchantService = mxMerchantService;
+            _stripeService = stripeService;
             _twilioService = twilioService;
         }
 
@@ -479,6 +482,37 @@ namespace KLS.Services
                             Last4 = method.Last4
                         };
                     }
+                    else if (chargeReq.Gateway == "STRIPE")
+                    {
+                        var stripeCustId = Uow.Customers.GetById(chargeReq.PayeeId)?.StripeId;
+                        if (string.IsNullOrEmpty(stripeCustId))
+                            throw new Exception("Stripe customer not found for this payee.");
+
+                        var stripeResult = _stripeService
+                            .ChargeWithSavedMethod(chargeReq.PayeeId, stripeCustId,
+                                Utilities.Decrypt(method.StripePmId), paymentAmountCent)
+                            .GetAwaiter().GetResult();
+
+                        if (stripeResult.Status != "succeeded")
+                            throw new Exception($"Stripe payment failed: {stripeResult.Status}");
+
+                        var stripeCharge = chargeReq.IsPaymentChange
+                            ? chargeReq.PaymentAmount + ccFee
+                            : dueTotal + ccFee;
+
+                        paymentReq = new CreateGatewayPaymentReq
+                        {
+                            PayeeId = chargeReq.PayeeId,
+                            PaymentMethod = "CREDIT CARD",
+                            ReferenceId = stripeResult.PaymentIntentId,
+                            PaymentAmount = stripeCharge,
+                            SalesIds = chargeReq.SalesIds,
+                            Gateway = "Stripe Payment" + sortName,
+                            CCFee = ccFee,
+                            CardType = stripeResult.CardBrand,
+                            Last4 = stripeResult.Last4
+                        };
+                    }
                     else
                     {
                         var sqCustId = !string.IsNullOrEmpty(method.SQCustId)
@@ -542,6 +576,36 @@ namespace KLS.Services
                         Last4 = Convert.ToString(paymentResponse?.Payment?.CardDetails?.Card?.Last4)
                     };
                 }
+                else if (!string.IsNullOrWhiteSpace(chargeReq.StripeToken))
+                {
+                    if (chargeReq.IsPaymentChange)
+                    {
+                        chargeReq.SalesIds = "";
+                        ccFee = Utilities.Rounding(chargeReq.CCFeePercent * chargeReq.PaymentAmount, 2) ?? 0m;
+                        paymentAmount = chargeReq.PaymentAmount + ccFee;
+                        paymentAmountCent = Convert.ToInt64(paymentAmount * 100m);
+                    }
+
+                    var stripeResult = _stripeService
+                        .ChargePayment(chargeReq.PayeeId, paymentAmountCent, chargeReq.StripeToken)
+                        .GetAwaiter().GetResult();
+
+                    if (stripeResult.Status != "succeeded")
+                        throw new Exception($"Stripe payment failed: {stripeResult.Status}");
+
+                    paymentReq = new CreateGatewayPaymentReq
+                    {
+                        PayeeId = chargeReq.PayeeId,
+                        PaymentMethod = "CREDIT CARD",
+                        ReferenceId = stripeResult.PaymentIntentId,
+                        PaymentAmount = paymentAmount,
+                        SalesIds = chargeReq.SalesIds,
+                        Gateway = "Stripe Payment" + sortName,
+                        CCFee = ccFee,
+                        CardType = stripeResult.CardBrand,
+                        Last4 = stripeResult.Last4
+                    };
+                }
                 else if (chargeReq.PaymentMethod != null)
                 {
                     chargeReq.PaymentMethod.PayeeId = chargeReq.PayeeId;
@@ -584,7 +648,7 @@ namespace KLS.Services
                 }
                 else
                 {
-                    throw new Exception("Payment method or Square token is required.");
+                    throw new Exception("Payment method, Square token, or Stripe token is required.");
                 }
 
                 // Forward user-entered note (from the charge dialog) to the

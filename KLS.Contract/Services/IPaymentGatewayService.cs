@@ -12,5 +12,9 @@ namespace KLS.Contract.Services
         PaymentGateway GetByCode(string code);
 
         SquareInfo GetSQInfo();
+
+        StripeInfo GetStripeInfo();
+
+        List<ActiveGateway> GetActiveGateways();
     }
 }
