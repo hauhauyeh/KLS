@@ -42,6 +42,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<RptSalesCallListRow> SalesCallList();
 
+        IEnumerable<RptItemAvgCostReviewRow> ItemAvgCostReview();
+
         IEnumerable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed);
 
         IEnumerable<RptCustomerSalesSummary> CustomerSalesSummary(bool includeClosed, int? salesRepId);
