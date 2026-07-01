@@ -75,8 +75,9 @@ namespace KLS.Services
                 // 2) Fallback: match ExternalUpc against ItemUnit.Barcode
                 else if (!string.IsNullOrEmpty(item.ExternalUpc))
                 {
+                    var upcTrimmed = item.ExternalUpc.Trim();
                     var unitMatch = Uow.ItemUnits.Find(u =>
-                        u.Barcode == item.ExternalUpc).FirstOrDefault();
+                        u.Barcode == upcTrimmed).FirstOrDefault();
 
                     if (unitMatch != null)
                     {

@@ -204,7 +204,7 @@ namespace KLS.Services.Marketplace.ShipStation
                     MarketOrderId = order.MarketOrderId,
                     ExternalLineId = externalLineId,
                     ExternalSku = string.IsNullOrWhiteSpace(line.sku) ? null : line.sku,
-                    ExternalUpc = string.IsNullOrWhiteSpace(line.upc) ? null : line.upc,
+                    ExternalUpc = string.IsNullOrWhiteSpace(line.upc) ? null : line.upc.Trim(),
                     ExternalListingId = line.productId?.ToString(),
                     ExternalItemName = line.name,
                     Qty = qty,
@@ -268,8 +268,9 @@ namespace KLS.Services.Marketplace.ShipStation
                 // 2) Fallback: match ExternalUpc against ItemUnit.Barcode
                 else if (!string.IsNullOrEmpty(item.ExternalUpc))
                 {
+                    var upcTrimmed = item.ExternalUpc.Trim();
                     var unitMatch = Uow.ItemUnits.Find(u =>
-                        u.Barcode == item.ExternalUpc).FirstOrDefault();
+                        u.Barcode == upcTrimmed).FirstOrDefault();
 
                     if (unitMatch != null)
                     {
