@@ -15,6 +15,7 @@ namespace KLS.Contract.Services.Marketplace.ShipStation
             DateTime? modifyDateStart,
             DateTime? createDateStart,
             int? storeId,
+            string? timeZoneId = null,
             CancellationToken ct = default);
 
         Task<bool> TestConnectionAsync(int marketAccountId, CancellationToken ct = default);

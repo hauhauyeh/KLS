@@ -48,16 +48,21 @@ namespace KLS.Services.Marketplace.ShipStation
                 var account = Uow.MarketAccounts.GetById(marketAccountId)
                     ?? throw new InvalidOperationException("Market account not found");
                 var settings = ShipStationSettings.FromEncrypted(account.SettingsJson);
+                var accountTz = ShipStationApiClient.ResolveTimeZone(account.TimeZone);
 
                 DateTime? modifyDateStart = null;
                 DateTime? createDateStart = null;
                 if (account.LastSyncAt == null)
                 {
-                    createDateStart = since ?? DateTime.UtcNow.AddDays(-4);
+                    createDateStart = since.HasValue
+                        ? ShipStationApiClient.LocalToUtc(since.Value.Date, accountTz)
+                        : DateTime.UtcNow.AddDays(-4);
                 }
                 else
                 {
-                    var baseFrom = since ?? account.LastSyncAt.Value;
+                    var baseFrom = since.HasValue
+                        ? ShipStationApiClient.LocalToUtc(since.Value.Date, accountTz)
+                        : account.LastSyncAt.Value;
                     modifyDateStart = baseFrom.AddMinutes(-10);
                 }
 
@@ -69,7 +74,7 @@ namespace KLS.Services.Marketplace.ShipStation
                 {
                     var response = await _client.GetOrdersAsync(
                         marketAccountId, page, PageSize,
-                        modifyDateStart, createDateStart, settings.StoreId, CancellationToken.None);
+                        modifyDateStart, createDateStart, settings.StoreId, account.TimeZone, CancellationToken.None);
 
                     if (response?.orders == null || response.orders.Count == 0) break;
                     totalPages = response.pages > 0 ? response.pages : 1;
@@ -79,11 +84,11 @@ namespace KLS.Services.Marketplace.ShipStation
                     {
                         try
                         {
-                            var isNew = UpsertOrder(marketAccountId, order);
+                            var isNew = UpsertOrder(marketAccountId, order, accountTz);
                             if (isNew) inserted++; else updated++;
                             if (order.modifyDate.HasValue)
                             {
-                                var utc = ShipStationApiClient.PacificToUtc(order.modifyDate.Value);
+                                var utc = ShipStationApiClient.LocalToUtc(order.modifyDate.Value, accountTz);
                                 if (!maxModifyUtc.HasValue || utc > maxModifyUtc.Value)
                                     maxModifyUtc = utc;
                             }
@@ -125,7 +130,7 @@ namespace KLS.Services.Marketplace.ShipStation
             }
         }
 
-        private bool UpsertOrder(int marketAccountId, ShipStationOrder src)
+        private bool UpsertOrder(int marketAccountId, ShipStationOrder src, TimeZoneInfo accountTz)
         {
             var externalOrderId = src.orderId.ToString();
             var existing = Uow.MarketOrders.Find(o =>
@@ -142,7 +147,7 @@ namespace KLS.Services.Marketplace.ShipStation
             // Header fields (refresh on every pull; preserve ERP fields + PK + CreatedAt)
             order.ExternalOrderNo = !string.IsNullOrWhiteSpace(src.orderNumber) ? src.orderNumber : src.orderKey;
             order.ExternalCustomerId = src.customerId?.ToString();
-            order.OrderDate = src.orderDate.HasValue ? ShipStationApiClient.PacificToUtc(src.orderDate.Value) : (DateTime?)null;
+            order.OrderDate = src.orderDate.HasValue ? ShipStationApiClient.LocalToUtc(src.orderDate.Value, accountTz) : (DateTime?)null;
             order.OrderStatus = src.orderStatus ?? MarketInternalOrderStatus.Pending.ToValue();
             order.CustomerName = src.customerUsername;
             order.CustomerEmail = string.IsNullOrWhiteSpace(src.customerEmail) ? null : src.customerEmail;
