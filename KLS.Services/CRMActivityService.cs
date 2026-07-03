@@ -18,6 +18,9 @@ namespace KLS.Services
 
         public CRMActivity Create(CRMActivityDTO dto)
         {
+            if (dto.PayeeId.HasValue == dto.LeadId.HasValue)
+                throw new ArgumentException("An activity must have exactly one parent (customer or lead).");
+
             CRMActivity activity = null!;
 
             Uow.ExecuteInTransaction(() =>

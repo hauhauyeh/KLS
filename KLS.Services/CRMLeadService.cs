@@ -107,6 +107,9 @@ namespace KLS.Services
             if (lead.ConvertedPayeeId.HasValue)
                 throw new InvalidOperationException("Lead is already converted to a different customer.");
 
+            if (!Uow.Payees.Exists(p => p.PayeeId == payeeId))
+                throw new KeyNotFoundException("Target customer not found.");
+
             Uow.CRMLeads.Convert(leadId, payeeId);
         }
 

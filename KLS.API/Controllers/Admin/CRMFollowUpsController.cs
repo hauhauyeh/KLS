@@ -27,6 +27,17 @@ namespace KLS.API.Controllers.Admin
             return Ok(_crmFollowUpService.GetPagedList(req));
         }
 
+        [HttpGet("by-entity")]
+        [DisplayName("List Follow-Ups")]
+        [PermissionKey("CRM.FollowUp.List")]
+        public IActionResult GetByEntity([FromQuery] int? payeeId, [FromQuery] int? leadId, [FromQuery] int pageNo = 1, [FromQuery] int pageSize = 20)
+        {
+            if (payeeId.HasValue == leadId.HasValue)
+                return BadRequest("Provide exactly one of payeeId or leadId.");
+
+            return Ok(_crmFollowUpService.GetByEntity(payeeId, leadId, pageNo, pageSize));
+        }
+
         [HttpGet("{id}")]
         [PermissionKey("CRM.FollowUp.List")]
         public IActionResult GetById(int id)

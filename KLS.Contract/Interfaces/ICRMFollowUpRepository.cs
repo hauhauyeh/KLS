@@ -6,6 +6,8 @@ namespace KLS.Contract.Interfaces
     {
         IQueryable<CRMFollowUpList> GetPagedList(CRMFollowUpListReq req);
 
+        IQueryable<CRMFollowUpList> GetByEntity(int? payeeId, int? leadId, int pageNo, int pageSize);
+
         int Count(CRMFollowUpListReq req);
 
         int GetOverdueCount(int empId);

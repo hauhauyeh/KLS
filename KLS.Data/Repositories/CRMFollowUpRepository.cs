@@ -32,6 +32,19 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output!.Value);
         }
 
+        public IQueryable<CRMFollowUpList> GetByEntity(int? payeeId, int? leadId, int pageNo, int pageSize)
+        {
+            object[] param = {
+                payeeId.HasValue ? new SqlParameter("@PayeeId", payeeId.Value) : new SqlParameter("@PayeeId", DBNull.Value),
+                leadId.HasValue ? new SqlParameter("@LeadId", leadId.Value) : new SqlParameter("@LeadId", DBNull.Value),
+                new SqlParameter("@Pageno", pageNo),
+                new SqlParameter("@Pagesize", pageSize)
+            };
+            return DbContext.CRMFollowUpList.FromSqlRaw(
+                "[dbo].[CRMFollowUp_GetByEntity] @PayeeId,@LeadId,@Pageno,@Pagesize",
+                param);
+        }
+
         public int GetOverdueCount(int empId)
         {
             var empIdParam = new SqlParameter("@EmpId", empId);

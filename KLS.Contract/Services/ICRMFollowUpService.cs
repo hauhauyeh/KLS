@@ -6,6 +6,8 @@ namespace KLS.Contract.Services
     {
         PagingResponse<CRMFollowUpList> GetPagedList(CRMFollowUpListReq req);
 
+        ICollection<CRMFollowUpList> GetByEntity(int? payeeId, int? leadId, int pageNo, int pageSize);
+
         CRMFollowUp? GetById(int followUpId);
 
         CRMFollowUp Create(CRMFollowUpDTO dto);

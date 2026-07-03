@@ -22,6 +22,14 @@ namespace KLS.Services
             };
         }
 
+        public ICollection<CRMFollowUpList> GetByEntity(int? payeeId, int? leadId, int pageNo, int pageSize)
+        {
+            if (payeeId.HasValue == leadId.HasValue)
+                throw new ArgumentException("Provide exactly one of payeeId or leadId.");
+
+            return Uow.CRMFollowUps.GetByEntity(payeeId, leadId, pageNo, pageSize).ToList();
+        }
+
         public CRMFollowUp? GetById(int followUpId)
         {
             return Uow.CRMFollowUps.GetById(followUpId);
@@ -29,6 +37,9 @@ namespace KLS.Services
 
         public CRMFollowUp Create(CRMFollowUpDTO dto)
         {
+            if (dto.PayeeId.HasValue == dto.LeadId.HasValue)
+                throw new ArgumentException("A follow-up must have exactly one parent (customer or lead).");
+
             var followUp = new CRMFollowUp
             {
                 PayeeId = dto.PayeeId,
