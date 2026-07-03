@@ -104,10 +104,20 @@ namespace KLS.Services
                 var basePrice = (tempQuote.IsBaseToRecentCost ? tempQuote.RecentCost : tempQuote.P1) ?? 0m;
 
                 decimal? markup = null;
-                decimal? finalPrice = tempQuote.FinalPriceUpdate;
+                decimal? finalPrice = null;
 
-                if (finalPrice.HasValue && finalPrice != 0 && basePrice != 0)
-                    markup = Utilities.Rounding((finalPrice - basePrice) / basePrice, 4);
+                if (tempQuote.MarkupPercentUpdate.HasValue)
+                {
+                    markup = tempQuote.MarkupPercentUpdate;
+                    if (basePrice != 0)
+                        finalPrice = Utilities.Rounding(basePrice * (1 + markup.Value), 2);
+                }
+                else
+                {
+                    finalPrice = tempQuote.FinalPriceUpdate;
+                    if (finalPrice.HasValue && finalPrice != 0 && basePrice != 0)
+                        markup = Utilities.Rounding((finalPrice - basePrice) / basePrice, 4);
+                }
 
                 existing.MarkupPercent = markup;
 

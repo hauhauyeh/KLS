@@ -199,6 +199,11 @@ namespace KLS.Data.Repositories
             return DbContext.RptSalesCallListRow.FromSqlRaw("[dbo].[Report_SalesCallList]");
         }
 
+        public IQueryable<RptItemAvgCostReviewRow> ItemAvgCostReview()
+        {
+            return DbContext.RptItemAvgCostReviewRow.FromSqlRaw("[dbo].[Report_ItemAvgCostReview]");
+        }
+
         public IQueryable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed)
         {
             var IncludeClosedParam = new SqlParameter("@IncludeClosed", includeClosed);

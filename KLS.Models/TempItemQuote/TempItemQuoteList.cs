@@ -76,5 +76,8 @@ namespace KLS.Models
 
         [NotMapped]
         public decimal? FinalPriceUpdate { get; set; }
+
+        [NotMapped]
+        public decimal? MarkupPercentUpdate { get; set; }
     }
 }

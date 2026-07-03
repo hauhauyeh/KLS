@@ -97,6 +97,9 @@ namespace KLS.Models
         public decimal? AltFactorToBase { get; set; }
 
         [NotMapped]
+        public int? AltMultipleToBase { get; set; }
+
+        [NotMapped]
         public decimal? AltPricePercentToBase { get; set; }
 
         [NotMapped]

@@ -59,6 +59,7 @@ namespace KLS.Services
                     item.AltItemUnitId = altUnit.ItemUnitId;
                     item.AltUnit = altUnit.Unit;
                     item.AltFactorToBase = altUnit.FactorToBase;
+                    item.AltMultipleToBase = altUnit.MultipleToBase;  // for the read-only ×N / ÷N ratio badge (A.5)
                     item.AltPricePercentToBase = altUnit.PricePercentToBase;
                     item.AltP1 = altUnit.P1;
                 }
@@ -246,11 +247,20 @@ namespace KLS.Services
 
                             if (dbUnit != null)
                             {
+                                // Immutability (master plan §5.1/§5.2, "saved => immutable"): a saved unit's
+                                // ratio is frozen. Do NOT reassign FactorToBase/MultipleToBase on an existing
+                                // unit; reject an ACTUAL change (unchanged resend is a harmless no-op). To
+                                // correct a ratio, inactivate this unit and add a new one. This also blocks
+                                // rebasing a saved item (Set Base Unit rewrites a saved factor) -- by design.
+                                if (unit.FactorToBase != dbUnit.FactorToBase || unit.MultipleToBase != dbUnit.MultipleToBase)
+                                    throw new InvalidOperationException(
+                                        "Cannot change the unit ratio on a saved unit. Inactivate this unit and add a new one instead.");
+
                                 dbUnit.Unit = unit.Unit;
-                                dbUnit.FactorToBase = unit.IsBaseUnit ? 1 : unit.FactorToBase;
+                                // FactorToBase / MultipleToBase intentionally NOT reassigned (immutable on saved units).
                                 dbUnit.IsDefaultSalesUnit = unit.IsDefaultSalesUnit;
                                 dbUnit.PricePercentToBase = unit.IsBaseUnit ? null : unit.PricePercentToBase;
-                                dbUnit.Barcode = unit.Barcode;
+                                dbUnit.Barcode = unit.Barcode?.Trim();
                                 dbUnit.P1 = unit.P1;
                                 dbUnit.MSRP = unit.MSRP;
                                 dbUnit.MarketPrice = unit.MarketPrice;

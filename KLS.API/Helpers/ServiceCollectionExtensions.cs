@@ -182,6 +182,11 @@ namespace KLS.API.Helpers
             services.AddScoped<ISalesQuoteService, SalesQuoteService>();
             services.AddScoped<ITempSalesQuoteService, TempSalesQuoteService>();
 
+            // CRM
+            services.AddScoped<ICRMLeadService, CRMLeadService>();
+            services.AddScoped<ICRMActivityService, CRMActivityService>();
+            services.AddScoped<ICRMFollowUpService, CRMFollowUpService>();
+
             return services;
         }
     }

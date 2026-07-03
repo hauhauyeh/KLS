@@ -24,7 +24,7 @@ namespace KLS.Services.Marketplace.ShipStation
         private const string BaseUrl = "https://ssapi.shipstation.com";
         private const int MaxRetries = 3;
 
-        private static readonly TimeZoneInfo PacificTz = ResolvePacificTimeZone();
+        private const string DefaultTimeZone = "Eastern Standard Time";
 
         public ShipStationApiClient(IHttpClientFactory httpClientFactory, IUnitOfWork uow)
         {
@@ -39,14 +39,16 @@ namespace KLS.Services.Marketplace.ShipStation
             DateTime? modifyDateStart,
             DateTime? createDateStart,
             int? storeId,
+            string? timeZoneId = null,
             CancellationToken ct = default)
         {
+            var tz = ResolveTimeZone(timeZoneId);
             var sb = new StringBuilder("/orders?");
             sb.Append($"page={page}&pageSize={pageSize}");
             if (modifyDateStart.HasValue)
-                sb.Append($"&modifyDateStart={Uri.EscapeDataString(FormatPacific(modifyDateStart.Value))}");
+                sb.Append($"&modifyDateStart={Uri.EscapeDataString(FormatLocal(modifyDateStart.Value, tz))}");
             if (createDateStart.HasValue)
-                sb.Append($"&createDateStart={Uri.EscapeDataString(FormatPacific(createDateStart.Value))}");
+                sb.Append($"&createDateStart={Uri.EscapeDataString(FormatLocal(createDateStart.Value, tz))}");
             if (storeId.HasValue)
                 sb.Append($"&storeId={storeId.Value}");
             sb.Append("&sortBy=ModifyDate&sortDir=ASC");
@@ -287,25 +289,27 @@ namespace KLS.Services.Marketplace.ShipStation
             return TimeSpan.FromSeconds(Math.Pow(2, attempt));
         }
 
-        private static string FormatPacific(DateTime utc)
+        private static string FormatLocal(DateTime utc, TimeZoneInfo tz)
         {
             var local = TimeZoneInfo.ConvertTimeFromUtc(
                 utc.Kind == DateTimeKind.Utc ? utc : DateTime.SpecifyKind(utc, DateTimeKind.Utc),
-                PacificTz);
+                tz);
             return local.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
 
-        public static DateTime PacificToUtc(DateTime pacific)
+        public static DateTime LocalToUtc(DateTime local, TimeZoneInfo tz)
         {
-            var unspecified = DateTime.SpecifyKind(pacific, DateTimeKind.Unspecified);
-            return TimeZoneInfo.ConvertTimeToUtc(unspecified, PacificTz);
+            var unspecified = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
+            return TimeZoneInfo.ConvertTimeToUtc(unspecified, tz);
         }
 
-        private static TimeZoneInfo ResolvePacificTimeZone()
+        public static TimeZoneInfo ResolveTimeZone(string? timeZoneId)
         {
-            try { return TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time"); } catch { }
-            try { return TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles"); } catch { }
-            return TimeZoneInfo.Utc;
+            if (!string.IsNullOrWhiteSpace(timeZoneId))
+            {
+                try { return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId); } catch { }
+            }
+            return TimeZoneInfo.FindSystemTimeZoneById(DefaultTimeZone);
         }
     }
 }
