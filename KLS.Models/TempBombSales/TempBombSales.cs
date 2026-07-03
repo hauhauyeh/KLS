@@ -17,7 +17,10 @@ namespace KLS.Models
 
         public int? ItemId { get; set; }
         public int? ItemUnitId { get; set; }
-        public string? Unit { get; set; }
+        // Unit is set only via ApplyUnit() so the unit name can never be changed without also
+        // updating ItemUnitId + FactorToBase. (Mirrors the TempSales entity. A prior bomb path
+        // set Unit + FactorToBase but not ItemUnitId, producing crossed SalesDetail rows.)
+        public string? Unit { get; private set; }
 
         public bool IsFree { get; set; }
         public bool IsOut { get; set; }
@@ -41,5 +44,15 @@ namespace KLS.Models
         public int? SalesDetailId { get; set; }
 
         public bool IsChanged { get; set; }
+
+        // Set unit name, id, and factor together — they are one atomic fact about the line.
+        // Changing any subset (e.g. Unit + FactorToBase but not ItemUnitId) desyncs the line so
+        // its ItemUnitId points at one unit while Unit/Factor describe another.
+        public void ApplyUnit(string? unit, int? itemUnitId, decimal? factorToBase)
+        {
+            Unit = unit;
+            ItemUnitId = itemUnitId;
+            FactorToBase = factorToBase;
+        }
     }
 }

@@ -85,9 +85,11 @@ namespace KLS.Services
                 var itemUnit = _itemUnitService.GetNextUnit(existing.ItemId ?? 0, existing.Unit);
                 var itemPrice = _itemUnitService.GetItemPriceByCustomer(existing.PayeeId, existing.ItemId ?? 0, itemUnit.ItemUnitId);
 
-                existing.Unit = itemUnit.Unit;
+                // Set unit id + name + factor together. The prior code set Unit + FactorToBase but
+                // NOT ItemUnitId, so a "change unit" (e.g. cs -> lb) left ItemUnitId on the old unit
+                // while Unit/Factor moved to the new one -> crossed SalesDetail rows on bomb save.
+                existing.ApplyUnit(itemUnit.Unit, itemUnit.ItemUnitId, itemUnit.FactorToBase);
                 existing.UnitPrice = itemPrice.DefaultPrice;
-                existing.FactorToBase = itemUnit.FactorToBase;
                 existing.IsChanged = true;
 
                 Uow.TempBombSales.Update(existing);
@@ -115,10 +117,8 @@ namespace KLS.Services
                 var itemPrice = _itemUnitService.GetItemPriceByCustomer(existing.PayeeId, item.ItemId, null);
 
                 existing.ItemId = item.ItemId;
-                existing.ItemUnitId = itemPrice.ItemUnitId;
-                existing.Unit = itemPrice.DefaultUnit;
+                existing.ApplyUnit(itemPrice.DefaultUnit, itemPrice.ItemUnitId, itemPrice.FactorToBase);
                 existing.UnitPrice = itemPrice.DefaultPrice;
-                existing.FactorToBase = itemPrice.FactorToBase;
                 existing.IsTaxable = itemPrice.IsTaxable;
                 existing.IsChanged = true;
 
