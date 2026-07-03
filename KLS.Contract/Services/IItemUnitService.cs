@@ -24,7 +24,7 @@ namespace KLS.Contract.Services
 
         IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds);
 
-        ItemUnitMutationResult CreateUnit(int itemId);
+        ItemUnitMutationResult CreateUnit(CreateItemUnitReq req);
 
         ItemUnitMutationResult UpdateUnit(ItemUnitUpdateReq req);
 

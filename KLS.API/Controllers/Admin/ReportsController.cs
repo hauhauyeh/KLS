@@ -88,6 +88,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.SalesCallList());
         }
 
+        [HttpGet("ItemAvgCostReview")]
+        [DisplayName("Item -> Item AvgCost Review")]
+        [PermissionKey("Report.Item.ItemAvgCostReview")]
+        public IActionResult ItemAvgCostReview()
+        {
+            return Ok(_reportService.ItemAvgCostReview());
+        }
+
         [HttpGet("VendorPurchaseSummary")]
         [DisplayName("Purchase -> Vendor Purchase Summary")]
         [PermissionKey("Report.Purchase.VendorPurchaseSummary")]

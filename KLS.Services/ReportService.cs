@@ -718,6 +718,11 @@ namespace KLS.Services
             return Uow.Reports.SalesCallList().ToList();
         }
 
+        public IEnumerable<RptItemAvgCostReviewRow> ItemAvgCostReview()
+        {
+            return Uow.Reports.ItemAvgCostReview().ToList();
+        }
+
         public IEnumerable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed)
         {
             return Uow.Reports.VendorPurchaseSummary(includeClosed).ToList();

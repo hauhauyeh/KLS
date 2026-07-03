@@ -93,9 +93,15 @@ namespace KLS.Services
             var unit = Uow.ItemUnits.GetById(req.ItemUnitId);
             if (unit == null) return new ItemUnitMutationResult();
 
-            // Base unit FactorToBase must remain 1
-            if (unit.IsBaseUnit && req.FactorToBase.HasValue && req.FactorToBase.Value != 1)
-                throw new InvalidOperationException("Cannot change FactorToBase on base unit.");
+            // Immutability (master plan §5.1/§5.2, "saved => immutable"): a saved unit's ratio is frozen.
+            // FactorToBase cannot change on an existing unit. (MultipleToBase is immutable-by-omission --
+            // it is not on this request, so no update path can change it.) To correct a ratio, inactivate
+            // this unit and add a new one. Subsumes the old "base unit FactorToBase must stay 1" rule.
+            // Reject only an ACTUAL change -- the edit form may resend the unchanged ratio when saving
+            // name/price/barcode, which is a harmless no-op.
+            if (req.FactorToBase.HasValue && req.FactorToBase.Value != unit.FactorToBase)
+                throw new InvalidOperationException(
+                    "Cannot change the conversion factor on a saved unit. Inactivate this unit and add a new one instead.");
 
             if (req.Unit != null)
             {
@@ -119,8 +125,7 @@ namespace KLS.Services
                 unit.Barcode = trimmed;
             }
 
-            if (req.FactorToBase.HasValue && !unit.IsBaseUnit)
-                unit.FactorToBase = req.FactorToBase.Value;
+            // FactorToBase intentionally NOT assigned here -- it is immutable on a saved unit (guarded above).
 
             if (req.PricePercentToBase.HasValue && !unit.IsBaseUnit)
                 unit.PricePercentToBase = req.PricePercentToBase.Value;
@@ -155,33 +160,68 @@ namespace KLS.Services
             };
         }
 
-        public ItemUnitMutationResult CreateUnit(int itemId)
+        // Create a non-base unit with its ratio set up-front (draft-row add flow). The old CreateUnit(itemId)
+        // made an auto-named 1:1 unit that immutability then froze into junk ("unit2"). Now the caller supplies
+        // name + ratio, and we validate it BEFORE persisting — the ratio can never be edited later.
+        public ItemUnitMutationResult CreateUnit(CreateItemUnitReq req)
         {
+            var itemId = req.ItemId;
+
+            var name = (req.Unit ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(name))
+                throw new InvalidOperationException("Unit name is required.");
+
+            // Normalize the ratio. FactorToBase = denominator, MultipleToBase = numerator; one side must be 1.
+            var factorToBase = req.FactorToBase < 1 ? 1 : req.FactorToBase;
+            var multipleToBase = req.MultipleToBase < 1 ? 1 : req.MultipleToBase;
+
+            // Matches CK_ItemUnit_Ratio_OneSideOne — no odd fractions like 3/2 in v1.
+            if (multipleToBase != 1 && factorToBase != 1)
+                throw new InvalidOperationException("A unit ratio must be a whole ×N or ÷N of the base (one side must be 1).");
+
+            // A non-base unit needs a real ratio (N >= 2). A 1/1 non-base unit is the junk we no longer allow.
+            if (multipleToBase == 1 && factorToBase == 1)
+                throw new InvalidOperationException("Enter a unit ratio of 2 or more (e.g. ×6 or ÷12).");
+
+            // Friendly duplicate check (the filtered unique index UX_ItemUnit_Ratio also enforces this at the DB).
+            var dup = Uow.ItemUnits
+                .Find(u => u.ItemId == itemId && !u.Inactive
+                        && u.MultipleToBase == multipleToBase && u.FactorToBase == factorToBase)
+                .Any();
+            if (dup)
+                throw new InvalidOperationException("An active unit with this ratio already exists on this item. Inactivate it first, or use a different ratio.");
+
             var baseUnit = GetBaseUnit(itemId);
             var baseP1 = baseUnit?.P1 ?? 0;
 
-            // Get default markup from SystemSetting
-            var defaultPercent = Uow.SystemSettings
-                .Find(s => s.SettingKey == "ITEM_DEFAULT_RETAILPROFIT")
-                .Select(s => s.SettingValue)
-                .FirstOrDefault();
-
+            // Markup: caller value if given, else the ITEM_DEFAULT_RETAILPROFIT setting (fallback 0.40).
             decimal markup = 0.4m;
+            if (req.PricePercentToBase.HasValue)
+            {
+                markup = req.PricePercentToBase.Value;
+            }
+            else
+            {
+                var defaultPercent = Uow.SystemSettings
+                    .Find(s => s.SettingKey == "ITEM_DEFAULT_RETAILPROFIT")
+                    .Select(s => s.SettingValue)
+                    .FirstOrDefault();
+                if (decimal.TryParse(defaultPercent, out var parsed))
+                    markup = parsed;
+            }
 
-            if (decimal.TryParse(defaultPercent, out var parsed))
-                markup = parsed;
-
-            var existingCount = Uow.ItemUnits.Find(u => u.ItemId == itemId).Count();
-            decimal factorToBase = 1;
-            decimal p1 = CalcRetailP1(baseP1, factorToBase, markup);
+            // Default P1 from base + markup unless the caller supplied one.
+            var p1 = req.P1 ?? CalcRetailP1(baseP1, factorToBase, multipleToBase, markup);
 
             var unit = new ItemUnit
             {
                 ItemId = itemId,
-                Unit = "unit" + (existingCount + 1),
+                Unit = name,
                 FactorToBase = factorToBase,
+                MultipleToBase = multipleToBase,
                 PricePercentToBase = markup,
                 P1 = p1,
+                Barcode = string.IsNullOrWhiteSpace(req.Barcode) ? null : req.Barcode.Trim(),
                 IsBaseUnit = false,
                 IsDefaultSalesUnit = false,
                 Inactive = false
@@ -199,25 +239,34 @@ namespace KLS.Services
             };
         }
 
-        private static decimal CalcRetailP1(decimal baseP1, decimal factorToBase, decimal markup)
+        // Retail P1 from the base P1, the unit's effective size (multiple/factor), and markup.
+        // BaseQty = Qty * multiple / factor, so a unit's price scales by multiple/factor vs the base.
+        private static decimal CalcRetailP1(decimal baseP1, decimal factorToBase, decimal multipleToBase, decimal markup)
         {
             if (factorToBase <= 0) factorToBase = 1;
+            if (multipleToBase <= 0) multipleToBase = 1;
             if (markup >= 1) return 0; // 100% markup is invalid
-            return Math.Round((baseP1 / (1 - markup)) / factorToBase, 2);
+            return Math.Round((baseP1 / (1 - markup)) * multipleToBase / factorToBase, 2);
         }
 
         public ItemUnitMutationResult DeleteUnit(int itemUnitId)
         {
-            //var unit = Uow.ItemUnits.GetById(itemUnitId);
-
-            //if (unit == null) return;
-
-            //if (unit.IsBaseUnit)
-            //    throw new InvalidOperationException("Cannot delete base unit.");
-
             // Capture ItemId before delete so we can recompute SetPacking after.
             var existing = Uow.ItemUnits.GetById(itemUnitId);
-            var itemId = existing?.ItemId ?? 0;
+            if (existing == null) return new ItemUnitMutationResult();
+
+            // Delete guard (A.5): the base unit is never deletable.
+            if (existing.IsBaseUnit)
+                throw new InvalidOperationException("Cannot delete the base unit.");
+
+            // Delete only UNUSED units. A used unit (referenced in sales, quotes, purchases, routes, cart, or any
+            // Temp* draft — see Fn_ItemUnit_IsUsed / the 13 ItemUnitId tables) must be INACTIVATED instead:
+            // deleting it would orphan its history (those tables have no FK to ItemUnit).
+            if (Uow.ItemUnits.IsUsed(itemUnitId))
+                throw new InvalidOperationException(
+                    "This unit is in use (sales, quotes, purchases, or open drafts) and cannot be deleted. Inactivate it instead.");
+
+            var itemId = existing.ItemId;
 
             Uow.ItemUnits.Delete(itemUnitId);
 

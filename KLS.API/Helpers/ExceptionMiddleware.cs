@@ -40,6 +40,11 @@ namespace KLS.API.Helpers
             var statusCode = exception switch
             {
                 ArgumentException => HttpStatusCode.BadRequest,
+                // Business-rule rejections across the services (21 files) throw InvalidOperationException
+                // ("in use — inactivate instead", "Barcode already exists", "Parent category not found", ...).
+                // These are client-correctable, not server faults → 400, so the UI can show Message instead of
+                // a generic 500. Genuine bugs are still logged above via _logger.LogError.
+                InvalidOperationException => HttpStatusCode.BadRequest,
                 KeyNotFoundException => HttpStatusCode.NotFound,
                 DuplicateNameException => HttpStatusCode.Conflict,
                 UnauthorizedAccessException => HttpStatusCode.Unauthorized,

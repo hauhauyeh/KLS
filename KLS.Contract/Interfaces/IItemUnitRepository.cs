@@ -14,5 +14,9 @@ namespace KLS.Contract.Interfaces
         IEnumerable<ItemUnitListRow> GetUnitViewList(string itemIds);
 
         void Delete(int itemUnitId);
+
+        // True if the unit is referenced in any of the 13 ItemUnitId tables (incl. Temp* drafts).
+        // Used by the DeleteUnit guard: delete only UNUSED units; used ones must be inactivated.
+        bool IsUsed(int itemUnitId);
     }
 }

@@ -48,6 +48,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptSalesCallListRow> SalesCallList();
 
+        IQueryable<RptItemAvgCostReviewRow> ItemAvgCostReview();
+
         IQueryable<RptVendorPurchaseSummary> VendorPurchaseSummary(bool includeClosed);
 
         IQueryable<RptCustomerSalesSummary> CustomerSalesSummary(bool includeClosed, int? salesRepId);

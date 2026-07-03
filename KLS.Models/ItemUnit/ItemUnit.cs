@@ -21,6 +21,13 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18, 6)")]
         public decimal FactorToBase { get; set; }
 
+        // Numerator of the unit ratio (denominator = FactorToBase):
+        //   BaseQty = Qty * MultipleToBase / FactorToBase
+        // Default 1 = identity (today's Qty / FactorToBase). Combine-up units store MultipleToBase = N,
+        // FactorToBase = 1. DB CHECKs enforce ( > 0 ) and ( MultipleToBase = 1 OR FactorToBase = 1 ).
+        // Initialized to 1 so EF inserts a value that satisfies the CHECK when not explicitly set.
+        public int MultipleToBase { get; set; } = 1;
+
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? PricePercentToBase { get; set; }
 
