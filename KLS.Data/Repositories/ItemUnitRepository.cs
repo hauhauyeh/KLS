@@ -44,5 +44,16 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("EXEC [dbo].[ItemUnit_Delete] @ItemUnitId", ItemUnitIdParam);
         }
+
+        public bool IsUsed(int itemUnitId)
+        {
+            var param = new SqlParameter("@ItemUnitId", itemUnitId);
+
+            // Fn_ItemUnit_IsUsed returns a BIT (all 13 ItemUnitId tables, incl. Temp* drafts) -> read as bool.
+            return DbContext.Database
+                .SqlQueryRaw<bool>("SELECT dbo.Fn_ItemUnit_IsUsed(@ItemUnitId) AS Value", param)
+                .AsEnumerable()
+                .First();
+        }
     }
 }

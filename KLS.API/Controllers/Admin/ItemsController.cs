@@ -172,12 +172,12 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("CreateItemUnit/{itemId}")]
+        [HttpPost("CreateItemUnit")]
         [DisplayName("Create Item Unit")]
         [PermissionKey("Product.Item.CreateItemUnit")]
-        public IActionResult CreateItemUnit(int itemId)
+        public IActionResult CreateItemUnit([FromBody] CreateItemUnitReq req)
         {
-            return Ok(_itemUnitService.CreateUnit(itemId));
+            return Ok(_itemUnitService.CreateUnit(req));
         }
 
 
