@@ -224,6 +224,11 @@ namespace KLS.Contract.Interfaces
         ISalesQuoteRepository SalesQuotes { get; }
         ITempSalesQuoteRepository TempSalesQuotes { get; }
 
+        // CRM
+        ICRMLeadRepository CRMLeads { get; }
+        ICRMActivityRepository CRMActivities { get; }
+        ICRMFollowUpRepository CRMFollowUps { get; }
+
         void Commit();
         void ExecuteInTransaction(Action action);
     }

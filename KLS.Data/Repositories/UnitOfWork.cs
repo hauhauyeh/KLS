@@ -266,5 +266,10 @@ namespace KLS.Data.Repositories
 
         public ISalesQuoteRepository SalesQuotes { get { return new SalesQuoteRepository(DbContext); } }
         public ITempSalesQuoteRepository TempSalesQuotes { get { return new TempSalesQuoteRepository(DbContext); } }
+
+        // CRM
+        public ICRMLeadRepository CRMLeads { get { return new CRMLeadRepository(DbContext); } }
+        public ICRMActivityRepository CRMActivities { get { return new CRMActivityRepository(DbContext); } }
+        public ICRMFollowUpRepository CRMFollowUps { get { return new CRMFollowUpRepository(DbContext); } }
     }
 }

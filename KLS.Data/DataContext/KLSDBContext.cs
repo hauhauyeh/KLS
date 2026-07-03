@@ -158,6 +158,11 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<MarketOrder>().ToTable("MarketOrder");
             modelBuilder.Entity<MarketOrderItem>().ToTable("MarketOrderItem");
             modelBuilder.Entity<MarketSyncLog>().ToTable("MarketSyncLog");
+
+            // CRM tables
+            modelBuilder.Entity<CRMLead>().ToTable("CRMLead");
+            modelBuilder.Entity<CRMActivity>().ToTable("CRMActivity");
+            modelBuilder.Entity<CRMFollowUp>().ToTable("CRMFollowUp");
         }
 
         #region ---DBSET---
@@ -644,5 +649,14 @@ namespace KLS.Data.DataContext
         public virtual DbSet<ItemWebRowList> ItemWebRowList { get; set; }
 
         public virtual DbSet<ItemUnitListRow> ItemUnitListRow { get; set; }
+
+        // CRM
+        public DbSet<CRMLead> CRMLeads { get; set; }
+        public DbSet<CRMActivity> CRMActivities { get; set; }
+        public DbSet<CRMFollowUp> CRMFollowUps { get; set; }
+        public virtual DbSet<CRMLeadList> CRMLeadList { get; set; }
+        public virtual DbSet<CRMActivityList> CRMActivityList { get; set; }
+        public virtual DbSet<CRMFollowUpList> CRMFollowUpList { get; set; }
+        public virtual DbSet<CRMPipelineSummary> CRMPipelineSummary { get; set; }
     }
 }
