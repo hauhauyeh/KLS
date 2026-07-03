@@ -232,6 +232,12 @@ namespace KLS.Services
                     {
                         if (unit.ItemUnitId == 0)
                         {
+                            // TEMPORARY GATE (2026-07-03): combine-up (× N, MultipleToBase > 1) is not yet threaded
+                            // through the conversion paths -> reject on the item-save create path too (base is
+                            // Multiple=1, so this only blocks combine-up non-base units). Remove when Phase B lands.
+                            if (unit.MultipleToBase > 1)
+                                throw new InvalidOperationException("Combine-up units (× N, larger than the base) aren't supported yet — use a ÷ N unit for now.");
+
                             var baseUnitCost = existingUnits.FirstOrDefault(u => u.IsBaseUnit)?.RecentCost;
 
                             // NEW UNIT: add
