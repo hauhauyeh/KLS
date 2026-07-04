@@ -496,6 +496,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<SalesQuoteList> SalesQuoteList { get; set; }
 
+        public virtual DbSet<SalesQuoteDetailList> SalesQuoteDetailList { get; set; }
+
         public virtual DbSet<TempSalesQuoteItem> TempSalesQuoteItem { get; set; }
 
         public virtual DbSet<PurchaseItemCostList> PurchaseItemCostList { get; set; }
