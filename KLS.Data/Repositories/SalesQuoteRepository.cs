@@ -74,11 +74,12 @@ namespace KLS.Data.Repositories
             );
         }
 
-        public IEnumerable<SalesQuoteDetail> GetDetails(int salesQuoteId)
+        public IEnumerable<SalesQuoteDetailList> GetDetails(int salesQuoteId)
         {
-            return DbContext.Set<SalesQuoteDetail>()
-                .Where(d => d.SalesQuoteId == salesQuoteId)
-                .OrderBy(d => d.LineId)
+            var idParam = new SqlParameter("@SalesQuoteId", salesQuoteId);
+
+            return DbContext.SalesQuoteDetailList
+                .FromSqlRaw("[SalesQuote_GetDetail] @SalesQuoteId", idParam)
                 .AsNoTracking()
                 .ToList();
         }

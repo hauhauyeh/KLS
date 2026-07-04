@@ -10,7 +10,7 @@ namespace KLS.Contract.Interfaces
         int Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes);
         void Inject(int salesQuoteId);
         void Delete(int salesQuoteId);
-        IEnumerable<SalesQuoteDetail> GetDetails(int salesQuoteId);
+        IEnumerable<SalesQuoteDetailList> GetDetails(int salesQuoteId);
         void UpdateStatus(int salesQuoteId, int statusId);
         void ConvertToSales(int salesQuoteId);
     }
