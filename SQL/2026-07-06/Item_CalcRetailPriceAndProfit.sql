@@ -14,7 +14,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[Item_CalcRetailPriceAndProfit]
+CREATE OR ALTER PROCEDURE [dbo].[Item_CalcRetailPriceAndProfit]   -- EXEC: DECLARE @rp DECIMAL(18,2),@pp DECIMAL(18,4); EXEC dbo.Item_CalcRetailPriceAndProfit @P1=100,@FactorToBase=1,@RetailPrice=@rp OUTPUT,@RetailProfitPercent=@pp OUTPUT,@MultipleToBase=1; SELECT @rp,@pp;
 (
     @P1           DECIMAL(18,2),
     @FactorToBase DECIMAL(18,2),

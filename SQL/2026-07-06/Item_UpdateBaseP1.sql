@@ -20,7 +20,7 @@ GO
 -- Create date: <Create Date,,>
 -- Description:	<Description,,>
 -- =============================================
-CREATE OR ALTER PROCEDURE [dbo].[Item_UpdateBaseP1]
+CREATE OR ALTER PROCEDURE [dbo].[Item_UpdateBaseP1]   -- EXEC dbo.Item_UpdateBaseP1 @ItemUnitId=1242, @BaseP1=125;
 
 	@ItemUnitId INT,
 	@BaseP1 DECIMAL(18,2)
