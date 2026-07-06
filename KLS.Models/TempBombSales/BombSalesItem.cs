@@ -39,6 +39,11 @@ namespace KLS.Models
         public decimal? OrgPrice { get; set; }
         public decimal? DiscountPercent { get; set; }
         public decimal? FactorToBase { get; set; }
+
+        // 2026-07-06: MultipleToBase from ItemUnit (live via ItemUnitId, TempBombSales_GetList); default 1 = identity.
+        // Numerator for combine-up: OrdCases = OrdQty * MultipleToBase / FactorToBase. FactorToBase stays the temp snapshot.
+        public int MultipleToBase { get; set; } = 1;
+
         public int? SalesDetailId { get; set; }
 
         public bool IsChanged { get; set; }
@@ -58,7 +63,7 @@ namespace KLS.Models
         public bool Locked => (IsLocked || StageId > 0);
 
 
-        public decimal? OrdCases => Utilities.Rounding(OrdQty / FactorToBase, 6);
+        public decimal? OrdCases => Utilities.Rounding(OrdQty * MultipleToBase / FactorToBase, 6);
 
 
         [NotMapped]
