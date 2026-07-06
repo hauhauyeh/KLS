@@ -41,10 +41,15 @@ namespace KLS.Models.Reports
         public string? Notes { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? FactorToBase { get; set; }
+        public decimal? FactorToBase { get; set; }   // 2026-07-06: now sourced from ItemUnit by Report_PODetail (was the pd snapshot)
 
+        // 2026-07-06: MultipleToBase from ItemUnit (source of truth); default 1 = identity.
+        public int MultipleToBase { get; set; } = 1;
+
+        // 2026-07-06: base bill qty = qty * MultipleToBase / FactorToBase (both from ItemUnit via Report_PODetail).
+        // Keeps the BillQty ?? OrdQty0 fallback. Feeds TotalCases + WeightTotal/VolumeTotal on the PO PDF.
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? BaseBillQty { get { return Utilities.Rounding((BillQty ?? OrdQty0) / FactorToBase, 6); } }
+        public decimal? BaseBillQty { get { return Utilities.Rounding((BillQty ?? OrdQty0) * MultipleToBase / FactorToBase, 6); } }
 
         public string? ItemName { get; set; }
 
