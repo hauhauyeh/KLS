@@ -59,6 +59,10 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18,6)")]
         public decimal? FactorToBase { get; set; }
 
+        // 2026-07-06: MultipleToBase from ItemUnit (live via ItemUnitId, TempPurchase_GetList); default 1 = identity.
+        // Numerator for combine-up: base qty = qty * MultipleToBase / FactorToBase. FactorToBase stays the temp snapshot.
+        public int MultipleToBase { get; set; } = 1;
+
         public DateOnly? ExpiryDate { get; set; }
 
         public decimal? DiscountPercent { get; set; }
@@ -109,7 +113,7 @@ namespace KLS.Models
         public decimal? BaseFinalQty { get; set; }
 
         [Column(TypeName = "decimal(18,6)")]
-        public decimal? BaseBillQty { get { return Utilities.Rounding(BillQty / FactorToBase, 6); } }
+        public decimal? BaseBillQty { get { return Utilities.Rounding(BillQty * MultipleToBase / FactorToBase, 6); } }
 
 
         public decimal? BillVolumeTotal { get { return Utilities.Rounding(BaseBillQty * ItemVolume, 2); } }
@@ -124,7 +128,7 @@ namespace KLS.Models
         {
             get
             {
-                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(BillQty / FactorToBase, 6) : 0;
+                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(BillQty * MultipleToBase / FactorToBase, 6) : 0;
             }
         }
 
@@ -132,7 +136,7 @@ namespace KLS.Models
         {
             get
             {
-                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(FinalQty / FactorToBase, 6) : 0;
+                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(FinalQty * MultipleToBase / FactorToBase, 6) : 0;
             }
         }
 
