@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Phase A -- add MultipleToBase to ItemUnit   (FactorToBase -> rational migration)
--- Master plan: txdetail-itemunit-master-plan.md (Effort A, Phase A)
+-- Master plan: note-txdetail-itemunit-master-plan.md (Effort A, Phase A)
 -- Detail:      itemunit-factor-to-rational-migration-plan.md
 -- ============================================================================
 -- MultipleToBase is the NUMERATOR of the unit ratio; FactorToBase stays the denominator:
