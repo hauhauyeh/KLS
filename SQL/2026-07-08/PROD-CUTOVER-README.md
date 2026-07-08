@@ -13,6 +13,8 @@ evidence: `recalc-cutover-rehearsal-FINDINGS.md`. Run every step against the **p
   `VendorPayment_InsertPayNow.sql`, `Shipment_AllocationInventoryClear.sql`
 - Sales: `2026-07-07/Sales_Insert.sql`, `Sales_PartialUpdate.sql`, `TempBombSales_Save.sql`
 - Driver: `2026-07-08/_postmigration_RunRecalcQAV_ForItemCache_rowcount_fix.sql`
+- Schema (independent, unused all-NULL column): `2026-07-08/drop-tjd-landedcost.sql` — drops
+  `TransactionJournalDetail.LandedCost` (guard aborts if any non-NULL). Rollback: `drop-tjd-landedcost_rollback.sql`.
 
 **2. Backfill FactorToBase** (data migration, batched, self-validating):
 - `2026-07-07/factortobase-backfill.sql` — check output: **mismatch = 0**. Rollback: `factortobase-backfill_rollback.sql`.
