@@ -21,7 +21,7 @@ Rehearsed end-to-end on a prod restore (2026-07-08). Run every step against the 
 **3. RecalcQAV cutover — 2 steps, in this order:**
 - **3a.** Run `2026-07-08/recalcqav_1_save_prev.sql` → saves the current prod `RecalcQAV` as `RecalcQAV_prev` (rollback).
 - **3b.** Deploy `2026-07-08/RecalcQAV_recovery_fix.sql` → `CREATE OR ALTER RecalcQAV` with the fixed engine.
-  **This is the cutover.**  ⚠️ Deploy this file — **NOT** `2026-07-07/RecalcQAV-v1_final.sql` (superseded, buggy).
+  **This is the cutover.**
 
 **4. Full recost — must run AFTER step 3.** First capture the before-baseline (the validation needs it), then recost:
 ```sql
