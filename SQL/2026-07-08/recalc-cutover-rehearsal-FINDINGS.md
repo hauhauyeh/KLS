@@ -52,7 +52,7 @@ balanced before *and* after (global 0.00, zero unbalanced transactions). The `@I
 - `@ActualValue = @RecoveredQty * @Price` (recalcqav_2_cutover.sql:265) — `@RecoveredQty` is **base** qty.
 - `ABS(@Qty) * (@Price − @LAvgCost)` (~:281) — `@LAvgCost` is per-**base**.
 Both assume `@Price` is per-**base**. New writers emit per-**entered** `@Price` (contract:
-`txdetail-inv-field-definitions.md` §2). So for a **divide/combine** purchase receipt into an oversold position, the
+`note-txdetail-inv-field-definitions.md` §2). So for a **divide/combine** purchase receipt into an oversold position, the
 `@COGS`/`@INV` split is wrong by the unit factor. (Main value line 242 `@BillQty*@Price` and the `@Qty=0` branch
 291/296 already use the invariant → those are fine.)
 
