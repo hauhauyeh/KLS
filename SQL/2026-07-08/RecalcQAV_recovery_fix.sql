@@ -243,7 +243,7 @@ BEGIN
 
             IF @LCloQty < 0
             BEGIN
-                -- 2026-07-08 recovery basis fix (see recalc-cutover-rehearsal-FINDINGS.md):
+                -- 2026-07-08 recovery basis fix (see note-recalc-cutover-rehearsal-FINDINGS.md):
                 -- base-unit cost from the shape-invariant (BillQty*Price)/Qty -- correct for BOTH
                 -- old per-base @Price and new per-entered @Price. NULLIF guards the @Qty=0 branch.
                 DECLARE @UnitCostBase DECIMAL(18,6) = (@BillQty * @Price) / NULLIF(@Qty, 0);

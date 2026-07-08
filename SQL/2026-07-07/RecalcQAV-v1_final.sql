@@ -3,7 +3,7 @@
 -- This is the INTERMEDIATE RecalcQAV v1 (rehearsal). It has the oversold-recovery
 -- @Price basis BUG. The corrected, canonical body to deploy is:
 --     KLS/SQL/2026-07-08/RecalcQAV_recovery_fix.sql
--- Kept only as the rehearsal record. See recalc-cutover-rehearsal-FINDINGS.md.
+-- Kept only as the rehearsal record. See note-recalc-cutover-rehearsal-FINDINGS.md.
 -- =============================================================================
 USE [KLS_2026]
 GO
