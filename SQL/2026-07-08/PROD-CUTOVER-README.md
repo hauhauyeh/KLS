@@ -41,7 +41,8 @@ EXEC dbo._postmigration_RunRecalcQAV_ForItemCache @RunMode='INVENTORY_HISTORY_ON
 ```
 (Rehearsal: ~2,545 items / ~23 min — scale for prod.)
 
-**5. Validate:** run `2026-07-08/recalc-cutover-afterval.sql`. Must show:
+**5. Validate:** run `2026-07-08/recalc-cutover-afterval.sql` — self-contained, it compares current vs the
+`dbo._recalc_cutover_before` snapshot table from step 4 (same DB; **no separate/backup database needed**). Must show:
 - **cache==journal mismatch = 0**
 - **NewlyInvalid = 0** (Healed > 0; invalid states drop)
 - **GL balance = 0.00 / 0 unbalanced tx** (check 7 — uses `CrDeAmount`, not `Amount`)
