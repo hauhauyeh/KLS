@@ -1,3 +1,15 @@
+-- =============================================================================
+-- !!! SUPERSEDED / DO NOT DEPLOY -- annotated 2026-07-07 (Effort-B) !!!
+-- This 2026-04-30 draft's SALES branch CONSUMES @INV.BillQty (@BillQty * @LAvgCost)
+-- and @FactorToBase (fractional rounding). The LIVE prod RecalcQAV (modify_date
+-- 2026-05-22) values sales by @Qty * @LAvgCost and does NOT read @INV.BillQty /
+-- FactorToBase -- captured byte-exact at
+-- KLS/SQL/2026-07-07/RecalcQAV_prod_live_baseline_2026-05-22.sql (the authoritative version).
+-- Effort-B flips sales @INV BillQty base->entered + FactorToBase->ShipQty; redeploying
+-- THIS stale file would reintroduce sales-@INV.BillQty consumption and MIS-VALUE sales
+-- costing. Kept for history ONLY -- do not deploy. See the 2026-07-07 sales plans /
+-- memory project_effortb_purchase_inv_batch.md.
+-- =============================================================================
 -- RecalcQAV optimization draft
 -- 1. Keep existing recalculation logic and branch behavior intact.
 -- 2. Preload loop-driving row data into #QAVTable to avoid repeated TransactionJournalDetail lookups.
