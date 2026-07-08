@@ -48,6 +48,10 @@ EXEC dbo._postmigration_RunRecalcQAV_ForItemCache @RunMode='INVENTORY_HISTORY_ON
 - **GL balance = 0.00 / 0 unbalanced tx** (check 7 — uses `CrDeAmount`, not `Amount`)
 - inventory-value delta = the healing (oversold items un-stranded) — **sign off with accounting.**
 
+**6. Cleanup** — after validation passes **and** the value-delta is signed off:
+`DROP TABLE dbo._recalc_cutover_before;` (a throwaway comparison table; keep it until sign-off in case you need
+to re-run step 5 or re-inspect).
+
 ## Rollback
 - Whole window: restore the step-0 backup.
 - RecalcQAV only: re-deploy `RecalcQAV_prev`, then recost.
