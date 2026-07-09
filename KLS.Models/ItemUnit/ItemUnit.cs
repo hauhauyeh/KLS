@@ -36,9 +36,13 @@ namespace KLS.Models
 
         public string? Barcode { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? RecentCost { get; set; }
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? P1 { get; set; }
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? MSRP { get; set; }
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? MarketPrice { get; set; }
 
         public bool Inactive { get; set; }

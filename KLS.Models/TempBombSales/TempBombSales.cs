@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,7 @@ namespace KLS.Models
         public decimal? ShipQty { get; set; }
         public decimal? BillQty { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? UnitPrice { get; set; }
         public decimal? ExtTotal { get; set; }
 
@@ -38,6 +40,7 @@ namespace KLS.Models
         public bool IsTaxable { get; set; }
         public bool IsUserOverWrite { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? OrgPrice { get; set; }
         public decimal? DiscountPercent { get; set; }
         public decimal? FactorToBase { get; set; }

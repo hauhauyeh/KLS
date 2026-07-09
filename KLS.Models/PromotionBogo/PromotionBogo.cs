@@ -38,6 +38,7 @@ namespace KLS.Models
 
         public decimal? DiscountValue { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? PromoPrice { get; set; }
     }
 }

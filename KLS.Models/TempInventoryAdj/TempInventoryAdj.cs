@@ -24,6 +24,7 @@ namespace KLS.Models
 
         public decimal? QtyDiffer { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? NewPrice { get; set; }
 
         public string? Notes { get; set; }

@@ -17,6 +17,7 @@ namespace KLS.Models
 
         public string? DefaultUnit { get; set; }
 
+        [Column(TypeName = "decimal(18, 4)")]
         public decimal? DefaultPrice { get; set; }
 
         [Column(TypeName = "decimal(18, 6)")]
