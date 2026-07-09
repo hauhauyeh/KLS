@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildTransferFundParam(tFReq);
 
-            return DbContext.TransferFundList.FromSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.TransferFundList.FromSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@FromAccountId,@ToAccountId", param);
         }
 
         public int CountTransferFunds(TFReq tFReq)
@@ -31,7 +31,7 @@ namespace KLS.Data.Repositories
             tFReq.IsCount = true;
             var param = BuildTransferFundParam(tFReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[TransferFund_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@TFId,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@FromAccountId,@ToAccountId", param);
 
             var output = param[9] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -63,7 +63,11 @@ namespace KLS.Data.Repositories
                     ParameterName = "@TotalCount",
                     Direction = System.Data.ParameterDirection.Output,
                     SqlDbType = System.Data.SqlDbType.Int
-                }
+                },
+
+                tFReq.FromAccountId.HasValue ? new SqlParameter("@FromAccountId", tFReq.FromAccountId) : new SqlParameter("@FromAccountId", DBNull.Value),
+
+                tFReq.ToAccountId.HasValue ? new SqlParameter("@ToAccountId", tFReq.ToAccountId) : new SqlParameter("@ToAccountId", DBNull.Value)
             };
 
             return param;
@@ -102,7 +106,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildDepositParam(depositReq);
 
-            return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Uncleared", param);
         }
 
         public int CountDeposits(DepositReq depositReq)
@@ -110,7 +114,7 @@ namespace KLS.Data.Repositories
             depositReq.IsCount = true;
             var param = BuildDepositParam(depositReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Uncleared", param);
 
             var output = param[10] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -144,7 +148,9 @@ namespace KLS.Data.Repositories
                     ParameterName = "@TotalCount",
                     Direction = System.Data.ParameterDirection.Output,
                     SqlDbType = System.Data.SqlDbType.Int
-                }
+                },
+
+                new SqlParameter("@Uncleared", depositReq.Uncleared)
             };
 
             return param;

@@ -8,5 +8,7 @@ namespace KLS.Models
 {
     public class TFReq : PagingRequest
     {
+        public int? FromAccountId { get; set; }
+        public int? ToAccountId { get; set; }
     }
 }
