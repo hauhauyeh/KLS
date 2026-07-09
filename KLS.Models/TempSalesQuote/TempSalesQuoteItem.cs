@@ -10,7 +10,9 @@ namespace KLS.Models
         public int SalesQuoteId { get; set; }
         public int PayeeId { get; set; }
         public int? LineId { get; set; }
+        public string? LineType { get; set; }
         public int? ItemId { get; set; }
+        public int? AccountId { get; set; }
         public int? ItemUnitId { get; set; }
         public string? Unit { get; set; }
         public decimal? OrdQty { get; set; }

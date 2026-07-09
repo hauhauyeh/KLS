@@ -242,7 +242,9 @@ namespace KLS.Services
 
                             // NEW UNIT: add
                             unit.ItemId = item.ItemId;
-                            unit.RecentCost = baseUnitCost / unit.FactorToBase;
+                            // 2026-07-06: cost per unit = baseUnitCost * MultipleToBase / FactorToBase (combine-up threaded).
+                            // Identity today (behind the :238 gate, Mult=1); correct once the gate is removed.
+                            unit.RecentCost = baseUnitCost * unit.MultipleToBase / unit.FactorToBase;
                             Uow.ItemUnits.Add(unit);
                         }
                         else

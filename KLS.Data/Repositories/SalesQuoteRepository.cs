@@ -102,13 +102,30 @@ namespace KLS.Data.Repositories
             );
         }
 
-        public void ConvertToSales(int salesQuoteId)
+        public SalesQuoteConvertResult ConvertToSales(int salesQuoteId)
         {
+            var newSalesIdParam = new SqlParameter("@NewSalesId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var newSalesNumberParam = new SqlParameter("@NewSalesNumber", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
             DbContext.Database.ExecuteSqlRaw(
-                "EXEC [SalesQuote_ConvertToSales] @SalesQuoteId,@EmpId",
+                "EXEC [SalesQuote_ConvertToSales] @SalesQuoteId,@EmpId,@NewSalesId OUTPUT,@NewSalesNumber OUTPUT",
                 new SqlParameter("@SalesQuoteId", salesQuoteId),
-                new SqlParameter("@EmpId", UserContext.EmpId)
+                new SqlParameter("@EmpId", UserContext.EmpId),
+                newSalesIdParam,
+                newSalesNumberParam
             );
+
+            return new SalesQuoteConvertResult
+            {
+                SalesId = newSalesIdParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesIdParam.Value),
+                SalesNumber = newSalesNumberParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesNumberParam.Value)
+            };
         }
 
         private static object[] BuildPagedListParam(SalesQuoteListReq req)

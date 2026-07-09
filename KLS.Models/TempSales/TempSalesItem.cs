@@ -47,6 +47,10 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18,6)")]
         public decimal? FactorToBase { get; set; }
 
+        // 2026-07-06: MultipleToBase from ItemUnit (live via ItemUnitId, TempSales_GetList/AddLine); default 1 = identity.
+        // Numerator for combine-up: CaseTotal = OrdQty * MultipleToBase / FactorToBase. FactorToBase stays the temp snapshot.
+        public int MultipleToBase { get; set; } = 1;
+
         public int? SourceTempSalesId { get; set; }
 
         public int? ParentSalesNumber { get; set; }
@@ -92,7 +96,7 @@ namespace KLS.Models
         {
             get
             {
-                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(OrdQty / FactorToBase, 6) : 0;
+                return LineType == EnumHelper.LineType.I.ToString() ? Utilities.Rounding(OrdQty * MultipleToBase / FactorToBase, 6) : 0;
             }
         }
 

@@ -10,8 +10,12 @@ namespace KLS.Models
         public int SalesQuoteDetailId { get; set; }
         public int SalesQuoteId { get; set; }
         public int LineId { get; set; }
-        public int ItemId { get; set; }
-        public int ItemUnitId { get; set; }
+
+        [MaxLength(2)]
+        public string? LineType { get; set; }
+        public int? ItemId { get; set; }
+        public int? AccountId { get; set; }
+        public int? ItemUnitId { get; set; }
         public string? Unit { get; set; }
         public decimal? OrdQty { get; set; }
         public decimal? UnitPrice { get; set; }

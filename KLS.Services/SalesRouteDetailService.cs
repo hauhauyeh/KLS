@@ -219,7 +219,7 @@ namespace KLS.Services
 
             routeDetail.ReturnType = UntrackedType;
             routeDetail.ResolutionStatus = PendingStatus;
-            routeDetail.BaseQty = ComputeBaseQty(routeDetail.Qty, routeDetail.FactorToBase);
+            routeDetail.BaseQty = ComputeBaseQty(routeDetail.Qty, GetMultipleToBase(routeDetail.ItemUnitId), routeDetail.FactorToBase);
 
             Uow.SalesRouteDetails.Add(routeDetail);
             Uow.Commit();
@@ -240,7 +240,7 @@ namespace KLS.Services
                 detail.Notes = routeDetail.Notes;
                 detail.IsMatch = routeDetail.IsMatch;
                 detail.Fault = routeDetail.Fault;
-                detail.BaseQty = ComputeBaseQty(detail.Qty, detail.FactorToBase);
+                detail.BaseQty = ComputeBaseQty(detail.Qty, GetMultipleToBase(detail.ItemUnitId), detail.FactorToBase);
 
                 Uow.SalesRouteDetails.Update(detail);
                 Uow.Commit();
@@ -264,7 +264,7 @@ namespace KLS.Services
                     existing.Unit = itemUnit.Unit;
                     existing.ItemUnitId = itemUnit.ItemUnitId;
                     existing.FactorToBase = itemUnit.FactorToBase;
-                    existing.BaseQty = ComputeBaseQty(existing.Qty, existing.FactorToBase);
+                    existing.BaseQty = ComputeBaseQty(existing.Qty, itemUnit.MultipleToBase, existing.FactorToBase);
                 }
 
                 Uow.SalesRouteDetails.Update(existing);
@@ -358,14 +358,26 @@ namespace KLS.Services
             Uow.Commit();
         }
 
-        private static decimal ComputeBaseQty(decimal? qty, decimal? factorToBase)
+        // 2026-07-06: MultipleToBase lives only on ItemUnit (never snapshotted on SalesRouteDetail),
+        // so resolve it live via the line's ItemUnitId. Default 1 (base/identity) when absent.
+        private int GetMultipleToBase(int? itemUnitId)
+        {
+            if (!itemUnitId.HasValue || itemUnitId.Value <= 0)
+                return 1;
+
+            return Uow.ItemUnits.GetById(itemUnitId.Value)?.MultipleToBase ?? 1;
+        }
+
+        // 2026-07-06: base qty = qty * MultipleToBase / FactorToBase (combine-up numerator threaded).
+        private static decimal ComputeBaseQty(decimal? qty, int? multipleToBase, decimal? factorToBase)
         {
             var factor = factorToBase.GetValueOrDefault(1);
+            if (factor == 0) factor = 1;
 
-            if (factor == 0)
-                factor = 1;
+            var multiple = multipleToBase.GetValueOrDefault(1);
+            if (multiple <= 0) multiple = 1;
 
-            return Utilities.Rounding(qty.GetValueOrDefault(0) / factor, 6) ?? 0;
+            return Utilities.Rounding(qty.GetValueOrDefault(0) * multiple / factor, 6) ?? 0;
         }
 
         private static void EnsurePendingEditable(SalesRouteDetail detail)
