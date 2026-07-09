@@ -24,10 +24,12 @@ namespace KLS.Services
     public class PromoHelperService : BaseService, IPromoHelperService
     {
         private readonly ICategoryRollupHelper _categoryRollup;
+        private readonly ISystemSettingService _systemSettingService;
 
-        public PromoHelperService(IUnitOfWork uow, ICategoryRollupHelper categoryRollup) : base(uow)
+        public PromoHelperService(IUnitOfWork uow, ICategoryRollupHelper categoryRollup, ISystemSettingService systemSettingService) : base(uow)
         {
             _categoryRollup = categoryRollup;
+            _systemSettingService = systemSettingService;
         }
 
 
@@ -185,6 +187,9 @@ namespace KLS.Services
 
         public Dictionary<int, BogoOfferInfo> GetActiveItemOfferBadges()
         {
+            // 4dp Section B Phase-2 (Slice 5): read the active price precision ONCE per method (not per rule).
+            var priceDecimals = _systemSettingService.GetPriceDecimals();
+
             var nowLocal = GetLocalNow();
             var today = DateOnly.FromDateTime(nowLocal);
 
@@ -226,8 +231,10 @@ namespace KLS.Services
                         var total = rule.ConditionQty.Value + (rule.RewardQty ?? 0m);
                         if (total > 0m)
                         {
-                            afterPromoPrice = Math.Round((rule.PromoPrice.Value * rule.ConditionQty.Value) / total, 2);
-                            savings = Math.Round(rule.PromoPrice.Value - afterPromoPrice.Value, 2);
+                            // 4dp Section B Phase-2 (Slice 5): effective per-unit promo price + per-unit savings round to
+                            // the active price precision (priceDecimals, read once at method top). Mirrors Slice 3.
+                            afterPromoPrice = Math.Round((rule.PromoPrice.Value * rule.ConditionQty.Value) / total, priceDecimals);
+                            savings = Math.Round(rule.PromoPrice.Value - afterPromoPrice.Value, priceDecimals);
                         }
                     }
 

@@ -17,6 +17,7 @@ namespace KLS.API.Controllers.Web
         private readonly IItemImageService _itemImageService;
         private readonly IItemCategoryService _itemCategoryService;
         private readonly IPromoHelperService _promoHelper;
+        private readonly ISystemSettingService _systemSettingService;
 
         #endregion
 
@@ -26,12 +27,14 @@ namespace KLS.API.Controllers.Web
             IItemService itemService,
             IItemImageService itemImageService,
             IItemCategoryService itemCategoryService,
-            IPromoHelperService promoHelper)
+            IPromoHelperService promoHelper,
+            ISystemSettingService systemSettingService)
         {
             _itemService = itemService;
             _itemImageService = itemImageService;
             _itemCategoryService = itemCategoryService;
             _promoHelper = promoHelper;
+            _systemSettingService = systemSettingService;
         }
 
         #endregion
@@ -55,7 +58,7 @@ namespace KLS.API.Controllers.Web
                 }
             }
 
-            page.RowData.ApplyPromoDecoration(discountMap, offerBadgeMap);
+            page.RowData.ApplyPromoDecoration(discountMap, offerBadgeMap, _systemSettingService.GetPriceDecimals());
             return Ok(page);
         }
 

@@ -16,16 +16,22 @@ namespace KLS.Services
     {
         private readonly IItemService _itemService;
         private readonly IItemUnitService _itemUnitService;
+        private readonly ISystemSettingService _systemSettingService;
 
-        public TempItemQuoteService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService) : base(uow)
+        public TempItemQuoteService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, ISystemSettingService systemSettingService) : base(uow)
         {
             _itemService = itemService;
             _itemUnitService = itemUnitService;
+            _systemSettingService = systemSettingService;
         }
 
         public IEnumerable<TempItemQuoteList>? GetList(TempItemQuoteReq tempReq)
         {
-            return Uow.TempItemQuotes.GetList(tempReq);
+            // 4dp Section B Phase-2 (Slice 5): materialize FIRST, then thread the active price precision into the rows.
+            var priceDecimals = _systemSettingService.GetPriceDecimals();
+            var rows = Uow.TempItemQuotes.GetList(tempReq)?.ToList();
+            rows?.ForEach(r => r.PriceDecimals = priceDecimals);
+            return rows;
         }
 
         public TempItemQuote? GetById(int tempId)
@@ -41,7 +47,10 @@ namespace KLS.Services
                 TempId = tempId
             };
 
-            return Uow.TempItemQuotes.GetList(tempReq)?.AsEnumerable().FirstOrDefault()!;
+            // 4dp Section B Phase-2 (Slice 5): thread the active price precision into the returned row.
+            var row = Uow.TempItemQuotes.GetList(tempReq)?.AsEnumerable().FirstOrDefault()!;
+            if (row != null) row.PriceDecimals = _systemSettingService.GetPriceDecimals();
+            return row;
         }
 
         public IEnumerable<TempItemQuoteList> Create(TempItemQuoteList tempQuote)
@@ -110,7 +119,7 @@ namespace KLS.Services
                 {
                     markup = tempQuote.MarkupPercentUpdate;
                     if (basePrice != 0)
-                        finalPrice = Utilities.Rounding(basePrice * (1 + markup.Value), 2);
+                        finalPrice = Utilities.Rounding(basePrice * (1 + markup.Value), _systemSettingService.GetPriceDecimals());
                 }
                 else
                 {
