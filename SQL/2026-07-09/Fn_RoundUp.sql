@@ -2,9 +2,11 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B1-Fn_RoundUp: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
---   Widen @Price param + RETURNS RoundedPrice col 2dp -> 4dp. Type-only: l.35 ROUND(@Price,2) caps the input
---   and the output is cents/100 (inherently 2dp). The .99 cent-ending rule (Decision-A) is untouched.
+-- KLS-4DP-B-Phase2-Slice1-Fn_RoundUp: Decision-A round-up bypass (setting-gated).
+--   Reads PRICE_DISPLAY_DECIMALS (guard: missing/0/2/invalid -> 2, =4 -> 4).
+--   setting=2: ROUND(@Price,2) + x5/x9 cents round-up (BYTE-IDENTICAL to prior behavior).
+--   setting=4: ROUND(@Price,4), bypass the cents round-up (2dp-only) -> return clean 4dp price
+--   (the =4 branch inserts into @Results before RETURN). (Phase-1 already widened the types to 18,4.)
 CREATE OR ALTER FUNCTION [dbo].[Fn_RoundUp](@Price DECIMAL(18,4))
 
 	RETURNS @Results TABLE (RoundedPrice DECIMAL(18,4))
@@ -36,12 +38,25 @@ BEGIN
 	DECLARE @WholeCents INT;
 	DECLARE @LastCentDigit INT;
 	DECLARE @RoundedCents INT;
+	-- 2026-07-09 Decision-A: read the active price-decimals mode (guard missing/0/2/invalid -> 2, =4 -> 4)
+	DECLARE @PriceDecimals INT;
+	SELECT @PriceDecimals = TRY_CAST(SettingValue AS INT) FROM SystemSetting WHERE SettingKey='PRICE_DISPLAY_DECIMALS';
+	SET @PriceDecimals = CASE WHEN @PriceDecimals = 4 THEN 4 ELSE 2 END;
 
 	/*
-	    Normalize the input price to two decimals before the selling-price rule runs.
+	    Normalize the input price to the active price-decimals mode before the selling-price rule runs.
 	*/
-	SET @Price = ROUND(@Price, 2);
+	-- 2026-07-09 Decision-A: round to the active mode. Old: SET @Price = ROUND(@Price, 2);
+	SET @Price = ROUND(@Price, @PriceDecimals);
 	SET @RoundedPrice = @Price;
+
+	-- 2026-07-09 Decision-A: the x5/x9 cents round-up is 2dp-only; bypass it in 4dp mode (return the clean
+	-- 4dp price). The TVF must populate @Results before RETURN. setting=2 falls through to the cents rule below.
+	IF @PriceDecimals = 4
+	BEGIN
+		INSERT INTO @Results(RoundedPrice) VALUES(@RoundedPrice);
+		RETURN;
+	END
 
 	/*
 	    Convert the price to whole cents so the final-cent rule is predictable.
