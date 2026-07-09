@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Effort B / B1 (pulled forward as schema-only) -- add LandedCost to TransactionJournalDetail
--- Master plan: txdetail-itemunit-master-plan.md (Effort B, B1)
+-- Master plan: note-txdetail-itemunit-master-plan.md (Effort B, B1)
 -- Design + rationale: note-billqty-live-db.md (finalized @INV column design)
 -- ============================================================================
 -- LandedCost = the freight/duty DOLLAR allocated to an inventory (@INV) line. It lets the finalized
