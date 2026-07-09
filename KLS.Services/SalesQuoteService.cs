@@ -82,10 +82,9 @@ namespace KLS.Services
             Uow.SalesQuotes.UpdateStatus(salesQuoteId, statusId);
         }
 
-        public int ConvertToSales(int salesQuoteId)
+        public SalesQuoteConvertResult ConvertToSales(int salesQuoteId)
         {
-            Uow.SalesQuotes.ConvertToSales(salesQuoteId);
-            return salesQuoteId;
+            return Uow.SalesQuotes.ConvertToSales(salesQuoteId);
         }
 
         public void EmailPdf(int salesQuoteId)

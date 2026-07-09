@@ -12,7 +12,7 @@ namespace KLS.Contract.Services
         void Inject(int salesQuoteId);
         void Delete(int salesQuoteId);
         void UpdateStatus(int salesQuoteId, int statusId);
-        int ConvertToSales(int salesQuoteId);
+        SalesQuoteConvertResult ConvertToSales(int salesQuoteId);
         void EmailPdf(int salesQuoteId);
     }
 }

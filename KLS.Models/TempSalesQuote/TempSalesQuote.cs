@@ -9,6 +9,7 @@ namespace KLS.Models
         {
             ChangeStatus = "I";
             FactorToBase = 1;
+            LineType = "I";
         }
 
         [Key]
@@ -18,7 +19,11 @@ namespace KLS.Models
         public int SalesQuoteId { get; set; }
         public int PayeeId { get; set; }
         public int? LineId { get; set; }
+
+        [MaxLength(2)]
+        public string LineType { get; set; }
         public int? ItemId { get; set; }
+        public int? AccountId { get; set; }
         public int? ItemUnitId { get; set; }
 
         [MaxLength(50)]

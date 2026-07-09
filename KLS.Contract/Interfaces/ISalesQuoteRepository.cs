@@ -12,6 +12,6 @@ namespace KLS.Contract.Interfaces
         void Delete(int salesQuoteId);
         IEnumerable<SalesQuoteDetailList> GetDetails(int salesQuoteId);
         void UpdateStatus(int salesQuoteId, int statusId);
-        void ConvertToSales(int salesQuoteId);
+        SalesQuoteConvertResult ConvertToSales(int salesQuoteId);
     }
 }
