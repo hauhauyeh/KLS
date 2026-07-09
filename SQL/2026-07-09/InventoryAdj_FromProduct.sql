@@ -2,9 +2,9 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B4-InventoryAdj_FromProduct: 4-decimal pricing §B Phase-1 (storage/type widen, inert).
+-- KLS-4DP-B4-InventoryAdj_FromProduct: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
 --   Widen the entered adjustment-price param 2dp -> 4dp. Inert today: this value lands in the
---   already-§A-widened TempInventoryAdj.NewPrice, and InventoryAdj_Insert (still 18,2, deferred to
+--   already-Section A-widened TempInventoryAdj.NewPrice, and InventoryAdj_Insert (still 18,2, deferred to
 --   Phase-2) re-truncates it on read -> byte-identical result now, correct once Insert is widened.
 -- EXEC dbo.InventoryAdj_FromProduct @AdjDate='2026-07-09', @ItemId=1, @OpenClose='Before Receiving', @NewQty=10, @NewPrice=3.2167, @EmpId=1
 CREATE OR ALTER PROCEDURE [dbo].[InventoryAdj_FromProduct]

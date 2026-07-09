@@ -9,7 +9,7 @@ GO
 -- Widen loop scalars @UnitPrice/@OrgPrice DECIMAL(18,2)->(18,4) so a 4-decimal
 -- unit price survives into SalesDetail + the journal write. INERT today: no >2dp
 -- data exists, every ROUND(...,2) is untouched, and @ExtTotal/totals stay 2dp money.
--- Scope: scope-4-decimal-pricing.md §B2. Rollback = redeploy the _live_baseline.
+-- Scope: scope-4-decimal-pricing.md Section B2. Rollback = redeploy the _live_baseline.
 -- ============================================================================
 -- 2026-07-07 (Effort-B): sales @INV rows written here are ENTERED basis. Both journal paths
 --   (ChangeStatus 'I' insert + 'U' update): BillQty @BaseBillQty -> @BillQty (entered value);
@@ -85,12 +85,12 @@ BEGIN
         @OrdQty DECIMAL(18, 2),
         @ShipQty DECIMAL(18, 2),
         @BillQty DECIMAL(18, 2),
-        -- @UnitPrice DECIMAL(18, 2),   -- 4dp §B2 2026-07-09: widened -> (18,4)
+        -- @UnitPrice DECIMAL(18, 2),   -- 4dp Section B2 2026-07-09: widened -> (18,4)
         @UnitPrice DECIMAL(18, 4),
         @ExtTotal DECIMAL(18, 2),
         @Notes NVARCHAR(300),
         @IsTaxable BIT,
-        -- @OrgPrice DECIMAL(18, 2),    -- 4dp §B2 2026-07-09: widened -> (18,4)
+        -- @OrgPrice DECIMAL(18, 2),    -- 4dp Section B2 2026-07-09: widened -> (18,4)
         @OrgPrice DECIMAL(18, 4),
         @DiscountPercent DECIMAL(18, 4),
         @FactorToBase DECIMAL(18, 6),

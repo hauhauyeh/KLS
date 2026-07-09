@@ -7,9 +7,9 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B1-Item_CalcUnitFromPack1: 4-decimal pricing §B Phase-1 (storage/type widen, inert).
+-- KLS-4DP-B1-Item_CalcUnitFromPack1: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
 --   Widen @P1 param + @RetailPrice local 2dp -> 4dp. Fully inert: both vars are currently DEAD (declared,
---   never used/returned) — this is cosmetic consistency with the rest of the price engine.
+--   never used/returned) - this is cosmetic consistency with the rest of the price engine.
 CREATE OR ALTER PROCEDURE [dbo].[Item_CalcUnitFromPack1] --[Item_CalcUnitFromPack1] 'cs/10pk',10
 
 	@SetPacking NVARCHAR(200),

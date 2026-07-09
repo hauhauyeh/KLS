@@ -9,7 +9,7 @@ GO
 -- Widen #LineUpdates.UnitPrice/.OrgPrice DECIMAL(18,2)->(18,4) so a 4-decimal unit
 -- price survives into SalesDetail + tjd.Price. INERT today: no >2dp data exists,
 -- every ROUND(...,2) is untouched, and ExtTotal/totals stay 2dp money.
--- Scope: scope-4-decimal-pricing.md §B2. Rollback = redeploy the _live_baseline.
+-- Scope: scope-4-decimal-pricing.md Section B2. Rollback = redeploy the _live_baseline.
 -- ============================================================================
 -- 2026-07-07 (Effort-B): sales @INV rows written here are ENTERED basis. Both @INV journal paths (Section 14
 --   UPDATE + Section 15 INSERT, set-based via #LineUpdates): BillQty lu.BaseBillQty -> lu.BillQty (entered value);
@@ -126,13 +126,13 @@ BEGIN
         OrdQty             DECIMAL(18,2) NULL,
         ShipQty            DECIMAL(18,2) NULL,
         BillQty            DECIMAL(18,2) NULL,
-        -- UnitPrice          DECIMAL(18,2) NULL,   -- 4dp §B2 2026-07-09: widened -> (18,4)
+        -- UnitPrice          DECIMAL(18,2) NULL,   -- 4dp Section B2 2026-07-09: widened -> (18,4)
         UnitPrice          DECIMAL(18,4) NULL,
         ExtTotal           DECIMAL(18,2) NULL,
 
         Notes              NVARCHAR(300) NULL,
         IsTaxable          BIT NOT NULL,
-        -- OrgPrice           DECIMAL(18,2) NULL,   -- 4dp §B2 2026-07-09: widened -> (18,4)
+        -- OrgPrice           DECIMAL(18,2) NULL,   -- 4dp Section B2 2026-07-09: widened -> (18,4)
         OrgPrice           DECIMAL(18,4) NULL,
         DiscountPercent    DECIMAL(18,4) NULL,
         FactorToBase       DECIMAL(18,6) NULL,

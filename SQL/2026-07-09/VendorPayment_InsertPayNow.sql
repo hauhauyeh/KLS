@@ -12,7 +12,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B3-VendorPayment_InsertPayNow: 4-decimal pricing §B Phase-1 (storage/type widen, inert).
+-- KLS-4DP-B3-VendorPayment_InsertPayNow: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
 --   Widen @MyFinalPrice (entered goods price) 2dp -> 4dp and the journal temp #PurTxDetail.Price 2dp -> 6dp
 --   (match TransactionJournalDetail.Price). Inert today: @MyFinalPrice is capped <=2dp by the ROUND(FinalPrice,2)
 --   at its load (left unchanged for Phase-2), and #PurTxDetail.Price is fed only from it / @ConvertedPrice.

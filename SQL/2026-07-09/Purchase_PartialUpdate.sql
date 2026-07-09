@@ -33,7 +33,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B3-Purchase_PartialUpdate: 4-decimal pricing §B Phase-1 (storage/type widen, inert).
+-- KLS-4DP-B3-Purchase_PartialUpdate: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
 --   Widen entered purchase-price carriers 2dp -> 4dp: params @BillPrice/@FinalPrice/@OrgPrice/@DefaultCost
 --   and the local staging temp-table cols BillPrice/FinalPrice/OrgPrice (must widen together or the temp
 --   re-truncates the param). Inert today: sources still <=2dp; money ROUND(qty*price,2) outputs unchanged.
@@ -128,7 +128,7 @@ BEGIN
 	DECLARE @X DECIMAL(18, 2)
 	DECLARE @CrDeAmount DECIMAL(18, 2)
 	DECLARE @ItemType NVARCHAR(100)
-	-- 4dp widen (entered default cost; usages currently dead/commented — matches scope): was DECIMAL(18, 2)
+	-- 4dp widen (entered default cost; usages currently dead/commented - matches scope): was DECIMAL(18, 2)
 	DECLARE @DefaultCost DECIMAL(18, 4)
 	DECLARE @OldItemId INT
 	DECLARE @AccountCode NVARCHAR(50)

@@ -2,7 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B1-Fn_GetPrice: 4-decimal pricing §B Phase-1 (storage/type widen, inert).
+-- KLS-4DP-B1-Fn_GetPrice: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
 --   Widen internal price vars + RETURNS Price/ListPrice cols 2dp -> 4dp. Inert: output @FinalPrice always
 --   passes ROUND(@Price,2) (l.87, unchanged) and Fn_RoundUp, so emitted value stays 2dp on today's data.
 --   The 4 unit-price ROUND(,2) sites (l.55/60/85/87) are LEFT for Phase-2.

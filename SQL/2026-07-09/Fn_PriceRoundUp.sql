@@ -3,7 +3,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B1-Fn_PriceRoundUp: 4-decimal pricing §B Phase-1 (storage/type widen, inert).
+-- KLS-4DP-B1-Fn_PriceRoundUp: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
 --   Widen @Price + @RoundedPrice OUTPUT 2dp -> 4dp. Type-only: l.15 ROUND(@Price,2) caps the input and the
 --   .99/.29 cent-endings are 2dp constants. The round-up rule (Decision-A) is untouched.
 CREATE OR ALTER PROCEDURE [dbo].[Fn_PriceRoundUp]
