@@ -2,10 +2,11 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
--- KLS-4DP-B1-Fn_GetPrice: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
---   Widen internal price vars + RETURNS Price/ListPrice cols 2dp -> 4dp. Inert: output @FinalPrice always
---   passes ROUND(@Price,2) (l.87, unchanged) and Fn_RoundUp, so emitted value stays 2dp on today's data.
---   The 4 unit-price ROUND(,2) sites (l.55/60/85/87) are LEFT for Phase-2.
+-- KLS-4DP-B-Phase2-Slice3-Fn_GetPrice: Class-B derived-price ROUND flip (setting-gated).
+--   Reads PRICE_DISPLAY_DECIMALS (guard: missing/0/2/invalid -> 2, =4 -> 4) and rounds the 4 derived unit-price
+--   sites to @PriceDecimals (was hardcoded 2). setting=2: byte-identical (ROUND(x,2)); setting=4: 4dp markup/
+--   target prices, and Fn_RoundUp (Slice-1-gated) bypasses the psychological round-up. Money/discount untouched.
+--   (Section B Phase-1 already widened the internal price vars + RETURNS Price/ListPrice to 18,4.)
 CREATE OR ALTER FUNCTION [dbo].[Fn_GetPrice](@PayeeId INT,@ItemId INT,@ItemUnitId INT)
 	RETURNS @Results TABLE (
 		ItemUnitId INT,
@@ -66,13 +67,20 @@ BEGIN
 
 	SELECT @SharedCustBaseMarkup=BaseMarkup FROM Customer WHERE PayeeId=@ShareQuoteId;
 
+	-- 2026-07-09 Slice-3: read the active price-decimals mode (guard missing/0/2/invalid -> 2, =4 -> 4)
+	DECLARE @PriceDecimals INT;
+	SELECT @PriceDecimals = TRY_CAST(SettingValue AS INT) FROM dbo.SystemSetting WHERE SettingKey='PRICE_DISPLAY_DECIMALS';
+	SET @PriceDecimals = CASE WHEN @PriceDecimals = 4 THEN 4 ELSE 2 END;
+
 	IF @BaseMarkup IS NOT NULL AND @BaseMarkup!=0 --use default own basemarkup
-		SET @Price=Round(@P1*(1+@BaseMarkup),2);
+		-- 2026-07-09 Slice-3: round to active mode. was ROUND(@P1*(1+@BaseMarkup),2)
+		SET @Price=Round(@P1*(1+@BaseMarkup),@PriceDecimals);
 	ELSE
 		SET @Price=@P1;
 
 	IF @IsShareBasePrice=1 AND @SharedCustBaseMarkup IS NOT NULL and @SharedCustBaseMarkup<>0 --use share default basemarkup
-		SET @Price=ROUND(@P1*(1+@SharedCustBaseMarkup),2);
+		-- 2026-07-09 Slice-3: round to active mode. was ROUND(@P1*(1+@SharedCustBaseMarkup),2)
+		SET @Price=ROUND(@P1*(1+@SharedCustBaseMarkup),@PriceDecimals);
 
 	IF @ShareQuoteId IS NOT NULL	--use shared list markup
 	BEGIN
@@ -97,9 +105,11 @@ BEGIN
 	END;
 
 	IF @MarkupPercent IS NOT NULL --AND @MarkupPercent <> 0
-		SET @Price=ROUND(@P1*(1+@MarkupPercent),2);
+		-- 2026-07-09 Slice-3: round to active mode. was ROUND(@P1*(1+@MarkupPercent),2)
+		SET @Price=ROUND(@P1*(1+@MarkupPercent),@PriceDecimals);
 
-	SET @Price = ISNULL(ROUND(@Price,2),0);
+	-- 2026-07-09 Slice-3: final round to active mode. was ISNULL(ROUND(@Price,2),0)
+	SET @Price = ISNULL(ROUND(@Price,@PriceDecimals),0);
 
 	-- 4dp widen: was DECIMAL(18,2)
 	DECLARE @FinalPrice DECIMAL(18,4) = @Price;
