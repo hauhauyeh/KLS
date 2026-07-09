@@ -17,7 +17,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParams(req);
             return DbContext.CRMFollowUpList.FromSqlRaw(
-                "[dbo].[CRMFollowUp_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@AssignedTo,@Status,@Priority,@StartDate,@EndDate,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[CRMFollowUp_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@AssignedTo,@Status,@Priority,@StartDate,@EndDate,@IsCount,@TotalCount OUTPUT,@EmpId",
                 param);
         }
 
@@ -26,7 +26,7 @@ namespace KLS.Data.Repositories
             req.IsCount = true;
             var param = BuildParams(req);
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[CRMFollowUp_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@AssignedTo,@Status,@Priority,@StartDate,@EndDate,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[CRMFollowUp_GetAllList] @Pageno,@Pagesize,@Search,@SortField,@SortOrder,@AssignedTo,@Status,@Priority,@StartDate,@EndDate,@IsCount,@TotalCount OUTPUT,@EmpId",
                 param);
             var output = param[11] as SqlParameter;
             return Convert.ToInt32(output!.Value);
@@ -76,7 +76,8 @@ namespace KLS.Data.Repositories
                 req.StartDate.HasValue ? new SqlParameter("@StartDate", req.StartDate.Value) : new SqlParameter("@StartDate", DBNull.Value),
                 req.EndDate.HasValue ? new SqlParameter("@EndDate", req.EndDate.Value) : new SqlParameter("@EndDate", DBNull.Value),
                 new SqlParameter("@IsCount", req.IsCount),
-                new SqlParameter() { ParameterName = "@TotalCount", Direction = System.Data.ParameterDirection.Output, SqlDbType = System.Data.SqlDbType.Int }
+                new SqlParameter() { ParameterName = "@TotalCount", Direction = System.Data.ParameterDirection.Output, SqlDbType = System.Data.SqlDbType.Int },
+                new SqlParameter("@EmpId", UserContext.EmpId)
             };
             return param;
         }
