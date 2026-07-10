@@ -13,8 +13,11 @@ namespace KLS.Services
 {
     public class ItemUnitService : BaseService, IItemUnitService
     {
-        public ItemUnitService(IUnitOfWork uow) : base(uow)
+        private readonly ISystemSettingService _systemSettingService;
+
+        public ItemUnitService(IUnitOfWork uow, ISystemSettingService systemSettingService) : base(uow)
         {
+            _systemSettingService = systemSettingService;
         }
 
         public List<ItemUnit> GetByItemId(int itemId)
@@ -219,7 +222,7 @@ namespace KLS.Services
             }
 
             // Default P1 from base + markup unless the caller supplied one.
-            var p1 = req.P1 ?? CalcRetailP1(baseP1, factorToBase, multipleToBase, markup);
+            var p1 = req.P1 ?? CalcRetailP1(baseP1, factorToBase, multipleToBase, markup, _systemSettingService.GetPriceDecimals());
 
             var unit = new ItemUnit
             {
@@ -249,12 +252,13 @@ namespace KLS.Services
 
         // Retail P1 from the base P1, the unit's effective size (multiple/factor), and markup.
         // BaseQty = Qty * multiple / factor, so a unit's price scales by multiple/factor vs the base.
-        private static decimal CalcRetailP1(decimal baseP1, decimal factorToBase, decimal multipleToBase, decimal markup)
+        private static decimal CalcRetailP1(decimal baseP1, decimal factorToBase, decimal multipleToBase, decimal markup, int priceDecimals = 2)
         {
             if (factorToBase <= 0) factorToBase = 1;
             if (multipleToBase <= 0) multipleToBase = 1;
             if (markup >= 1) return 0; // 100% markup is invalid
-            return Math.Round((baseP1 / (1 - markup)) * multipleToBase / factorToBase, 2);
+            // 4dp Section B Phase-2 (Slice 5): round to the active unit-price precision (2 or 4) instead of literal 2.
+            return Math.Round((baseP1 / (1 - markup)) * multipleToBase / factorToBase, priceDecimals);
         }
 
         public ItemUnitMutationResult DeleteUnit(int itemUnitId)

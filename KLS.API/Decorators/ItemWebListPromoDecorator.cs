@@ -16,7 +16,10 @@ namespace KLS.API.Decorators
         public static void ApplyPromoDecoration(
             this IEnumerable<ItemWebList>? items,
             Dictionary<int, ItemPromoDiscount>? discountMap,
-            Dictionary<int, BogoOfferInfo>? offerBadgeMap = null)
+            Dictionary<int, BogoOfferInfo>? offerBadgeMap = null,
+            // 4dp Section B Phase-2 (Slice 5): active unit-price precision (2 or 4); controllers pass
+            // SystemSettingService.GetPriceDecimals(). Defaults to 2 (static method, no DI).
+            int priceDecimals = 2)
         {
             if (items == null) return;
 
@@ -52,7 +55,7 @@ namespace KLS.API.Decorators
                     var newPrice = Math.Max(0m, originalPrice - rawDiscount);
 
                     unit.MarketPrice = originalPrice;                                  // preserve original for strike-through
-                    unit.Price = Utilities.Rounding(newPrice, 2);                      // discounted price, rounded to cents
+                    unit.Price = Utilities.Rounding(newPrice, priceDecimals);          // discounted unit price (2 or 4 dp)
                     unit.Discount = Math.Round(((originalPrice - newPrice) / originalPrice) * 100m, 0);
                 }
 

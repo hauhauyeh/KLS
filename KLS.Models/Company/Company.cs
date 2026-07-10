@@ -14,8 +14,9 @@ namespace KLS.Models
         public Company()
         {
             CreatedAt = DateTime.UtcNow;
-            if (HasLogo)
-                LogoUrl = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Logo", "logo.png");
+            // LogoUrl is populated at report time (see CompanyService.GetDefault).
+            // It must NOT be set here: EF calls this ctor before HasLogo is
+            // materialized, so any HasLogo check here always sees false.
         }
 
         [Key]

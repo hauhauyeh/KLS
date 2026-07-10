@@ -1,11 +1,3 @@
-USE [KLS-2026]
-GO
-
-SET ANSI_NULLS ON
-GO
-
-SET QUOTED_IDENTIFIER ON
-GO
 
 -- ============================================================
 -- TempSalesQuote_AddLine
@@ -15,6 +7,14 @@ GO
 --   reject Asset(A)/Expense(X) class, insert LineType='A'.
 --   Item path unchanged except it now stamps LineType='I'.
 -- ============================================================
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- KLS-4DP-B5-TempSalesQuote_AddLine: 4-decimal pricing Section B Phase-1 (storage/type widen, inert).
+--   Layered onto developer's f1d30aa (account/freight-line support). Widen entered/config price carriers
+--   @UnitPrice/@AcctPrice/@DefaultPrice/@ListPrice 2dp -> 4dp. Inert: prices are entered/config (P1, TargetPrice,
+--   <=2dp today); ExtTotal = ROUND(@Qty*price,2) stays 2dp. @Qty stays (entered qty deferred).
 CREATE OR ALTER PROCEDURE [dbo].[TempSalesQuote_AddLine]
     @PayeeId        INT,
     @SalesQuoteId   INT,
@@ -22,7 +22,8 @@ CREATE OR ALTER PROCEDURE [dbo].[TempSalesQuote_AddLine]
     @ItemId         INT = NULL,
     @ItemCode       NVARCHAR(50) = NULL,
     @Qty            DECIMAL(18,2),
-    @UnitPrice      DECIMAL(18,2) = NULL,
+    -- 4dp widen: was DECIMAL(18,2)
+    @UnitPrice      DECIMAL(18,4) = NULL,
     @Unit           NVARCHAR(50) = NULL,
     @Notes          NVARCHAR(300) = NULL
 AS
@@ -66,7 +67,8 @@ BEGIN
             RETURN;
         END
 
-        DECLARE @AcctPrice DECIMAL(18,2) =
+        -- 4dp widen: was DECIMAL(18,2)
+        DECLARE @AcctPrice DECIMAL(18,4) =
             CASE WHEN @UnitPrice IS NOT NULL AND @UnitPrice <> 0 THEN @UnitPrice ELSE 0 END;
 
         INSERT INTO TempSalesQuote (
@@ -98,7 +100,8 @@ BEGIN
     END
 
     DECLARE @ItemUnitId INT, @ResolvedUnit NVARCHAR(50), @FactorToBase DECIMAL(18,6);
-    DECLARE @DefaultPrice DECIMAL(18,2), @ListPrice DECIMAL(18,2);
+    -- 4dp widen: were DECIMAL(18,2)
+    DECLARE @DefaultPrice DECIMAL(18,4), @ListPrice DECIMAL(18,4);
 
     IF @Unit IS NOT NULL
     BEGIN
@@ -137,3 +140,4 @@ BEGIN
     EXEC TempSalesQuote_GetList @EmpId, @PayeeId, @SalesQuoteId, NULL, NULL, @NewId;
 END
 GO
+
