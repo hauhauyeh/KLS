@@ -1,9 +1,14 @@
-
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
+-- ============================================================================
+-- KLS-4DP-B2b-Sales_PartialUpdate-tempwiden (2026-07-09)
+--   Follow-up to B2: the @TempSaleTable STAGING columns [UnitPrice] and [OrgPrice] were still
+--   DECIMAL(18,2), so a 4-decimal entered price truncated (35.999 -> 36.00) as it passed through
+--   the staging table on edit-save, before reaching SalesDetail. Widen both staging columns to
+--   (18,4) to match SalesDetail/TempSales (UnitPrice + OrgPrice = decimal(18,4)). Inert at
+--   setting=2 (no >2dp data); ExtTotal/totals stay 2dp money.
 -- ============================================================================
 -- KLS-4DP-B2-Sales_PartialUpdate | 4dp Phase-1 (2026-07-09)
 -- Widen loop scalars @UnitPrice/@OrgPrice DECIMAL(18,2)->(18,4) so a 4-decimal
@@ -143,11 +148,11 @@ BEGIN
 		[OrdQty] [decimal](18, 2) NULL,
 		[ShipQty] [decimal](18, 2) NULL,
 		[BillQty] [decimal](18, 2) NULL,
-		[UnitPrice] [decimal](18, 2) NULL,
+		[UnitPrice] [decimal](18, 4) NULL,   -- 4dp B2b: was (18,2) -- truncated entered 4dp price in staging
 		[ExtTotal] [decimal](18, 2) NULL,
 		[Notes] [nvarchar](300) NULL,
 		[IsTaxable] [bit] NOT NULL,
-		[OrgPrice] [decimal](18, 2) NULL,
+		[OrgPrice] [decimal](18, 4) NULL,   -- 4dp B2b: was (18,2) -- truncated entered 4dp price in staging
 		[DiscountPercent] [decimal](18, 4) NULL,
 		[FactorToBase] [decimal](18, 6) NULL,
 		[ChangeStatus] [nvarchar](1) null,
@@ -754,3 +759,5 @@ END
 
 
 
+
+GO

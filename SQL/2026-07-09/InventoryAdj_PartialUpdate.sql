@@ -2,6 +2,10 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+-- KLS-4DP-InvAdjPU-ConvertNewPrice-widen (2026-07-09): @ConvertTable.NewPrice widened (18,2)->(18,4).
+--   The Slice-4b note below deferred this (kept inert while no >2dp NewPrice existed). 4dp NewPrice ENTRY is now
+--   live (inventory-adj input on kls-price-input), so the convert-flow staging column would truncate 35.999->36.
+--   #ConvertTxDetail.Price stays (18,2): it carries @JrnCost (cost), not the entered price -- costing carve-out holds.
 -- KLS-4DP-B-Phase2-Slice4b-InventoryAdj_PartialUpdate: Class-C variable split (inert-first, Decision 2).
 --   Split @NewPrice: @NewPrice DECIMAL(18,4) [ENTERED, main Q/V/B section] + @JrnCost DECIMAL(18,2) [COMPUTED
 --   convert cost, C section]. @TempInvTable.NewPrice -> (18,4) [entered]. Left @ConvertTable.NewPrice +
@@ -105,7 +109,7 @@ BEGIN
 			AutoId INT IDENTITY(1,1) PRIMARY KEY,
 			ItemId INT,
 			NewQty DECIMAL(18,2),
-			NewPrice DECIMAL(18,2),
+			NewPrice DECIMAL(18,4),   -- 4dp: was (18,2) -- convert-flow staging truncated entered 4dp NewPrice
 			Direction VARCHAR(1),
 			SrcDetailId INT
 		)
@@ -473,4 +477,5 @@ BEGIN
 		SELECT ItemId,@TxId,@AdjDate FROM @TempInvTable WHERE ChangeStatus IS NOT NULL
 	END
 END
-GO
+
+GO
