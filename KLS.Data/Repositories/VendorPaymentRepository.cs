@@ -181,6 +181,19 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(NewPaymentId.Value);
         }
 
+        public List<ImportPayNowExcelRow> ImportPayNowPreview(string filePath)
+        {
+            var FilePathParam = new SqlParameter("@FilePath", filePath);
+
+            // Materialise here. [VendorPayment_ImportPreview] contains INSERT ... EXEC, and
+            // SQL Server rejects a SELECT composed over an INSERT-EXEC. Returning IQueryable
+            // would let a caller add a .Where()/.OrderBy() that EF turns into a wrapping
+            // subquery, breaking the proc at runtime. Returning List<> makes that unreachable.
+            return DbContext.ImportPayNowExcelRow
+                .FromSqlRaw("[dbo].[VendorPayment_ImportPreview] @FilePath", FilePathParam)
+                .ToList();
+        }
+
         public int ImportPayNow(ImportPayNow importPayNow)
         {
             var PaymentMethodParam = new SqlParameter("@PaymentMethod", importPayNow.PaymentMethod);

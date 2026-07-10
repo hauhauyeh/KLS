@@ -120,12 +120,21 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("ImportPayNowPreview")]
+        [DisplayName("Preview Import Pay NOW")]
+        [PermissionKey("Vendor.VendorPayment.ImportPayNow")]
+        public IActionResult ImportPayNowPreview([FromForm] ImportPayNowPreviewReq req)
+        {
+            return Ok(_vendorPaymentService.ImportPayNowPreview(req));
+        }
+
+
         [HttpPost("ImportPayNow")]
         [DisplayName("Import Pay NOW")]
         [PermissionKey("Vendor.VendorPayment.ImportPayNow")]
-        public IActionResult ImportPayNow([FromForm] ImportPayNow importPayNow)
+        public IActionResult ImportPayNow([FromBody] ImportPayNowCommitReq req)
         {
-            var result = _vendorPaymentService.ImportPayNow(importPayNow);
+            var result = _vendorPaymentService.ImportPayNow(req);
             return Ok(result);
         }
 
