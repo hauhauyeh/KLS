@@ -16,6 +16,9 @@ namespace KLS.Common
         public const string ITEM_DEFAULT_RETAILPROFIT = "ITEM_DEFAULT_RETAILPROFIT";
         public const string ITEM_DEFAULT_MINPROFIT = "ITEM_DEFAULT_MINPROFIT";
 
+        // 4-decimal pricing (Section B Phase-2): unit-price decimal places for calc + display. Allowed 2 or 4; default 2.
+        public const string PRICE_DISPLAY_DECIMALS = "PRICE_DISPLAY_DECIMALS";
+
         public const string PAYROLL_DEFAULT_PAYFREQ = "PAYROLL_DEFAULT_PAYFREQ";
         public const string PAYROLL_DEFAULT_BANK = "PAYROLL_DEFAULT_BANK";
         public const string PAYROLL_BEGINDAYOFWEEK = "PAYROLL_BEGINDAYOFWEEK";

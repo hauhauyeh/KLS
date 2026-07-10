@@ -49,6 +49,7 @@ namespace KLS.Models
         public decimal? ShipQty { get; private set; }
         public decimal? BillQty { get; private set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? UnitPrice { get; set; }
 
         public decimal? ExtTotal => Utilities.Rounding((BillQty ?? 0m) * (UnitPrice ?? 0m), 2);
@@ -58,6 +59,7 @@ namespace KLS.Models
 
         public bool IsTaxable { get; set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? OrgPrice { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]

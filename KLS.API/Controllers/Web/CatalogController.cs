@@ -16,6 +16,7 @@ namespace KLS.API.Controllers.Web
         private readonly IItemImageService _itemImageService;
         private readonly IItemCategoryService _itemCategoryService;
         private readonly IPromoHelperService _promoHelper;
+        private readonly ISystemSettingService _systemSettingService;
 
         #endregion
 
@@ -26,13 +27,15 @@ namespace KLS.API.Controllers.Web
             IItemService itemService,
             IItemImageService itemImageService,
             IItemCategoryService itemCategoryService,
-            IPromoHelperService promoHelper)
+            IPromoHelperService promoHelper,
+            ISystemSettingService systemSettingService)
         {
             _portalModeService = portalModeService;
             _itemService = itemService;
             _itemImageService = itemImageService;
             _itemCategoryService = itemCategoryService;
             _promoHelper = promoHelper;
+            _systemSettingService = systemSettingService;
         }
 
         #endregion
@@ -50,7 +53,7 @@ namespace KLS.API.Controllers.Web
             var offerBadgeMap = _promoHelper.GetActiveItemOfferBadges();
             // Decorate each ItemWebUnitList.Price/MarketPrice/Discount with any
             // active item-level promos. B2C: public, catalog-level.
-            page.RowData.ApplyPromoDecoration(discountMap, offerBadgeMap);
+            page.RowData.ApplyPromoDecoration(discountMap, offerBadgeMap, _systemSettingService.GetPriceDecimals());
             return Ok(page);
         }
 

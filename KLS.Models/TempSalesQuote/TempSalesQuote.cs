@@ -29,6 +29,7 @@ namespace KLS.Models
         [MaxLength(50)]
         public string? Unit { get; set; }
         public decimal? OrdQty { get; set; }
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? UnitPrice { get; set; }
         public decimal? ExtTotal => KLS.Common.Utilities.Rounding((OrdQty ?? 0m) * (UnitPrice ?? 0m), 2);
 

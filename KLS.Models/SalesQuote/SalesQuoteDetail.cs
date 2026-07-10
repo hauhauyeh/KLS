@@ -18,6 +18,7 @@ namespace KLS.Models
         public int? ItemUnitId { get; set; }
         public string? Unit { get; set; }
         public decimal? OrdQty { get; set; }
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? UnitPrice { get; set; }
         public decimal? ExtTotal { get; set; }
 

@@ -46,7 +46,9 @@ namespace KLS.Models
         public decimal? ReceiveQty { get; private set; }
         public decimal? FinalQty { get; private set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? BillPrice { get; private set; }
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? FinalPrice { get; private set; }
 
         public decimal? ImportCommission { get; set; }
@@ -59,6 +61,7 @@ namespace KLS.Models
         [Column(TypeName = "decimal(18,4)")]
         public decimal? DiscountPercent { get; private set; }
         public decimal? Discount { get; private set; }
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? OrgPrice { get; private set; }
 
 

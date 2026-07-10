@@ -38,11 +38,16 @@ namespace KLS.Models
 
         public decimal? Payee30Volume { get; set; }
 
+        // 4dp Section B Phase-2 (Slice 5): unit-price decimal places, threaded from the service before serialization
+        // (models have no DI). Defaults to 2; the returning service sets it via SystemSettingService.GetPriceDecimals().
+        [NotMapped]
+        public int PriceDecimals { get; set; } = 2;
+
         public decimal? DefaultPrice
         {
             get
             {
-                return Utilities.Rounding(P1 * (1 + BaseMarkup), 2);
+                return Utilities.Rounding(P1 * (1 + BaseMarkup), PriceDecimals);
             }
         }
 
@@ -56,7 +61,7 @@ namespace KLS.Models
                 if (IsFixed)
                     price = TargetPrice;
                 else if (MarkupPercent.HasValue)
-                    price = Utilities.Rounding(basePrice * (1 + MarkupPercent.Value), 2);
+                    price = Utilities.Rounding(basePrice * (1 + MarkupPercent.Value), PriceDecimals);
 
                 // If you want to treat 0 as "no price"
                 return (price.HasValue && price.Value != 0m) ? price : null;

@@ -14,9 +14,11 @@ namespace KLS.Services
 {
     public class ItemQuoteService : BaseService, IItemQuoteService
     {
-        public ItemQuoteService(IUnitOfWork uow) : base(uow)
-        {
+        private readonly ISystemSettingService _systemSettingService;
 
+        public ItemQuoteService(IUnitOfWork uow, ISystemSettingService systemSettingService) : base(uow)
+        {
+            _systemSettingService = systemSettingService;
         }
 
         public ItemQuote GetById(int quoteId)
@@ -53,7 +55,12 @@ namespace KLS.Services
 
         public IEnumerable<TargetQuotePrice> GetTargetrPrice(int itemId, string? filterby)
         {
-            return Uow.ItemQuotes.GetTargetrPrice(itemId, filterby);
+            // 4dp Section B Phase-2 (Slice 5): materialize FIRST, then thread the active price precision into the rows
+            // so the DefaultPrice/FinalPrice computed getters round to 2 or 4 at serialization time.
+            var priceDecimals = _systemSettingService.GetPriceDecimals();
+            var rows = Uow.ItemQuotes.GetTargetrPrice(itemId, filterby).ToList();
+            rows.ForEach(r => r.PriceDecimals = priceDecimals);
+            return rows;
         }
 
         public ItemQuote Update(TargetQuotePrice quotePrice)
