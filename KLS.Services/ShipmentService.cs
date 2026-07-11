@@ -253,6 +253,11 @@ namespace KLS.Services
             return Uow.Shipments.AssignedPurchases(shipmentId);
         }
 
+        public IEnumerable<BillBasisUsability>? BillBasisUsability(int shipmentId)
+        {
+            return Uow.Shipments.BillBasisUsability(shipmentId);
+        }
+
         public IEnumerable<EligibleBill>? EligibleBills(int shipmentId, string? search)
         {
             return Uow.Shipments.EligibleBills(shipmentId, search);
@@ -334,7 +339,7 @@ namespace KLS.Services
                 ?? throw new KeyNotFoundException("Shipment not found.");
 
             if (HasLockedShipmentBill(req.ShipmentId))
-                throw new InvalidOperationException("Freight split is locked because the generated vendor bill is paid or locked.");
+                throw new InvalidOperationException("Charge split is locked because the generated vendor bill is paid or locked.");
 
             var chargeType = (req.ChargeType ?? "").Trim();
             var isFreight = chargeType.Equals("Freight", StringComparison.OrdinalIgnoreCase);
@@ -472,24 +477,55 @@ namespace KLS.Services
                     });
                 }
             }
-            else // duty / tariff: no bill split; amount auto-derived per bill from line duty weight.
+            else // duty / tariff: split the broker's actual total by each bill's duty/tariff weight.
             {
-                foreach (var r in req.Rows)
-                {
-                    if (!usability.TryGetValue(r.ShipmentPurchaseId, out var u) || u.DutyTariffOk != 1)
-                        throw new ArgumentException($"Bill {r.ShipmentPurchaseId}: no dutiable value for {chargeType}.");
+                if (req.CarrierTotal < 0m)
+                    throw new ArgumentException($"{chargeType} actual total cannot be negative.");
 
-                    toAdd.Add(new ShipmentCharge
+                if (req.CarrierTotal > 0m)
+                {
+                    var weight = new Dictionary<int, decimal>();
+                    foreach (var r in req.Rows)
                     {
-                        ShipmentId = req.ShipmentId,
-                        ShipmentPurchaseId = r.ShipmentPurchaseId,
-                        ChargeType = chargeType,
-                        ChargeAmount = u.DutyTariffAmount,
-                        BillBasis = null,
-                        LineBasis = "BY_DUTY_TARIFF",
-                        AllocationMethod = null,
-                        UpdatedAt = DateTime.UtcNow
-                    });
+                        if (!usability.TryGetValue(r.ShipmentPurchaseId, out var u))
+                            throw new ArgumentException($"No duty/tariff basis data for bill {r.ShipmentPurchaseId}.");
+
+                        weight[r.ShipmentPurchaseId] = u.TotalDutyTariffWeight;
+                    }
+
+                    var totalWeight = weight.Values.Sum();
+                    if (totalWeight <= 0m)
+                        throw new ArgumentException($"Selected bills have no dutiable value for {chargeType}.");
+
+                    var amount = new Dictionary<int, decimal>();
+                    foreach (var r in req.Rows)
+                        amount[r.ShipmentPurchaseId] = Math.Round(req.CarrierTotal * weight[r.ShipmentPurchaseId] / totalWeight, 2);
+
+                    // Residual to the cent -> largest amount, tiebreak ShipmentPurchaseId ASC.
+                    var residual = req.CarrierTotal - amount.Values.Sum();
+                    if (residual != 0m)
+                    {
+                        var top = amount.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key).First().Key;
+                        amount[top] += residual;
+                    }
+
+                    foreach (var r in req.Rows)
+                    {
+                        var amt = amount[r.ShipmentPurchaseId];
+                        if (amt <= 0m) continue; // zero-weight/zero-share bills bear no duty/tariff row
+
+                        toAdd.Add(new ShipmentCharge
+                        {
+                            ShipmentId = req.ShipmentId,
+                            ShipmentPurchaseId = r.ShipmentPurchaseId,
+                            ChargeType = chargeType,
+                            ChargeAmount = amt,
+                            BillBasis = null,
+                            LineBasis = "BY_DUTY_TARIFF",
+                            AllocationMethod = null,
+                            UpdatedAt = DateTime.UtcNow
+                        });
+                    }
                 }
             }
 

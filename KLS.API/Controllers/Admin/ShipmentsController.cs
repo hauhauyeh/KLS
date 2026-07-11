@@ -132,6 +132,12 @@ namespace KLS.API.Controllers.Admin
             return Ok(_shipmentService.AssignedPurchases(shipmentId));
         }
 
+        [HttpGet("{shipmentId}/BillBasisUsability")]
+        public IActionResult BillBasisUsability(int shipmentId)
+        {
+            return Ok(_shipmentService.BillBasisUsability(shipmentId));
+        }
+
 
         // Multi-Bill Assign: bills selectable in the Add-Bills picker for this shipment.
         [HttpGet("{shipmentId}/EligibleBills")]

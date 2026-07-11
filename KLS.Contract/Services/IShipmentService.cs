@@ -33,6 +33,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
 
+        IEnumerable<BillBasisUsability>? BillBasisUsability(int shipmentId);
+
         // Multi-Bill Assign: eligible-bill picker + batch assign (returns count assigned).
         IEnumerable<EligibleBill>? EligibleBills(int shipmentId, string? search);
 
