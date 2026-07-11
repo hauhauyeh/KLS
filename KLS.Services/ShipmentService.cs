@@ -253,6 +253,34 @@ namespace KLS.Services
             return Uow.Shipments.AssignedPurchases(shipmentId);
         }
 
+        public IEnumerable<EligibleBill>? EligibleBills(int shipmentId, string? search)
+        {
+            return Uow.Shipments.EligibleBills(shipmentId, search);
+        }
+
+        public int AssignBills(int shipmentId, AssignBillsReq req)
+        {
+            // Reject at the write boundary rather than sanitize (mirrors the SP's 50066 hard-reject of
+            // bad tokens): an empty request or any non-positive id is invalid input, not something to
+            // silently drop. Only de-duplication is applied to the accepted ids.
+            if (req?.PurchaseIds == null || req.PurchaseIds.Count == 0)
+                throw new ArgumentException("No bills selected.");
+
+            if (req.PurchaseIds.Any(id => id <= 0))
+                throw new ArgumentException("One or more selected bill ids are invalid.");
+
+            var ids = req.PurchaseIds
+                .Distinct()
+                .ToList();
+
+            // Shipment_AssignBills' business guards (THROW 50061-50068) surface via ExceptionMiddleware,
+            // which preserves Message on its default response - same as the other shipment SP-throw paths
+            // (UnAllocation, CopyToBill). Keeping SqlClient out of the service layer.
+            Uow.Shipments.AssignBills(shipmentId, string.Join(",", ids));
+
+            return ids.Count;
+        }
+
         public AllocationValidationResult ValidateAllocation(int purchaseId)
         {
             return Uow.Shipments.ValidateAllocation(purchaseId);

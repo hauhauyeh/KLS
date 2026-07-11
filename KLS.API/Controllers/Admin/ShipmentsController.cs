@@ -133,6 +133,24 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        // Multi-Bill Assign: bills selectable in the Add-Bills picker for this shipment.
+        [HttpGet("{shipmentId}/EligibleBills")]
+        public IActionResult EligibleBills(int shipmentId, [FromQuery] string? search)
+        {
+            return Ok(_shipmentService.EligibleBills(shipmentId, search));
+        }
+
+
+        // Multi-Bill Assign: batch-assign the selected bills to this shipment.
+        [HttpPost("{shipmentId}/AssignBills")]
+        [DisplayName("Assign Bills To Shipment")]
+        [PermissionKey("Vendor.Shipment.AssignBills")]
+        public IActionResult AssignBills(int shipmentId, [FromBody] AssignBillsReq req)
+        {
+            return Ok(_shipmentService.AssignBills(shipmentId, req));
+        }
+
+
         [HttpGet("ValidateAllocation/{purchaseId}")]
         public IActionResult ValidateAllocation(int purchaseId)
         {

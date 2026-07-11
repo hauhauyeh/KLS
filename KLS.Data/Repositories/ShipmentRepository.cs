@@ -90,6 +90,27 @@ namespace KLS.Data.Repositories
             return DbContext.AssignedPurchase.FromSqlRaw("[Shipment_AssignedPurchase] @ShipmentId", ShipmentIdParam);
         }
 
+        public IEnumerable<EligibleBill>? EligibleBills(int shipmentId, string? search)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+            var SearchParam = string.IsNullOrWhiteSpace(search)
+                ? new SqlParameter("@Search", DBNull.Value)
+                : new SqlParameter("@Search", search);
+
+            return DbContext.EligibleBill
+                .FromSqlRaw("[Shipment_EligibleBills] @ShipmentId,@Search", ShipmentIdParam, SearchParam)
+                .AsNoTracking()
+                .ToList();
+        }
+
+        public void AssignBills(int shipmentId, string purchaseIds)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+            var PurchaseIdsParam = new SqlParameter("@PurchaseIds", purchaseIds);
+
+            DbContext.Database.ExecuteSqlRaw("[Shipment_AssignBills] @ShipmentId,@PurchaseIds", ShipmentIdParam, PurchaseIdsParam);
+        }
+
         public IEnumerable<BillBasisUsability> BillBasisUsability(int shipmentId)
         {
             var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
