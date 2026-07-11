@@ -40,7 +40,11 @@ namespace KLS.Services
 
         public Shipment? GetById(int shipmentId)
         {
-            return Uow.Shipments.Find(c => c.ShipmentId == shipmentId).Include(c => c.Charges).FirstOrDefault();
+            var shipment = Uow.Shipments.Find(c => c.ShipmentId == shipmentId).Include(c => c.Charges).FirstOrDefault();
+            if (shipment != null)
+                shipment.IsFreightSplitLocked = HasLockedShipmentBill(shipment.ShipmentId);
+
+            return shipment;
         }
 
         public bool Exists(Shipment shipment)
@@ -95,6 +99,9 @@ namespace KLS.Services
 
                     if (!hasData) continue;
 
+                    // Per-bill rows are owned by SplitCharge; never restamp them here.
+                    if (ch.ShipmentPurchaseId != null) continue;
+
                     ch.AllocationMethod = GetAllocationMethodFromChargeType(ch.ChargeType);
                 }
             }
@@ -143,8 +150,13 @@ namespace KLS.Services
                 .Select(x => x.ChargeId)
                 .ToHashSet();
 
+            // Per-bill redesign: the legacy charge-sync owns ONLY legacy shipment-wide charges
+            // (ShipmentPurchaseId == null). Per-bill charges are managed exclusively by SplitCharge -
+            // never delete or restamp them here.
             Uow.ShipmentCharges
-                .Find(x => x.ShipmentId == shipment.ShipmentId && !incomingIds.Contains(x.ChargeId))
+                .Find(x => x.ShipmentId == shipment.ShipmentId
+                        && x.ShipmentPurchaseId == null
+                        && !incomingIds.Contains(x.ChargeId))
                 .ExecuteDelete();
 
             // 2) ADD / UPDATE
@@ -157,6 +169,9 @@ namespace KLS.Services
                     !string.IsNullOrWhiteSpace(ch.Notes);
 
                 if (!hasData) continue;
+
+                // Never let the legacy sync create or touch per-bill rows (owned by SplitCharge).
+                if (ch.ShipmentPurchaseId != null) continue;
 
                 if (ch.ChargeId == 0)
                 {
@@ -281,6 +296,242 @@ namespace KLS.Services
             return new ReallocateResponse { Results = results.ToList() };
         }
 
+        // Phase C: split-on-entry helper. Creates/updates per-bill charges (ShipmentPurchaseId NOT NULL)
+        // for one shipment + charge type, then reallocates the affected bills.
+        public ChargeSplitResponse SplitCharge(ChargeSplitReq req)
+        {
+            if (req == null) throw new ArgumentException("Request is required.");
+
+            _ = Uow.Shipments.Find(s => s.ShipmentId == req.ShipmentId).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Shipment not found.");
+
+            if (HasLockedShipmentBill(req.ShipmentId))
+                throw new InvalidOperationException("Freight split is locked because the generated vendor bill is paid or locked.");
+
+            var chargeType = (req.ChargeType ?? "").Trim();
+            var isFreight = chargeType.Equals("Freight", StringComparison.OrdinalIgnoreCase);
+            var isDuty = chargeType.Equals("CustomDuty", StringComparison.OrdinalIgnoreCase)
+                      || chargeType.Equals("Tariff", StringComparison.OrdinalIgnoreCase);
+            if (!isFreight && !isDuty)
+                throw new ArgumentException($"Charge type '{req.ChargeType}' is not supported by the split helper (manual/other charges stay on the legacy path).");
+
+            // Canonicalize to the exact-case values the ChargeType CHECK constraint requires
+            // (a request like 'customduty' would otherwise be inserted verbatim and rejected).
+            if (isFreight) chargeType = "Freight";
+            else if (chargeType.Equals("CustomDuty", StringComparison.OrdinalIgnoreCase)) chargeType = "CustomDuty";
+            else if (chargeType.Equals("Tariff", StringComparison.OrdinalIgnoreCase)) chargeType = "Tariff";
+
+            if (req.Rows == null || req.Rows.Count == 0)
+                throw new ArgumentException("Select at least one vendor bill.");
+
+            var spIds = req.Rows.Select(r => r.ShipmentPurchaseId).Distinct().ToList();
+            if (spIds.Count != req.Rows.Count)
+                throw new ArgumentException("Each vendor bill can appear only once.");
+
+            // Selected bills must belong to this shipment.
+            var bills = Uow.ShipmentPurchases
+                .Find(sp => sp.ShipmentId == req.ShipmentId && spIds.Contains(sp.ShipmentPurchaseId))
+                .ToList();
+            if (bills.Count != spIds.Count)
+                throw new ArgumentException("One or more selected bills do not belong to this shipment.");
+
+            var purchaseIds = bills.Select(b => b.PurchaseId).Distinct().ToList();
+
+            // One-purchase-one-shipment backstop (assignment enforces it; this is defence in depth).
+            var offenders = Uow.ShipmentPurchases
+                .Find(sp => purchaseIds.Contains(sp.PurchaseId))
+                .ToList()
+                .GroupBy(sp => sp.PurchaseId)
+                .Where(g => g.Select(x => x.ShipmentId).Distinct().Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+            if (offenders.Count > 0)
+                throw new ArgumentException($"Purchase(s) {string.Join(", ", offenders)} belong to more than one shipment. Break them into one-to-one purchases first.");
+
+            // Strict legacy-scope block (matches Shipment_AllocateWithinBill's mixed-scope guard).
+            var hasLegacy = Uow.ShipmentCharges
+                .Find(c => c.ShipmentId == req.ShipmentId && c.ShipmentPurchaseId == null && c.ChargeAmount != 0m)
+                .Any();
+            if (hasLegacy)
+                throw new ArgumentException("This shipment has a legacy shipment-wide charge (including generated inline freight). Remove or reverse it before creating per-bill charges.");
+
+            var usability = Uow.Shipments.BillBasisUsability(req.ShipmentId).ToDictionary(u => u.ShipmentPurchaseId);
+
+            var toAdd = new List<ShipmentCharge>();
+            string? billBasis = null;
+
+            if (isFreight)
+            {
+                billBasis = (req.BillBasis ?? "").Trim().ToUpperInvariant();
+                if (billBasis != "BY_PALLET" && billBasis != "BY_SPACE_PCT")
+                    throw new ArgumentException("Freight requires BillBasis BY_PALLET or BY_SPACE_PCT.");
+                if (req.CarrierTotal <= 0m)
+                    throw new ArgumentException("Freight carrier total must be greater than zero.");
+
+                var forced = (req.ForcedLineBasis ?? "").Trim().ToUpperInvariant();
+                if (forced.Length > 0 && forced != "BY_QUANTITY")
+                    throw new ArgumentException("The only supported freight line-basis override is BY_QUANTITY.");
+
+                // Per-bill split weight.
+                var weight = new Dictionary<int, decimal>();
+                foreach (var r in req.Rows)
+                {
+                    decimal w;
+                    if (billBasis == "BY_PALLET")
+                    {
+                        w = r.PalletCount ?? 0m;
+                        if (w < 0m) throw new ArgumentException("Pallet count cannot be negative.");
+                    }
+                    else
+                    {
+                        w = r.SpacePercent ?? 0m;
+                        if (w < 0m || w > 100m) throw new ArgumentException("Space percent must be between 0 and 100.");
+                    }
+                    weight[r.ShipmentPurchaseId] = w;
+                }
+
+                var totalWeight = weight.Values.Sum();
+                if (billBasis == "BY_PALLET" && totalWeight <= 0m)
+                    throw new ArgumentException("Total pallet count must be greater than zero.");
+                if (billBasis == "BY_SPACE_PCT" && Math.Abs(totalWeight - 100m) > 0.01m)
+                    throw new ArgumentException($"Space percentages must sum to 100 (got {totalWeight:0.##}).");
+
+                // Denominator: pallets divide by the entered total; space% divides by 100.
+                var denom = billBasis == "BY_SPACE_PCT" ? 100m : totalWeight;
+
+                var amount = new Dictionary<int, decimal>();
+                foreach (var r in req.Rows)
+                    amount[r.ShipmentPurchaseId] = Math.Round(req.CarrierTotal * weight[r.ShipmentPurchaseId] / denom, 2);
+
+                // Residual to the cent -> largest amount, tiebreak ShipmentPurchaseId ASC.
+                var residual = req.CarrierTotal - amount.Values.Sum();
+                if (residual != 0m)
+                {
+                    var top = amount.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key).First().Key;
+                    amount[top] += residual;
+                }
+
+                foreach (var r in req.Rows)
+                {
+                    if (!usability.TryGetValue(r.ShipmentPurchaseId, out var u))
+                        throw new ArgumentException($"No basis-usability data for bill {r.ShipmentPurchaseId}.");
+
+                    // Resolve LineBasis per bill (SQL owns eligibility/weights; this is the cascade decision).
+                    string lineBasis;
+                    if (forced == "BY_QUANTITY")
+                    {
+                        if (u.QuantityOk != 1) throw new ArgumentException($"Bill {r.ShipmentPurchaseId}: BY_QUANTITY requires total quantity greater than zero.");
+                        lineBasis = "BY_QUANTITY";
+                    }
+                    else if (u.VolumeOk == 1) lineBasis = "BY_VOLUME";
+                    else if (u.WeightOk == 1) lineBasis = "BY_WEIGHT";
+                    else if (u.ValueOk == 1) lineBasis = "BY_VALUE";
+                    else throw new ArgumentException($"Bill {r.ShipmentPurchaseId}: no usable freight line basis (no volume, weight, or value).");
+
+                    var amt = amount[r.ShipmentPurchaseId];
+                    if (amt <= 0m) continue; // a zero-share bill bears no freight; no charge row
+
+                    toAdd.Add(new ShipmentCharge
+                    {
+                        ShipmentId = req.ShipmentId,
+                        ShipmentPurchaseId = r.ShipmentPurchaseId,
+                        ChargeType = "Freight",
+                        ChargeAmount = amt,
+                        BillBasis = billBasis,
+                        LineBasis = lineBasis,
+                        AllocationMethod = null,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+            else // duty / tariff: no bill split; amount auto-derived per bill from line duty weight.
+            {
+                foreach (var r in req.Rows)
+                {
+                    if (!usability.TryGetValue(r.ShipmentPurchaseId, out var u) || u.DutyTariffOk != 1)
+                        throw new ArgumentException($"Bill {r.ShipmentPurchaseId}: no dutiable value for {chargeType}.");
+
+                    toAdd.Add(new ShipmentCharge
+                    {
+                        ShipmentId = req.ShipmentId,
+                        ShipmentPurchaseId = r.ShipmentPurchaseId,
+                        ChargeType = chargeType,
+                        ChargeAmount = u.DutyTariffAmount,
+                        BillBasis = null,
+                        LineBasis = "BY_DUTY_TARIFF",
+                        AllocationMethod = null,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            // The delete-replace below removes this (Shipment, ChargeType) group's existing per-bill rows;
+            // their ShipmentAllocation rows cascade-delete (FK_ShipmentAllocation_ShipmentCharge = CASCADE).
+            // Capture the OLD bills so any bill dropped from the re-split is ALSO reallocated - its LandedCost
+            // must be recomputed once its charge (and cascaded allocations) are gone.
+            var oldCharges = Uow.ShipmentCharges
+                .Find(c => c.ShipmentId == req.ShipmentId && c.ChargeType == chargeType && c.ShipmentPurchaseId != null)
+                .ToList();
+            var oldSpIds = oldCharges.Select(c => c.ShipmentPurchaseId!.Value).Distinct().ToList();
+            var oldPurchaseIds = oldSpIds.Count == 0
+                ? new List<int>()
+                : Uow.ShipmentPurchases.Find(sp => oldSpIds.Contains(sp.ShipmentPurchaseId)).Select(sp => sp.PurchaseId).ToList();
+            var affectedPurchaseIds = purchaseIds.Union(oldPurchaseIds).Distinct().ToList();
+
+            // Atomic multi-table save: split inputs (pallet/space) + the per-bill charge group,
+            // all-or-nothing. ExecuteInTransaction wraps ExecuteUpdate/ExecuteDelete/SaveChanges in one DB tx,
+            // so a failure can't leave pallet/space changed while the charges fail to save.
+            Uow.ExecuteInTransaction(() =>
+            {
+                if (isFreight)
+                {
+                    // store the per-bill split inputs (clear the unused one so a re-split by another basis is clean)
+                    foreach (var r in req.Rows)
+                    {
+                        var pc   = billBasis == "BY_PALLET"    ? r.PalletCount  : (decimal?)null;
+                        var spct = billBasis == "BY_SPACE_PCT" ? r.SpacePercent : (decimal?)null;
+                        Uow.ShipmentPurchases
+                            .Find(sp => sp.ShipmentPurchaseId == r.ShipmentPurchaseId)
+                            .ExecuteUpdate(s => s
+                                .SetProperty(x => x.PalletCount, pc)
+                                .SetProperty(x => x.SpacePercent, spct));
+                    }
+                }
+
+                // group delete-replace: this shipment's per-bill rows for this charge type
+                Uow.ShipmentCharges
+                    .Find(c => c.ShipmentId == req.ShipmentId && c.ChargeType == chargeType && c.ShipmentPurchaseId != null)
+                    .ExecuteDelete();
+
+                foreach (var c in toAdd)
+                    Uow.ShipmentCharges.Add(c);
+
+                Uow.Commit(); // SaveChanges assigns ChargeId to the added rows
+            });
+
+            // Apply = atomic save, THEN allocation. Allocation is idempotent (Purchase_Allocation clears+rewrites),
+            // so if it errors the saved charges are recoverable by re-applying/re-allocating - it is deliberately
+            // NOT inside the save transaction (nested SP transactions + XACT_ABORT ON would make that fragile).
+            // Reallocate NEW and OLD bills so a bill dropped from the re-split has its LandedCost recomputed.
+            foreach (var pid in affectedPurchaseIds)
+                Uow.Shipments.Allocation(pid);
+
+            // Build the response after commit - ChargeId is now populated on the added entities.
+            var resultRows = toAdd
+                .Select(c => new ChargeSplitResultRow
+                {
+                    ShipmentPurchaseId = c.ShipmentPurchaseId ?? 0,
+                    ChargeId = c.ChargeId,
+                    ChargeType = c.ChargeType ?? "",
+                    ChargeAmount = c.ChargeAmount ?? 0m,
+                    BillBasis = c.BillBasis,
+                    LineBasis = c.LineBasis
+                })
+                .ToList();
+
+            return new ChargeSplitResponse { Rows = resultRows, Reload = true };
+        }
+
         private static class AllocationMethods
         {
             public const string ByValue = "BY_VALUE";
@@ -310,6 +561,15 @@ namespace KLS.Services
 
             // Other / unknown
             return AllocationMethods.ByValue;
+        }
+
+        private bool HasLockedShipmentBill(int shipmentId)
+        {
+            return Uow.Purchases
+                .Find(p => p.IsShipment
+                        && p.SourceShipmentId == shipmentId
+                        && (p.IsLocked || (p.PaymentApplied ?? 0m) > 0m))
+                .Any();
         }
     }
 }

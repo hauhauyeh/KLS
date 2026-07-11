@@ -43,5 +43,8 @@ namespace KLS.Contract.Services
         List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
 
         ReallocateResponse Reallocate(ReallocateReq req);
+
+        // Phase C: split-on-entry helper - creates/updates per-bill charges for one shipment + charge type.
+        ChargeSplitResponse SplitCharge(ChargeSplitReq req);
     }
 }

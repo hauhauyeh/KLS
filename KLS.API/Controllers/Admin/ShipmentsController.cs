@@ -169,6 +169,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_shipmentService.Reallocate(req));
         }
 
+
+        [HttpPost("SplitCharge")]
+        [DisplayName("Split Charge To Bills")]
+        [PermissionKey("Vendor.Shipment.SplitCharge")]
+        public IActionResult SplitCharge([FromBody] ChargeSplitReq req)
+        {
+            return Ok(_shipmentService.SplitCharge(req));
+        }
+
         #endregion
     }
 }

@@ -68,6 +68,8 @@ namespace KLS.Models
 
         public bool IsShipment { get; set; }
 
+        public int? SourceShipmentId { get; set; }
+
         public decimal? FreightInside { get; set; }
 
         public decimal? FreightOutside { get; set; }

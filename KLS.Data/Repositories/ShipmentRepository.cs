@@ -90,6 +90,16 @@ namespace KLS.Data.Repositories
             return DbContext.AssignedPurchase.FromSqlRaw("[Shipment_AssignedPurchase] @ShipmentId", ShipmentIdParam);
         }
 
+        public IEnumerable<BillBasisUsability> BillBasisUsability(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            return DbContext.BillBasisUsability
+                .FromSqlRaw("[Shipment_BillBasisUsability] @ShipmentId", ShipmentIdParam)
+                .AsNoTracking()
+                .ToList();
+        }
+
         public AllocationValidationResult ValidateAllocation(int purchaseId)
             => RunValidateAllocation(new SqlParameter("@PurchaseId", purchaseId));
 
