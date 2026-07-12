@@ -55,6 +55,8 @@ namespace KLS.Models
 
         public bool IsLocked { get { return Status == EnumHelper.ShipmentStatus.Closed.ToString(); } }
 
+        [NotMapped]
+        public bool IsFreightSplitLocked { get; set; }
 
         [ForeignKey("ShipmentId")]
         public virtual ICollection<ShipmentCharge>? Charges { get; set; }

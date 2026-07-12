@@ -27,6 +27,15 @@ namespace KLS.Contract.Interfaces
 
         IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
 
+        // Multi-Bill Assign: eligible bills for the picker + the atomic batch-assign write.
+        IEnumerable<EligibleBill>? EligibleBills(int shipmentId, string? search);
+
+        void AssignBills(int shipmentId, string purchaseIds);
+
+        // Phase C: per-bill basis usability + totals, so the split helper resolves freight LineBasis
+        // and derives duty amounts in the service without duplicating landed-cost math.
+        IEnumerable<BillBasisUsability> BillBasisUsability(int shipmentId);
+
         AllocationValidationResult ValidateAllocation(int purchaseId);
 
         List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);

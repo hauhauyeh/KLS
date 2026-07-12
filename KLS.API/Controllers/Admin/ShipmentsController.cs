@@ -132,6 +132,30 @@ namespace KLS.API.Controllers.Admin
             return Ok(_shipmentService.AssignedPurchases(shipmentId));
         }
 
+        [HttpGet("{shipmentId}/BillBasisUsability")]
+        public IActionResult BillBasisUsability(int shipmentId)
+        {
+            return Ok(_shipmentService.BillBasisUsability(shipmentId));
+        }
+
+
+        // Multi-Bill Assign: bills selectable in the Add-Bills picker for this shipment.
+        [HttpGet("{shipmentId}/EligibleBills")]
+        public IActionResult EligibleBills(int shipmentId, [FromQuery] string? search)
+        {
+            return Ok(_shipmentService.EligibleBills(shipmentId, search));
+        }
+
+
+        // Multi-Bill Assign: batch-assign the selected bills to this shipment.
+        [HttpPost("{shipmentId}/AssignBills")]
+        [DisplayName("Assign Bills To Shipment")]
+        [PermissionKey("Vendor.Shipment.AssignBills")]
+        public IActionResult AssignBills(int shipmentId, [FromBody] AssignBillsReq req)
+        {
+            return Ok(_shipmentService.AssignBills(shipmentId, req));
+        }
+
 
         [HttpGet("ValidateAllocation/{purchaseId}")]
         public IActionResult ValidateAllocation(int purchaseId)
@@ -167,6 +191,15 @@ namespace KLS.API.Controllers.Admin
         public IActionResult Reallocate([FromBody] ReallocateReq req)
         {
             return Ok(_shipmentService.Reallocate(req));
+        }
+
+
+        [HttpPost("SplitCharge")]
+        [DisplayName("Split Charge To Bills")]
+        [PermissionKey("Vendor.Shipment.SplitCharge")]
+        public IActionResult SplitCharge([FromBody] ChargeSplitReq req)
+        {
+            return Ok(_shipmentService.SplitCharge(req));
         }
 
         #endregion

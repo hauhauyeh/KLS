@@ -33,6 +33,13 @@ namespace KLS.Contract.Services
 
         IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
 
+        IEnumerable<BillBasisUsability>? BillBasisUsability(int shipmentId);
+
+        // Multi-Bill Assign: eligible-bill picker + batch assign (returns count assigned).
+        IEnumerable<EligibleBill>? EligibleBills(int shipmentId, string? search);
+
+        int AssignBills(int shipmentId, AssignBillsReq req);
+
         AllocationValidationResult ValidateAllocation(int purchaseId);
 
         List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);
@@ -43,5 +50,8 @@ namespace KLS.Contract.Services
         List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
 
         ReallocateResponse Reallocate(ReallocateReq req);
+
+        // Phase C: split-on-entry helper - creates/updates per-bill charges for one shipment + charge type.
+        ChargeSplitResponse SplitCharge(ChargeSplitReq req);
     }
 }
