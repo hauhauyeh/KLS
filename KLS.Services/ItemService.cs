@@ -193,7 +193,16 @@ namespace KLS.Services
                     oldItem.ItemBrand = item.ItemBrand;
 
                     oldItem.SetPacking = item.SetPacking;
-                    oldItem.PackSize = item.PackSize;
+
+                    // The item add/edit form has had no PackSize control since d0cfe3a, so its payload
+                    // omits the property and it binds to null -- an unguarded assignment here wipes the
+                    // stored value on every save from that screen. Only accept a value the caller
+                    // actually sent. Stopgap: the insert path is still exposed (a new or cloned item
+                    // saves PackSize = null), and PackSize stays client-owned and free to drift from
+                    // SetPacking. Fix properly by deriving it server-side in ItemSetPackingRecomputer.
+                    // See plan/item-packsize-null-fix-v1.md (Option A).
+                    if (item.PackSize != null)
+                        oldItem.PackSize = item.PackSize;
 
                     oldItem.PreferredVendorId = item.PreferredVendorId;
                     oldItem.PaletteFactor = item.PaletteFactor;

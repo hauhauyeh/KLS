@@ -146,6 +146,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
             modelBuilder.Entity<CustomerPaymentEditEligibility>().HasNoKey();
             modelBuilder.Entity<RptSalesYearlyRow>().HasNoKey();
+            modelBuilder.Entity<ImportPayNowExcelRow>().HasNoKey();
 
             // SalesQuote tables
             modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
@@ -404,6 +405,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<VendorPaymentList> VendorPaymentList { get; set; }
 
+        public virtual DbSet<ImportPayNowExcelRow> ImportPayNowExcelRow { get; set; }
+
         public virtual DbSet<VendorAppliedBill> VendorAppliedBill { get; set; }
 
         public virtual DbSet<VendorPaymentOpenAdvance> VendorPaymentOpenAdvance { get; set; }
@@ -483,6 +486,10 @@ namespace KLS.Data.DataContext
         public virtual DbSet<AssignedShipmentRow> AssignedShipmentRow { get; set; }
 
         public virtual DbSet<AssignedPurchase> AssignedPurchase { get; set; }
+
+        public virtual DbSet<BillBasisUsability> BillBasisUsability { get; set; }
+
+        public virtual DbSet<EligibleBill> EligibleBill { get; set; }
 
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
 

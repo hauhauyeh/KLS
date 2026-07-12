@@ -25,6 +25,8 @@ namespace KLS.Contract.Interfaces
 
         int SavePayNow(PayNowReq payNowReq);
 
+        List<ImportPayNowExcelRow> ImportPayNowPreview(string filePath);
+
         int ImportPayNow(ImportPayNow importPayNow);
 
         IQueryable<VendorPaymentList> GetByPurchaseId(int purchaseId);

@@ -29,7 +29,9 @@ namespace KLS.Contract.Services
 
         VendorPaymentList? SavePayNow(PayNowReq payNowReq);
 
-        int ImportPayNow(ImportPayNow importPayNow);
+        ImportPayNowPreviewRes ImportPayNowPreview(ImportPayNowPreviewReq req);
+
+        int ImportPayNow(ImportPayNowCommitReq req);
 
 
         void SaveAdvance(VendorPaymentAdvanceReq req);
