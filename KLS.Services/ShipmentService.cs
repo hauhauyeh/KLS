@@ -370,6 +370,16 @@ namespace KLS.Services
 
             var purchaseIds = bills.Select(b => b.PurchaseId).Distinct().ToList();
 
+            // 2026-07-13 drop-ship exclude: drop-ship bills are shipment references only and must not
+            // receive per-bill landed-cost split charges. Bounded lookup over the selected purchase ids
+            // (not a full drop-ship scan).
+            var dropShipPurchaseIds = Uow.Purchases
+                .Find(p => purchaseIds.Contains(p.PurchaseId) && p.IsDropShip)
+                .Select(p => p.PurchaseId)
+                .ToHashSet();
+            if (dropShipPurchaseIds.Count > 0)
+                throw new ArgumentException("Drop-ship bills are shipment references only and cannot receive landed-cost split charges.");
+
             // One-purchase-one-shipment backstop (assignment enforces it; this is defence in depth).
             var offenders = Uow.ShipmentPurchases
                 .Find(sp => purchaseIds.Contains(sp.PurchaseId))
