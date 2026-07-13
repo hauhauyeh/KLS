@@ -38,6 +38,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("GeneratePOFromSales")]
+        [DisplayName("Generate Drop-Ship PO from Sales Order")]
+        [PermissionKey("Vendor.DropShipment.Create")]
+        public IActionResult GeneratePOFromSales([FromBody] DropShipmentGeneratePoReq req)
+        {
+            return Ok(_dropShipmentService.GeneratePOFromSales(req));
+        }
+
+
         [HttpPost("UpdateShipQty/{purchaseId}")]
         [DisplayName("Update Ship Qty")]
         [PermissionKey("Vendor.DropShipment.UpdateShipQty")]

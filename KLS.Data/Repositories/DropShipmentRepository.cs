@@ -68,6 +68,40 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
+            var vendorPayeeIdParam = new SqlParameter("@VendorPayeeId", req.VendorPayeeId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var purchaseDateParam = req.PurchaseDate.HasValue
+                ? new SqlParameter("@PurchaseDate", req.PurchaseDate)
+                : new SqlParameter("@PurchaseDate", DBNull.Value);
+
+            var newPurchaseIdParam = new SqlParameter
+            {
+                ParameterName = "@NewPurchaseId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[DropShipment_GeneratePOFromSales] @SalesId,@VendorPayeeId,@EmpId,@PurchaseDate,@NewPurchaseId OUTPUT",
+                salesIdParam, vendorPayeeIdParam, empIdParam, purchaseDateParam, newPurchaseIdParam);
+
+            var newPurchaseId = Convert.ToInt32(newPurchaseIdParam.Value);
+
+            var sales = DbContext.Sales.AsNoTracking().FirstOrDefault(s => s.SalesId == req.SalesId);
+            var purchase = DbContext.Purchases.AsNoTracking().FirstOrDefault(p => p.PurchaseId == newPurchaseId);
+
+            return new DropShipmentInsertRes
+            {
+                SalesId = req.SalesId,
+                SalesNumber = sales?.SalesNumber ?? 0,
+                PurchaseId = newPurchaseId,
+                PurchaseNumber = purchase?.PurchaseNumber ?? 0
+            };
+        }
+
         public void UpdateShipQty(int purchaseId)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
