@@ -65,6 +65,10 @@ namespace KLS.Models
 
         public bool IsDropShip { get; set; }
 
+        public int? DropShipSalesId { get; set; }
+
+        public int? DropShipSalesNumber { get; set; }
+
         public bool IsBillStage => StageId == 6;
 
         [NotMapped]
