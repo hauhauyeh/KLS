@@ -73,9 +73,9 @@ namespace KLS.Data.Repositories
             var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
             var vendorPayeeIdParam = new SqlParameter("@VendorPayeeId", req.VendorPayeeId);
             var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
-            var purchaseDateParam = req.PurchaseDate.HasValue
-                ? new SqlParameter("@PurchaseDate", req.PurchaseDate)
-                : new SqlParameter("@PurchaseDate", DBNull.Value);
+            var arrivalDateParam = req.ArrivalDate.HasValue
+                ? new SqlParameter("@ArrivalDate", req.ArrivalDate)
+                : new SqlParameter("@ArrivalDate", DBNull.Value);
 
             var newPurchaseIdParam = new SqlParameter
             {
@@ -85,8 +85,8 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_GeneratePOFromSales] @SalesId,@VendorPayeeId,@EmpId,@PurchaseDate,@NewPurchaseId OUTPUT",
-                salesIdParam, vendorPayeeIdParam, empIdParam, purchaseDateParam, newPurchaseIdParam);
+                "[DropShipment_GeneratePOFromSales] @SalesId,@VendorPayeeId,@EmpId,@ArrivalDate,@NewPurchaseId OUTPUT",
+                salesIdParam, vendorPayeeIdParam, empIdParam, arrivalDateParam, newPurchaseIdParam);
 
             var newPurchaseId = Convert.ToInt32(newPurchaseIdParam.Value);
 

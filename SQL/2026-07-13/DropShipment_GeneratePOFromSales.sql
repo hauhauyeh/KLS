@@ -4,19 +4,20 @@ SET QUOTED_IDENTIFIER ON
 GO
 -- DropShipment_GeneratePOFromSales  (NEW 2026-07-13, Slice 1 of plan-dropship-2-checkout-two-step.md)
 -- Convert an existing NORMAL sales order (StageId=0) into a drop-ship order: generate its linked vendor PO
--- from the committed SalesDetail ITEM lines (LineType='I'; account lines stay on the SO), then flag the SO
--- drop-ship + set the bidirectional link. Step 2 of the two-step workflow (Step 1 = normal checkout).
+-- from the committed SalesDetail ITEM lines (LineType='I'; account lines stay on the SO), stamp the required
+-- ETA Date as Purchase.ArrivalDate + Sales.ShipDate, then flag the SO drop-ship + set the bidirectional link.
+-- Step 2 of the two-step workflow (Step 1 = normal checkout).
 -- No journal entries (PO is StageId=1).
 -- v1 (direct-insert): source SO is already committed, so we insert SalesDetail -> PurchaseDetail DIRECTLY -
 -- no TempPurchase, no staging trigger dependency, no shared-staging app lock. PO LineId is fresh contiguous
 -- (ROW_NUMBER over SalesDetail line order) since account lines are excluded. Column mapping matches the
 -- purchase-side of DropShipment_InsertSalesAndPO.
--- EXEC dbo.DropShipment_GeneratePOFromSales @SalesId=123, @VendorPayeeId=456, @EmpId=1, @NewPurchaseId=0;
+-- EXEC dbo.DropShipment_GeneratePOFromSales @SalesId=123, @VendorPayeeId=456, @EmpId=1, @ArrivalDate='2026-07-20', @NewPurchaseId=0;
 CREATE OR ALTER PROCEDURE [dbo].[DropShipment_GeneratePOFromSales]
     @SalesId INT,
     @VendorPayeeId INT,
     @EmpId INT,
-    @PurchaseDate DATE = NULL,
+    @ArrivalDate DATE = NULL,
     @NewPurchaseId INT OUTPUT
 AS
 BEGIN
@@ -34,8 +35,6 @@ BEGIN
     DECLARE @SalesDropShipPurchaseId INT;
     DECLARE @LockResult INT;
     DECLARE @LockResource NVARCHAR(200);
-
-    SET @PurchaseDate = ISNULL(@PurchaseDate, CAST(GETDATE() AS DATE));
 
     -- ============================================================
     -- Validate the sales order (all pre-transaction; RAISERROR + RETURN)
@@ -98,6 +97,13 @@ BEGIN
         RETURN;
     END
 
+    -- Convert-existing-SO requires a business ETA. This maps to Purchase.ArrivalDate and keeps Sales.ShipDate in sync.
+    IF @ArrivalDate IS NULL
+    BEGIN
+        RAISERROR('ETA Date is required.', 16, 1);
+        RETURN;
+    END
+
     SET @LockResource = 'DropShip_GeneratePOFromSales_' + CONVERT(NVARCHAR(20), @SalesId);
 
     BEGIN TRY
@@ -133,11 +139,11 @@ BEGIN
         SET @PurchaseNumber = NEXT VALUE FOR dbo.Seq_PurchaseNumber;
 
         INSERT INTO [dbo].[Purchase]
-            ([PurchaseNumber],[StageId],[PayeeId],[PurchaseDate],[EnterDate],[TermId]
+            ([PurchaseNumber],[StageId],[PayeeId],[PurchaseDate],[EnterDate],[ArrivalDate],[TermId]
             ,[VendorTotal],[PurchaseTotal],[AmountDue],[PaymentApplied],[DiscountApplied]
             ,[IsLocked],[IsStartFromPO],[IsDropShip],[DropShipSalesId],[CreatedAt])
         VALUES
-            (@PurchaseNumber, 1, @VendorPayeeId, @PurchaseDate, GETDATE(), @VendorTermId
+            (@PurchaseNumber, 1, @VendorPayeeId, CAST(GETDATE() AS DATE), GETDATE(), @ArrivalDate, @VendorTermId
             ,0, 0, 0, 0, 0
             ,0, 1, 1, @SalesId, GETUTCDATE());
 
@@ -204,7 +210,10 @@ BEGIN
         -- ============================================================
         -- Flag + link the sales order as drop-ship (bidirectional)
         -- ============================================================
-        UPDATE Sales SET IsDropShip = 1, DropShipPurchaseId = @PurchaseId
+        UPDATE Sales SET
+            IsDropShip = 1,
+            DropShipPurchaseId = @PurchaseId,
+            ShipDate = @ArrivalDate
         WHERE SalesId = @SalesId;
 
         -- Required write step: the SO link must have applied to exactly the one row.
