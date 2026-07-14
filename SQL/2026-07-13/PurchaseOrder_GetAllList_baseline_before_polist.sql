@@ -1,11 +1,6 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for PO Manager badge.
--- 2026-07-13 PO-TOTALS: show order total and bill total in PO Manager.
-CREATE OR ALTER PROCEDURE [dbo].[PurchaseOrder_GetAllList] --[PurchaseOrder_GetAllList] 1,50,null,null,null,null,null,null,null,null,null
+CREATE   PROCEDURE [dbo].[PurchaseOrder_GetAllList] --[PurchaseOrder_GetAllList] 1,50,null,null,null,null,null,null,null,null,null
 	
 	@Pageno int,
 	@Pagesize int,
@@ -48,11 +43,6 @@ BEGIN
 		InvoiceDate,
 		VendorDocNumber,
 		ContainerNumber,
-		(
-			SELECT ISNULL(SUM(ROUND(ISNULL(pd.OrdQty0, 0) * ISNULL(pd.BillPrice, 0), 2)), 0)
-			FROM dbo.PurchaseDetail pd
-			WHERE pd.PurchaseId = p.PurchaseId
-		) AS OrderTotal,
 		VendorTotal,
 		PurchaseTotal,
 		p.AmountDue,

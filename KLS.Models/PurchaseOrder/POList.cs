@@ -35,6 +35,8 @@ namespace KLS.Models
 
         public string? ContainerNumber { get; set; }
 
+        public decimal? OrderTotal { get; set; }
+
         public decimal? VendorTotal { get; set; }
 
         public decimal? PurchaseTotal { get; set; }
