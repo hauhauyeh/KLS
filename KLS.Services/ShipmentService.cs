@@ -400,6 +400,13 @@ namespace KLS.Services
 
             var usability = Uow.Shipments.BillBasisUsability(req.ShipmentId).ToDictionary(u => u.ShipmentPurchaseId);
 
+            // 2026-07-13: user-facing bill labels use PurchaseNumber, not ShipmentPurchaseId.
+            var billNoBySpId = bills
+                .Join(Uow.Purchases.Find(p => purchaseIds.Contains(p.PurchaseId)),
+                      b => b.PurchaseId, p => p.PurchaseId, (b, p) => new { b.ShipmentPurchaseId, p.PurchaseNumber })
+                .ToDictionary(x => x.ShipmentPurchaseId, x => x.PurchaseNumber);
+            string BillLabel(int spId) => billNoBySpId.TryGetValue(spId, out var n) ? n.ToString() : spId.ToString();
+
             var toAdd = new List<ShipmentCharge>();
             string? billBasis = null;
 
@@ -457,19 +464,19 @@ namespace KLS.Services
                 foreach (var r in req.Rows)
                 {
                     if (!usability.TryGetValue(r.ShipmentPurchaseId, out var u))
-                        throw new ArgumentException($"No basis-usability data for bill {r.ShipmentPurchaseId}.");
+                        throw new ArgumentException($"No basis-usability data for bill {BillLabel(r.ShipmentPurchaseId)}.");
 
                     // Resolve LineBasis per bill (SQL owns eligibility/weights; this is the cascade decision).
                     string lineBasis;
                     if (forced == "BY_QUANTITY")
                     {
-                        if (u.QuantityOk != 1) throw new ArgumentException($"Bill {r.ShipmentPurchaseId}: BY_QUANTITY requires total quantity greater than zero.");
+                        if (u.QuantityOk != 1) throw new ArgumentException($"Bill {BillLabel(r.ShipmentPurchaseId)}: BY_QUANTITY requires total quantity greater than zero.");
                         lineBasis = "BY_QUANTITY";
                     }
                     else if (u.VolumeOk == 1) lineBasis = "BY_VOLUME";
                     else if (u.WeightOk == 1) lineBasis = "BY_WEIGHT";
                     else if (u.ValueOk == 1) lineBasis = "BY_VALUE";
-                    else throw new ArgumentException($"Bill {r.ShipmentPurchaseId}: no usable freight line basis (no volume, weight, or value).");
+                    else throw new ArgumentException($"Bill {BillLabel(r.ShipmentPurchaseId)}: no usable freight line basis (no volume, weight, or value).");
 
                     var amt = amount[r.ShipmentPurchaseId];
                     if (amt <= 0m) continue; // a zero-share bill bears no freight; no charge row
@@ -498,7 +505,7 @@ namespace KLS.Services
                     foreach (var r in req.Rows)
                     {
                         if (!usability.TryGetValue(r.ShipmentPurchaseId, out var u))
-                            throw new ArgumentException($"No duty/tariff basis data for bill {r.ShipmentPurchaseId}.");
+                            throw new ArgumentException($"No duty/tariff basis data for bill {BillLabel(r.ShipmentPurchaseId)}.");
 
                         weight[r.ShipmentPurchaseId] = u.TotalDutyTariffWeight;
                     }
