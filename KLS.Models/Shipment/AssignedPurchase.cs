@@ -31,5 +31,8 @@ namespace KLS.Models
 
         [Column(TypeName = "decimal(5,2)")]
         public decimal? SpacePercent { get; set; }
+
+        // 2026-07-13 (Slice B): reference-only shipment link; no landed cost.
+        public bool IsDropShip { get; set; }
     }
 }
