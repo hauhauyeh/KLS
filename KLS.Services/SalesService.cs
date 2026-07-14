@@ -212,6 +212,11 @@ namespace KLS.Services
 
             if (sales != null && !sales.IsLocked)
             {
+                // Slice 3 (drop-ship): a converted SO with a linked PO must not be deleted directly. The
+                // Purchase.DropShipSalesId -> Sales FK would raise a raw FK error; give a clear message instead.
+                if (sales.IsDropShip || sales.DropShipPurchaseId != null)
+                    throw new ArgumentException("This sales order has a linked drop-ship PO. Delete or unlink the PO first.");
+
                 Uow.Sales.Find(c => c.SalesId == salesId).ExecuteDelete();
             }
         }

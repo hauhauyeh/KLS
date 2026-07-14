@@ -35,5 +35,8 @@ namespace KLS.Models
 
         [Column(TypeName = "decimal(18,4)")]
         public decimal TotalDutyTariffWeight { get; set; }
+
+        // 2026-07-13 (Slice B): reference-only; excluded from basis CTE, returned for UI.
+        public bool IsDropShip { get; set; }
     }
 }

@@ -29,5 +29,8 @@ namespace KLS.Models
         public decimal? PurchaseTotal { get; set; }
 
         public bool IsLocked { get; set; }
+
+        // 2026-07-13 (Slice B): reference-only shipment link; no landed cost.
+        public bool IsDropShip { get; set; }
     }
 }

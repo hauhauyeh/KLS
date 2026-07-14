@@ -6,6 +6,8 @@ namespace KLS.Contract.Interfaces
     {
         DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req);
 
+        DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req);
+
         void UpdateShipQty(int purchaseId);
 
         void ConvertPOToBill(int purchaseId);

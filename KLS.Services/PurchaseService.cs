@@ -157,7 +157,29 @@ namespace KLS.Services
 
             if (purchase != null && !purchase.IsLocked)
             {
-                Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
+                if (purchase.IsDropShip && purchase.DropShipSalesId != null)
+                {
+                    // Slice 3 (drop-ship): no FK protects Sales.DropShipPurchaseId, so unlink the linked SO first,
+                    // then delete the PO - atomically, or a failed delete would leave the SO unlinked from a live PO.
+                    Uow.ExecuteInTransaction(() =>
+                    {
+                        var unlinkCount = Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
+                            .ExecuteUpdate(su => su
+                                .SetProperty(s => s.IsDropShip, false)
+                                .SetProperty(s => s.DropShipPurchaseId, (int?)null));
+
+                        // Required write step: the unlink must have applied, else roll back (don't delete the PO
+                        // while its linked SO reference is unresolved).
+                        if (unlinkCount == 0)
+                            throw new ArgumentException("Linked drop-ship sales order was not found.");
+
+                        Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
+                    });
+                }
+                else
+                {
+                    Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
+                }
 
                 string docType = EnumHelper.DocType.Purchase.ToString();
 

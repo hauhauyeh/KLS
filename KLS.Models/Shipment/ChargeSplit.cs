@@ -5,8 +5,9 @@ namespace KLS.Models
 {
     // Split-on-entry helper DTOs (Phase C). Endpoint: POST api/admin/Shipments/SplitCharge.
     // Creates/updates per-bill ShipmentCharge rows (ShipmentPurchaseId NOT NULL) for one shipment + charge type.
-    // Freight is the primary path (split a carrier total across bills by pallet or space%); duty/tariff is
-    // auto-derived per bill from line duty weights; manual/other is out of scope (deferred).
+    // Freight splits a carrier total across bills by pallet or space%.
+    // Duty/tariff splits the broker's actual total across bills by each bill's duty/tariff weight.
+    // Manual/other is intentionally out of scope and stays on the legacy path.
 
     public class ChargeSplitReq
     {
@@ -18,7 +19,7 @@ namespace KLS.Models
         // Freight only: BY_PALLET | BY_SPACE_PCT. NULL for duty/tariff (no bill split).
         public string? BillBasis { get; set; }
 
-        // Freight only: the carrier lump to split across the selected bills. Ignored for duty/tariff (auto-derived).
+        // Freight: carrier lump to split. Duty/tariff: broker's actual total to split by duty/tariff weight.
         public decimal CarrierTotal { get; set; }
 
         // Freight only: NULL = auto cascade per bill (VOLUME -> WEIGHT -> VALUE); or a user override (BY_QUANTITY).
@@ -57,7 +58,7 @@ namespace KLS.Models
         public int ChargeId { get; set; }
         public string ChargeType { get; set; } = "";
 
-        // Per-bill charge amount (freight share, or auto-derived duty total for the bill).
+        // Per-bill charge amount (freight share, or duty/tariff actual-total share).
         public decimal ChargeAmount { get; set; }
 
         // BY_PALLET / BY_SPACE_PCT (freight) or NULL (duty).

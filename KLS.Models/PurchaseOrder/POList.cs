@@ -35,6 +35,8 @@ namespace KLS.Models
 
         public string? ContainerNumber { get; set; }
 
+        public decimal? OrderTotal { get; set; }
+
         public decimal? VendorTotal { get; set; }
 
         public decimal? PurchaseTotal { get; set; }
@@ -64,6 +66,10 @@ namespace KLS.Models
         public string? PaymentStatusName { get; set; }
 
         public bool IsDropShip { get; set; }
+
+        public int? DropShipSalesId { get; set; }
+
+        public int? DropShipSalesNumber { get; set; }
 
         public bool IsBillStage => StageId == 6;
 

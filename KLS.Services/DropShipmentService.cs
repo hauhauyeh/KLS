@@ -16,6 +16,11 @@ namespace KLS.Services
             return Uow.DropShipments.InsertSalesAndPO(req);
         }
 
+        public DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req)
+        {
+            return Uow.DropShipments.GeneratePOFromSales(req);
+        }
+
         public void UpdateShipQty(int purchaseId)
         {
             Uow.DropShipments.UpdateShipQty(purchaseId);
