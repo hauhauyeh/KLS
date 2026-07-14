@@ -39,6 +39,12 @@ BEGIN
       AND NOT EXISTS (SELECT 1 FROM dbo.ShipmentPurchase sp WHERE sp.PurchaseId = p.PurchaseId)
       AND ISNULL(p.IsLocked, 0) = 0
       AND ISNULL(p.PaymentApplied, 0) = 0
+      -- 2026-07-13 REQUIRE-ITEM-LINES: only bills with >=1 real item line are shipment-eligible
+      -- (landed-cost needs inventory lines; account-only/service bills have no shipment role).
+      AND EXISTS (
+          SELECT 1 FROM dbo.PurchaseDetail pd
+          WHERE pd.PurchaseId = p.PurchaseId AND pd.LineType = 'I' AND pd.ItemId IS NOT NULL
+      )
       AND (
             @S IS NULL
             OR (TRY_CAST(@S AS INT) IS NOT NULL AND p.PurchaseNumber = TRY_CAST(@S AS INT))

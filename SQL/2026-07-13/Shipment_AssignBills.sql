@@ -78,6 +78,17 @@ BEGIN
     )
         THROW 50065, 'One or more selected bills are already assigned to a shipment. Unassign them first.', 1;
 
+    -- 2026-07-13 REQUIRE-ITEM-LINES: a bill with no real item line cannot receive landed-cost allocation;
+    -- block at the write so a stale picker / direct API path cannot assign it either.
+    IF EXISTS (
+        SELECT 1 FROM @Ids i
+        WHERE NOT EXISTS (
+            SELECT 1 FROM dbo.PurchaseDetail pd
+            WHERE pd.PurchaseId = i.PurchaseId AND pd.LineType = 'I' AND pd.ItemId IS NOT NULL
+        )
+    )
+        THROW 50070, 'One or more selected bills have no item lines and cannot be assigned to a shipment.', 1;
+
     ------------------------------------------------------------
     -- Mutate atomically
     ------------------------------------------------------------

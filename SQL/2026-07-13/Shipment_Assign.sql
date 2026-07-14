@@ -34,6 +34,13 @@ BEGIN
 	)
 	    THROW 50069, 'Bill must be bill-stage, non-shipment, unlocked, and unpaid to join a shipment.', 1;
 
+	-- 2026-07-13 REQUIRE-ITEM-LINES: a bill with no real item line cannot receive landed cost.
+	IF NOT EXISTS (
+	    SELECT 1 FROM dbo.PurchaseDetail pd
+	    WHERE pd.PurchaseId = @PurchaseId AND pd.LineType = 'I' AND pd.ItemId IS NOT NULL
+	)
+	    THROW 50070, 'Bill has no item lines and cannot be assigned to a shipment.', 1;
+
 	IF @ShipmentIds IS NOT NULL AND LTRIM(RTRIM(@ShipmentIds)) <> ''
 	BEGIN
 		INSERT INTO ShipmentPurchase (ShipmentId, PurchaseId)
