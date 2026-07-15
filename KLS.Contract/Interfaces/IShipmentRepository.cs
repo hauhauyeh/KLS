@@ -21,6 +21,14 @@ namespace KLS.Contract.Interfaces
 
         void GenerateBill(int shipmentId);
 
+        void GenerateChargeBills(int shipmentId);
+
+        bool HasChargeBills(int shipmentId);
+
+        void RebuildChargesFromChargeBills(int shipmentId);
+
+        void RefreshSingleBillAllocation(int shipmentId);
+
         void UpdateCharges(int shipmentId);
 
         void AssignShipment(POCopyToBillReq copyToBillReq);

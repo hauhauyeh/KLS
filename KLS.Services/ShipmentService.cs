@@ -145,6 +145,14 @@ namespace KLS.Services
 
             var incomingCharges = shipment.Charges ?? [];
 
+            if (Uow.Shipments.HasChargeBills(shipment.ShipmentId))
+            {
+                if (HasLegacyChargeChanges(existingCharges, incomingCharges))
+                    throw new InvalidOperationException("Shipment charges are managed by charge bills and cannot be edited here.");
+
+                return existing;
+            }
+
             // 1) DELETE removed charges (exists in DB but not coming from UI)
             var incomingIds = incomingCharges
                 .Select(x => x.ChargeId)
@@ -208,6 +216,57 @@ namespace KLS.Services
             return existing;
         }
 
+        private static bool HasLegacyChargeChanges(List<ShipmentCharge> existingCharges, IEnumerable<ShipmentCharge> incomingCharges)
+        {
+            var incomingLegacy = incomingCharges
+                .Where(HasChargeData)
+                .Where(c => c.ShipmentPurchaseId == null)
+                .ToList();
+
+            // Some header-only saves may post no charges. In charge-bill mode that is not an edit.
+            if (incomingLegacy.Count == 0)
+                return false;
+
+            if (incomingLegacy.Any(c => c.ChargeId == 0))
+                return true;
+
+            var existingLegacy = existingCharges
+                .Where(c => c.ShipmentPurchaseId == null)
+                .ToDictionary(c => c.ChargeId);
+
+            var incomingIds = incomingLegacy
+                .Select(c => c.ChargeId)
+                .ToHashSet();
+
+            if (existingLegacy.Keys.Any(id => !incomingIds.Contains(id)))
+                return true;
+
+            foreach (var incoming in incomingLegacy)
+            {
+                if (!existingLegacy.TryGetValue(incoming.ChargeId, out var existing))
+                    return true;
+
+                if (!SameChargeValue(existing, incoming))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasChargeData(ShipmentCharge ch)
+        {
+            return !string.IsNullOrWhiteSpace(ch.ChargeType)
+                || (ch.ChargeAmount.HasValue && ch.ChargeAmount.Value != 0)
+                || !string.IsNullOrWhiteSpace(ch.Notes);
+        }
+
+        private static bool SameChargeValue(ShipmentCharge left, ShipmentCharge right)
+        {
+            return string.Equals((left.ChargeType ?? "").Trim(), (right.ChargeType ?? "").Trim(), StringComparison.OrdinalIgnoreCase)
+                && (left.ChargeAmount ?? 0m) == (right.ChargeAmount ?? 0m)
+                && string.Equals(left.Notes ?? "", right.Notes ?? "", StringComparison.Ordinal);
+        }
+
         public void UpdateNotes(Shipment shipment)
         {
             Uow.Shipments.Find(c => c.ShipmentId == shipment.ShipmentId).ExecuteUpdate(setters => setters
@@ -238,7 +297,10 @@ namespace KLS.Services
 
         public Shipment? GenerateBill(int shipmentId)
         {
-            Uow.Shipments.GenerateBill(shipmentId);
+            if (Uow.Shipments.HasChargeBills(shipmentId))
+                Uow.Shipments.GenerateChargeBills(shipmentId);
+            else
+                Uow.Shipments.GenerateBill(shipmentId);
 
             return GetById(shipmentId);
         }

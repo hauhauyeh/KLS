@@ -110,6 +110,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ItemImage>().ToTable("ItemImage");
             modelBuilder.Entity<Shipment>().ToTable("Shipment");
             modelBuilder.Entity<ShipmentCharge>().ToTable("ShipmentCharge");
+            modelBuilder.Entity<ShipmentChargeBill>().ToTable("ShipmentChargeBill");
+            modelBuilder.Entity<ShipmentChargeBillLine>().ToTable("ShipmentChargeBillLine");
             modelBuilder.Entity<ShipmentPurchase>().ToTable("ShipmentPurchase");
             modelBuilder.Entity<ItemTariff>().ToTable("ItemTariff");
             modelBuilder.Entity<Promotion>().ToTable("Promotion");
@@ -335,6 +337,10 @@ namespace KLS.Data.DataContext
         public DbSet<Shipment> Shipments { get; set; }
 
         public DbSet<ShipmentCharge> ShipmentCharges { get; set; }
+
+        public DbSet<ShipmentChargeBill> ShipmentChargeBills { get; set; }
+
+        public DbSet<ShipmentChargeBillLine> ShipmentChargeBillLines { get; set; }
 
         public DbSet<ShipmentPurchase> ShipmentPurchases { get; set; }
 
