@@ -453,12 +453,16 @@ namespace KLS.Services
             if (offenders.Count > 0)
                 throw new ArgumentException($"Purchase(s) {string.Join(", ", offenders)} belong to more than one shipment. Break them into one-to-one purchases first.");
 
-            // Strict legacy-scope block (matches Shipment_AllocateWithinBill's mixed-scope guard).
+            // Strict legacy-scope block. Generated charge-bill source rows are allowed here;
+            // this save replaces that source row with per-bill rows for the same charge type.
             var hasLegacy = Uow.ShipmentCharges
-                .Find(c => c.ShipmentId == req.ShipmentId && c.ShipmentPurchaseId == null && c.ChargeAmount != 0m)
+                .Find(c => c.ShipmentId == req.ShipmentId
+                        && c.ShipmentPurchaseId == null
+                        && !c.IsGeneratedFromChargeBills
+                        && c.ChargeAmount != 0m)
                 .Any();
             if (hasLegacy)
-                throw new ArgumentException("This shipment has a legacy shipment-wide charge (including generated inline freight). Remove or reverse it before creating per-bill charges.");
+                throw new ArgumentException("This shipment has a legacy shipment-wide charge. Remove or convert it before creating per-bill charges.");
 
             var usability = Uow.Shipments.BillBasisUsability(req.ShipmentId).ToDictionary(u => u.ShipmentPurchaseId);
 
@@ -644,6 +648,16 @@ namespace KLS.Services
                 // group delete-replace: this shipment's per-bill rows for this charge type
                 Uow.ShipmentCharges
                     .Find(c => c.ShipmentId == req.ShipmentId && c.ChargeType == chargeType && c.ShipmentPurchaseId != null)
+                    .ExecuteDelete();
+
+                // Charge-bill mode uses generated NULL-grain rows as source totals. Once this charge
+                // type is split to bills, remove that generated summary so Purchase_Allocation routes
+                // cleanly to the per-bill allocator without mixed-scope rows.
+                Uow.ShipmentCharges
+                    .Find(c => c.ShipmentId == req.ShipmentId
+                            && c.ChargeType == chargeType
+                            && c.ShipmentPurchaseId == null
+                            && c.IsGeneratedFromChargeBills)
                     .ExecuteDelete();
 
                 foreach (var c in toAdd)
