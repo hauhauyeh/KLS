@@ -89,6 +89,8 @@ namespace KLS.Models
 
         public string? FallbackMethods { get; set; }
 
+        public string? FreightAllocationMethod { get; set; }
+
         public bool IsBillStage => StageId == 6;
 
         [NotMapped]

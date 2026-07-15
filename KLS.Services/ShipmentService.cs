@@ -555,7 +555,7 @@ namespace KLS.Services
                         ChargeAmount = amt,
                         BillBasis = billBasis,
                         LineBasis = lineBasis,
-                        AllocationMethod = null,
+                        AllocationMethod = lineBasis,
                         UpdatedAt = DateTime.UtcNow
                     });
                 }
@@ -605,7 +605,7 @@ namespace KLS.Services
                             ChargeAmount = amt,
                             BillBasis = null,
                             LineBasis = "BY_DUTY_TARIFF",
-                            AllocationMethod = null,
+                            AllocationMethod = "BY_DUTY_TARIFF",
                             UpdatedAt = DateTime.UtcNow
                         });
                     }
