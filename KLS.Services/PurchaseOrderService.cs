@@ -71,7 +71,25 @@ namespace KLS.Services
             // convert-to-bill, otherwise Bill Manager still shows the orphaned row.
             if (purchase != null && !purchase.IsLocked)
             {
-                Uow.Purchases.Find(c => c.PurchaseId == PurchaseId).ExecuteDelete();
+                if (purchase.IsDropShip && purchase.DropShipSalesId != null)
+                {
+                    Uow.ExecuteInTransaction(() =>
+                    {
+                        var unlinkCount = Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
+                            .ExecuteUpdate(su => su
+                                .SetProperty(s => s.IsDropShip, false)
+                                .SetProperty(s => s.DropShipPurchaseId, (int?)null));
+
+                        if (unlinkCount == 0)
+                            throw new ArgumentException("Linked drop-ship sales order was not found.");
+
+                        Uow.Purchases.Find(c => c.PurchaseId == PurchaseId).ExecuteDelete();
+                    });
+                }
+                else
+                {
+                    Uow.Purchases.Find(c => c.PurchaseId == PurchaseId).ExecuteDelete();
+                }
 
                 string docType = EnumHelper.DocType.Purchase.ToString();
 
