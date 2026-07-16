@@ -65,6 +65,47 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Shipment_GenerateBill] @ShipmentId", ShipmentIdParam);
         }
 
+        public void GenerateChargeBills(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            DbContext.Database.ExecuteSqlRaw("[Shipment_GenerateChargeBills] @ShipmentId", ShipmentIdParam);
+        }
+
+        public bool HasChargeBills(int shipmentId)
+        {
+            var conn = DbContext.Database.GetDbConnection();
+            var wasClosed = conn.State != System.Data.ConnectionState.Open;
+
+            if (wasClosed) conn.Open();
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.ShipmentChargeBill WHERE ShipmentId = @ShipmentId) THEN 1 ELSE 0 END";
+                cmd.Parameters.Add(new SqlParameter("@ShipmentId", shipmentId));
+
+                return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+            }
+            finally
+            {
+                if (wasClosed) conn.Close();
+            }
+        }
+
+        public void RebuildChargesFromChargeBills(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            DbContext.Database.ExecuteSqlRaw("[ShipmentCharge_RebuildFromChargeBills] @ShipmentId", ShipmentIdParam);
+        }
+
+        public void RefreshSingleBillAllocation(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            DbContext.Database.ExecuteSqlRaw("[ShipmentCharge_RefreshSingleBillAllocation] @ShipmentId", ShipmentIdParam);
+        }
+
         public void UpdateCharges(int shipmentId)
         {
             var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);

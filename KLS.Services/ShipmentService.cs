@@ -145,6 +145,14 @@ namespace KLS.Services
 
             var incomingCharges = shipment.Charges ?? [];
 
+            if (Uow.Shipments.HasChargeBills(shipment.ShipmentId))
+            {
+                if (HasLegacyChargeChanges(existingCharges, incomingCharges))
+                    throw new InvalidOperationException("Shipment charges are managed by charge bills and cannot be edited here.");
+
+                return existing;
+            }
+
             // 1) DELETE removed charges (exists in DB but not coming from UI)
             var incomingIds = incomingCharges
                 .Select(x => x.ChargeId)
@@ -208,6 +216,57 @@ namespace KLS.Services
             return existing;
         }
 
+        private static bool HasLegacyChargeChanges(List<ShipmentCharge> existingCharges, IEnumerable<ShipmentCharge> incomingCharges)
+        {
+            var incomingLegacy = incomingCharges
+                .Where(HasChargeData)
+                .Where(c => c.ShipmentPurchaseId == null)
+                .ToList();
+
+            // Some header-only saves may post no charges. In charge-bill mode that is not an edit.
+            if (incomingLegacy.Count == 0)
+                return false;
+
+            if (incomingLegacy.Any(c => c.ChargeId == 0))
+                return true;
+
+            var existingLegacy = existingCharges
+                .Where(c => c.ShipmentPurchaseId == null)
+                .ToDictionary(c => c.ChargeId);
+
+            var incomingIds = incomingLegacy
+                .Select(c => c.ChargeId)
+                .ToHashSet();
+
+            if (existingLegacy.Keys.Any(id => !incomingIds.Contains(id)))
+                return true;
+
+            foreach (var incoming in incomingLegacy)
+            {
+                if (!existingLegacy.TryGetValue(incoming.ChargeId, out var existing))
+                    return true;
+
+                if (!SameChargeValue(existing, incoming))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasChargeData(ShipmentCharge ch)
+        {
+            return !string.IsNullOrWhiteSpace(ch.ChargeType)
+                || (ch.ChargeAmount.HasValue && ch.ChargeAmount.Value != 0)
+                || !string.IsNullOrWhiteSpace(ch.Notes);
+        }
+
+        private static bool SameChargeValue(ShipmentCharge left, ShipmentCharge right)
+        {
+            return string.Equals((left.ChargeType ?? "").Trim(), (right.ChargeType ?? "").Trim(), StringComparison.OrdinalIgnoreCase)
+                && (left.ChargeAmount ?? 0m) == (right.ChargeAmount ?? 0m)
+                && string.Equals(left.Notes ?? "", right.Notes ?? "", StringComparison.Ordinal);
+        }
+
         public void UpdateNotes(Shipment shipment)
         {
             Uow.Shipments.Find(c => c.ShipmentId == shipment.ShipmentId).ExecuteUpdate(setters => setters
@@ -238,7 +297,10 @@ namespace KLS.Services
 
         public Shipment? GenerateBill(int shipmentId)
         {
-            Uow.Shipments.GenerateBill(shipmentId);
+            if (Uow.Shipments.HasChargeBills(shipmentId))
+                Uow.Shipments.GenerateChargeBills(shipmentId);
+            else
+                Uow.Shipments.GenerateBill(shipmentId);
 
             return GetById(shipmentId);
         }
@@ -391,12 +453,16 @@ namespace KLS.Services
             if (offenders.Count > 0)
                 throw new ArgumentException($"Purchase(s) {string.Join(", ", offenders)} belong to more than one shipment. Break them into one-to-one purchases first.");
 
-            // Strict legacy-scope block (matches Shipment_AllocateWithinBill's mixed-scope guard).
+            // Strict legacy-scope block. Generated charge-bill source rows are allowed here;
+            // this save replaces that source row with per-bill rows for the same charge type.
             var hasLegacy = Uow.ShipmentCharges
-                .Find(c => c.ShipmentId == req.ShipmentId && c.ShipmentPurchaseId == null && c.ChargeAmount != 0m)
+                .Find(c => c.ShipmentId == req.ShipmentId
+                        && c.ShipmentPurchaseId == null
+                        && !c.IsGeneratedFromChargeBills
+                        && c.ChargeAmount != 0m)
                 .Any();
             if (hasLegacy)
-                throw new ArgumentException("This shipment has a legacy shipment-wide charge (including generated inline freight). Remove or reverse it before creating per-bill charges.");
+                throw new ArgumentException("This shipment has a legacy shipment-wide charge. Remove or convert it before creating per-bill charges.");
 
             var usability = Uow.Shipments.BillBasisUsability(req.ShipmentId).ToDictionary(u => u.ShipmentPurchaseId);
 
@@ -489,7 +555,7 @@ namespace KLS.Services
                         ChargeAmount = amt,
                         BillBasis = billBasis,
                         LineBasis = lineBasis,
-                        AllocationMethod = null,
+                        AllocationMethod = lineBasis,
                         UpdatedAt = DateTime.UtcNow
                     });
                 }
@@ -539,7 +605,7 @@ namespace KLS.Services
                             ChargeAmount = amt,
                             BillBasis = null,
                             LineBasis = "BY_DUTY_TARIFF",
-                            AllocationMethod = null,
+                            AllocationMethod = "BY_DUTY_TARIFF",
                             UpdatedAt = DateTime.UtcNow
                         });
                     }
@@ -582,6 +648,16 @@ namespace KLS.Services
                 // group delete-replace: this shipment's per-bill rows for this charge type
                 Uow.ShipmentCharges
                     .Find(c => c.ShipmentId == req.ShipmentId && c.ChargeType == chargeType && c.ShipmentPurchaseId != null)
+                    .ExecuteDelete();
+
+                // Charge-bill mode uses generated NULL-grain rows as source totals. Once this charge
+                // type is split to bills, remove that generated summary so Purchase_Allocation routes
+                // cleanly to the per-bill allocator without mixed-scope rows.
+                Uow.ShipmentCharges
+                    .Find(c => c.ShipmentId == req.ShipmentId
+                            && c.ChargeType == chargeType
+                            && c.ShipmentPurchaseId == null
+                            && c.IsGeneratedFromChargeBills)
                     .ExecuteDelete();
 
                 foreach (var c in toAdd)

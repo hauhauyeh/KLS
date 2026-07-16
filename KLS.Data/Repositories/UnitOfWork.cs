@@ -221,6 +221,10 @@ namespace KLS.Data.Repositories
 
         public IShipmentChargeRepository ShipmentCharges { get { return new ShipmentChargeRepository(DbContext); } }
 
+        public IShipmentChargeBillRepository ShipmentChargeBills { get { return new ShipmentChargeBillRepository(DbContext); } }
+
+        public IShipmentChargeBillLineRepository ShipmentChargeBillLines { get { return new ShipmentChargeBillLineRepository(DbContext); } }
+
         public IShipmentPurchaseRepository ShipmentPurchases { get { return new ShipmentPurchaseRepository(DbContext); } }
 
         public IItemTariffRepository ItemTariffs { get { return new ItemTariffRepository(DbContext); } }

@@ -35,6 +35,8 @@ namespace KLS.Models
 
         public string? Notes { get; set; }
 
+        public bool IsGeneratedFromChargeBills { get; set; }
+
         public DateTime? UpdatedAt { get; set; }
 
         [NotMapped]
