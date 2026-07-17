@@ -1,4 +1,3 @@
-
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for PO Manager badge.
 -- 2026-07-13 PO-TOTALS: show order total and bill total in PO Manager.
 CREATE   PROCEDURE [dbo].[PurchaseOrder_GetAllList] --[PurchaseOrder_GetAllList] 1,50,null,null,null,null,null,null,null,null,null
@@ -43,6 +42,7 @@ BEGIN
 		ArrivalDate,
 		InvoiceDate,
 		VendorDocNumber,
+		p.FactorPO,
 		ContainerNumber,
 		(
 			SELECT ISNULL(SUM(ROUND(ISNULL(pd.OrdQty0, 0) * ISNULL(pd.BillPrice, 0), 2)), 0)

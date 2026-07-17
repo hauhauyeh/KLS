@@ -2,7 +2,6 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for Bill Manager badge.
 CREATE OR ALTER PROCEDURE [dbo].[Purchase_GetAllList]
     @Pageno INT,
@@ -67,6 +66,7 @@ BEGIN
         p.IsDropShip,
         p.DropShipSalesId,
         dss.SalesNumber AS DropShipSalesNumber,
+        dss.CustPONumber AS DropShipSalesCustPONumber,
         spx.ShipmentLinkCount,
         shipinfo.ShipmentContainerNos,
         sps.PurchaseLinkCount,
@@ -262,11 +262,11 @@ BEGIN
         SET @Qry += ' ORDER BY ' + @SortField + ' ' + @SortOrder + '';
     ELSE
     BEGIN
-        -- 2026-05-27: reverted to EnterDate per user feedback — see file header.
+        -- 2026-05-27: reverted to EnterDate per user feedback - see file header.
         -- 2026-05-23: SET @Qry += ' ORDER BY p.ArrivalDate DESC,p.PurchaseNumber DESC';
         IF @Search IS NOT NULL
             SET @Qry += ' ORDER BY p.EnterDate DESC,p.PurchaseNumber DESC';
-        -- 2026-05-27: reverted to EnterDate per user feedback — see file header.
+        -- 2026-05-27: reverted to EnterDate per user feedback - see file header.
         -- 2026-05-23: SET @Qry += ' ORDER BY p.ArrivalDate DESC,p.PurchaseNumber DESC';
         ELSE IF @VendorId IS NOT NULL
             SET @Qry += ' ORDER BY p.ArrivalDate DESC,p.PurchaseNumber DESC';

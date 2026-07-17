@@ -68,6 +68,7 @@ BEGIN
 		p.IsDropShip,
 		p.DropShipSalesId,
 		dss.SalesNumber AS DropShipSalesNumber,
+		dss.CustPONumber AS DropShipSalesCustPONumber,
 
 		CASE 
         WHEN EXISTS (
