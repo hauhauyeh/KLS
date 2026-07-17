@@ -89,6 +89,10 @@ namespace KLS.Data.Repositories
                 ? new SqlParameter("@Notes", DBNull.Value)
                 : new SqlParameter("@Notes", checkoutReq.Notes);
 
+            var FactorPOParam = string.IsNullOrWhiteSpace(checkoutReq.FactorPO)
+                ? new SqlParameter("@FactorPO", DBNull.Value)
+                : new SqlParameter("@FactorPO", checkoutReq.FactorPO);
+
             // stage / pallet / emp
             var StageIdParam = new SqlParameter("@StageId", checkoutReq.StageId);
 
@@ -106,7 +110,7 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
-            DbContext.Database.ExecuteSqlRaw("[Purchase_Insert] @PurchaseId,@PayeeId,@VendorDocNumber,@ContainerNumber,@PurchaseDate,@ArrivalDate,@InvoiceDate,@DueDate,@Notes,@StageId,@PalletCount,@EmpId,@NewPurchaseId OUTPUT", PurchaseIdParam, PayeeIdParam, VendorDocNumberParam, ContainerNumberParam, PurchaseDateParam, ArrivalDateParam, InvoiceDateParam, DueDateParam, NotesParam, StageIdParam, PalletCountParam, EmpIdParam, NewPurchaseIdParam);
+            DbContext.Database.ExecuteSqlRaw("[Purchase_Insert] @PurchaseId,@PayeeId,@VendorDocNumber,@ContainerNumber,@PurchaseDate,@ArrivalDate,@InvoiceDate,@DueDate,@Notes,@StageId,@PalletCount,@EmpId,@NewPurchaseId OUTPUT,@FactorPO", PurchaseIdParam, PayeeIdParam, VendorDocNumberParam, ContainerNumberParam, PurchaseDateParam, ArrivalDateParam, InvoiceDateParam, DueDateParam, NotesParam, StageIdParam, PalletCountParam, EmpIdParam, NewPurchaseIdParam, FactorPOParam);
 
             return (NewPurchaseIdParam.Value == DBNull.Value) ? 0 : Convert.ToInt32(NewPurchaseIdParam.Value);
         }

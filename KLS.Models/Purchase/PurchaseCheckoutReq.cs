@@ -25,6 +25,8 @@ namespace KLS.Models
 
         public DateOnly? DueDate { get; set; }
 
+        public string? FactorPO { get; set; }
+
         public string? Notes { get; set; }
 
         public int StageId { get; set; }
