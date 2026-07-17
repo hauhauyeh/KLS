@@ -14,7 +14,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    ;WITH TxRows AS
+    ;WITH FilteredRows AS
     (
         SELECT
             t.TxId,
@@ -28,44 +28,68 @@ BEGIN
             a.IsAccountDebit,
             td.Amount,
             td.CrDeAmount,
-            expected.CrDeAmount AS ExpectedCrDeAmount
+            CASE
+                WHEN a.IsAccountDebit = 1 THEN -td.Amount
+                ELSE td.Amount
+            END AS ExpectedCrDeAmount
         FROM dbo.TransactionJournal t
         INNER JOIN dbo.TransactionJournalDetail td
             ON td.TxId = t.TxId
         INNER JOIN dbo.Account a
             ON a.AccountId = td.AccountId
-        CROSS APPLY dbo.Fn_CrDeAmount(td.AccountId, td.Amount) expected
         WHERE td.AccountId IS NOT NULL
           AND (@StartDate IS NULL OR t.TxDate >= @StartDate)
           AND (@EndDate IS NULL OR t.TxDate < DATEADD(DAY, 1, @EndDate))
           AND (@AccountCode IS NULL OR a.AccountCode = @AccountCode)
           AND (@SourceDocType IS NULL OR t.SourceDocType = @SourceDocType)
     ),
+    MismatchRows AS
+    (
+        SELECT TOP (@MaxRows)
+            fr.*
+        FROM FilteredRows fr
+        WHERE ISNULL(fr.CrDeAmount, 0) <> ISNULL(fr.ExpectedCrDeAmount, 0)
+    ),
+    MismatchTx AS
+    (
+        SELECT DISTINCT TxId
+        FROM MismatchRows
+    ),
     TxBalance AS
     (
         SELECT
-            tr.TxId,
-            SUM(tr.CrDeAmount) AS StoredCrDeBalance,
-            SUM(tr.ExpectedCrDeAmount) AS ExpectedCrDeBalance
-        FROM TxRows tr
-        GROUP BY tr.TxId
+            t.TxId,
+            SUM(td.CrDeAmount) AS StoredCrDeBalance,
+            SUM(CASE
+                    WHEN a.IsAccountDebit = 1 THEN -td.Amount
+                    ELSE td.Amount
+                END) AS ExpectedCrDeBalance
+        FROM MismatchTx mt
+        INNER JOIN dbo.TransactionJournal t
+            ON t.TxId = mt.TxId
+        INNER JOIN dbo.TransactionJournalDetail td
+            ON td.TxId = t.TxId
+        INNER JOIN dbo.Account a
+            ON a.AccountId = td.AccountId
+        WHERE td.AccountId IS NOT NULL
+        GROUP BY t.TxId
     )
-    SELECT TOP (@MaxRows)
-        tr.TxId,
-        tr.TxDate,
-        tr.SourceDocType,
-        tr.SourceDocNumber,
-        tr.TxDetailId,
-        tr.AccountCode,
-        tr.AccountName,
-        tr.IsAccountDebit,
-        tr.Amount,
-        tr.CrDeAmount,
-        tr.ExpectedCrDeAmount,
+    SELECT
+        mr.TxId,
+        mr.TxDate,
+        mr.SourceDocType,
+        mr.SourceDocNumber,
+        mr.TxDetailId,
+        mr.AccountCode,
+        mr.AccountName,
+        mr.IsAccountDebit,
+        mr.Amount,
+        mr.CrDeAmount,
+        mr.ExpectedCrDeAmount,
         tb.StoredCrDeBalance,
         tb.ExpectedCrDeBalance,
         CASE
-            WHEN ISNULL(tr.CrDeAmount, 0) = ISNULL(tr.ExpectedCrDeAmount, 0)
+            WHEN ISNULL(mr.CrDeAmount, 0) = ISNULL(mr.ExpectedCrDeAmount, 0)
                 THEN 'NoMismatch'
             WHEN ISNULL(tb.StoredCrDeBalance, 0) = 0
              AND ISNULL(tb.ExpectedCrDeBalance, 0) <> 0
@@ -75,13 +99,13 @@ BEGIN
                 THEN 'CrDeAmountWrong_ExpectedCrDeBalances'
             ELSE 'BothOrAmbiguous'
         END AS Diagnosis
-    FROM TxRows tr
+    FROM MismatchRows mr
     INNER JOIN TxBalance tb
-        ON tb.TxId = tr.TxId
-    WHERE ISNULL(tr.CrDeAmount, 0) <> ISNULL(tr.ExpectedCrDeAmount, 0)
+        ON tb.TxId = mr.TxId
     ORDER BY
-        tr.TxDate DESC,
-        tr.TxId DESC,
-        tr.TxDetailId;
+        mr.TxDate DESC,
+        mr.TxId DESC,
+        mr.TxDetailId
+    OPTION (RECOMPILE);
 END
 GO
