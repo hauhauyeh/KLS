@@ -35,6 +35,8 @@ namespace KLS.Models
 
         public string? VendorDocNumber { get; set; }
 
+        public string? FactorPO { get; set; }
+
         public string? ContainerNumber { get; set; }
 
         public int? TermId { get; set; }
