@@ -75,8 +75,6 @@ namespace KLS.Data.Repositories
 
         public ITruckRepository Trucks { get { return new TruckRepository(DbContext); } }
 
-        public IAccountTypeRepository AccountTypes { get { return new AccountTypeRepository(DbContext); } }
-
         public IAccountCategoryRepository AccountCategories { get { return new AccountCategoryRepository(DbContext); } }
 
         public IAccountRepository Accounts { get { return new AccountRepository(DbContext); } }

@@ -30,7 +30,6 @@ namespace KLS.API.Helpers
             services.AddScoped<IBankFeedAccountService, BankFeedAccountService>();
             services.AddScoped<IBankFeedTransactionService, BankFeedTransactionService>();
             services.AddScoped<IAccountCategoryService, AccountCategoryService>();
-            services.AddScoped<IAccountTypeService, AccountTypeService>();
             services.AddScoped<IEmailLogService, EmailLogService>();
             services.AddScoped<IEmailSettingService, EmailSettingService>();
             services.AddScoped<IRecalculationLogService, RecalculationLogService>();
