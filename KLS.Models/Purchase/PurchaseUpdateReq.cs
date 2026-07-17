@@ -16,6 +16,8 @@ namespace KLS.Models
 
         public string? ContainerNumber { get; set; }
 
+        public string? FactorPO { get; set; }
+
         public DateOnly? InvoiceDate { get; set; }
 
         public decimal? ImportCommission { get; set; }
