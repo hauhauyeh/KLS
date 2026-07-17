@@ -212,9 +212,13 @@ namespace KLS.Services
 
             if (sales != null && !sales.IsLocked)
             {
-                // Slice 3 (drop-ship): a converted SO with a linked PO must not be deleted directly. The
-                // Purchase.DropShipSalesId -> Sales FK would raise a raw FK error; give a clear message instead.
-                if (sales.IsDropShip || sales.DropShipPurchaseId != null)
+                // Slice 3 (drop-ship): block deletion only while a live linked PO/Bill still exists.
+                // If PO Manager previously deleted the PO without unlinking the SO, allow deleting the stale SO.
+                var hasLiveDropShipPurchase = Uow.Purchases.Exists(p =>
+                    (sales.DropShipPurchaseId != null && p.PurchaseId == sales.DropShipPurchaseId)
+                    || p.DropShipSalesId == salesId);
+
+                if ((sales.IsDropShip || sales.DropShipPurchaseId != null) && hasLiveDropShipPurchase)
                     throw new ArgumentException("This sales order has a linked drop-ship PO. Delete or unlink the PO first.");
 
                 Uow.Sales.Find(c => c.SalesId == salesId).ExecuteDelete();
