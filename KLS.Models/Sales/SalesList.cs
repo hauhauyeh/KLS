@@ -82,6 +82,7 @@ namespace KLS.Models
         // 2026-07-13: linked drop-ship purchase (PO/Bill) ref for the SO -> PO/Bill badge.
         public int? DropShipPurchaseId { get; set; }
         public int? DropShipPurchaseNumber { get; set; }
+        public string? DropShipPurchaseFactorPO { get; set; }
         public int? DropShipPurchaseStageId { get; set; }
         public int? DropShipPurchasePayeeId { get; set; }
 

@@ -72,6 +72,7 @@ namespace KLS.Models
         public int? DropShipSalesId { get; set; }
 
         public int? DropShipSalesNumber { get; set; }
+        public string? DropShipSalesCustPONumber { get; set; }
 
         public bool IsBillStage => StageId == 6;
 
