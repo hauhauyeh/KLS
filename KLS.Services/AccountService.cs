@@ -71,6 +71,9 @@ namespace KLS.Services
 
         public Account Create(Account account)
         {
+            var category = GetRequiredCategory(account.AccountCategoryId);
+            account.TypeName ??= category.CategoryName;
+
             Uow.Accounts.Add(account);
             Uow.Commit();
 
@@ -84,10 +87,13 @@ namespace KLS.Services
             if (existing == null)
                 return null;
 
+            var category = GetRequiredCategory(existing.AccountCategoryId);
+
             existing.AccountName = account.AccountName;
             existing.SortOrder = account.SortOrder;
             existing.Description = account.Description;
             existing.IsAccountDebit = account.IsAccountDebit;
+            existing.TypeName ??= category.CategoryName;
             existing.Inactive = account.Inactive;
             existing.UpdatedAt = DateTime.UtcNow;
 
@@ -98,6 +104,15 @@ namespace KLS.Services
             Uow.Commit();
 
             return existing;
+        }
+
+        private AccountCategory GetRequiredCategory(int categoryId)
+        {
+            var category = Uow.AccountCategories.GetById(categoryId);
+            if (category == null)
+                throw new ArgumentException("Account category is required.");
+
+            return category;
         }
 
         public void Delete(int accountId)
