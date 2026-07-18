@@ -38,6 +38,10 @@ namespace KLS.Models
 
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? RecentCost { get; set; }
+        // Pure item cost (no landed cost) — RecentCost minus the landed-cost share.
+        // Written by ItemUnit_UpdateRecentCost; NULL until the item has purchase history.
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? RecentBaseCost { get; set; }
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? P1 { get; set; }
         [Column(TypeName = "decimal(18, 4)")]
