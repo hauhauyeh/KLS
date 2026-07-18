@@ -9,5 +9,6 @@ namespace KLS.Contract.Dtos.DropShipment
         public string? ShipRoute { get; set; }
         public string? Instruction { get; set; }
         public DateTime? PurchaseDate { get; set; }
+        public string? FactorPO { get; set; }
     }
 }

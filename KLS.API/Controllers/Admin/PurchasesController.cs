@@ -131,6 +131,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("UpdateFactorPO")]
+        [DisplayName("Update Factor PO")]
+        [PermissionKey("Vendor.Purchase.Update")]
+        public IActionResult UpdateFactorPO([FromBody] PurchaseUpdateReq updateReq)
+        {
+            return Ok(_purchaseService.UpdateFactorPO(updateReq.PurchaseId, updateReq.FactorPO));
+        }
+
+
         [HttpPost("Checkout")]
         [DisplayName("Create Bill")]
         [PermissionKey("Vendor.Purchase.Create")]

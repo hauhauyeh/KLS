@@ -34,6 +34,9 @@ namespace KLS.Data.Repositories
             var purchaseDateParam = req.PurchaseDate.HasValue
                 ? new SqlParameter("@PurchaseDate", req.PurchaseDate)
                 : new SqlParameter("@PurchaseDate", DBNull.Value);
+            var factorPOParam = string.IsNullOrWhiteSpace(req.FactorPO)
+                ? new SqlParameter("@FactorPO", DBNull.Value)
+                : new SqlParameter("@FactorPO", req.FactorPO.Trim().ToUpper());
 
             var newSalesIdParam = new SqlParameter
             {
@@ -49,9 +52,9 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_InsertSalesAndPO] @SalesId,@PayeeId,@VendorPayeeId,@ShipDate,@ShipRoute,@Instruction,@EmpId,@PurchaseDate,@NewSalesId OUTPUT,@NewPurchaseId OUTPUT",
+                "[DropShipment_InsertSalesAndPO] @SalesId,@PayeeId,@VendorPayeeId,@ShipDate,@ShipRoute,@Instruction,@EmpId,@PurchaseDate,@NewSalesId OUTPUT,@NewPurchaseId OUTPUT,@FactorPO",
                 salesIdParam, payeeIdParam, vendorPayeeIdParam, shipDateParam, shipRouteParam,
-                instructionParam, empIdParam, purchaseDateParam, newSalesIdParam, newPurchaseIdParam);
+                instructionParam, empIdParam, purchaseDateParam, newSalesIdParam, newPurchaseIdParam, factorPOParam);
 
             var newSalesId = Convert.ToInt32(newSalesIdParam.Value);
             var newPurchaseId = Convert.ToInt32(newPurchaseIdParam.Value);
@@ -76,6 +79,9 @@ namespace KLS.Data.Repositories
             var arrivalDateParam = req.ArrivalDate.HasValue
                 ? new SqlParameter("@ArrivalDate", req.ArrivalDate)
                 : new SqlParameter("@ArrivalDate", DBNull.Value);
+            var factorPOParam = string.IsNullOrWhiteSpace(req.FactorPO)
+                ? new SqlParameter("@FactorPO", DBNull.Value)
+                : new SqlParameter("@FactorPO", req.FactorPO.Trim().ToUpper());
 
             var newPurchaseIdParam = new SqlParameter
             {
@@ -85,8 +91,8 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_GeneratePOFromSales] @SalesId,@VendorPayeeId,@EmpId,@ArrivalDate,@NewPurchaseId OUTPUT",
-                salesIdParam, vendorPayeeIdParam, empIdParam, arrivalDateParam, newPurchaseIdParam);
+                "[DropShipment_GeneratePOFromSales] @SalesId,@VendorPayeeId,@EmpId,@ArrivalDate,@NewPurchaseId OUTPUT,@FactorPO",
+                salesIdParam, vendorPayeeIdParam, empIdParam, arrivalDateParam, newPurchaseIdParam, factorPOParam);
 
             var newPurchaseId = Convert.ToInt32(newPurchaseIdParam.Value);
 

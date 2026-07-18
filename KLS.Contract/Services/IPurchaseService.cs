@@ -30,6 +30,8 @@ namespace KLS.Contract.Services
 
         PurchaseList? UpdateContainerNumber(int purchaseId, string? containerNumber);
 
+        PurchaseList? UpdateFactorPO(int purchaseId, string? factorPO);
+
         PurchaseList? Checkout(PurchaseCheckoutReq checkoutReq);
 
         PurchaseList? UpdatePartially(int purchaseId);
