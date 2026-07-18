@@ -41,7 +41,6 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<Vendor>().ToTable("Vendor");
             modelBuilder.Entity<Term>().ToTable("Term");
             modelBuilder.Entity<Truck>().ToTable("Truck");
-            modelBuilder.Entity<AccountType>().ToTable("AccountType");
             modelBuilder.Entity<AccountCategory>().ToTable("AccountCategory");
             modelBuilder.Entity<Account>().ToTable("Account");
             modelBuilder.Entity<EmailLog>().ToTable("EmailLog");
@@ -191,8 +190,6 @@ namespace KLS.Data.DataContext
         public DbSet<Term> Temrs { get; set; }
 
         public DbSet<Truck> Trucks { get; set; }
-
-        public DbSet<AccountType> AccountTypes { get; set; }
 
         public DbSet<AccountCategory> AccountCategories { get; set; }
 

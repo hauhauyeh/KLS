@@ -139,6 +139,20 @@ namespace KLS.Services
             return GetListById(purchaseId);
         }
 
+        public PurchaseList? UpdateFactorPO(int purchaseId, string? factorPO)
+        {
+            factorPO = string.IsNullOrWhiteSpace(factorPO) ? null : factorPO.Trim();
+
+            var updated = Uow.Purchases.Find(c => c.PurchaseId == purchaseId && !c.IsLocked).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.FactorPO, x => factorPO)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+
+            if (updated == 0)
+                throw new ArgumentException("Purchase was not found or is locked.");
+
+            return GetListById(purchaseId);
+        }
+
         public PurchaseList? UpdatePartially(int purchaseId)
         {
             Uow.Purchases.UpdatePartially(purchaseId);

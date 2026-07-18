@@ -36,8 +36,6 @@ namespace KLS.Contract.Interfaces
 
         ITruckRepository Trucks { get; }
 
-        IAccountTypeRepository AccountTypes { get; }
-
         IAccountCategoryRepository AccountCategories { get; }
 
         IAccountRepository Accounts { get; }

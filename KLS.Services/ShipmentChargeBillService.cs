@@ -96,6 +96,8 @@ namespace KLS.Services
                 EnsureLegacyTotalsMatch(legacySourceCharges, normalizedLines);
             }
 
+            EnsureSplitTotalsRemainMatched(req.ShipmentId, req.ShipmentChargeBillId, normalizedLines, "saving");
+
             Uow.ExecuteInTransaction(() =>
             {
                 var legacyChargesToConvert = legacySourceCharges.Count > 0
@@ -178,6 +180,8 @@ namespace KLS.Services
 
             if (HasLockedShipmentBill(bill.ShipmentId))
                 throw new InvalidOperationException("Charge bills are read-only because a generated AP bill is paid or locked.");
+
+            EnsureSplitTotalsRemainMatched(bill.ShipmentId, bill.ShipmentChargeBillId, [], "deleting");
 
             Uow.ExecuteInTransaction(() =>
             {
@@ -280,6 +284,54 @@ namespace KLS.Services
 
                 if (Math.Abs(legacyTotal - lineTotal) > 0.01m)
                     throw new InvalidOperationException("Charge bill conversion total must match saved legacy charges.");
+            }
+        }
+
+        private void EnsureSplitTotalsRemainMatched(
+            int shipmentId,
+            int replacingShipmentChargeBillId,
+            List<ShipmentChargeBillLineReq> replacementLines,
+            string action)
+        {
+            var splitTotals = Uow.ShipmentCharges
+                .Find(c => c.ShipmentId == shipmentId
+                        && c.ShipmentPurchaseId != null
+                        && (c.ChargeAmount ?? 0m) != 0m)
+                .ToList()
+                .GroupBy(c => c.ChargeType ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Sum(c => c.ChargeAmount ?? 0m), StringComparer.OrdinalIgnoreCase);
+
+            if (splitTotals.Count == 0)
+                return;
+
+            var existingBillIds = Uow.ShipmentChargeBills
+                .Find(b => b.ShipmentId == shipmentId
+                        && b.ShipmentChargeBillId != replacingShipmentChargeBillId)
+                .Select(b => b.ShipmentChargeBillId)
+                .ToList();
+
+            var proposedTotals = existingBillIds.Count == 0
+                ? new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+                : Uow.ShipmentChargeBillLines
+                    .Find(l => existingBillIds.Contains(l.ShipmentChargeBillId))
+                    .ToList()
+                    .GroupBy(l => l.ChargeType, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.Sum(l => l.ChargeAmount), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var lineTotal in replacementLines
+                .GroupBy(l => l.ChargeType, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new { ChargeType = g.Key, Amount = g.Sum(l => l.ChargeAmount) }))
+            {
+                proposedTotals.TryGetValue(lineTotal.ChargeType, out var existingTotal);
+                proposedTotals[lineTotal.ChargeType] = existingTotal + lineTotal.Amount;
+            }
+
+            foreach (var splitTotal in splitTotals)
+            {
+                proposedTotals.TryGetValue(splitTotal.Key, out var proposedTotal);
+
+                if (Math.Abs(proposedTotal - splitTotal.Value) > 0.01m)
+                    throw new InvalidOperationException($"{splitTotal.Key} total changed after split. Re-split {splitTotal.Key} before {action} this charge bill.");
             }
         }
 

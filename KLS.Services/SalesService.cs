@@ -162,6 +162,8 @@ namespace KLS.Services
 
         public void UpdatePO(int salesId, string? custPO)
         {
+            custPO = string.IsNullOrWhiteSpace(custPO) ? null : custPO.Trim().ToUpper();
+
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.CustPONumber, x => custPO)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
