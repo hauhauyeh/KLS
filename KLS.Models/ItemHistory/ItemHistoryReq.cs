@@ -13,5 +13,9 @@ namespace KLS.Models
         public int PayeeId { get; set; }
 
         public string? Filterby { get; set; }
+
+        public int? ViewerSalesRepId { get; set; }
+
+        public bool CanSeeCost { get; set; }
     }
 }
