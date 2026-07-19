@@ -97,6 +97,16 @@ namespace KLS.Services
             existingPayee.City = vendorDTO.City;
             existingPayee.State = vendorDTO.State;
             existingPayee.ZipCode = vendorDTO.ZipCode;
+            existingPayee.Country = vendorDTO.Country;
+            existingPayee.AddressLine2 = CleanText(vendorDTO.AddressLine2);
+            existingPayee.CountryCode = CleanUpperText(vendorDTO.CountryCode);
+            existingPayee.Continent = CleanText(vendorDTO.Continent);
+            existingPayee.Province = CleanText(vendorDTO.Province);
+            existingPayee.PostalCode = CleanText(vendorDTO.PostalCode);
+            existingPayee.CurrencyCode = CleanUpperText(vendorDTO.CurrencyCode);
+            existingPayee.Locale = CleanText(vendorDTO.Locale);
+            existingPayee.Timezone = CleanText(vendorDTO.Timezone);
+            existingPayee.TaxRegistrationNumber = CleanText(vendorDTO.TaxRegistrationNumber);
             existingPayee.Email = CleanText(vendorDTO.Email);
             existingPayee.IsClosed = vendorDTO.IsClosed;
             existingPayee.StartDate = vendorDTO.StartDate;
@@ -169,6 +179,15 @@ namespace KLS.Services
         private static void NormalizePayeeContactFields(Payee payee)
         {
             payee.Email = CleanText(payee.Email);
+            payee.AddressLine2 = CleanText(payee.AddressLine2);
+            payee.CountryCode = CleanUpperText(payee.CountryCode);
+            payee.Continent = CleanText(payee.Continent);
+            payee.Province = CleanText(payee.Province);
+            payee.PostalCode = CleanText(payee.PostalCode);
+            payee.CurrencyCode = CleanUpperText(payee.CurrencyCode);
+            payee.Locale = CleanText(payee.Locale);
+            payee.Timezone = CleanText(payee.Timezone);
+            payee.TaxRegistrationNumber = CleanText(payee.TaxRegistrationNumber);
             payee.PhoneDesc1 = CleanText(payee.PhoneDesc1);
             payee.Phone1 = CleanText(payee.Phone1);
             payee.PhoneDesc2 = CleanText(payee.PhoneDesc2);
@@ -187,6 +206,11 @@ namespace KLS.Services
         {
             var text = value?.Trim();
             return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+
+        private static string? CleanUpperText(string? value)
+        {
+            return CleanText(value)?.ToUpperInvariant();
         }
 
         public IEnumerable<VendorSearchDTO>? GetActive()

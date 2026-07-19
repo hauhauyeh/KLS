@@ -207,6 +207,16 @@ namespace KLS.Services
             existingPayee.City = dto.City;
             existingPayee.State = dto.State;
             existingPayee.ZipCode = dto.ZipCode;
+            existingPayee.Country = dto.Country;
+            existingPayee.AddressLine2 = CleanText(dto.AddressLine2);
+            existingPayee.CountryCode = CleanUpperText(dto.CountryCode);
+            existingPayee.Continent = CleanText(dto.Continent);
+            existingPayee.Province = CleanText(dto.Province);
+            existingPayee.PostalCode = CleanText(dto.PostalCode);
+            existingPayee.CurrencyCode = CleanUpperText(dto.CurrencyCode);
+            existingPayee.Locale = CleanText(dto.Locale);
+            existingPayee.Timezone = CleanText(dto.Timezone);
+            existingPayee.TaxRegistrationNumber = CleanText(dto.TaxRegistrationNumber);
             existingPayee.Email = CleanText(dto.Email);
             existingPayee.EmailInvoice = CleanText(dto.EmailInvoice);
             existingPayee.EmailStmt = CleanText(dto.EmailStmt);
@@ -367,6 +377,15 @@ namespace KLS.Services
             payee.EmailStmt = CleanText(payee.EmailStmt);
             payee.EmailPricesheet = CleanText(payee.EmailPricesheet);
             payee.EmailACH = CleanText(payee.EmailACH);
+            payee.AddressLine2 = CleanText(payee.AddressLine2);
+            payee.CountryCode = CleanUpperText(payee.CountryCode);
+            payee.Continent = CleanText(payee.Continent);
+            payee.Province = CleanText(payee.Province);
+            payee.PostalCode = CleanText(payee.PostalCode);
+            payee.CurrencyCode = CleanUpperText(payee.CurrencyCode);
+            payee.Locale = CleanText(payee.Locale);
+            payee.Timezone = CleanText(payee.Timezone);
+            payee.TaxRegistrationNumber = CleanText(payee.TaxRegistrationNumber);
             payee.PhoneDesc1 = CleanText(payee.PhoneDesc1);
             payee.Phone1 = CleanText(payee.Phone1);
             payee.PhoneDesc2 = CleanText(payee.PhoneDesc2);
@@ -385,6 +404,11 @@ namespace KLS.Services
         {
             var text = value?.Trim();
             return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+
+        private static string? CleanUpperText(string? value)
+        {
+            return CleanText(value)?.ToUpperInvariant();
         }
 
         private static string? FirstEmail(params string?[] emails)
