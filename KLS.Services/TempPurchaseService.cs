@@ -202,7 +202,7 @@ namespace KLS.Services
             if (!string.IsNullOrEmpty(dto.Unit))
                 unit = _itemUnitService.ResolveKeyboxUnit(item.ItemId, dto.Unit);
 
-            var itemTariff = Uow.ItemTariffs.Find(c => c.ItemId == item.ItemId)?.FirstOrDefault();
+            var itemTariff = GetVendorCountryTariff(item.ItemId, dto.PayeeId);
 
             if (itemTariff != null)
             {
@@ -257,6 +257,51 @@ namespace KLS.Services
             Uow.Commit();
 
             return GetListById(tempItem.PayeeId, tempItem.PurchaseId, tempPurchase.TempPurchaseId);
+        }
+
+        private ItemTariff? GetVendorCountryTariff(int itemId, int payeeId)
+        {
+            var countryCode = GetPayeeAlpha2CountryCode(payeeId);
+
+            if (string.IsNullOrEmpty(countryCode))
+                return null;
+
+            return Uow.ItemTariffs
+                .Find(c => c.ItemId == itemId && c.CountryCode == countryCode)
+                .FirstOrDefault();
+        }
+
+        private string? GetPayeeAlpha2CountryCode(int payeeId)
+        {
+            if (payeeId <= 0)
+                return null;
+
+            var payee = Uow.Payees
+                .Find(c => c.PayeeId == payeeId)
+                .Select(c => new { c.CountryCode, c.Country })
+                .FirstOrDefault();
+
+            return ResolveAlpha2CountryCode(payee?.CountryCode)
+                ?? ResolveAlpha2CountryCode(payee?.Country);
+        }
+
+        private string? ResolveAlpha2CountryCode(string? value)
+        {
+            var code = value?.Trim();
+
+            if (string.IsNullOrEmpty(code))
+                return null;
+
+            var normalized = code.ToUpperInvariant();
+
+            return Uow.Countries
+                .Find(c => c.IsActive
+                    && (c.ISOAlpha2 == normalized
+                        || c.ISOAlpha3 == normalized
+                        || c.CountryCode == normalized
+                        || c.CountryName == code))
+                .Select(c => c.ISOAlpha2)
+                .FirstOrDefault();
         }
     }
 }
