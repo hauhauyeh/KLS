@@ -93,6 +93,12 @@ namespace KLS.Services
 
             // --- Update Payee Fields ---
             existingPayee.PayeeName = vendorDTO.PayeeName;
+            existingPayee.GoogleAddress = CleanText(vendorDTO.GoogleAddress);
+            existingPayee.GoogleMapLink = CleanText(vendorDTO.GoogleMapLink);
+            existingPayee.GooglePlaceId = CleanText(vendorDTO.GooglePlaceId);
+            existingPayee.GoogleLat = CleanText(vendorDTO.GoogleLat);
+            existingPayee.GoogleLong = CleanText(vendorDTO.GoogleLong);
+            existingPayee.FormatAddress = CleanText(vendorDTO.FormatAddress);
             existingPayee.Address = vendorDTO.Address;
             existingPayee.City = vendorDTO.City;
             existingPayee.State = vendorDTO.State;
@@ -178,6 +184,12 @@ namespace KLS.Services
 
         private static void NormalizePayeeContactFields(Payee payee)
         {
+            payee.GoogleAddress = CleanText(payee.GoogleAddress);
+            payee.GoogleMapLink = CleanText(payee.GoogleMapLink);
+            payee.GooglePlaceId = CleanText(payee.GooglePlaceId);
+            payee.GoogleLat = CleanText(payee.GoogleLat);
+            payee.GoogleLong = CleanText(payee.GoogleLong);
+            payee.FormatAddress = CleanText(payee.FormatAddress);
             payee.Email = CleanText(payee.Email);
             payee.AddressLine2 = CleanText(payee.AddressLine2);
             payee.CountryCode = CleanUpperText(payee.CountryCode);

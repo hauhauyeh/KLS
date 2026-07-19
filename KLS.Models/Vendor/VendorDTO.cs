@@ -82,7 +82,15 @@ namespace KLS.Models
 
         public string? GoogleAddress { get; set; }
 
+        public string? GoogleMapLink { get; set; }
 
+        public string? GooglePlaceId { get; set; }
+
+        public string? GoogleLat { get; set; }
+
+        public string? GoogleLong { get; set; }
+
+        public string? FormatAddress { get; set; }
 
         public string CompanyName { get; set; }
 
