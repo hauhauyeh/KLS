@@ -150,6 +150,7 @@ namespace KLS.Services
 
             var payee = new Payee();
             payee.InjectFrom(dto);
+            NormalizePayeeContactFields(payee);
             payee.PayeeId = newPayeeId;
             payee.PayeeType = EnumHelper.PayeeType.C.ToString();
 
@@ -188,15 +189,15 @@ namespace KLS.Services
             var customer = Uow.Customers.GetById(dto.PayeeId);
             var existingPayee = Uow.Payees.GetById(dto.PayeeId);
 
+            if (customer == null || existingPayee == null)
+                return null;
+
             // Keep the Google-selected geocode values unless the user explicitly reselects an address
             // from autocomplete. Manual edits to Address/City/State/ZipCode are allowed for suite/site
             // adjustments and should not silently overwrite GooglePlaceId/lat/long/FormatAddress.
             var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
             var latlong = GetMapLatLong(existingPayee.FullAddress, mapAPIKey);
             var distance = GetDistance(dto.FullAddress, mapAPIKey);
-
-            if (customer == null || existingPayee == null)
-                return null;
 
             // --- Update Payee Fields ---
             existingPayee.PayeeName = dto.PayeeName;
@@ -206,29 +207,29 @@ namespace KLS.Services
             existingPayee.City = dto.City;
             existingPayee.State = dto.State;
             existingPayee.ZipCode = dto.ZipCode;
-            existingPayee.Email = dto.Email;
-            existingPayee.EmailInvoice = dto.EmailInvoice;
-            existingPayee.EmailStmt = dto.EmailStmt;
-            existingPayee.EmailPricesheet = dto.EmailPricesheet;
-            existingPayee.EmailACH = dto.EmailACH;
+            existingPayee.Email = CleanText(dto.Email);
+            existingPayee.EmailInvoice = CleanText(dto.EmailInvoice);
+            existingPayee.EmailStmt = CleanText(dto.EmailStmt);
+            existingPayee.EmailPricesheet = CleanText(dto.EmailPricesheet);
+            existingPayee.EmailACH = CleanText(dto.EmailACH);
             existingPayee.TermId = dto.TermId;
             existingPayee.IsClosed = dto.IsClosed;
             existingPayee.IsDelinquent = dto.IsDelinquent;
             existingPayee.GracePeriod = dto.GracePeriod;
             existingPayee.StartDate = dto.StartDate;
             existingPayee.Notes = dto.Notes;
-            existingPayee.PhoneDesc1 = dto.PhoneDesc1;
-            existingPayee.Phone1 = dto.Phone1;
-            existingPayee.PhoneDesc2 = dto.PhoneDesc2;
-            existingPayee.Phone2 = dto.Phone2;
-            existingPayee.PhoneDesc3 = dto.PhoneDesc3;
-            existingPayee.Phone3 = dto.Phone3;
-            existingPayee.PhoneDesc4 = dto.PhoneDesc4;
-            existingPayee.Phone4 = dto.Phone4;
-            existingPayee.PhoneDesc5 = dto.PhoneDesc5;
-            existingPayee.Phone5 = dto.Phone5;
-            existingPayee.PhoneDesc6 = dto.PhoneDesc6;
-            existingPayee.Phone6 = dto.Phone6;
+            existingPayee.PhoneDesc1 = CleanText(dto.PhoneDesc1);
+            existingPayee.Phone1 = CleanText(dto.Phone1);
+            existingPayee.PhoneDesc2 = CleanText(dto.PhoneDesc2);
+            existingPayee.Phone2 = CleanText(dto.Phone2);
+            existingPayee.PhoneDesc3 = CleanText(dto.PhoneDesc3);
+            existingPayee.Phone3 = CleanText(dto.Phone3);
+            existingPayee.PhoneDesc4 = CleanText(dto.PhoneDesc4);
+            existingPayee.Phone4 = CleanText(dto.Phone4);
+            existingPayee.PhoneDesc5 = CleanText(dto.PhoneDesc5);
+            existingPayee.Phone5 = CleanText(dto.Phone5);
+            existingPayee.PhoneDesc6 = CleanText(dto.PhoneDesc6);
+            existingPayee.Phone6 = CleanText(dto.Phone6);
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
             // Disabled: automatic re-geocoding on save can replace a user-confirmed Google selection
@@ -357,6 +358,33 @@ namespace KLS.Services
                 return dto.AdvancedDayOfMonth.HasValue || (dto.AdvancedWeekOfMonth.HasValue && dto.AdvancedDayOfWeek.HasValue);
 
             return false;
+        }
+
+        private static void NormalizePayeeContactFields(Payee payee)
+        {
+            payee.Email = CleanText(payee.Email);
+            payee.EmailInvoice = CleanText(payee.EmailInvoice);
+            payee.EmailStmt = CleanText(payee.EmailStmt);
+            payee.EmailPricesheet = CleanText(payee.EmailPricesheet);
+            payee.EmailACH = CleanText(payee.EmailACH);
+            payee.PhoneDesc1 = CleanText(payee.PhoneDesc1);
+            payee.Phone1 = CleanText(payee.Phone1);
+            payee.PhoneDesc2 = CleanText(payee.PhoneDesc2);
+            payee.Phone2 = CleanText(payee.Phone2);
+            payee.PhoneDesc3 = CleanText(payee.PhoneDesc3);
+            payee.Phone3 = CleanText(payee.Phone3);
+            payee.PhoneDesc4 = CleanText(payee.PhoneDesc4);
+            payee.Phone4 = CleanText(payee.Phone4);
+            payee.PhoneDesc5 = CleanText(payee.PhoneDesc5);
+            payee.Phone5 = CleanText(payee.Phone5);
+            payee.PhoneDesc6 = CleanText(payee.PhoneDesc6);
+            payee.Phone6 = CleanText(payee.Phone6);
+        }
+
+        private static string? CleanText(string? value)
+        {
+            var text = value?.Trim();
+            return string.IsNullOrWhiteSpace(text) ? null : text;
         }
 
         public int GetMaxCustomerId()
