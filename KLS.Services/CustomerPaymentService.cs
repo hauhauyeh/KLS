@@ -85,8 +85,15 @@ namespace KLS.Services
             };
         }
 
+        public void EnsureVisible(int customerPaymentId)
+        {
+            EnsureVisibleCustomerPayment(customerPaymentId);
+        }
+
         public CustomerPayment? GetById(int customerPaymentId)
         {
+            EnsureVisible(customerPaymentId);
+
             var payment = Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId).Include(c => c.PaymentDetails).FirstOrDefault();
             NormalizePayment(payment);
             return payment;
@@ -94,6 +101,8 @@ namespace KLS.Services
 
         public CustomerPayment? GetByIdWithInclude(int customerPaymentId)
         {
+            EnsureVisible(customerPaymentId);
+
             var payment = Uow.CustomerPayments.Find(c => c.CustomerPaymentId == customerPaymentId)?.Include(c => c.Payee)?.Include(c => c.PaymentDetails!)?.ThenInclude(s => s.Sales).FirstOrDefault();
             NormalizePayment(payment);
             return payment;
@@ -111,6 +120,8 @@ namespace KLS.Services
 
         public void Delete(int customerPaymentId)
         {
+            EnsureVisible(customerPaymentId);
+
             var eligibility = Uow.CustomerPayments.GetEditEligibility(customerPaymentId);
             if (!eligibility.CanEdit)
                 throw new ValidationException("This payment cannot be deleted because future payments still depend on it.");
@@ -129,6 +140,8 @@ namespace KLS.Services
 
         public void UpdateNotes(CustomerPaymentUpdateReq updateReq)
         {
+            EnsureVisible(updateReq.CustomerPaymentId);
+
             Uow.CustomerPayments.Find(c => c.CustomerPaymentId == updateReq.CustomerPaymentId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.Notes, x => updateReq.Notes)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
@@ -138,6 +151,8 @@ namespace KLS.Services
         {
             if (paymentSaveReq.CustomerPaymentId > 0)
             {
+                EnsureVisible(paymentSaveReq.CustomerPaymentId);
+
                 var existingPayment = Uow.CustomerPayments.GetById(paymentSaveReq.CustomerPaymentId);
 
                 if (existingPayment == null)
@@ -167,6 +182,8 @@ namespace KLS.Services
                 }
             }
 
+            EnsureVisibleCustomer(paymentSaveReq.PayeeId);
+
             var newPaymentId = Uow.CustomerPayments.Save(paymentSaveReq);
 
             if (paymentSaveReq.CustomerPaymentId == 0)
@@ -185,6 +202,8 @@ namespace KLS.Services
 
         public void SaveReturn(CustomerPaymentReturnReq returnReq)
         {
+            EnsureVisible(returnReq.CustomerPaymentId);
+
             var payment = Uow.CustomerPayments.GetById(returnReq.CustomerPaymentId);
             if (payment == null)
                 throw new Exception("Customer payment not found.");
@@ -210,11 +229,15 @@ namespace KLS.Services
 
         public void DeleteReturn(int customerPaymentId)
         {
+            EnsureVisible(customerPaymentId);
+
             Uow.CustomerPayments.DeleteReturn(customerPaymentId);
         }
 
         public IEnumerable<CustomerPaymentStatement>? Statement(int payeeId)
         {
+            EnsureVisibleCustomer(payeeId);
+
             return Uow.CustomerPayments.Statement(payeeId);
         }
 
@@ -274,6 +297,8 @@ namespace KLS.Services
                 || refundSource.SourceCustomerPaymentId != refundSource.CustomerPaymentId)
                 throw new ValidationException("Refund source was not found.");
 
+            EnsureVisible(refundSource.CustomerPaymentId);
+
             if (refundSource.RefundPaymentId.HasValue)
                 throw new ValidationException("This refund was already issued.");
 
@@ -320,6 +345,8 @@ namespace KLS.Services
 
         public CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId)
         {
+            EnsureVisible(customerPaymentId);
+
             return Uow.CustomerPayments.GetEditEligibility(customerPaymentId);
         }
 
@@ -410,6 +437,8 @@ namespace KLS.Services
         {
             try
             {
+                EnsureVisibleCustomer(chargeReq.PayeeId);
+
                 decimal dueTotal = GetDueTotal(chargeReq.SalesIds);
                 decimal ccFee = Utilities.Rounding(chargeReq.CCFeePercent * dueTotal, 2) ?? 0m;
                 decimal paymentAmount = dueTotal + ccFee;
@@ -696,28 +725,45 @@ namespace KLS.Services
 
         public decimal GetDueTotal(string salesIds)
         {
-            if (string.IsNullOrWhiteSpace(salesIds))
+            var ids = ParsePositiveIntsOrEmpty(salesIds, nameof(salesIds));
+
+            if (ids.Count == 0)
                 return 0m;
 
-            var ids = salesIds
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(s => int.TryParse(s, out var id) ? (int?)id : null)
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
-                .Distinct()
-                .ToArray();
-
-            if (ids.Length == 0)
-                return 0m;
+            foreach (var salesId in ids)
+            {
+                EnsureVisibleSales(salesId);
+            }
 
             return Uow.Sales.GetAll()
                 .Where(x => ids.Contains(x.SalesId))
                 .Sum(x => (decimal?)(x.AmountDue ?? 0m)) ?? 0m;
         }
 
+        private static List<int> ParsePositiveIntsOrEmpty(string? value, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return new List<int>();
+
+            var ids = new List<int>();
+
+            foreach (var part in value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (!int.TryParse(part, out var id) || id <= 0)
+                    throw new ArgumentException($"{fieldName} contains an invalid id: {part}.", fieldName);
+
+                if (!ids.Contains(id))
+                    ids.Add(id);
+            }
+
+            return ids;
+        }
+
 
         public CustomerPaymentView? GetDetails(int paymentId)
         {
+            EnsureVisible(paymentId);
+
             var payment = GetByIdWithInclude(paymentId);
 
             if (payment == null) return null;

@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         PagingResponse<CustomerPaymentList> GetPagedList(CustomerPaymentReq customerPaymentReq);
 
+        void EnsureVisible(int customerPaymentId);
+
         CustomerPayment? GetById(int customerPaymentId);
 
         CustomerPayment? GetByIdWithInclude(int customerPaymentId);
