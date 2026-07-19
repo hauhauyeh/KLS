@@ -86,6 +86,8 @@ namespace KLS.Services
                 return dto;
             }
 
+            EnsureVisible(payeeId);
+
             if (payee != null)
                 dto.InjectFrom(payee);
 
@@ -136,6 +138,11 @@ namespace KLS.Services
             return dto;
         }
 
+        public void EnsureVisible(int payeeId)
+        {
+            EnsureVisibleCustomer(payeeId);
+        }
+
         public bool NameExists(string? payeeName, int payeeId)
         {
             if (string.IsNullOrWhiteSpace(payeeName))
@@ -174,7 +181,9 @@ namespace KLS.Services
             customer.InjectFrom(dto);
             customer.PayeeId = newPayeeId;
 
-            customer.SalesRepId = dto.SalesRepId ?? (UserContext.EmpId == 0 ? null : UserContext.EmpId);
+            customer.SalesRepId = UserContext.IsSalesRole
+                ? UserContext.EmpId
+                : dto.SalesRepId ?? (UserContext.EmpId == 0 ? null : UserContext.EmpId);
             customer.BillId = dto.BillId ?? newPayeeId;
 
             Uow.Customers.Add(customer);
@@ -186,6 +195,8 @@ namespace KLS.Services
 
         public CustomerDto? Update(CustomerDto dto)
         {
+            EnsureVisible(dto.PayeeId);
+
             var customer = Uow.Customers.GetById(dto.PayeeId);
             var existingPayee = Uow.Payees.GetById(dto.PayeeId);
 
@@ -259,7 +270,7 @@ namespace KLS.Services
 
             if (customer != null)
             {
-                customer.SalesRepId = dto.SalesRepId ?? UserContext.EmpId;
+                customer.SalesRepId = UserContext.IsSalesRole ? UserContext.EmpId : dto.SalesRepId ?? UserContext.EmpId;
                 customer.BillId = dto.BillId ?? customer.PayeeId;
 
                 customer.Region = dto.Region;
@@ -308,6 +319,8 @@ namespace KLS.Services
 
         public void Delete(int payeeId)
         {
+            EnsureVisible(payeeId);
+
             Uow.ExecuteInTransaction(() =>
             {
                 var existingSchedules = Uow.DeliverSchedules.GetByPayeeId(payeeId).ToList();
