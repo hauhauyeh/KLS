@@ -34,18 +34,21 @@ namespace KLS.Services
 
         public bool Exists(ItemTariff itemTariff)
         {
-            var cc = (itemTariff.CountryCode ?? string.Empty).Trim().ToLower();
+            var country = FindActiveCountry(itemTariff.CountryCode);
+            var alpha2 = country.ISOAlpha2.Trim().ToUpper();
+            var alpha3 = country.ISOAlpha3.Trim().ToUpper();
 
             return Uow.ItemTariffs.Exists(x =>
                 x.ItemId == itemTariff.ItemId &&
-                x.CountryCode.Trim().ToLower() == cc &&
+                (x.CountryCode.Trim().ToUpper() == alpha2 ||
+                 x.CountryCode.Trim().ToUpper() == alpha3) &&
                 x.ItemTariffId != itemTariff.ItemTariffId
             );
         }
 
         public ItemTariff Create(ItemTariff itemTariff)
         {
-            itemTariff.CountryCode = (itemTariff.CountryCode ?? string.Empty).Trim().ToUpper();
+            itemTariff.CountryCode = NormalizeCountryCodeToAlpha2(itemTariff.CountryCode);
 
             Uow.ItemTariffs.Add(itemTariff);
             Uow.Commit();
@@ -60,7 +63,7 @@ namespace KLS.Services
             if (existing != null)
             {
                 existing.ItemId = itemTariff.ItemId;
-                existing.CountryCode = (itemTariff.CountryCode ?? string.Empty).Trim().ToUpper();
+                existing.CountryCode = NormalizeCountryCodeToAlpha2(itemTariff.CountryCode);
                 existing.DutyRate = itemTariff.DutyRate;
                 existing.TariffRate = itemTariff.TariffRate;
                 existing.UpdatedAt = DateTime.UtcNow;
@@ -81,6 +84,34 @@ namespace KLS.Services
         public IEnumerable<Country>? GetCountriesList()
         {
             return Uow.Countries.GetAll().OrderBy(c => c.CountryName);
+        }
+
+        private string NormalizeCountryCodeToAlpha2(string? countryCode)
+        {
+            return FindActiveCountry(countryCode).ISOAlpha2.Trim().ToUpper();
+        }
+
+        private Country FindActiveCountry(string? countryCode)
+        {
+            var code = (countryCode ?? string.Empty).Trim().ToUpper();
+
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                throw new ArgumentException("Country is required.");
+            }
+
+            var country = Uow.Countries.GetAll().FirstOrDefault(c =>
+                c.IsActive &&
+                (c.ISOAlpha2.Trim().ToUpper() == code ||
+                 c.ISOAlpha3.Trim().ToUpper() == code ||
+                 c.CountryCode.Trim().ToUpper() == code));
+
+            if (country == null)
+            {
+                throw new ArgumentException("Country must be a valid active country.");
+            }
+
+            return country;
         }
     }
 }
