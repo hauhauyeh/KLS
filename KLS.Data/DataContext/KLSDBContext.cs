@@ -128,7 +128,6 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<LabelPrintLog>().ToTable("LabelPrintLog");
 
             modelBuilder.Entity<Country>().ToTable("Country");
-            modelBuilder.Entity<Country>().Property(c => c.CountryCode).ValueGeneratedNever();
 
             modelBuilder.Entity<EmpJob>().ToTable("EmpJob");
             modelBuilder.Entity<EmpJob>().Property(c => c.JobCode).ValueGeneratedNever();

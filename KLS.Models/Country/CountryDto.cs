@@ -1,19 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace KLS.Models
 {
-    public class Country
+    public class CountryDto
     {
-        [Key]
         public int CountryId { get; set; }
-
-        public string CountryCode { get; set; } = string.Empty;
 
         public string CountryName { get; set; } = string.Empty;
 
@@ -30,9 +19,5 @@ namespace KLS.Models
         public bool IsActive { get; set; }
 
         public int? SortOrder { get; set; }
-
-        public DateTime CreatedAt { get; set; }
-
-        public DateTime? UpdatedAt { get; set; }
     }
 }
