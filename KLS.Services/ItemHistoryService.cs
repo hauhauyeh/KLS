@@ -53,7 +53,18 @@ namespace KLS.Services
         public IEnumerable<ItemHistoryInventory> GetInventoryHistory(ItemHistoryReq itemHistoryReq)
         {
             itemHistoryReq = WithServerContext(itemHistoryReq);
-            return Uow.ItemHistories.GetInventoryHistory(itemHistoryReq);
+            var inventoryItems = Uow.ItemHistories.GetInventoryHistory(itemHistoryReq).ToList();
+
+            if (!itemHistoryReq.CanSeeCost)
+            {
+                foreach (var item in inventoryItems)
+                {
+                    item.Price = null;
+                    item.AverageCost = null;
+                }
+            }
+
+            return inventoryItems;
         }
 
         private ItemHistoryReq WithServerContext(ItemHistoryReq itemHistoryReq)
