@@ -387,6 +387,17 @@ namespace KLS.Services
             return string.IsNullOrWhiteSpace(text) ? null : text;
         }
 
+        private static string? FirstEmail(params string?[] emails)
+        {
+            foreach (var email in emails)
+            {
+                if (!string.IsNullOrWhiteSpace(email))
+                    return email.Trim();
+            }
+
+            return null;
+        }
+
         public int GetMaxCustomerId()
         {
             var maxId = Uow.Customers.GetAll().Select(p => (int?)p.PayeeId).Max();
@@ -402,7 +413,7 @@ namespace KLS.Services
         {
             var customer = GetById(payeeId);
 
-            string? toEmails = customer?.EmailPricesheet;
+            string? toEmails = FirstEmail(customer?.EmailPricesheet, customer?.Email);
 
             if (string.IsNullOrEmpty(toEmails))
                 throw new Exception("Email address not found");
@@ -445,7 +456,7 @@ namespace KLS.Services
         {
             var customer = GetById(payeeId);
 
-            string? toEmails = customer?.EmailStmt;
+            string? toEmails = FirstEmail(customer?.EmailStmt, customer?.EmailInvoice, customer?.Email);
 
             if (string.IsNullOrEmpty(toEmails))
                 throw new Exception("Email address not found");

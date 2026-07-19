@@ -334,9 +334,9 @@ namespace KLS.Services
                 if (normalized == EnumPaymentMethod.E_CHECK.ToString() || normalized == EnumPaymentMethod.CREDIT_CARD.ToString())
                 {
                     var payee = Uow.Payees.GetById(payment.PayeeId);
-                    var toEmails = payee.EmailACH;
+                    var toEmails = FirstEmail(payee?.EmailACH, payee?.EmailInvoice, payee?.Email);
 
-                    if (!string.IsNullOrEmpty(toEmails))
+                    if (payee != null && !string.IsNullOrEmpty(toEmails))
                     {
                         var emailReceipt = new EmailReceipt
                         {
@@ -368,6 +368,17 @@ namespace KLS.Services
                     }
                 }
             }
+        }
+
+        private static string? FirstEmail(params string?[] emails)
+        {
+            foreach (var email in emails)
+            {
+                if (!string.IsNullOrWhiteSpace(email))
+                    return email.Trim();
+            }
+
+            return null;
         }
 
         public void SendMessage(int customerPaymentId)

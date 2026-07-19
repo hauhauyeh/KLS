@@ -306,9 +306,10 @@ namespace KLS.Services
 
             var payee = Uow.Payees.GetById(sales.ShipId.Value);
 
-            if (payee != null && !string.IsNullOrEmpty(payee.EmailInvoice))
+            var toEmails = FirstEmail(payee?.EmailInvoice, payee?.Email);
+
+            if (payee != null && !string.IsNullOrEmpty(toEmails))
             {
-                string toEmails = payee.EmailInvoice;
                 string subject = "Invoice File";
                 string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Here is a your invoice file for the order#" + sales.SalesNumber + "<br/><br/>";
                 string[] attcfiles = [pdfFile];
@@ -331,6 +332,17 @@ namespace KLS.Services
                     Uow.Commit();
                 });
             }
+        }
+
+        private static string? FirstEmail(params string?[] emails)
+        {
+            foreach (var email in emails)
+            {
+                if (!string.IsNullOrWhiteSpace(email))
+                    return email.Trim();
+            }
+
+            return null;
         }
 
         public int MergeOrder(SalesMergeReq mergeReq)
