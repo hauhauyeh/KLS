@@ -12,6 +12,10 @@ namespace KLS.Contract.Services
     {
         PagingResponse<SalesList>? GetPagedList(SalesListReq salesListReq);
 
+        void EnsureVisible(int salesId);
+
+        void EnsureVisibleSalesNumber(int salesNumber);
+
         Sales GetById(int salesId);
 
         Sales? GetBySalesNumber(int salesNumber);
