@@ -73,8 +73,30 @@ namespace KLS.Services
             };
         }
 
+        public void EnsureVisible(int salesId)
+        {
+            EnsureVisibleSales(salesId);
+        }
+
+        public void EnsureVisibleSalesNumber(int salesNumber)
+        {
+            if (!UserContext.IsSalesRole)
+                return;
+
+            var salesId = Uow.Sales.Find(s => s.SalesNumber == salesNumber)
+                .Select(s => (int?)s.SalesId)
+                .FirstOrDefault();
+
+            if (!salesId.HasValue)
+                throw new KeyNotFoundException($"Sales with number {salesNumber} not found.");
+
+            EnsureVisible(salesId.Value);
+        }
+
         public Sales GetById(int salesId)
         {
+            EnsureVisible(salesId);
+
             return Uow.Sales.GetById(salesId);
         }
 
@@ -95,6 +117,8 @@ namespace KLS.Services
 
         public Sales UpdateShipRoute(int salesId, string? shipRoute)
         {
+            EnsureVisible(salesId);
+
             var sales = GetById(salesId);
 
             if (sales != null)
@@ -155,6 +179,8 @@ namespace KLS.Services
 
         public void UpdateInstruction(int salesId, string? instruction)
         {
+            EnsureVisible(salesId);
+
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.Instruction, x => instruction)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
@@ -162,6 +188,8 @@ namespace KLS.Services
 
         public void UpdatePO(int salesId, string? custPO)
         {
+            EnsureVisible(salesId);
+
             custPO = string.IsNullOrWhiteSpace(custPO) ? null : custPO.Trim().ToUpper();
 
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
@@ -171,6 +199,8 @@ namespace KLS.Services
 
         public void UpdateLoadSeparate(int salesId)
         {
+            EnsureVisible(salesId);
+
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
            .SetProperty(x => x.IsLoadSeparate, x => !x.IsLoadSeparate)
            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
@@ -178,6 +208,8 @@ namespace KLS.Services
 
         public SalesList UpdateCarrier(int salesId, int? shippingCarrierId)
         {
+            EnsureVisible(salesId);
+
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
            .SetProperty(x => x.ShippingCarrierId, x => shippingCarrierId)
            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
@@ -187,11 +219,15 @@ namespace KLS.Services
 
         public SalesStage UpdateStage(int salesId, int stageId)
         {
+            EnsureVisible(salesId);
+
             return Uow.Sales.UpdateStage(salesId, stageId);
         }
 
         public SalesStage EnterEditMode(int salesId)
         {
+            EnsureVisible(salesId);
+
             var sales = GetById(salesId);
 
             if (sales == null)
@@ -205,11 +241,15 @@ namespace KLS.Services
 
         public SalesStage RestoreStage(int salesId, int stageId)
         {
+            EnsureVisible(salesId);
+
             return Uow.Sales.RestoreStage(salesId, stageId);
         }
 
         public void Delete(int salesId)
         {
+            EnsureVisible(salesId);
+
             var sales = Uow.Sales.GetById(salesId);
 
             if (sales != null && !sales.IsLocked)
@@ -234,11 +274,15 @@ namespace KLS.Services
 
         public void Inject(int salesId)
         {
+            EnsureVisible(salesId);
+
             Uow.Sales.Inject(salesId);
         }
 
         public SalesList Checkout(SalesCheckoutReq checkoutReq)
         {
+            EnsureVisibleCustomer(checkoutReq.PayeeId);
+
             var salesId = Uow.Sales.Checkout(checkoutReq);
             var sales = GetListById(salesId)!;
             AutoPrintPickTicket(sales.SalesId, sales.SalesNumber);
@@ -248,6 +292,8 @@ namespace KLS.Services
 
         public SalesList UpdatePartially(int salesId)
         {
+            EnsureVisible(salesId);
+
             Uow.Sales.UpdatePartially(salesId);
 
             return GetListById(salesId)!;
@@ -255,6 +301,11 @@ namespace KLS.Services
 
         public SalesList UpdateNameDate(SalesUpdateReq updateReq)
         {
+            EnsureVisible(updateReq.SalesId);
+
+            if (updateReq.IsNameChange && updateReq.PayeeId.HasValue)
+                EnsureVisibleCustomer(updateReq.PayeeId.Value);
+
             Uow.Sales.UpdateNameDate(updateReq);
 
             return GetListById(updateReq.SalesId)!;
@@ -262,6 +313,8 @@ namespace KLS.Services
 
         public SalesList InsertShippingCharge(SalesUpdateReq updateReq)
         {
+            EnsureVisible(updateReq.SalesId);
+
             Uow.Sales.InsertShippingCharge(updateReq);
 
             return GetListById(updateReq.SalesId)!;
@@ -292,6 +345,8 @@ namespace KLS.Services
 
         public void EmailPdf(int salesId)
         {
+            EnsureVisible(salesId);
+
             var sales = GetById(salesId);
 
             if (sales == null)
@@ -306,9 +361,10 @@ namespace KLS.Services
 
             var payee = Uow.Payees.GetById(sales.ShipId.Value);
 
-            if (payee != null && !string.IsNullOrEmpty(payee.EmailInvoice))
+            var toEmails = FirstEmail(payee?.EmailInvoice, payee?.Email);
+
+            if (payee != null && !string.IsNullOrEmpty(toEmails))
             {
-                string toEmails = payee.EmailInvoice;
                 string subject = "Invoice File";
                 string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Here is a your invoice file for the order#" + sales.SalesNumber + "<br/><br/>";
                 string[] attcfiles = [pdfFile];
@@ -333,8 +389,24 @@ namespace KLS.Services
             }
         }
 
+        private static string? FirstEmail(params string?[] emails)
+        {
+            foreach (var email in emails)
+            {
+                if (!string.IsNullOrWhiteSpace(email))
+                    return email.Trim();
+            }
+
+            return null;
+        }
+
         public int MergeOrder(SalesMergeReq mergeReq)
         {
+            foreach (var salesId in ParsePositiveInts(mergeReq.SalesIds, nameof(mergeReq.SalesIds)))
+            {
+                EnsureVisible(salesId);
+            }
+
             return Uow.Sales.MergeOrder(mergeReq);
         }
 
@@ -349,12 +421,12 @@ namespace KLS.Services
             var tempFileName = $"{DateTime.UtcNow:yyyyMMddHHmmssfff}";
             var mergedPdfPath = Path.Combine(mergeFolder, tempFileName + ".pdf");
 
-            var ids = salesNumbers
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
-                .Where(x => !string.IsNullOrEmpty(x))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            var ids = ParsePositiveInts(salesNumbers, nameof(salesNumbers));
+
+            foreach (var salesNumber in ids)
+            {
+                EnsureVisibleSalesNumber(salesNumber);
+            }
 
             var docs = new List<PdfDocument>(ids.Count);
 
@@ -362,7 +434,7 @@ namespace KLS.Services
             {
                 foreach (var salesNum in ids)
                 {
-                    var pdfPath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNum + ".pdf");
+                    var pdfPath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNum.ToString() + ".pdf");
                     if (!File.Exists(pdfPath))
                         continue;
 
@@ -384,8 +456,34 @@ namespace KLS.Services
             }
         }
 
+        private static List<int> ParsePositiveInts(string? value, string fieldName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException($"{fieldName} is required.", fieldName);
+
+            var ids = new List<int>();
+
+            foreach (var part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var trimmed = part.Trim();
+
+                if (!int.TryParse(trimmed, out var id) || id <= 0)
+                    throw new ArgumentException($"{fieldName} contains an invalid id: {trimmed}.", fieldName);
+
+                if (!ids.Contains(id))
+                    ids.Add(id);
+            }
+
+            if (ids.Count == 0)
+                throw new ArgumentException($"{fieldName} is required.", fieldName);
+
+            return ids;
+        }
+
         public SalesSeePayment SeePayment(int salesId)
         {
+            EnsureVisible(salesId);
+
             var payments = (from c in Uow.CustomerPayments.GetAll()
                             join cd in Uow.CustomerPaymentDetails.GetAll() on c.CustomerPaymentId equals cd.CustomerPaymentId
                             where cd.SalesId == salesId
@@ -400,6 +498,8 @@ namespace KLS.Services
 
         public IEnumerable<SalesList>? OpenInvoices(int payeeId)
         {
+            EnsureVisibleCustomer(payeeId);
+
             var sales = Uow.Sales.GetPagedList(new SalesListReq
             {
                 Pagesize = 500,
@@ -419,6 +519,8 @@ namespace KLS.Services
 
         public IEnumerable<SalesList>? PastDueInvoices(int payeeId)
         {
+            EnsureVisibleCustomer(payeeId);
+
             var sales = Uow.Sales.GetPagedList(new SalesListReq
             {
                 Pagesize = 500,
@@ -438,6 +540,8 @@ namespace KLS.Services
 
         public IEnumerable<CustBoughtItemPanelRow> CustBoughtItemsPanel(int payeeId)
         {
+            EnsureVisibleCustomer(payeeId);
+
             return Uow.Reports.CustBoughtItemsPanel(payeeId).ToList();
         }
 
@@ -516,6 +620,8 @@ namespace KLS.Services
 
         public SalesDetailDto? GetSalesDetails(int salesId)
         {
+            EnsureVisible(salesId);
+
             var details = Uow.Sales.GetSalesDetails(salesId);
 
             return new SalesDetailDto

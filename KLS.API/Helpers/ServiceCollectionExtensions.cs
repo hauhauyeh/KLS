@@ -25,6 +25,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<ITermService, TermService>();
             services.AddScoped<ITruckService, TruckService>();
+            services.AddScoped<ICountryService, CountryService>();
             services.AddScoped<IVendorService, VendorService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IBankFeedAccountService, BankFeedAccountService>();

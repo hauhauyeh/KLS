@@ -24,6 +24,24 @@ namespace KLS.Models
 
         public string? Country { get; set; }
 
+        public string? AddressLine2 { get; set; }
+
+        public string? CountryCode { get; set; }
+
+        public string? Continent { get; set; }
+
+        public string? Province { get; set; }
+
+        public string? PostalCode { get; set; }
+
+        public string? CurrencyCode { get; set; }
+
+        public string? Locale { get; set; }
+
+        public string? Timezone { get; set; }
+
+        public string? TaxRegistrationNumber { get; set; }
+
         public string? PhoneDesc1 { get; set; }
 
         public string? Phone1 { get; set; }
@@ -64,7 +82,15 @@ namespace KLS.Models
 
         public string? GoogleAddress { get; set; }
 
+        public string? GoogleMapLink { get; set; }
 
+        public string? GooglePlaceId { get; set; }
+
+        public string? GoogleLat { get; set; }
+
+        public string? GoogleLong { get; set; }
+
+        public string? FormatAddress { get; set; }
 
         public string CompanyName { get; set; }
 

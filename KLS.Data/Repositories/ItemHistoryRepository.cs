@@ -26,7 +26,9 @@ namespace KLS.Data.Repositories
 
             var FilterbyParam = (!string.IsNullOrEmpty(itemHistoryReq.Filterby)) ? new SqlParameter("@Filterby", itemHistoryReq.Filterby) : new SqlParameter("@Filterby", DBNull.Value);
 
-            return DbContext.ItemHistorySales.FromSqlRaw("[dbo].[ItemHistory_Sales] @ItemId,@PayeeId,@Filterby", ItemIdParam, PayeeIdParam, FilterbyParam);
+            var ViewerSalesRepIdParam = itemHistoryReq.ViewerSalesRepId.HasValue ? new SqlParameter("@ViewerSalesRepId", itemHistoryReq.ViewerSalesRepId.Value) : new SqlParameter("@ViewerSalesRepId", DBNull.Value);
+
+            return DbContext.ItemHistorySales.FromSqlRaw("[dbo].[ItemHistory_Sales] @ItemId,@PayeeId,@Filterby,@ViewerSalesRepId", ItemIdParam, PayeeIdParam, FilterbyParam, ViewerSalesRepIdParam);
         }
 
         public IQueryable<ItemHistoryPurchase> GetPurchaseHistory(ItemHistoryReq itemHistoryReq)

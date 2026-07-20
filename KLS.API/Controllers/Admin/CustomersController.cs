@@ -90,6 +90,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.Customer.OpenClose")]
         public IActionResult OpenClose(int id)
         {
+            _customerService.EnsureVisible(id);
             _payeeService.OpenClose(id);
 
             return Ok();
@@ -126,6 +127,8 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("{payeeId}/accounts")]
         public IActionResult CreateAccount(int payeeId, [FromBody] UserAccountDto dto)
         {
+            _customerService.EnsureVisible(payeeId);
+
             if (string.IsNullOrWhiteSpace(dto.Password))
                 return BadRequest("Password is required.");
 
@@ -158,6 +161,8 @@ namespace KLS.API.Controllers.Admin
         [HttpPut("{payeeId}/accounts/{userId}")]
         public IActionResult UpdateAccount(int payeeId, int userId, [FromBody] UserAccountDto dto)
         {
+            _customerService.EnsureVisible(payeeId);
+
             var existing = _userAccountService.GetById(userId);
             if (existing == null || existing.PayeeId != payeeId)
                 return NotFound("Account not found.");
@@ -190,6 +195,8 @@ namespace KLS.API.Controllers.Admin
         [HttpDelete("{payeeId}/accounts/{userId}")]
         public IActionResult DeleteAccount(int payeeId, int userId)
         {
+            _customerService.EnsureVisible(payeeId);
+
             var existing = _userAccountService.GetById(userId);
             if (existing == null || existing.PayeeId != payeeId)
                 return NotFound("Account not found.");
