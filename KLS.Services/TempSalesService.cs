@@ -19,8 +19,9 @@ namespace KLS.Services
         private readonly IItemImageService _itemImageService;
         private readonly IPortalModeService _portalModeService;
         private readonly IPromoHelperService _promoHelper;
+        private readonly ISystemSettingService _systemSettingService;
 
-        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService, IItemImageService itemImageService, IPortalModeService portalModeService, IPromoHelperService promoHelper) : base(uow)
+        public TempSalesService(IUnitOfWork uow, IItemService itemService, IItemUnitService itemUnitService, IAccountService accountService, IItemImageService itemImageService, IPortalModeService portalModeService, IPromoHelperService promoHelper, ISystemSettingService systemSettingService) : base(uow)
         {
             _itemService = itemService;
             _itemUnitService = itemUnitService;
@@ -28,6 +29,7 @@ namespace KLS.Services
             _itemImageService = itemImageService;
             _portalModeService = portalModeService;
             _promoHelper = promoHelper;
+            _systemSettingService = systemSettingService;
         }
 
         public IEnumerable<TempSalesItem>? GetList(TempSalesReq tempReq)
@@ -536,6 +538,8 @@ namespace KLS.Services
             ItemName = item.ItemName,
             ItemUnitId = item.ItemUnitId,
             Unit = item.Unit,
+            FactorToBase = item.FactorToBase,
+            MultipleToBase = item.MultipleToBase,
             OrdQty = item.OrdQty,
             UnitPrice = item.UnitPrice,
             ExtTotal = item.ExtTotal,
@@ -587,9 +591,40 @@ namespace KLS.Services
             _promoHelper.ApplyPromotion(salesId: 0, payeeId: UserContext.EmpId);
         }
 
+        // WEB_ENFORCE_STOCK_LIMIT: a unit is sellable on the web only if stock covers 1 whole unit.
+        // BaseQty = Qty * MultipleToBase / FactorToBase, so whole units = LCloseQty * Factor / Multiple.
+        // Works whether the base is the big unit (KLS: CS base, ÷N retail) or the small unit
+        // (other clients: retail base, ×N case). Round to 4dp before Floor: base snapshots are
+        // stored at 6dp, so a whole ÷12 unit round-trips as 0.999996 and a bare Floor would block it.
+        private static decimal WholeUnitsAvailable(decimal lCloseQty, ItemUnit unit)
+        {
+            var factor = unit.FactorToBase <= 0 ? 1 : unit.FactorToBase;
+            var multiple = unit.MultipleToBase <= 0 ? 1 : unit.MultipleToBase;
+            return Math.Floor(Math.Round(lCloseQty * factor / multiple, 4));
+        }
+
+        private static bool IsUnitSellable(decimal lCloseQty, ItemUnit unit)
+        {
+            return WholeUnitsAvailable(lCloseQty, unit) >= 1;
+        }
+
+        private bool EnforceStockLimit()
+        {
+            return _systemSettingService.GetByKey<bool>(GlobalKey.WEB_ENFORCE_STOCK_LIMIT);
+        }
+
         public IEnumerable<WebCartItem>? AddCartItem(AddToCartReq req)
         {
             var selectedUnit = ResolveWebCartUnit(req.ItemId, UserContext.EmpId, req.ItemUnitId, req.Unit);
+
+            if (selectedUnit != null && EnforceStockLimit())
+            {
+                var lCloseQty = Uow.Items.GetById(req.ItemId)?.LCloseQty ?? 0;
+
+                if (!IsUnitSellable(lCloseQty, selectedUnit))
+                    return null;
+            }
+
             var cartItems = GetList(new TempSalesReq { PayeeId = UserContext.EmpId, SalesId = 0 });
 
             var existing = cartItems?.FirstOrDefault(c =>
@@ -660,10 +695,43 @@ namespace KLS.Services
             if (existing == null || !existing.ItemId.HasValue)
                 return null;
 
-            var nextUnit = _itemUnitService.GetNextUnit(existing.ItemId.Value, existing.Unit);
+            // Cycle to the next unit like GetNextUnit, but when WEB_ENFORCE_STOCK_LIMIT is on,
+            // skip units whose stock can't cover 1 whole unit. With the setting off this picks
+            // units[(idx + 1) % Count] — identical to GetNextUnit.
+            var units = _itemUnitService.GetByItemId(existing.ItemId.Value);
+            var enforce = EnforceStockLimit();
+            var lCloseQty = Uow.Items.GetById(existing.ItemId.Value)?.LCloseQty ?? 0;
+            var idx = units.FindIndex(u => u.Unit == existing.Unit);
+
+            ItemUnit? nextUnit = null;
+
+            for (var step = 1; step <= units.Count; step++)
+            {
+                var candidate = units[(idx + step) % units.Count];
+
+                if (!enforce || IsUnitSellable(lCloseQty, candidate))
+                {
+                    nextUnit = candidate;
+                    break;
+                }
+            }
+
+            if (nextUnit == null || nextUnit.ItemUnitId == existing.ItemUnitId)
+                return GetCartItems();   // nothing else sellable — keep current unit
+
+            var qty = existing.OrdQty;
+
+            if (enforce)
+            {
+                // Cap the carried-over qty at the new unit's whole-unit availability
+                // (a 3-PACK line toggled to CS must not become 3 CS with only 1 in stock).
+                var maxQty = WholeUnitsAvailable(lCloseQty, nextUnit);
+                qty = Math.Max(1, Math.Min(qty ?? 1, maxQty));
+            }
+
             var price = ResolveWebCartPrice(existing.PayeeId, existing.ItemId.Value, nextUnit.ItemUnitId);
 
-            SaveWebCartRow(existing, existing.OrdQty, nextUnit.ItemUnitId, nextUnit.Unit, nextUnit.FactorToBase, price ?? existing.UnitPrice, false);
+            SaveWebCartRow(existing, qty, nextUnit.ItemUnitId, nextUnit.Unit, nextUnit.FactorToBase, price ?? existing.UnitPrice, false);
             ReapplyPromosForWebCart();
             return GetCartItems();
         }

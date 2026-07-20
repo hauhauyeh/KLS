@@ -449,6 +449,8 @@ namespace KLS.Services
                             : Utilities.EAN13(row.Barcode),
                         IsBaseUnit = row.IsBaseUnit,
                         IsDefaultSalesUnit = row.IsDefaultSalesUnit,
+                        FactorToBase = row.FactorToBase,
+                        MultipleToBase = row.MultipleToBase,
                         MSRP = row.MSRP,
                         MarketPrice = row.MarketPrice,
                         Price = forceBasePrice && basePrices.TryGetValue(row.ItemUnitId, out var unit)
