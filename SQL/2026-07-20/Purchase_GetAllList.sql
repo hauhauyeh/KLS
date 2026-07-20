@@ -124,12 +124,14 @@ BEGIN
         p.IsStartFromPO,
         p.IsShipment,
         p.SourceShipmentId,
+        vp.IsShippingCarrier,
         p.IsDropShip,
         p.DropShipSalesId,
         dss.SalesNumber AS DropShipSalesNumber,
         dss.CustPONumber AS DropShipSalesCustPONumber,
         spx.ShipmentLinkCount,
         shipinfo.ShipmentContainerNos,
+        chargebills.ChargeBillCount,
         sps.PurchaseLinkCount,
         CASE
         WHEN EXISTS (
@@ -241,6 +243,14 @@ BEGIN
               AND s.ContainerNo IS NOT NULL
               AND LTRIM(RTRIM(s.ContainerNo)) <> ''''
         ) shipinfo
+        OUTER APPLY (
+            SELECT COUNT(DISTINCT chargeBill.PurchaseId) AS ChargeBillCount
+            FROM dbo.ShipmentPurchase sp
+            INNER JOIN dbo.Purchase chargeBill
+                ON chargeBill.SourceShipmentId = sp.ShipmentId
+               AND ISNULL(chargeBill.IsShipment, 0) = 1
+            WHERE sp.PurchaseId = p.PurchaseId
+        ) chargebills
         OUTER APPLY (
             SELECT
                 COUNT(*) AS PurchaseLinkCount
