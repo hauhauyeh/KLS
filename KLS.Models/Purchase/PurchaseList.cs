@@ -67,6 +67,8 @@ namespace KLS.Models
 
         public int? SourceShipmentId { get; set; }
 
+        public bool IsShippingCarrier { get; set; }
+
         public bool IsDropShip { get; set; }
 
         public int? DropShipSalesId { get; set; }
