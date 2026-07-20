@@ -11,6 +11,11 @@ namespace KLS.Models.Cart
         public string? PrimaryImageUrl { get; set; }
         public int? ItemUnitId { get; set; }
         public string? Unit { get; set; }
+
+        // Unit ratio: BaseQty = OrdQty * MultipleToBase / FactorToBase. FactorToBase is the
+        // TempSales snapshot; MultipleToBase comes live from ItemUnit via TempSales_GetList.
+        public decimal? FactorToBase { get; set; }
+        public int MultipleToBase { get; set; } = 1;
         public decimal? OrdQty { get; set; }
         public decimal? UnitPrice { get; set; }
         public decimal? ExtTotal { get; set; }

@@ -95,9 +95,10 @@ namespace KLS.Services
             var pdfFile = _documentService.SalesQuote(salesQuoteId);
             var payee = Uow.Payees.GetById(quote.PayeeId);
 
-            if (payee != null && !string.IsNullOrEmpty(payee.EmailInvoice))
+            var toEmails = FirstEmail(payee?.EmailPricesheet, payee?.Email);
+
+            if (payee != null && !string.IsNullOrEmpty(toEmails))
             {
-                string toEmails = payee.EmailInvoice;
                 string subject = "Sales Quote #" + quote.QuoteNumber;
                 string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Please find attached your sales quote #" + quote.QuoteNumber + ".<br/><br/>";
                 string[] attcfiles = [pdfFile];
@@ -121,6 +122,17 @@ namespace KLS.Services
                         Uow.Commit();
                     });
             }
+        }
+
+        private static string? FirstEmail(params string?[] emails)
+        {
+            foreach (var email in emails)
+            {
+                if (!string.IsNullOrWhiteSpace(email))
+                    return email.Trim();
+            }
+
+            return null;
         }
     }
 }

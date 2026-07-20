@@ -40,6 +40,7 @@ namespace KLS.Common
         public static void Clear()
         {
             _empId.Value = 0;
+            _isSalesRole.Value = false;
             _systemUserId.Value = 0;
             _userTimezone.Value = null!;
         }

@@ -38,6 +38,9 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Admin.Export.Customers")]
         public IActionResult Customers()
         {
+            if (!IsCurrentUserAdmin())
+                return Forbid();
+
             var bytes = _customerService.Export();
 
             return File(
@@ -52,6 +55,9 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Admin.Export.Vendors")]
         public IActionResult Vendors()
         {
+            if (!IsCurrentUserAdmin())
+                return Forbid();
+
             var bytes = _vendorService.Export();
 
             return File(
@@ -66,6 +72,9 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Admin.Export.Order")]
         public IActionResult Order([FromQuery] SalesExportReq exportReq)
         {
+            if (!IsCurrentUserAdmin())
+                return Forbid();
+
             var bytes = _salesService.Export(exportReq);
 
             return File(

@@ -27,6 +27,11 @@ namespace KLS.Models
         public bool IsBaseUnit { get; set; }
         public bool IsDefaultSalesUnit { get; set; }
 
+        // Unit ratio: BaseQty = Qty * MultipleToBase / FactorToBase. MultipleToBase is the
+        // live value from ItemUnit (never snapshotted); default 1 = identity.
+        public decimal? FactorToBase { get; set; }
+        public int MultipleToBase { get; set; } = 1;
+
         public decimal? MSRP { get; set; }
         public decimal? MarketPrice { get; set; }
 

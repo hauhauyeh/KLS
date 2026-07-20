@@ -170,6 +170,8 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.Sale.SeePdf")]
         public IActionResult SeePdf(int salesNumber)
         {
+            _salesService.EnsureVisibleSalesNumber(salesNumber);
+
             var filePath = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
 
             if (!System.IO.File.Exists(filePath))
@@ -252,6 +254,18 @@ namespace KLS.API.Controllers.Admin
 
                 var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
                 return File(fileStream, "application/pdf");
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (KeyNotFoundException)
+            {
+                throw;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

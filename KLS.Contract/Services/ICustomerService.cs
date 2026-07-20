@@ -13,6 +13,8 @@ namespace KLS.Contract.Services
 
         CustomerDto GetById(int payeeId);
 
+        void EnsureVisible(int payeeId);
+
         bool NameExists(string? payeeName, int payeeId);
 
         CustomerDto Create(CustomerDto customerDto);

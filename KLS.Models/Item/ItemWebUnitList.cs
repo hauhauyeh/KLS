@@ -20,6 +20,12 @@ namespace KLS.Models
 
         public bool IsDefaultSalesUnit { get; set; }
 
+        // Unit ratio: BaseQty = Qty * MultipleToBase / FactorToBase. The web portal uses it
+        // for whole-unit stock math under WEB_ENFORCE_STOCK_LIMIT.
+        public decimal? FactorToBase { get; set; }
+
+        public int MultipleToBase { get; set; } = 1;
+
         public decimal? MSRP { get; set; }
 
         public decimal? MarketPrice { get; set; }

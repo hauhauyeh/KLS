@@ -66,6 +66,7 @@ namespace KLS.Services
 
             var payee = new Payee();
             payee.InjectFrom(vendorDTO);
+            NormalizePayeeContactFields(payee);
             payee.PayeeId = newPayeeId;
             payee.PayeeType = EnumHelper.PayeeType.V.ToString();
 
@@ -92,28 +93,44 @@ namespace KLS.Services
 
             // --- Update Payee Fields ---
             existingPayee.PayeeName = vendorDTO.PayeeName;
+            existingPayee.GoogleAddress = CleanText(vendorDTO.GoogleAddress);
+            existingPayee.GoogleMapLink = CleanText(vendorDTO.GoogleMapLink);
+            existingPayee.GooglePlaceId = CleanText(vendorDTO.GooglePlaceId);
+            existingPayee.GoogleLat = CleanText(vendorDTO.GoogleLat);
+            existingPayee.GoogleLong = CleanText(vendorDTO.GoogleLong);
+            existingPayee.FormatAddress = CleanText(vendorDTO.FormatAddress);
             existingPayee.Address = vendorDTO.Address;
             existingPayee.City = vendorDTO.City;
             existingPayee.State = vendorDTO.State;
             existingPayee.ZipCode = vendorDTO.ZipCode;
-            existingPayee.Email = vendorDTO.Email;
+            existingPayee.Country = vendorDTO.Country;
+            existingPayee.AddressLine2 = CleanText(vendorDTO.AddressLine2);
+            existingPayee.CountryCode = CleanUpperText(vendorDTO.CountryCode);
+            existingPayee.Continent = CleanText(vendorDTO.Continent);
+            existingPayee.Province = CleanText(vendorDTO.Province);
+            existingPayee.PostalCode = CleanText(vendorDTO.PostalCode);
+            existingPayee.CurrencyCode = CleanUpperText(vendorDTO.CurrencyCode);
+            existingPayee.Locale = CleanText(vendorDTO.Locale);
+            existingPayee.Timezone = CleanText(vendorDTO.Timezone);
+            existingPayee.TaxRegistrationNumber = CleanText(vendorDTO.TaxRegistrationNumber);
+            existingPayee.Email = CleanText(vendorDTO.Email);
             existingPayee.IsClosed = vendorDTO.IsClosed;
             existingPayee.StartDate = vendorDTO.StartDate;
             existingPayee.Balance = vendorDTO.Balance;
             existingPayee.TermId = vendorDTO.TermId;
             existingPayee.Notes = vendorDTO.Notes;
-            existingPayee.PhoneDesc1 = vendorDTO.PhoneDesc1;
-            existingPayee.Phone1 = vendorDTO.Phone1;
-            existingPayee.PhoneDesc2 = vendorDTO.PhoneDesc2;
-            existingPayee.Phone2 = vendorDTO.Phone2;
-            existingPayee.PhoneDesc3 = vendorDTO.PhoneDesc3;
-            existingPayee.Phone3 = vendorDTO.Phone3;
-            existingPayee.PhoneDesc4 = vendorDTO.PhoneDesc4;
-            existingPayee.Phone4 = vendorDTO.Phone4;
-            existingPayee.PhoneDesc5 = vendorDTO.PhoneDesc5;
-            existingPayee.Phone5 = vendorDTO.Phone5;
-            existingPayee.PhoneDesc6 = vendorDTO.PhoneDesc6;
-            existingPayee.Phone6 = vendorDTO.Phone6;
+            existingPayee.PhoneDesc1 = CleanText(vendorDTO.PhoneDesc1);
+            existingPayee.Phone1 = CleanText(vendorDTO.Phone1);
+            existingPayee.PhoneDesc2 = CleanText(vendorDTO.PhoneDesc2);
+            existingPayee.Phone2 = CleanText(vendorDTO.Phone2);
+            existingPayee.PhoneDesc3 = CleanText(vendorDTO.PhoneDesc3);
+            existingPayee.Phone3 = CleanText(vendorDTO.Phone3);
+            existingPayee.PhoneDesc4 = CleanText(vendorDTO.PhoneDesc4);
+            existingPayee.Phone4 = CleanText(vendorDTO.Phone4);
+            existingPayee.PhoneDesc5 = CleanText(vendorDTO.PhoneDesc5);
+            existingPayee.Phone5 = CleanText(vendorDTO.Phone5);
+            existingPayee.PhoneDesc6 = CleanText(vendorDTO.PhoneDesc6);
+            existingPayee.Phone6 = CleanText(vendorDTO.Phone6);
 
             existingPayee.UpdatedAt = DateTime.UtcNow;
 
@@ -163,6 +180,49 @@ namespace KLS.Services
         {
             var maxId = Uow.Vendors.GetAll().Select(p => (int?)p.PayeeId).Max();
             return (maxId ?? 200000) + 1;
+        }
+
+        private static void NormalizePayeeContactFields(Payee payee)
+        {
+            payee.GoogleAddress = CleanText(payee.GoogleAddress);
+            payee.GoogleMapLink = CleanText(payee.GoogleMapLink);
+            payee.GooglePlaceId = CleanText(payee.GooglePlaceId);
+            payee.GoogleLat = CleanText(payee.GoogleLat);
+            payee.GoogleLong = CleanText(payee.GoogleLong);
+            payee.FormatAddress = CleanText(payee.FormatAddress);
+            payee.Email = CleanText(payee.Email);
+            payee.AddressLine2 = CleanText(payee.AddressLine2);
+            payee.CountryCode = CleanUpperText(payee.CountryCode);
+            payee.Continent = CleanText(payee.Continent);
+            payee.Province = CleanText(payee.Province);
+            payee.PostalCode = CleanText(payee.PostalCode);
+            payee.CurrencyCode = CleanUpperText(payee.CurrencyCode);
+            payee.Locale = CleanText(payee.Locale);
+            payee.Timezone = CleanText(payee.Timezone);
+            payee.TaxRegistrationNumber = CleanText(payee.TaxRegistrationNumber);
+            payee.PhoneDesc1 = CleanText(payee.PhoneDesc1);
+            payee.Phone1 = CleanText(payee.Phone1);
+            payee.PhoneDesc2 = CleanText(payee.PhoneDesc2);
+            payee.Phone2 = CleanText(payee.Phone2);
+            payee.PhoneDesc3 = CleanText(payee.PhoneDesc3);
+            payee.Phone3 = CleanText(payee.Phone3);
+            payee.PhoneDesc4 = CleanText(payee.PhoneDesc4);
+            payee.Phone4 = CleanText(payee.Phone4);
+            payee.PhoneDesc5 = CleanText(payee.PhoneDesc5);
+            payee.Phone5 = CleanText(payee.Phone5);
+            payee.PhoneDesc6 = CleanText(payee.PhoneDesc6);
+            payee.Phone6 = CleanText(payee.Phone6);
+        }
+
+        private static string? CleanText(string? value)
+        {
+            var text = value?.Trim();
+            return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+
+        private static string? CleanUpperText(string? value)
+        {
+            return CleanText(value)?.ToUpperInvariant();
         }
 
         public IEnumerable<VendorSearchDTO>? GetActive()
