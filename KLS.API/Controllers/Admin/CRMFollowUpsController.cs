@@ -65,13 +65,12 @@ namespace KLS.API.Controllers.Admin
             return Ok(result);
         }
 
-        [HttpPut("{id}/complete")]
+        [HttpPost("{id}/complete-with-activity")]
         [DisplayName("Complete Follow-Up")]
         [PermissionKey("CRM.FollowUp.Update")]
-        public IActionResult Complete(int id, [FromQuery] int? activityId)
+        public IActionResult CompleteWithActivity(int id, [FromBody] CRMFollowUpCompleteReq req)
         {
-            _crmFollowUpService.Complete(id, activityId);
-            return Ok();
+            return Ok(_crmFollowUpService.CompleteWithActivity(id, req));
         }
 
         [HttpDelete("{id}")]
@@ -88,6 +87,13 @@ namespace KLS.API.Controllers.Admin
         public IActionResult OverdueCount()
         {
             return Ok(_crmFollowUpService.GetOverdueCount());
+        }
+
+        [HttpGet("my-day")]
+        [PermissionKey("CRM.FollowUp.List")]
+        public IActionResult MyDay()
+        {
+            return Ok(_crmFollowUpService.GetMyDay());
         }
     }
 }

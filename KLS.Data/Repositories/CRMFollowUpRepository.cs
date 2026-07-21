@@ -62,6 +62,19 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(countParam.Value);
         }
 
+        public IQueryable<CRMMyDayItem> GetMyDay(int empId, DateOnly today, DateTime todayStartUtc, DateTime todayEndUtc)
+        {
+            object[] param = {
+                new SqlParameter("@EmpId", empId),
+                new SqlParameter("@Today", today.ToDateTime(TimeOnly.MinValue).Date),
+                new SqlParameter("@TodayStartUtc", todayStartUtc),
+                new SqlParameter("@TodayEndUtc", todayEndUtc)
+            };
+            return DbContext.CRMMyDayItems.FromSqlRaw(
+                "[dbo].[CRM_MyDay] @EmpId,@Today,@TodayStartUtc,@TodayEndUtc",
+                param);
+        }
+
         private static object[] BuildParams(CRMFollowUpListReq req)
         {
             object[] param = {

@@ -11,5 +11,7 @@ namespace KLS.Contract.Interfaces
         int Count(CRMFollowUpListReq req);
 
         int GetOverdueCount(int empId);
+
+        IQueryable<CRMMyDayItem> GetMyDay(int empId, DateOnly today, DateTime todayStartUtc, DateTime todayEndUtc);
     }
 }

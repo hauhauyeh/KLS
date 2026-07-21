@@ -31,6 +31,10 @@ namespace KLS.Models
 
         public int? ActivityId { get; set; }
 
+        public int? CreatedFromActivityId { get; set; }
+
+        public int? CompletedActivityId { get; set; }
+
         public DateTime? CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }

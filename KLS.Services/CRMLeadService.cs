@@ -24,7 +24,11 @@ namespace KLS.Services
 
         public CRMLead? GetById(int leadId)
         {
-            return Uow.CRMLeads.GetById(leadId);
+            var lead = Uow.CRMLeads.GetById(leadId);
+            if (lead == null) return null;
+
+            CRMScope.EnsureLead(Uow, lead);
+            return lead;
         }
 
         public CRMLead Create(CRMLeadDTO dto)
@@ -60,6 +64,10 @@ namespace KLS.Services
             var existing = Uow.CRMLeads.GetById(dto.LeadId);
             if (existing == null) return null;
 
+            CRMScope.EnsureLead(Uow, existing);
+
+            var oldStage = existing.Stage;
+
             existing.LeadName = dto.LeadName;
             existing.ContactPerson = dto.ContactPerson;
             existing.Phone = dto.Phone;
@@ -77,14 +85,25 @@ namespace KLS.Services
             existing.UpdatedAt = DateTime.UtcNow;
             existing.UpdateBy = UserContext.EmpId;
 
-            Uow.CRMLeads.Update(existing);
-            Uow.Commit();
+            Uow.ExecuteInTransaction(() =>
+            {
+                Uow.CRMLeads.Update(existing);
+                Uow.Commit();
+
+                if (!string.IsNullOrEmpty(dto.Stage) && dto.Stage != oldStage)
+                    AddSystemActivity(existing.LeadId, "Stage changed", $"{oldStage} -> {dto.Stage}");
+            });
 
             return existing;
         }
 
         public void Delete(int leadId)
         {
+            var lead = Uow.CRMLeads.GetById(leadId);
+            if (lead == null) return;
+
+            CRMScope.EnsureLead(Uow, lead);
+
             if (Uow.CRMActivities.Exists(a => a.LeadId == leadId))
                 throw new InvalidOperationException("Cannot delete lead with existing activities. Set stage to Lost instead.");
 
@@ -98,10 +117,9 @@ namespace KLS.Services
         public void Convert(int leadId, int payeeId)
         {
             var lead = Uow.CRMLeads.GetById(leadId);
-            if (lead == null)
-                throw new KeyNotFoundException("Lead not found.");
+            CRMScope.EnsureLead(Uow, lead);
 
-            if (lead.ConvertedPayeeId.HasValue && lead.ConvertedPayeeId == payeeId)
+            if (lead!.ConvertedPayeeId.HasValue && lead.ConvertedPayeeId == payeeId)
                 return;
 
             if (lead.ConvertedPayeeId.HasValue)
@@ -110,7 +128,27 @@ namespace KLS.Services
             if (!Uow.Payees.Exists(p => p.PayeeId == payeeId))
                 throw new KeyNotFoundException("Target customer not found.");
 
-            Uow.CRMLeads.Convert(leadId, payeeId);
+            Uow.ExecuteInTransaction(() =>
+            {
+                Uow.CRMLeads.Convert(leadId, payeeId);
+                AddSystemActivity(leadId, "Lead converted to customer", $"Created customer/payee #{payeeId}");
+            });
+        }
+
+        private void AddSystemActivity(int leadId, string subject, string description)
+        {
+            Uow.CRMActivities.Add(new CRMActivity
+            {
+                LeadId = leadId,
+                ActivityType = "System",
+                Subject = subject,
+                Description = description,
+                ActivityDate = DateTime.UtcNow,
+                SalesRepId = UserContext.EmpId,
+                CreatedAt = DateTime.UtcNow,
+                EnterBy = UserContext.EmpId
+            });
+            Uow.Commit();
         }
 
         public ICollection<CRMPipelineSummary> GetPipelineSummary()

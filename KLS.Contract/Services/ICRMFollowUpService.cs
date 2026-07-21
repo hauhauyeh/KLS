@@ -14,10 +14,12 @@ namespace KLS.Contract.Services
 
         CRMFollowUp? Update(CRMFollowUpDTO dto);
 
-        void Complete(int followUpId, int? activityId);
+        CRMFollowUpCompleteResult CompleteWithActivity(int followUpId, CRMFollowUpCompleteReq req);
 
         void Delete(int followUpId);
 
         int GetOverdueCount();
+
+        ICollection<CRMMyDayItem> GetMyDay();
     }
 }

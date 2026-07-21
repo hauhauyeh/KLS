@@ -80,6 +80,8 @@ namespace KLS.Models
 
         public string? ShipmentContainerNos { get; set; }
 
+        public string? ShipmentCarrierName { get; set; }
+
         public int? ChargeBillCount { get; set; }
 
         public int? PurchaseLinkCount { get; set; }

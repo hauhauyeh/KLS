@@ -670,6 +670,7 @@ namespace KLS.Data.DataContext
         public virtual DbSet<CRMLeadList> CRMLeadList { get; set; }
         public virtual DbSet<CRMActivityList> CRMActivityList { get; set; }
         public virtual DbSet<CRMFollowUpList> CRMFollowUpList { get; set; }
+        public virtual DbSet<CRMMyDayItem> CRMMyDayItems { get; set; }
         public virtual DbSet<CRMPipelineSummary> CRMPipelineSummary { get; set; }
     }
 }
