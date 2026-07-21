@@ -23,6 +23,8 @@ namespace KLS.Models
 
         public decimal? EstimatedValue { get; set; }
 
+        public DateTime? LastActivityAt { get; set; }
+
         public DateOnly? NextFollowUpDate { get; set; }
 
         public int? ConvertedPayeeId { get; set; }

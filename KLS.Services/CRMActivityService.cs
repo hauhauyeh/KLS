@@ -13,6 +13,8 @@ namespace KLS.Services
 
         public ICollection<CRMActivityList> GetByEntity(int? payeeId, int? leadId, int pageNo, int pageSize)
         {
+            CRMScope.EnsureEntity(Uow, payeeId, leadId);
+
             return Uow.CRMActivities.GetByEntity(payeeId, leadId, pageNo, pageSize).ToList();
         }
 
@@ -20,6 +22,8 @@ namespace KLS.Services
         {
             if (dto.PayeeId.HasValue == dto.LeadId.HasValue)
                 throw new ArgumentException("An activity must have exactly one parent (customer or lead).");
+
+            CRMScope.EnsureEntity(Uow, dto.PayeeId, dto.LeadId);
 
             CRMActivity activity = null!;
 
@@ -54,7 +58,7 @@ namespace KLS.Services
                         Priority = dto.FollowUp.Priority ?? "Medium",
                         Status = "Pending",
                         AssignedTo = UserContext.EmpId,
-                        ActivityId = activity.ActivityId,
+                        CreatedFromActivityId = activity.ActivityId,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
                         EnterBy = UserContext.EmpId
@@ -70,6 +74,15 @@ namespace KLS.Services
 
         public void Delete(int activityId)
         {
+            var existing = Uow.CRMActivities.GetById(activityId);
+            if (existing == null)
+                throw new KeyNotFoundException("Activity not found.");
+
+            CRMScope.EnsureEntity(Uow, existing.PayeeId, existing.LeadId);
+
+            if (existing.ActivityType == "System")
+                throw new InvalidOperationException("System activities cannot be deleted.");
+
             Uow.CRMActivities.RemoveById(activityId);
             Uow.Commit();
         }
