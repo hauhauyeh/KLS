@@ -10,5 +10,6 @@ namespace KLS.Contract.Dtos.DropShipment
         public string? Instruction { get; set; }
         public DateTime? PurchaseDate { get; set; }
         public string? FactorPO { get; set; }
+        public string? CustPONumber { get; set; }
     }
 }
