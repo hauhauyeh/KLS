@@ -2,13 +2,17 @@ using KLS.Common;
 using KLS.Contract.Dtos.DropShipment;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace KLS.Services
 {
     public class DropShipmentService : BaseService, IDropShipmentService
     {
-        public DropShipmentService(IUnitOfWork uow) : base(uow)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public DropShipmentService(IUnitOfWork uow, IHttpContextAccessor httpContextAccessor) : base(uow)
         {
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req)
@@ -19,6 +23,13 @@ namespace KLS.Services
         public DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req)
         {
             return Uow.DropShipments.GeneratePOFromSales(req);
+        }
+
+        public DropShipmentBackorderSeedRes CreateBackorderDropShip(int salesId)
+        {
+            RequireCustomerSaleCreatePermission();
+
+            return Uow.DropShipments.CreateBackorderDropShip(salesId);
         }
 
         public void UpdateShipQty(int purchaseId)
@@ -42,6 +53,20 @@ namespace KLS.Services
         public void ReverseBill(int salesId)
         {
             Uow.DropShipments.ReverseBill(salesId);
+        }
+
+        private void RequireCustomerSaleCreatePermission()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+
+            if (httpContext?.Items["IsAdmin"] is bool isAdmin && isAdmin)
+                return;
+
+            if (httpContext?.Items["PermissionKeys"] is HashSet<string> permissionKeys &&
+                permissionKeys.Contains("Customer.Sale.Create"))
+                return;
+
+            throw new UnauthorizedAccessException("Customer sale create permission is required.");
         }
     }
 }

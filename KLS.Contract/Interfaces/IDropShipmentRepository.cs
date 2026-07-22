@@ -8,6 +8,8 @@ namespace KLS.Contract.Interfaces
 
         DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req);
 
+        DropShipmentBackorderSeedRes CreateBackorderDropShip(int salesId);
+
         void UpdateShipQty(int purchaseId);
 
         void UpdateReceiptQty(int purchaseId, DropShipmentUpdateReceiptQtyReq req);

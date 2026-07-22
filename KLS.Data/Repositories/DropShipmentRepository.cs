@@ -114,6 +114,25 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public DropShipmentBackorderSeedRes CreateBackorderDropShip(int salesId)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", salesId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var result = DbContext.DropShipmentBackorderSeedRes
+                .FromSqlRaw(
+                    "[dbo].[DropShipment_CreateBackorderDropShipToTemp] @SalesId,@EmpId",
+                    salesIdParam, empIdParam)
+                .AsNoTracking()
+                .AsEnumerable()
+                .SingleOrDefault();
+
+            if (result == null)
+                throw new InvalidOperationException("Backorder drop-ship seed did not return a result.");
+
+            return result;
+        }
+
         public void UpdateShipQty(int purchaseId)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
