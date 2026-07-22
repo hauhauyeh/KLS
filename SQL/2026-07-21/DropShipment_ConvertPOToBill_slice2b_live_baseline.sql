@@ -1,8 +1,3 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 
 -- KLS-4DP-B-Phase2-Slice2-DropShipment_ConvertPOToBill: Class-A pass-through ROUND flip (unconditional, inert).
 --   Flip the purchase-side journal-Price write ROUND(pd.FinalPrice,2) -> ROUND(pd.FinalPrice,4). Entered goods
@@ -27,7 +22,7 @@ GO
 -- 2026-07-21 DROPSHIP-PARTIAL-RECEIPT: preserve line-level customer receipt quantities during
 --   conversion. Null-only legacy fill remains, but partial and deliberate zero receipt values are
 --   no longer overwritten to full ordered quantity.
-CREATE OR ALTER PROCEDURE [dbo].[DropShipment_ConvertPOToBill]
+CREATE   PROCEDURE [dbo].[DropShipment_ConvertPOToBill]
     @PurchaseId INT,
     @EmpId INT
 AS
@@ -110,11 +105,9 @@ BEGIN
         RETURN;
     END
 
-    -- Slice 2B: drop-ship PO may be factory-progress stage 2 before customer receipt.
-    -- Convert remains blocked once the PO leaves open pre-bill stages.
-    IF @PurchaseStageId NOT IN (1, 2)
+    IF @PurchaseStageId <> 1
     BEGIN
-        RAISERROR('Purchase is not in an open drop-ship PO stage. Cannot convert to bill.', 16, 1);
+        RAISERROR('Purchase is not in PO stage. Cannot convert to bill.', 16, 1);
         RETURN;
     END
 
@@ -189,30 +182,24 @@ BEGIN
         --     WHERE PurchaseId = @PurchaseId;
         -- END
 
-        -- From received Sales stage: customer receipt must already be written by
-        -- DropShipment_UpdateReceiptQty. Do not invent receipt qty from factory ShipQty
-        -- or ordered qty; zero is valid, NULL is missing.
-        -- UPDATE PurchaseDetail SET
-        --     BillQty = COALESCE(BillQty, ShipQty, OrdQty0),
-        --     ReceiveQty = COALESCE(ReceiveQty, FinalQty, ShipQty, OrdQty1),
-        --     FinalQty = COALESCE(FinalQty, ReceiveQty, ShipQty, OrdQty1)
-        -- WHERE PurchaseId = @PurchaseId;
-        IF EXISTS
-        (
-            SELECT 1
-            FROM PurchaseDetail
-            WHERE PurchaseId = @PurchaseId
-              AND LineType = 'I'
-              AND ItemId IS NOT NULL
-              AND (ReceiveQty IS NULL OR FinalQty IS NULL)
-        )
-        BEGIN
-            RAISERROR('Customer receipt quantities must be confirmed before converting drop-ship PO to Bill.', 16, 1);
-            RETURN;
-        END
+        -- From Transit stage: customer receipt already set quantities. Preserve partial/zero
+        -- receipt values; fill only legacy NULL fields so older received rows can still post.
+        UPDATE PurchaseDetail SET
+            -- 2026-07-21 DROPSHIP-PARTIAL-RECEIPT old full-fill:
+            -- BillQty = OrdQty0,
+            -- ReceiveQty = OrdQty1,
+            -- FinalQty = OrdQty1
+            BillQty = COALESCE(BillQty, ShipQty, OrdQty0),
+            ReceiveQty = COALESCE(ReceiveQty, FinalQty, ShipQty, OrdQty1),
+            FinalQty = COALESCE(FinalQty, ReceiveQty, ShipQty, OrdQty1)
+            -- 2026-07-05 (Phase B): base qty moved to the shared ItemUnit-derived producer after
+            -- this update (below). Prior (snapshot factor):
+            -- BaseReceiveQty = ROUND(ISNULL(OrdQty1, 0) / NULLIF(FactorToBase, 0), 6),
+            -- BaseFinalQty = ROUND(ISNULL(OrdQty1, 0) / NULLIF(FactorToBase, 0), 6)
+        WHERE PurchaseId = @PurchaseId;
 
         -- 2026-07-05 (Phase B): PurchaseDetail base qty from ItemUnitId -> ItemUnit (Fn_QtyToBase),
-        -- qty-only. Runs after customer receipt quantities are verified, before STEP 2 reads
+        -- qty-only. Runs after both branch fills set ReceiveQty=FinalQty=OrdQty1, before STEP 2 reads
         -- pd.BaseFinalQty. INNER JOIN = item lines only; account lines (no ItemUnitId) not updated ->
         -- not consumed on the purchase side (@DSCC is LineType<>'A'; account rows use FinalQty*FinalPrice).
         UPDATE pd
@@ -370,27 +357,14 @@ BEGIN
 
         -- Fill SalesDetail quantities only for legacy NULLs before base refresh.
         -- Deliberate zero and partial receipt values must stay unchanged.
-        IF EXISTS
-        (
-            SELECT 1
-            FROM SalesDetail
-            WHERE SalesId = @SalesId
-              AND LineType = 'I'
-              AND ItemId IS NOT NULL
-              AND (ShipQty IS NULL OR BillQty IS NULL)
-        )
-        BEGIN
-            RAISERROR('Customer receipt quantities must be confirmed on linked sales lines before converting drop-ship PO to Bill.', 16, 1);
-            RETURN;
-        END
-
-        -- Slice 2B: conversion must not invent Sales receipt qty from order qty.
-        -- Customer receipt is written by DropShipment_UpdateReceiptQty before conversion.
-        -- UPDATE SalesDetail SET
-        --     ShipQty = COALESCE(ShipQty, BillQty, OrdQty),
-        --     BillQty = COALESCE(BillQty, ShipQty, OrdQty)
-        -- WHERE SalesId = @SalesId
-        --   AND (ShipQty IS NULL OR BillQty IS NULL);
+        UPDATE SalesDetail SET
+            -- 2026-07-21 DROPSHIP-PARTIAL-RECEIPT old zero-as-missing predicate:
+            -- ShipQty = BillQty
+            -- WHERE SalesId = @SalesId AND (ShipQty IS NULL OR ShipQty = 0);
+            ShipQty = COALESCE(ShipQty, BillQty, OrdQty),
+            BillQty = COALESCE(BillQty, ShipQty, OrdQty)
+        WHERE SalesId = @SalesId
+          AND (ShipQty IS NULL OR BillQty IS NULL);
 
         -- Recalculate sales totals from SalesDetail after legacy null-fill.
         SELECT @SubTotal = ISNULL(SUM(ROUND(ISNULL(BillQty, 0) * ISNULL(UnitPrice, 0), 2)), 0)
@@ -587,5 +561,3 @@ BEGIN
     EXEC [Sales_CalcTotal] @SalesId;
     EXEC [Purchase_CalcTotalAndPercent] @PurchaseId, @PurFinalTotal OUTPUT
 END
-
-GO

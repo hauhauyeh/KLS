@@ -1,14 +1,9 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 
 -- DropShipment_UpdateReceiptQty
 -- Line-level drop-ship customer receipt. Updates customer-received quantities on
 -- the linked Sales and Purchase detail rows without changing ordered quantity.
 -- EXEC dbo.DropShipment_UpdateReceiptQty @PurchaseId=13055, @EmpId=1, @ItemsJson=N'[{"PurchaseDetailId":324902,"ReceiveQty":900},{"PurchaseDetailId":324903,"ReceiveQty":1001}]';
-CREATE OR ALTER PROCEDURE [dbo].[DropShipment_UpdateReceiptQty]
+CREATE   PROCEDURE [dbo].[DropShipment_UpdateReceiptQty]
     @PurchaseId INT,
     @EmpId INT,
     @ItemsJson NVARCHAR(MAX)
@@ -62,11 +57,9 @@ BEGIN
         RETURN;
     END
 
-    -- Slice 2B: factory progress can move drop-ship PO to stage 2 before customer receipt.
-    -- Receipt is still allowed only before bill conversion / later PO stages.
-    IF @PurchaseStageId NOT IN (1, 2)
+    IF @PurchaseStageId <> 1
     BEGIN
-        RAISERROR('Purchase is not in an open drop-ship PO stage. Drop-ship receipt can only be updated before Bill conversion.', 16, 1);
+        RAISERROR('Purchase is not in PO stage. Drop-ship receipt can only be updated before Bill conversion.', 16, 1);
         RETURN;
     END
 
@@ -253,9 +246,8 @@ BEGIN
         -- Section 5: update detail quantities without changing ordered quantity.
         UPDATE pd
         SET
-            -- Slice 2B: ShipQty/BillQty are factory-confirmed values and must stay unchanged here.
-            -- pd.ShipQty = r.ReceiveQty,
-            -- pd.BillQty = r.ReceiveQty,
+            pd.ShipQty = r.ReceiveQty,
+            pd.BillQty = r.ReceiveQty,
             pd.ReceiveQty = r.ReceiveQty,
             pd.FinalQty = r.ReceiveQty
         FROM PurchaseDetail pd
@@ -279,23 +271,7 @@ BEGIN
         UPDATE sd
         SET
             sd.ShipQty = r.ReceiveQty,
-            -- Slice 2B: drop-ship item lines only support Free as non-billable.
-            sd.BillQty =
-                CASE
-                    WHEN sd.IsFree = 1 THEN 0
-                    ELSE r.ReceiveQty
-                END,
-            sd.ExtTotal =
-                ROUND(
-                    ISNULL(
-                        CASE
-                            WHEN sd.IsFree = 1 THEN 0
-                            ELSE r.ReceiveQty
-                        END,
-                        0
-                    ) * ISNULL(sd.UnitPrice, 0),
-                    2
-                )
+            sd.BillQty = r.ReceiveQty
         FROM SalesDetail sd
         INNER JOIN PurchaseDetail pd ON pd.PurchaseId = @PurchaseId
                                    AND pd.LineId = sd.LineId
@@ -397,5 +373,3 @@ BEGIN
               AND ISNULL(sd.OrdQty, 0) - ISNULL(sd.ShipQty, 0) > 0
         ) THEN 1 ELSE 0 END AS BIT) AS HasBackorder;
 END
-
-GO
