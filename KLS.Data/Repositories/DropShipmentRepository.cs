@@ -40,6 +40,9 @@ namespace KLS.Data.Repositories
             var custPONumberParam = string.IsNullOrWhiteSpace(req.CustPONumber)
                 ? new SqlParameter("@CustPONumber", DBNull.Value)
                 : new SqlParameter("@CustPONumber", req.CustPONumber.Trim().ToUpper());
+            var sourceSalesIdParam = req.SourceSalesId.HasValue
+                ? new SqlParameter("@SourceSalesId", req.SourceSalesId.Value)
+                : new SqlParameter("@SourceSalesId", DBNull.Value);
 
             var newSalesIdParam = new SqlParameter
             {
@@ -55,9 +58,9 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_InsertSalesAndPO] @SalesId,@PayeeId,@VendorPayeeId,@ShipDate,@ShipRoute,@Instruction,@EmpId,@PurchaseDate,@NewSalesId OUTPUT,@NewPurchaseId OUTPUT,@FactorPO,@CustPONumber",
+                "[DropShipment_InsertSalesAndPO] @SalesId,@PayeeId,@VendorPayeeId,@ShipDate,@ShipRoute,@Instruction,@EmpId,@PurchaseDate,@NewSalesId OUTPUT,@NewPurchaseId OUTPUT,@FactorPO,@CustPONumber,@SourceSalesId",
                 salesIdParam, payeeIdParam, vendorPayeeIdParam, shipDateParam, shipRouteParam,
-                instructionParam, empIdParam, purchaseDateParam, newSalesIdParam, newPurchaseIdParam, factorPOParam, custPONumberParam);
+                instructionParam, empIdParam, purchaseDateParam, newSalesIdParam, newPurchaseIdParam, factorPOParam, custPONumberParam, sourceSalesIdParam);
 
             var newSalesId = Convert.ToInt32(newSalesIdParam.Value);
             var newPurchaseId = Convert.ToInt32(newPurchaseIdParam.Value);

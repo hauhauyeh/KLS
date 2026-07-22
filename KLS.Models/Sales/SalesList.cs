@@ -85,6 +85,7 @@ namespace KLS.Models
         public string? DropShipPurchaseFactorPO { get; set; }
         public int? DropShipPurchaseStageId { get; set; }
         public int? DropShipPurchasePayeeId { get; set; }
+        public bool HasBackorderDropShip { get; set; }
 
         [NotMapped]
         public bool IsPdfExist { get; set; }

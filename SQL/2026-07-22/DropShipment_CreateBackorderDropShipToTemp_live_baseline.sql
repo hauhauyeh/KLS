@@ -1,16 +1,10 @@
-﻿
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 -- DropShipment_CreateBackorderDropShipToTemp
 -- Creates a new-order TempSales cart from eligible normal backorder lines on an existing drop-ship SO.
 -- No-row backorder is a normal business outcome: return GeneratedLineCount = 0 and do not touch TempSales.
 -- 2026-07-22 BACKORDER-DROPSHIP-SEED: normal item lines only; Free/Out/CRCG, promo, account, system, and parent/root lines are excluded.
--- 2026-07-22 BACKORDER-DROPSHIP-DUPLICATE-GUARD: source SO can create only one backorder drop-ship.
 -- EXEC dbo.DropShipment_CreateBackorderDropShipToTemp @SalesId = 74934, @EmpId = 1;
-CREATE OR ALTER PROCEDURE [dbo].[DropShipment_CreateBackorderDropShipToTemp]
+CREATE   PROCEDURE [dbo].[DropShipment_CreateBackorderDropShipToTemp]
     @SalesId INT,
     @EmpId INT
 AS
@@ -28,7 +22,6 @@ BEGIN
     DECLARE @CustPONumber NVARCHAR(100);
     DECLARE @FactorPO NVARCHAR(100);
     DECLARE @GeneratedLineCount INT = 0;
-    DECLARE @SourceSalesNumber INT;
 
     DECLARE @EligibleLines TABLE
     (
@@ -49,7 +42,6 @@ BEGIN
 
     SELECT
         @PayeeId = s.ShipId,
-        @SourceSalesNumber = s.SalesNumber,
         @DropShipPurchaseId = s.DropShipPurchaseId,
         @IsDropShip = s.IsDropShip,
         @CustPONumber = s.CustPONumber
@@ -105,27 +97,6 @@ BEGIN
     IF @PayeeId IS NULL
     BEGIN
         RAISERROR('Source sales order has no customer payee.', 16, 1);
-        RETURN;
-    END
-
-    IF EXISTS
-    (
-        SELECT 1
-        FROM dbo.Sales child
-        WHERE child.ParentSalesNumber = @SourceSalesNumber
-          AND child.IsDropShip = 1
-          AND child.DocType = 'SO'
-    )
-    BEGIN
-        SELECT
-            @SalesId AS SourceSalesId,
-            @PayeeId AS PayeeId,
-            @VendorPayeeId AS VendorPayeeId,
-            @VendorName AS VendorName,
-            @CustPONumber AS CustPONumber,
-            @FactorPO AS FactorPO,
-            0 AS GeneratedLineCount,
-            CAST('Backorder drop-ship already exists for this source order' AS NVARCHAR(200)) AS [Message];
         RETURN;
     END
 
@@ -296,3 +267,4 @@ BEGIN
         @GeneratedLineCount AS GeneratedLineCount,
         CAST(NULL AS NVARCHAR(200)) AS [Message];
 END
+

@@ -1,14 +1,8 @@
-﻿
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 -- DropShipment_PrecheckBackorderDropShipCheckout
 -- 2026-07-22 BACKORDER-DROPSHIP-CHECKOUT-PRECHECK: read-only guard for forced backorder drop-ship checkout.
--- 2026-07-22 BACKORDER-DROPSHIP-DUPLICATE-GUARD: source SO can post only one backorder drop-ship.
 -- EXEC dbo.DropShipment_PrecheckBackorderDropShipCheckout @SalesId = 0, @SourceSalesId = 74934, @PayeeId = 301383, @VendorPayeeId = 200393, @EmpId = 1;
-CREATE OR ALTER PROCEDURE [dbo].[DropShipment_PrecheckBackorderDropShipCheckout]
+CREATE   PROCEDURE [dbo].[DropShipment_PrecheckBackorderDropShipCheckout]
     @SalesId INT,
     @SourceSalesId INT,
     @PayeeId INT,
@@ -24,7 +18,6 @@ BEGIN
     DECLARE @PurchaseVendorPayeeId INT;
     DECLARE @PurchaseIsDropShip BIT;
     DECLARE @PurchaseDropShipSalesId INT;
-    DECLARE @SourceSalesNumber INT;
 
     DECLARE @TempRows TABLE
     (
@@ -58,7 +51,6 @@ BEGIN
 
     SELECT
         @SourcePayeeId = s.ShipId,
-        @SourceSalesNumber = s.SalesNumber,
         @DropShipPurchaseId = s.DropShipPurchaseId,
         @SourceIsDropShip = s.IsDropShip
     FROM dbo.Sales s
@@ -116,19 +108,6 @@ BEGIN
     IF ISNULL(@PurchaseVendorPayeeId, 0) <> @VendorPayeeId
     BEGIN
         SELECT CAST(0 AS BIT) AS CanPost, CAST('Backorder vendor does not match the linked purchase order.' AS NVARCHAR(200)) AS [Message];
-        RETURN;
-    END
-
-    IF EXISTS
-    (
-        SELECT 1
-        FROM dbo.Sales child
-        WHERE child.ParentSalesNumber = @SourceSalesNumber
-          AND child.IsDropShip = 1
-          AND child.DocType = 'SO'
-    )
-    BEGIN
-        SELECT CAST(0 AS BIT) AS CanPost, CAST('Backorder drop-ship already exists for this source order.' AS NVARCHAR(200)) AS [Message];
         RETURN;
     END
 
@@ -298,3 +277,4 @@ BEGIN
 
     SELECT CAST(1 AS BIT) AS CanPost, CAST(NULL AS NVARCHAR(200)) AS [Message];
 END
+
