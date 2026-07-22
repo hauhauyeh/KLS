@@ -23,6 +23,9 @@ GO
 --   CrDe CASE had '-ABS' in both branches). Byte-identical for the normal positive debit-nature lines;
 --   negative lines previously posted debit and UNBALANCED the journal.
 -- 2026-07-21 DROPSHIP-RECEIPT-GUARD: require customer receipt confirmation before bill conversion.
+-- 2026-07-21 DROPSHIP-PARTIAL-RECEIPT: preserve line-level customer receipt quantities during
+--   conversion. Null-only legacy fill remains, but partial and deliberate zero receipt values are
+--   no longer overwritten to full ordered quantity.
 CREATE OR ALTER PROCEDURE [dbo].[DropShipment_ConvertPOToBill]
     @PurchaseId INT,
     @EmpId INT
@@ -183,11 +186,16 @@ BEGIN
         --     WHERE PurchaseId = @PurchaseId;
         -- END
 
-        -- From Transit stage: customer receipt already set ShipQty; fill remaining billing quantities.
+        -- From Transit stage: customer receipt already set quantities. Preserve partial/zero
+        -- receipt values; fill only legacy NULL fields so older received rows can still post.
         UPDATE PurchaseDetail SET
-            BillQty = OrdQty0,
-            ReceiveQty = OrdQty1,
-            FinalQty = OrdQty1
+            -- 2026-07-21 DROPSHIP-PARTIAL-RECEIPT old full-fill:
+            -- BillQty = OrdQty0,
+            -- ReceiveQty = OrdQty1,
+            -- FinalQty = OrdQty1
+            BillQty = COALESCE(BillQty, ShipQty, OrdQty0),
+            ReceiveQty = COALESCE(ReceiveQty, FinalQty, ShipQty, OrdQty1),
+            FinalQty = COALESCE(FinalQty, ReceiveQty, ShipQty, OrdQty1)
             -- 2026-07-05 (Phase B): base qty moved to the shared ItemUnit-derived producer after
             -- this update (below). Prior (snapshot factor):
             -- BaseReceiveQty = ROUND(ISNULL(OrdQty1, 0) / NULLIF(FactorToBase, 0), 6),
@@ -351,7 +359,18 @@ BEGIN
         -- STEP 3: Sales-side posting (DR @AR, CR Revenue, DR @COGS, CR @DSCC)
         -- ============================================================
 
-        -- Recalculate sales totals from SalesDetail
+        -- Fill SalesDetail quantities only for legacy NULLs before base refresh.
+        -- Deliberate zero and partial receipt values must stay unchanged.
+        UPDATE SalesDetail SET
+            -- 2026-07-21 DROPSHIP-PARTIAL-RECEIPT old zero-as-missing predicate:
+            -- ShipQty = BillQty
+            -- WHERE SalesId = @SalesId AND (ShipQty IS NULL OR ShipQty = 0);
+            ShipQty = COALESCE(ShipQty, BillQty, OrdQty),
+            BillQty = COALESCE(BillQty, ShipQty, OrdQty)
+        WHERE SalesId = @SalesId
+          AND (ShipQty IS NULL OR BillQty IS NULL);
+
+        -- Recalculate sales totals from SalesDetail after legacy null-fill.
         SELECT @SubTotal = ISNULL(SUM(ROUND(ISNULL(BillQty, 0) * ISNULL(UnitPrice, 0), 2)), 0)
         FROM SalesDetail WHERE SalesId = @SalesId;
 
@@ -380,11 +399,6 @@ BEGIN
         FROM SalesDetail sd
         INNER JOIN ItemUnit iu ON iu.ItemUnitId = sd.ItemUnitId
         WHERE sd.SalesId = @SalesId;
-
-        -- Fill ShipQty = BillQty on SalesDetail if not already set
-        UPDATE SalesDetail SET
-            ShipQty = BillQty
-        WHERE SalesId = @SalesId AND (ShipQty IS NULL OR ShipQty = 0);
 
         CREATE TABLE #SalTxDetail (
             TxDetailId INT IDENTITY(1,1),

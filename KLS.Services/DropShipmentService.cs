@@ -26,6 +26,14 @@ namespace KLS.Services
             Uow.DropShipments.UpdateShipQty(purchaseId);
         }
 
+        public void UpdateReceiptQty(int purchaseId, DropShipmentUpdateReceiptQtyReq req)
+        {
+            if (req == null || string.IsNullOrWhiteSpace(req.ItemsJson))
+                throw new ArgumentException("Receipt items are required.");
+
+            Uow.DropShipments.UpdateReceiptQty(purchaseId, req);
+        }
+
         public void ConvertPOToBill(int purchaseId)
         {
             Uow.DropShipments.ConvertPOToBill(purchaseId);

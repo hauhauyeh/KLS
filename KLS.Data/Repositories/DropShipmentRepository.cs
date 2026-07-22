@@ -124,6 +124,19 @@ namespace KLS.Data.Repositories
                 purchaseIdParam, empIdParam);
         }
 
+        public void UpdateReceiptQty(int purchaseId, DropShipmentUpdateReceiptQtyReq req)
+        {
+            var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var itemsJsonParam = string.IsNullOrWhiteSpace(req.ItemsJson)
+                ? new SqlParameter("@ItemsJson", DBNull.Value)
+                : new SqlParameter("@ItemsJson", req.ItemsJson);
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[DropShipment_UpdateReceiptQty] @PurchaseId,@EmpId,@ItemsJson",
+                purchaseIdParam, empIdParam, itemsJsonParam);
+        }
+
         public void ConvertPOToBill(int purchaseId)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
