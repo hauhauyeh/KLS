@@ -279,17 +279,17 @@ BEGIN
         UPDATE sd
         SET
             sd.ShipQty = r.ReceiveQty,
-            -- Slice 2B: drop-ship item lines only support Free as non-billable.
+            -- Slice 2B: SalesDetail has no IsFree column; preserve Free from its existing qty pattern.
             sd.BillQty =
                 CASE
-                    WHEN sd.IsFree = 1 THEN 0
+                    WHEN ISNULL(sd.BillQty, 0) = 0 AND ISNULL(sd.ShipQty, 0) <> 0 THEN 0
                     ELSE r.ReceiveQty
                 END,
             sd.ExtTotal =
                 ROUND(
                     ISNULL(
                         CASE
-                            WHEN sd.IsFree = 1 THEN 0
+                            WHEN ISNULL(sd.BillQty, 0) = 0 AND ISNULL(sd.ShipQty, 0) <> 0 THEN 0
                             ELSE r.ReceiveQty
                         END,
                         0
