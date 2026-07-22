@@ -22,7 +22,7 @@ namespace KLS.Services
         private readonly ITermService _termService;
         private readonly IPDFService _pdfService;
         private readonly IEmailService _emailService;
-        private readonly IEmailSettingService _emailSettingService;
+        private readonly IEmailAuditService _emailAuditService;
         private readonly IExportService _exportService;
         private readonly IPortalModeService _portalModeService;
 
@@ -33,7 +33,7 @@ namespace KLS.Services
             IItemQuoteService itemQuoteService,
             IPDFService pdfService,
             IEmailService emailService,
-            IEmailSettingService emailSettingService,
+            IEmailAuditService emailAuditService,
             IExportService exportService,
             IPortalModeService portalModeService) : base(uow)
         {
@@ -43,7 +43,7 @@ namespace KLS.Services
             _itemQuoteService = itemQuoteService;
             _pdfService = pdfService;
             _emailService = emailService;
-            _emailSettingService = emailSettingService;
+            _emailAuditService = emailAuditService;
             _exportService = exportService;
             _portalModeService = portalModeService;
         }
@@ -470,22 +470,19 @@ namespace KLS.Services
             string subject = "Pricesheet";
             string mailBody = _pdfService.RenderTemplate("~/Views/Pricesheet.cshtml", pricesheet);
 
-            var setting = _emailSettingService.GetSetting();
-
-            Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailBody, null), TaskCreationOptions.LongRunning).ContinueWith((t) =>
+            _emailAuditService.SendAndLog(new EmailAuditMessage
             {
-                var log = new EmailLog
-                {
-                    PayeeId = customer?.PayeeId,
-                    Email = toEmails,
-                    SentDate = DateTime.UtcNow,
-                    EventType = EnumHelper.EmailLogEvent.PriceSheet.ToString(),
-                    ErrorMessage = t.Result,
-                    Status = string.IsNullOrEmpty(t.Result)
-                };
-
-                Uow.EmailLogs.Add(log);
-                Uow.Commit();
+                To = toEmails,
+                Subject = subject,
+                HtmlBody = mailBody,
+                EmailCategory = EmailAudit.Category.Document,
+                EmailType = EmailAudit.EmailType.PriceSheet,
+                PayeeId = customer?.PayeeId,
+                DocumentType = EmailAudit.DocumentType.PriceSheet,
+                RelatedEntityType = EmailAudit.RelatedEntity.Payee,
+                RelatedEntityId = customer?.PayeeId,
+                Source = EmailAudit.Source.Manual,
+                RequestedBy = UserContext.SystemUserId
             });
         }
 
@@ -503,22 +500,19 @@ namespace KLS.Services
             string subject = "A/R Statement";
             string mailBody = _pdfService.RenderTemplate("~/Views/Statement.cshtml", statement);
 
-            var setting = _emailSettingService.GetSetting();
-
-            Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailBody, null), TaskCreationOptions.LongRunning).ContinueWith((t) =>
+            _emailAuditService.SendAndLog(new EmailAuditMessage
             {
-                var log = new EmailLog
-                {
-                    PayeeId = customer?.PayeeId,
-                    Email = toEmails,
-                    SentDate = DateTime.UtcNow,
-                    EventType = EnumHelper.EmailLogEvent.Statement.ToString(),
-                    ErrorMessage = t.Result,
-                    Status = string.IsNullOrEmpty(t.Result)
-                };
-
-                Uow.EmailLogs.Add(log);
-                Uow.Commit();
+                To = toEmails,
+                Subject = subject,
+                HtmlBody = mailBody,
+                EmailCategory = EmailAudit.Category.Document,
+                EmailType = EmailAudit.EmailType.Statement,
+                PayeeId = customer?.PayeeId,
+                DocumentType = EmailAudit.DocumentType.Statement,
+                RelatedEntityType = EmailAudit.RelatedEntity.Payee,
+                RelatedEntityId = customer?.PayeeId,
+                Source = EmailAudit.Source.Manual,
+                RequestedBy = UserContext.SystemUserId
             });
         }
 
@@ -727,11 +721,20 @@ namespace KLS.Services
             var company = _companyService.GetDefault();
 
             string mailBody = _emailService.RenderEmailTemplate("~/Views/Register.cshtml", model);
-            EmailSetting setting = _emailSettingService.GetSetting();
             string subject = "Welcome to " + company.CompanyName;
 
-            Task.Factory.StartNew(() => _emailService.SendEmail(setting, registerReq.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
-                .ContinueWith((t) => { });
+            _emailAuditService.SendAndLog(new EmailAuditMessage
+            {
+                To = registerReq.Email,
+                Subject = subject,
+                HtmlBody = mailBody,
+                EmailCategory = EmailAudit.Category.Account,
+                EmailType = EmailAudit.EmailType.CustomerRegistration,
+                PayeeId = customer.PayeeId,
+                RelatedEntityType = EmailAudit.RelatedEntity.UserAccount,
+                RelatedEntityId = userAccount.UserId,
+                Source = EmailAudit.Source.System
+            });
         }
     }
 }

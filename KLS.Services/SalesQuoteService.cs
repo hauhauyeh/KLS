@@ -9,19 +9,16 @@ namespace KLS.Services
     public class SalesQuoteService : BaseService, ISalesQuoteService
     {
         private readonly IDocumentService _documentService;
-        private readonly IEmailSettingService _emailSettingService;
-        private readonly IEmailService _emailService;
+        private readonly IEmailAuditService _emailAuditService;
         private readonly IWebHostEnvironment _env;
 
         public SalesQuoteService(IUnitOfWork uow,
             IDocumentService documentService,
-            IEmailSettingService emailSettingService,
-            IEmailService emailService,
+            IEmailAuditService emailAuditService,
             IWebHostEnvironment env) : base(uow)
         {
             _documentService = documentService;
-            _emailSettingService = emailSettingService;
-            _emailService = emailService;
+            _emailAuditService = emailAuditService;
             _env = env;
         }
 
@@ -103,24 +100,21 @@ namespace KLS.Services
                 string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Please find attached your sales quote #" + quote.QuoteNumber + ".<br/><br/>";
                 string[] attcfiles = [pdfFile];
 
-                var setting = _emailSettingService.GetSetting();
-
-                Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailbody, attcfiles), TaskCreationOptions.LongRunning)
-                    .ContinueWith((t) =>
-                    {
-                        var log = new EmailLog
-                        {
-                            PayeeId = quote.PayeeId,
-                            Email = toEmails,
-                            SentDate = DateTime.UtcNow,
-                            EventType = EnumHelper.EmailLogEvent.Invoice.ToString(),
-                            ErrorMessage = t.Result,
-                            Status = string.IsNullOrEmpty(t.Result)
-                        };
-
-                        Uow.EmailLogs.Add(log);
-                        Uow.Commit();
-                    });
+                _emailAuditService.SendAndLog(new EmailAuditMessage
+                {
+                    To = toEmails,
+                    Subject = subject,
+                    HtmlBody = mailbody,
+                    Attachments = attcfiles,
+                    EmailCategory = EmailAudit.Category.Document,
+                    EmailType = EmailAudit.EmailType.SalesQuote,
+                    PayeeId = quote.PayeeId,
+                    DocumentType = EmailAudit.DocumentType.SalesQuote,
+                    DocumentId = salesQuoteId,
+                    DocumentNumber = quote.QuoteNumber.ToString(),
+                    Source = EmailAudit.Source.Manual,
+                    RequestedBy = UserContext.SystemUserId
+                });
             }
         }
 

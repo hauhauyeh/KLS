@@ -25,5 +25,37 @@ namespace KLS.Models
         public bool Status { get; set; }
 
         public string? ErrorMessage { get; set; }
+
+        // --- Audit columns (added 2026-07-22, EmailLog system-wide audit) ---
+
+        public string? EmailCategory { get; set; }
+
+        public string? EmailType { get; set; }
+
+        public string? FromEmail { get; set; }
+
+        public string? DocumentType { get; set; }
+
+        public int? DocumentId { get; set; }
+
+        public string? DocumentNumber { get; set; }
+
+        public string? RelatedEntityType { get; set; }
+
+        public int? RelatedEntityId { get; set; }
+
+        public string? Subject { get; set; }
+
+        public int? RequestedBy { get; set; }
+
+        public string? Source { get; set; }
+
+        public string? Provider { get; set; }
+
+        public string? ProviderMessageId { get; set; }
+
+        public string? DeliveryStatus { get; set; }
+
+        public DateTime? LastDeliveryEventAt { get; set; }
     }
 }

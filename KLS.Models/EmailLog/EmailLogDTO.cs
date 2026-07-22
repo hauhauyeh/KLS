@@ -25,5 +25,33 @@ namespace KLS.Models
         public string? ErrorMessage { get; set; }
 
         public string? PayeeName { get; set; }
+
+        // --- Audit columns (Phase 5; must match dbo.EmailLog_GetAllList SELECT) ---
+
+        public string? EmailCategory { get; set; }
+
+        public string? EmailType { get; set; }
+
+        public string? FromEmail { get; set; }
+
+        public string? DocumentType { get; set; }
+
+        public int? DocumentId { get; set; }
+
+        public string? DocumentNumber { get; set; }
+
+        public string? RelatedEntityType { get; set; }
+
+        public int? RelatedEntityId { get; set; }
+
+        public string? Subject { get; set; }
+
+        public int? RequestedBy { get; set; }
+
+        public string? Source { get; set; }
+
+        public string? Provider { get; set; }
+
+        public string? DeliveryStatus { get; set; }
     }
 }

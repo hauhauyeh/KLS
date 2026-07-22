@@ -24,7 +24,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildEmailLogsParam(emailLogReq);
 
-            return DbContext.EmailLogDTO.FromSqlRaw("[dbo].[EmailLog_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.EmailLogDTO.FromSqlRaw("[dbo].[EmailLog_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Category,@EmailType,@DeliveryStatus", param);
         }
 
         public int Count(EmailLogReq emailLogReq)
@@ -32,7 +32,7 @@ namespace KLS.Data.Repositories
             emailLogReq.IsCount = true;
             var param = BuildEmailLogsParam(emailLogReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[EmailLog_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[EmailLog_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Category,@EmailType,@DeliveryStatus", param);
 
             var output = param[9] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -64,7 +64,13 @@ namespace KLS.Data.Repositories
                     ParameterName = "@TotalCount",
                     Direction = System.Data.ParameterDirection.Output,
                     SqlDbType = System.Data.SqlDbType.Int
-                }
+                },
+
+                string.IsNullOrEmpty(emailLogReq.Category) ? new SqlParameter("@Category", DBNull.Value) : new SqlParameter("@Category", emailLogReq.Category),
+
+                string.IsNullOrEmpty(emailLogReq.EmailType) ? new SqlParameter("@EmailType", DBNull.Value) : new SqlParameter("@EmailType", emailLogReq.EmailType),
+
+                string.IsNullOrEmpty(emailLogReq.DeliveryStatus) ? new SqlParameter("@DeliveryStatus", DBNull.Value) : new SqlParameter("@DeliveryStatus", emailLogReq.DeliveryStatus)
             };
 
             return param;

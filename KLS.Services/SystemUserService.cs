@@ -21,6 +21,7 @@ namespace KLS.Services
         private readonly ISystemRoleService _roleService;
         private readonly IEmailSettingService _emailSettingService;
         private readonly IEmailService _emailService;
+        private readonly IEmailAuditService _emailAuditService;
         private readonly IUserLogService _userLogService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IPermissionService _permissionService;
@@ -33,6 +34,7 @@ namespace KLS.Services
             ISystemRoleService roleService,
             IEmailSettingService emailSettingService,
             IEmailService emailService,
+            IEmailAuditService emailAuditService,
             IUserLogService userLogService,
             IHttpContextAccessor httpContextAccessor,
             IPermissionService permissionService
@@ -44,6 +46,7 @@ namespace KLS.Services
             _roleService = roleService;
             _emailSettingService = emailSettingService;
             _emailService = emailService;
+            _emailAuditService = emailAuditService;
             _userLogService = userLogService;
             _httpContextAccessor = httpContextAccessor;
             _permissionService = permissionService;
@@ -273,10 +276,18 @@ namespace KLS.Services
 
             string mailBody = _emailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
 
-            EmailSetting setting = _emailSettingService.GetSetting();
-
-            Task.Factory.StartNew(() => _emailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
-                .ContinueWith((t) => { });
+            _emailAuditService.SendAndLog(new EmailAuditMessage
+            {
+                To = user.Email,
+                Subject = subject,
+                HtmlBody = mailBody,
+                EmailCategory = EmailAudit.Category.Account,
+                EmailType = EmailAudit.EmailType.PasswordReset,
+                PayeeId = user.PayeeId,
+                RelatedEntityType = EmailAudit.RelatedEntity.SystemUser,
+                RelatedEntityId = user.SystemUserId,
+                Source = EmailAudit.Source.System
+            });
 
             return resetUrl;
         }
