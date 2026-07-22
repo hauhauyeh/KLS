@@ -11,5 +11,7 @@ namespace KLS.Contract.Dtos.DropShipment
         public DateTime? PurchaseDate { get; set; }
         public string? FactorPO { get; set; }
         public string? CustPONumber { get; set; }
+        public bool IsBackorderDropShip { get; set; }
+        public int? SourceSalesId { get; set; }
     }
 }

@@ -17,6 +17,9 @@ namespace KLS.Services
 
         public DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req)
         {
+            if (req.IsBackorderDropShip)
+                PrecheckBackorderDropShipCheckout(req);
+
             return Uow.DropShipments.InsertSalesAndPO(req);
         }
 
@@ -67,6 +70,17 @@ namespace KLS.Services
                 return;
 
             throw new UnauthorizedAccessException("Customer sale create permission is required.");
+        }
+
+        private void PrecheckBackorderDropShipCheckout(DropShipmentInsertReq req)
+        {
+            if (!req.SourceSalesId.HasValue || req.SourceSalesId.Value <= 0)
+                throw new InvalidOperationException("Source sales order is required.");
+
+            var result = Uow.DropShipments.PrecheckBackorderDropShipCheckout(req);
+
+            if (!result.CanPost)
+                throw new InvalidOperationException(result.Message ?? "Backorder drop-ship checkout cannot be posted.");
         }
     }
 }

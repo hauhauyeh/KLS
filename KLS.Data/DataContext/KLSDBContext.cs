@@ -149,6 +149,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<RptSalesYearlyRow>().HasNoKey();
             modelBuilder.Entity<ImportPayNowExcelRow>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
+            modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
 
             // SalesQuote tables
             modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
@@ -412,6 +413,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<ImportPayNowExcelRow> ImportPayNowExcelRow { get; set; }
 
         public virtual DbSet<DropShipmentBackorderSeedRes> DropShipmentBackorderSeedRes { get; set; }
+
+        public virtual DbSet<DropShipmentBackorderCheckoutPrecheckRes> DropShipmentBackorderCheckoutPrecheckRes { get; set; }
 
         public virtual DbSet<VendorAppliedBill> VendorAppliedBill { get; set; }
 

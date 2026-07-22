@@ -6,6 +6,8 @@ namespace KLS.Contract.Interfaces
     {
         DropShipmentInsertRes InsertSalesAndPO(DropShipmentInsertReq req);
 
+        DropShipmentBackorderCheckoutPrecheckRes PrecheckBackorderDropShipCheckout(DropShipmentInsertReq req);
+
         DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req);
 
         DropShipmentBackorderSeedRes CreateBackorderDropShip(int salesId);

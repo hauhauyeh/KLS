@@ -74,6 +74,28 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public DropShipmentBackorderCheckoutPrecheckRes PrecheckBackorderDropShipCheckout(DropShipmentInsertReq req)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
+            var sourceSalesIdParam = new SqlParameter("@SourceSalesId", req.SourceSalesId ?? 0);
+            var payeeIdParam = new SqlParameter("@PayeeId", req.PayeeId);
+            var vendorPayeeIdParam = new SqlParameter("@VendorPayeeId", req.VendorPayeeId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var result = DbContext.DropShipmentBackorderCheckoutPrecheckRes
+                .FromSqlRaw(
+                    "[dbo].[DropShipment_PrecheckBackorderDropShipCheckout] @SalesId,@SourceSalesId,@PayeeId,@VendorPayeeId,@EmpId",
+                    salesIdParam, sourceSalesIdParam, payeeIdParam, vendorPayeeIdParam, empIdParam)
+                .AsNoTracking()
+                .AsEnumerable()
+                .SingleOrDefault();
+
+            if (result == null)
+                throw new InvalidOperationException("Backorder drop-ship checkout precheck did not return a result.");
+
+            return result;
+        }
+
         public DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req)
         {
             var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
