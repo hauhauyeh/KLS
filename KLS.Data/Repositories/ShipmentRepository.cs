@@ -189,9 +189,12 @@ namespace KLS.Data.Repositories
                         l.PurchaseId,
                         LastAllocAt = MAX(sa.CreatedAt)
                     FROM Linked l
-                    INNER JOIN dbo.ShipmentPurchase sp ON sp.PurchaseId = l.PurchaseId
-                    INNER JOIN dbo.ShipmentCharge sc ON sc.ShipmentId = sp.ShipmentId
-                    INNER JOIN dbo.ShipmentAllocation sa ON sa.ChargeId = sc.ChargeId
+                    INNER JOIN dbo.PurchaseDetail pd ON pd.PurchaseId = l.PurchaseId
+                    INNER JOIN dbo.ShipmentAllocation sa ON sa.PurchaseDetailId = pd.PurchaseDetailId
+                    INNER JOIN dbo.ShipmentCharge sc ON sc.ChargeId = sa.ChargeId
+                    INNER JOIN dbo.ShipmentPurchase sp
+                        ON sp.ShipmentId = sc.ShipmentId
+                       AND sp.PurchaseId = l.PurchaseId
                     GROUP BY l.PurchaseId
                 ),
                 Flags AS

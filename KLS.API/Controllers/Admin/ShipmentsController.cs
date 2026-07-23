@@ -194,6 +194,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("CleanupReallocation/{shipmentId}")]
+        [DisplayName("Cleanup Shipment Reallocation")]
+        [PermissionKey("Vendor.Shipment.Update")]
+        public IActionResult CleanupReallocation(int shipmentId)
+        {
+            return Ok(_shipmentService.CleanupReallocationForShipment(shipmentId));
+        }
+
+
         [HttpPost("SplitCharge")]
         [DisplayName("Split Charge To Bills")]
         [PermissionKey("Vendor.Shipment.SplitCharge")]

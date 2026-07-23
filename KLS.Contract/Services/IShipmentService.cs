@@ -51,6 +51,8 @@ namespace KLS.Contract.Services
 
         ReallocateResponse Reallocate(ReallocateReq req);
 
+        ShipmentReallocationCleanupRes CleanupReallocationForShipment(int shipmentId);
+
         // Phase C: split-on-entry helper - creates/updates per-bill charges for one shipment + charge type.
         ChargeSplitResponse SplitCharge(ChargeSplitReq req);
     }
