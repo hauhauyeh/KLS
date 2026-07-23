@@ -120,6 +120,8 @@ namespace KLS.Services
         {
             var purchaseId = Uow.Purchases.Checkout(checkoutReq);
 
+            Uow.Shipments.AllocateVendorDirectInvcIfNeeded(purchaseId);
+
             //send cost change notification
             var itemCosts = Uow.Purchases.GetItemCostChange(purchaseId).ToList();
 
