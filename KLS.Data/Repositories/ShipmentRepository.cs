@@ -372,51 +372,6 @@ namespace KLS.Data.Repositories
             return items;
         }
 
-        public IEnumerable<AllocationResultItem> AllocationResult(int purchaseId)
-        {
-            var results = new List<AllocationResultItem>();
-
-            var sql = @"
-                SELECT sc.ChargeType, sc.AllocationMethod AS RequestedMethod, sa.AllocationMethod AS UsedMethod,
-                       COUNT(*) AS ItemCount,
-                       SUM(CASE WHEN sa.AllocationMethod = 'BY_VALUE_FALLBACK' THEN 1 ELSE 0 END) AS FallbackCount
-                FROM dbo.ShipmentAllocation sa
-                JOIN dbo.ShipmentCharge sc ON sa.ChargeId = sc.ChargeId
-                JOIN dbo.ShipmentPurchase sp ON sc.ShipmentId = sp.ShipmentId
-                WHERE sp.PurchaseId = @PurchaseId
-                GROUP BY sc.ChargeType, sc.AllocationMethod, sa.AllocationMethod";
-
-            var conn = DbContext.Database.GetDbConnection();
-            var wasClosed = conn.State != System.Data.ConnectionState.Open;
-
-            if (wasClosed) conn.Open();
-            try
-            {
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = sql;
-                cmd.Parameters.Add(new SqlParameter("@PurchaseId", purchaseId));
-
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    results.Add(new AllocationResultItem
-                    {
-                        ChargeType = reader.GetString(0),
-                        RequestedMethod = reader.GetString(1),
-                        UsedMethod = reader.GetString(2),
-                        ItemCount = reader.GetInt32(3),
-                        FallbackCount = reader.GetInt32(4)
-                    });
-                }
-            }
-            finally
-            {
-                if (wasClosed) conn.Close();
-            }
-
-            return results;
-        }
-
         private static object[] BuildPagedList(ShipmentListReq shipmentListReq)
         {
             object[] param = {

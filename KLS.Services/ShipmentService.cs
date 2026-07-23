@@ -369,28 +369,6 @@ namespace KLS.Services
             return Uow.Shipments.ValidateAllocationByShipmentDetail(shipmentId, method);
         }
 
-        public ReallocateResponse Reallocate(ReallocateReq req)
-        {
-            // Update charge methods via direct SQL — avoids EF tracking conflicts
-            if (req.Charges != null)
-            {
-                foreach (var ov in req.Charges)
-                {
-                    Uow.ShipmentCharges.Find(c => c.ChargeId == ov.ChargeId)
-                        .ExecuteUpdate(setters => setters
-                            .SetProperty(c => c.AllocationMethod, ov.AllocationMethod)
-                            .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
-                }
-            }
-
-            // Run allocation
-            Uow.Shipments.Allocation(req.PurchaseId, req.RefreshVolume);
-
-            // Return results
-            var results = Uow.Shipments.AllocationResult(req.PurchaseId);
-            return new ReallocateResponse { Results = results.ToList() };
-        }
-
         public ShipmentReallocationCleanupRes CleanupReallocationForShipment(int shipmentId)
         {
             _ = Uow.Shipments.Find(s => s.ShipmentId == shipmentId).FirstOrDefault()

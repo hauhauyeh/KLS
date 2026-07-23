@@ -56,6 +56,5 @@ namespace KLS.Contract.Interfaces
 
         List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
 
-        IEnumerable<AllocationResultItem> AllocationResult(int purchaseId);
     }
 }
