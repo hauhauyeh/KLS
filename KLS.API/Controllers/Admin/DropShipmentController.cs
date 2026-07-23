@@ -46,6 +46,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_dropShipmentService.GeneratePOFromSales(req));
         }
 
+        [HttpPost("CreateBackorderDropShip/{salesId}")]
+        [DisplayName("Create Backorder Drop-Ship")]
+        [PermissionKey("Vendor.DropShipment.Create")]
+        public IActionResult CreateBackorderDropShip(int salesId)
+        {
+            return Ok(_dropShipmentService.CreateBackorderDropShip(salesId));
+        }
+
 
         [HttpPost("UpdateShipQty/{purchaseId}")]
         [DisplayName("Update Ship Qty")]
@@ -53,6 +61,16 @@ namespace KLS.API.Controllers.Admin
         public IActionResult UpdateShipQty(int purchaseId)
         {
             _dropShipmentService.UpdateShipQty(purchaseId);
+            return Ok();
+        }
+
+
+        [HttpPost("UpdateReceiptQty/{purchaseId}")]
+        [DisplayName("Update Receipt Qty")]
+        [PermissionKey("Vendor.DropShipment.UpdateShipQty")]
+        public IActionResult UpdateReceiptQty(int purchaseId, [FromBody] DropShipmentUpdateReceiptQtyReq req)
+        {
+            _dropShipmentService.UpdateReceiptQty(purchaseId, req);
             return Ok();
         }
 

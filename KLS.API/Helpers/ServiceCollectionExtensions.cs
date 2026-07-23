@@ -15,6 +15,8 @@ namespace KLS.API.Helpers
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
+            services.AddScoped<IEmailAuditService, EmailAuditService>();
             services.AddScoped<ISystemRoleService, SystemRoleService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();
             services.AddScoped<ISystemUserService, SystemUserService>();

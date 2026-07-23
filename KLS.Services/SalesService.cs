@@ -22,6 +22,7 @@ namespace KLS.Services
         private readonly IDocumentService _documentService;
         private readonly IEmailSettingService _emailSettingService;
         private readonly IEmailService _emailService;
+        private readonly IEmailAuditService _emailAuditService;
         private readonly IExportService _exportService;
         private readonly ITwilioService _twilioService;
         private readonly IPortalModeService _portalModeService;
@@ -35,6 +36,7 @@ namespace KLS.Services
             IDocumentService documentService,
             IEmailSettingService emailSettingService,
             IEmailService emailService,
+            IEmailAuditService emailAuditService,
             IExportService exportService,
             ITwilioService twilioService,
             IPortalModeService portalModeService,
@@ -47,6 +49,7 @@ namespace KLS.Services
             _documentService = documentService;
             _emailSettingService = emailSettingService;
             _emailService = emailService;
+            _emailAuditService = emailAuditService;
             _exportService = exportService;
             _twilioService = twilioService;
             _portalModeService = portalModeService;
@@ -369,22 +372,20 @@ namespace KLS.Services
                 string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Here is a your invoice file for the order#" + sales.SalesNumber + "<br/><br/>";
                 string[] attcfiles = [pdfFile];
 
-                var setting = _emailSettingService.GetSetting();
-
-                Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailbody, attcfiles), TaskCreationOptions.LongRunning).ContinueWith((t) =>
+                _emailAuditService.SendAndLog(new EmailAuditMessage
                 {
-                    var log = new EmailLog
-                    {
-                        PayeeId = sales.BillId,
-                        Email = toEmails,
-                        SentDate = DateTime.UtcNow,
-                        EventType = EnumHelper.EmailLogEvent.Invoice.ToString(),
-                        ErrorMessage = t.Result,
-                        Status = string.IsNullOrEmpty(t.Result)
-                    };
-
-                    Uow.EmailLogs.Add(log);
-                    Uow.Commit();
+                    To = toEmails,
+                    Subject = subject,
+                    HtmlBody = mailbody,
+                    Attachments = attcfiles,
+                    EmailCategory = EmailAudit.Category.Document,
+                    EmailType = EmailAudit.EmailType.Invoice,
+                    PayeeId = sales.BillId,
+                    DocumentType = EmailAudit.DocumentType.Invoice,
+                    DocumentId = salesId,
+                    DocumentNumber = sales.SalesNumber.ToString(),
+                    Source = EmailAudit.Source.Manual,
+                    RequestedBy = UserContext.SystemUserId
                 });
             }
         }
@@ -979,14 +980,36 @@ namespace KLS.Services
 
                 EmailSetting setting = _emailSettingService.GetSetting();
 
-                Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailBody, null), TaskCreationOptions.LongRunning)
-                    .ContinueWith((t) => { });
+                // Customer order confirmation
+                _emailAuditService.SendAndLog(new EmailAuditMessage
+                {
+                    To = toEmails,
+                    Subject = subject,
+                    HtmlBody = mailBody,
+                    EmailCategory = EmailAudit.Category.Document,
+                    EmailType = EmailAudit.EmailType.WebOrderConfirmation,
+                    PayeeId = payee.PayeeId,
+                    DocumentType = EmailAudit.DocumentType.Invoice,
+                    DocumentId = salesId,
+                    DocumentNumber = sales.SalesNumber.ToString(),
+                    Source = EmailAudit.Source.System
+                });
 
                 subject = "New Order Received – #" + sales.SalesNumber + " - " + payee.PayeeName;
 
-                //send to Admin
-                Task.Factory.StartNew(() => _emailService.SendEmail(setting, setting.AdminEmail, subject, mailBody, null), TaskCreationOptions.LongRunning)
-                    .ContinueWith((t) => { });
+                // Admin notification
+                _emailAuditService.SendAndLog(new EmailAuditMessage
+                {
+                    To = setting.AdminEmail,
+                    Subject = subject,
+                    HtmlBody = mailBody,
+                    EmailCategory = EmailAudit.Category.Notification,
+                    EmailType = EmailAudit.EmailType.WebOrderAdminNotification,
+                    DocumentType = EmailAudit.DocumentType.Invoice,
+                    DocumentId = salesId,
+                    DocumentNumber = sales.SalesNumber.ToString(),
+                    Source = EmailAudit.Source.System
+                });
             }
         }
     }

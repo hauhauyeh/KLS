@@ -1,4 +1,5 @@
-﻿using KLS.Contract.Interfaces;
+﻿using KLS.Common;
+using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using System.Net;
@@ -8,15 +9,15 @@ namespace KLS.Services
 {
     public class ContactService : BaseService, IContactService
     {
-        private readonly IEmailService _emailService;
+        private readonly IEmailAuditService _emailAuditService;
         private readonly IEmailSettingService _emailSettingService;
 
         public ContactService(
             IUnitOfWork uow,
-            IEmailService emailService,
+            IEmailAuditService emailAuditService,
             IEmailSettingService emailSettingService) : base(uow)
         {
-            _emailService = emailService;
+            _emailAuditService = emailAuditService;
             _emailSettingService = emailSettingService;
         }
 
@@ -55,7 +56,16 @@ namespace KLS.Services
                 .AppendLine($"<div>{EncodeMultiline(req.Message)}</div>")
                 .ToString();
 
-            var result = _emailService.SendEmail(setting, toEmail, subject, body);
+            var result = _emailAuditService.SendAndLogSync(new EmailAuditMessage
+            {
+                To = toEmail,
+                Subject = subject,
+                HtmlBody = body,
+                EmailCategory = EmailAudit.Category.Website,
+                EmailType = EmailAudit.EmailType.ContactMessage,
+                Source = EmailAudit.Source.System
+            });
+
             if (!string.IsNullOrWhiteSpace(result))
                 throw new Exception(result);
         }

@@ -43,8 +43,7 @@ namespace KLS.Services
 
         private readonly IDeleteLogService _deleteLogService;
         private readonly IPDFService _pdfService;
-        private readonly IEmailService _emailService;
-        private readonly IEmailSettingService _emailSettingService;
+        private readonly IEmailAuditService _emailAuditService;
         private readonly ICompanyService _companyService;
         private readonly ISquareService _squareService;
         private readonly IMxMerchantService _mxMerchantService;
@@ -54,8 +53,7 @@ namespace KLS.Services
         public CustomerPaymentService(IUnitOfWork uow,
             IDeleteLogService deleteLogService,
             IPDFService pdfService,
-            IEmailService emailService,
-            IEmailSettingService emailSettingService,
+            IEmailAuditService emailAuditService,
             ICompanyService companyService,
             ISquareService squareService,
             IMxMerchantService mxMerchantService,
@@ -64,8 +62,7 @@ namespace KLS.Services
         {
             _deleteLogService = deleteLogService;
             _pdfService = pdfService;
-            _emailService = emailService;
-            _emailSettingService = emailSettingService;
+            _emailAuditService = emailAuditService;
             _companyService = companyService;
             _squareService = squareService;
             _mxMerchantService = mxMerchantService;
@@ -375,22 +372,19 @@ namespace KLS.Services
                         string subject = "Payment Receipt " + payee.PayeeName;
                         string mailBody = _pdfService.RenderTemplate("~/Views/PaymentReceipt.cshtml", emailReceipt);
 
-                        var setting = _emailSettingService.GetSetting();
-
-                        Task.Factory.StartNew(() => _emailService.SendEmail(setting, toEmails, subject, mailBody, null), TaskCreationOptions.LongRunning).ContinueWith((t) =>
+                        _emailAuditService.SendAndLog(new EmailAuditMessage
                         {
-                            var log = new EmailLog
-                            {
-                                PayeeId = payee.PayeeId,
-                                Email = toEmails,
-                                SentDate = DateTime.UtcNow,
-                                EventType = EnumHelper.EmailLogEvent.ACHReceipt.ToString(),
-                                ErrorMessage = t.Result,
-                                Status = string.IsNullOrEmpty(t.Result)
-                            };
-
-                            Uow.EmailLogs.Add(log);
-                            Uow.Commit();
+                            To = toEmails,
+                            Subject = subject,
+                            HtmlBody = mailBody,
+                            EmailCategory = EmailAudit.Category.Document,
+                            EmailType = EmailAudit.EmailType.ACHReceipt,
+                            PayeeId = payee.PayeeId,
+                            DocumentType = EmailAudit.DocumentType.ACHReceipt,
+                            DocumentId = customerPaymentId,
+                            DocumentNumber = payment.PaymentNumber.ToString(),
+                            Source = EmailAudit.Source.Manual,
+                            RequestedBy = UserContext.SystemUserId
                         });
                     }
                 }

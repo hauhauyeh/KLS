@@ -37,6 +37,12 @@ namespace KLS.Data.Repositories
             var factorPOParam = string.IsNullOrWhiteSpace(req.FactorPO)
                 ? new SqlParameter("@FactorPO", DBNull.Value)
                 : new SqlParameter("@FactorPO", req.FactorPO.Trim().ToUpper());
+            var custPONumberParam = string.IsNullOrWhiteSpace(req.CustPONumber)
+                ? new SqlParameter("@CustPONumber", DBNull.Value)
+                : new SqlParameter("@CustPONumber", req.CustPONumber.Trim().ToUpper());
+            var sourceSalesIdParam = req.SourceSalesId.HasValue
+                ? new SqlParameter("@SourceSalesId", req.SourceSalesId.Value)
+                : new SqlParameter("@SourceSalesId", DBNull.Value);
 
             var newSalesIdParam = new SqlParameter
             {
@@ -52,9 +58,9 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_InsertSalesAndPO] @SalesId,@PayeeId,@VendorPayeeId,@ShipDate,@ShipRoute,@Instruction,@EmpId,@PurchaseDate,@NewSalesId OUTPUT,@NewPurchaseId OUTPUT,@FactorPO",
+                "[DropShipment_InsertSalesAndPO] @SalesId,@PayeeId,@VendorPayeeId,@ShipDate,@ShipRoute,@Instruction,@EmpId,@PurchaseDate,@NewSalesId OUTPUT,@NewPurchaseId OUTPUT,@FactorPO,@CustPONumber,@SourceSalesId",
                 salesIdParam, payeeIdParam, vendorPayeeIdParam, shipDateParam, shipRouteParam,
-                instructionParam, empIdParam, purchaseDateParam, newSalesIdParam, newPurchaseIdParam, factorPOParam);
+                instructionParam, empIdParam, purchaseDateParam, newSalesIdParam, newPurchaseIdParam, factorPOParam, custPONumberParam, sourceSalesIdParam);
 
             var newSalesId = Convert.ToInt32(newSalesIdParam.Value);
             var newPurchaseId = Convert.ToInt32(newPurchaseIdParam.Value);
@@ -71,6 +77,28 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public DropShipmentBackorderCheckoutPrecheckRes PrecheckBackorderDropShipCheckout(DropShipmentInsertReq req)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
+            var sourceSalesIdParam = new SqlParameter("@SourceSalesId", req.SourceSalesId ?? 0);
+            var payeeIdParam = new SqlParameter("@PayeeId", req.PayeeId);
+            var vendorPayeeIdParam = new SqlParameter("@VendorPayeeId", req.VendorPayeeId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var result = DbContext.DropShipmentBackorderCheckoutPrecheckRes
+                .FromSqlRaw(
+                    "[dbo].[DropShipment_PrecheckBackorderDropShipCheckout] @SalesId,@SourceSalesId,@PayeeId,@VendorPayeeId,@EmpId",
+                    salesIdParam, sourceSalesIdParam, payeeIdParam, vendorPayeeIdParam, empIdParam)
+                .AsNoTracking()
+                .AsEnumerable()
+                .SingleOrDefault();
+
+            if (result == null)
+                throw new InvalidOperationException("Backorder drop-ship checkout precheck did not return a result.");
+
+            return result;
+        }
+
         public DropShipmentInsertRes GeneratePOFromSales(DropShipmentGeneratePoReq req)
         {
             var salesIdParam = new SqlParameter("@SalesId", req.SalesId);
@@ -82,6 +110,9 @@ namespace KLS.Data.Repositories
             var factorPOParam = string.IsNullOrWhiteSpace(req.FactorPO)
                 ? new SqlParameter("@FactorPO", DBNull.Value)
                 : new SqlParameter("@FactorPO", req.FactorPO.Trim().ToUpper());
+            var custPONumberParam = string.IsNullOrWhiteSpace(req.CustPONumber)
+                ? new SqlParameter("@CustPONumber", DBNull.Value)
+                : new SqlParameter("@CustPONumber", req.CustPONumber.Trim().ToUpper());
 
             var newPurchaseIdParam = new SqlParameter
             {
@@ -91,8 +122,8 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_GeneratePOFromSales] @SalesId,@VendorPayeeId,@EmpId,@ArrivalDate,@NewPurchaseId OUTPUT,@FactorPO",
-                salesIdParam, vendorPayeeIdParam, empIdParam, arrivalDateParam, newPurchaseIdParam, factorPOParam);
+                "[DropShipment_GeneratePOFromSales] @SalesId,@VendorPayeeId,@EmpId,@ArrivalDate,@NewPurchaseId OUTPUT,@FactorPO,@CustPONumber",
+                salesIdParam, vendorPayeeIdParam, empIdParam, arrivalDateParam, newPurchaseIdParam, factorPOParam, custPONumberParam);
 
             var newPurchaseId = Convert.ToInt32(newPurchaseIdParam.Value);
 
@@ -108,6 +139,25 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public DropShipmentBackorderSeedRes CreateBackorderDropShip(int salesId)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", salesId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var result = DbContext.DropShipmentBackorderSeedRes
+                .FromSqlRaw(
+                    "[dbo].[DropShipment_CreateBackorderDropShipToTemp] @SalesId,@EmpId",
+                    salesIdParam, empIdParam)
+                .AsNoTracking()
+                .AsEnumerable()
+                .SingleOrDefault();
+
+            if (result == null)
+                throw new InvalidOperationException("Backorder drop-ship seed did not return a result.");
+
+            return result;
+        }
+
         public void UpdateShipQty(int purchaseId)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
@@ -116,6 +166,19 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw(
                 "[DropShipment_UpdateShipQty] @PurchaseId,@EmpId",
                 purchaseIdParam, empIdParam);
+        }
+
+        public void UpdateReceiptQty(int purchaseId, DropShipmentUpdateReceiptQtyReq req)
+        {
+            var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var itemsJsonParam = string.IsNullOrWhiteSpace(req.ItemsJson)
+                ? new SqlParameter("@ItemsJson", DBNull.Value)
+                : new SqlParameter("@ItemsJson", req.ItemsJson);
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[DropShipment_UpdateReceiptQty] @PurchaseId,@EmpId,@ItemsJson",
+                purchaseIdParam, empIdParam, itemsJsonParam);
         }
 
         public void ConvertPOToBill(int purchaseId)

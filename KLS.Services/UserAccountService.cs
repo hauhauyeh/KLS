@@ -19,19 +19,19 @@ namespace KLS.Services
     {
         private readonly IJWTService _jWTService;
         private readonly IUserRoleService _userRoleService;
-        private readonly IEmailSettingService _emailSettingService;
         private readonly IEmailService _emailService;
+        private readonly IEmailAuditService _emailAuditService;
 
         public UserAccountService(IUnitOfWork uow,
             IJWTService jWTService,
             IUserRoleService userRoleService,
-            IEmailSettingService emailSettingService,
-            IEmailService emailService) : base(uow)
+            IEmailService emailService,
+            IEmailAuditService emailAuditService) : base(uow)
         {
             _jWTService = jWTService;
             _userRoleService = userRoleService;
-            _emailSettingService = emailSettingService;
             _emailService = emailService;
+            _emailAuditService = emailAuditService;
         }
 
         public UserAccount? CheckUserUsername(LoginReq loginReq)
@@ -217,10 +217,18 @@ namespace KLS.Services
 
             string mailBody = _emailService.RenderEmailTemplate("~/Views/ForgotPassword.cshtml", model);
 
-            EmailSetting setting = _emailSettingService.GetSetting();
-
-            Task.Factory.StartNew(() => _emailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
-                .ContinueWith((t) => { });
+            _emailAuditService.SendAndLog(new EmailAuditMessage
+            {
+                To = user.Email,
+                Subject = subject,
+                HtmlBody = mailBody,
+                EmailCategory = EmailAudit.Category.Account,
+                EmailType = EmailAudit.EmailType.PasswordReset,
+                PayeeId = user.PayeeId,
+                RelatedEntityType = EmailAudit.RelatedEntity.UserAccount,
+                RelatedEntityId = user.UserId,
+                Source = EmailAudit.Source.System
+            });
 
             return resetUrl;
         }
@@ -272,10 +280,18 @@ namespace KLS.Services
 
             string mailBody = _emailService.RenderEmailTemplate("~/Views/Register.cshtml", model);
 
-            EmailSetting setting = _emailSettingService.GetSetting();
-
-            Task.Factory.StartNew(() => _emailService.SendEmail(setting, user.Email, subject, mailBody, null), TaskCreationOptions.LongRunning)
-                .ContinueWith((t) => { });
+            _emailAuditService.SendAndLog(new EmailAuditMessage
+            {
+                To = user.Email,
+                Subject = subject,
+                HtmlBody = mailBody,
+                EmailCategory = EmailAudit.Category.Account,
+                EmailType = EmailAudit.EmailType.EmailVerification,
+                PayeeId = user.PayeeId,
+                RelatedEntityType = EmailAudit.RelatedEntity.UserAccount,
+                RelatedEntityId = user.UserId,
+                Source = EmailAudit.Source.System
+            });
         }
 
         public bool VerifyEmail(string token)
@@ -369,10 +385,20 @@ namespace KLS.Services
             };
 
             string mailBody = _emailService.RenderEmailTemplate("~/Views/WelcomeEmail.cshtml", model);
-            EmailSetting setting = _emailSettingService.GetSetting();
 
-            Task.Factory.StartNew(() => _emailService.SendEmail(setting, account.Email, "Your Account Is Ready", mailBody, null), TaskCreationOptions.LongRunning)
-                .ContinueWith((t) => { });
+            _emailAuditService.SendAndLog(new EmailAuditMessage
+            {
+                To = account.Email,
+                Subject = "Your Account Is Ready",
+                HtmlBody = mailBody,
+                EmailCategory = EmailAudit.Category.Account,
+                EmailType = EmailAudit.EmailType.AccountReady,
+                PayeeId = account.PayeeId,
+                RelatedEntityType = EmailAudit.RelatedEntity.UserAccount,
+                RelatedEntityId = account.UserId,
+                Source = EmailAudit.Source.Manual,
+                RequestedBy = UserContext.SystemUserId
+            });
 
             return account;
         }

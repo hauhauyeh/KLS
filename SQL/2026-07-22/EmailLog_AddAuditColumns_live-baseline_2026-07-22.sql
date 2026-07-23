@@ -1,0 +1,17 @@
+-- EmailLog_AddAuditColumns_live-baseline_2026-07-22.sql
+-- Baseline snapshot of dbo.EmailLog BEFORE the EmailLog audit columns were added.
+-- Captured 2026-07-22 from KLS-2026. Reference only; do not run.
+--
+-- dbo.EmailLog columns as of baseline:
+--   EmailLogId    int            NOT NULL  (PK, identity)
+--   PayeeId       int            NULL
+--   EventType     nvarchar(100)  NULL
+--   Email         nvarchar(255)  NULL
+--   SentDate      datetime       NULL
+--   Status        bit            NOT NULL
+--   ErrorMessage  nvarchar(500)  NULL
+--
+-- No other objects reference these columns beyond:
+--   dbo.EmailLog_GetAllList  (explicit SELECT list; unaffected by additive columns)
+--   KLS.Models.EmailLog       (EF entity, convention-mapped)
+--   KLS.Models.EmailLogDTO    (list read projection via FromSqlRaw)

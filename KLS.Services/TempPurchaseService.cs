@@ -61,34 +61,58 @@ namespace KLS.Services
 
             if (existing != null)
             {
-                // --- NEW: change unit logic (only when keyboxUnit has value) ---
-                if (dto.IsUnitChange && dto.LineType == EnumHelper.LineType.I.ToString())
+                switch (dto.UpdateKind)
                 {
-                    var resolvedUnit = _itemUnitService.ResolveKeyboxUnit(existing.ItemId ?? 0, dto.Unit);
+                    case EnumHelper.TempPurchaseUpdateKind.Price:
+                        existing.ApplyPrices(dto.BillPrice, dto.FinalPrice);
+                        break;
 
-                    if (resolvedUnit != null)
-                    {
-                        // update unit on existing
-                        existing.ApplyUnit(resolvedUnit.Unit, resolvedUnit.ItemUnitId, resolvedUnit.FactorToBase);
-                    }
+                    case EnumHelper.TempPurchaseUpdateKind.Metadata:
+                        existing.ApplyMetadata(dto.Notes, dto.ExpiryDate);
+                        existing.CustomDutyRate = dto.CustomDutyRate;
+                        existing.TariffPercent = dto.TariffPercent;
+                        existing.ImportCommission = dto.ImportCommission;
+                        // 2026-06-29 (Plan 2a): persist ItemVolume so the cart can resync the volume snapshot
+                        // from the item after an item-master edit (keeps the readiness chip honest).
+                        existing.ItemVolume = dto.ItemVolume;
+                        break;
+
+                    case EnumHelper.TempPurchaseUpdateKind.Unit:
+                        ApplyKeyboxUnit(existing, dto);
+                        break;
+
+                    case EnumHelper.TempPurchaseUpdateKind.QuantityUnit:
+                        ApplyKeyboxUnit(existing, dto);
+                        if (docType == EnumHelper.PurchaseDocType.Bill)
+                            existing.ApplyBillQuantities(dto.OrdQty0, dto.OrdQty1);
+                        else
+                            existing.ApplyPOQuantities(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
+                        break;
+
+                    case EnumHelper.TempPurchaseUpdateKind.Quantity:
+                        if (docType == EnumHelper.PurchaseDocType.Bill)
+                            existing.ApplyBillQuantities(dto.OrdQty0, dto.OrdQty1);
+                        else
+                            existing.ApplyPOQuantities(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
+                        break;
+
+                    case EnumHelper.TempPurchaseUpdateKind.Flag:
+                        existing.ApplyFlags(dto.IsFree, dto.IsOut, dto.IsCRCG);
+                        existing.ApplyMetadata(dto.Notes, dto.ExpiryDate);
+                        if (docType == EnumHelper.PurchaseDocType.Bill)
+                            existing.ApplyBillQuantities(dto.OrdQty0, dto.OrdQty1);
+                        else
+                            existing.ApplyPOQuantities(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
+                        break;
+
+                    case EnumHelper.TempPurchaseUpdateKind.General:
+                    default:
+                        ApplyLegacyUpdate(existing, dto, docType);
+                        break;
                 }
-
-                existing.ApplyCommonEdits(dto.IsFree, dto.IsOut, dto.IsCRCG, dto.BillPrice, dto.FinalPrice, dto.Notes, dto.ExpiryDate);
-
-                if (docType == EnumHelper.PurchaseDocType.Bill)
-                    existing.ApplyBill(dto.OrdQty0, dto.OrdQty1);
-                else
-                    existing.ApplyPO(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
 
                 if (existing.PurchaseDetailId.HasValue)
                     existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
-
-                existing.CustomDutyRate = dto.CustomDutyRate;
-                existing.TariffPercent = dto.TariffPercent;
-                existing.ImportCommission = dto.ImportCommission;
-                // 2026-06-29 (Plan 2a): persist ItemVolume so the cart can resync the volume snapshot
-                // from the item after an item-master edit (keeps the readiness chip honest).
-                existing.ItemVolume = dto.ItemVolume;
 
                 Uow.TempPurchases.Update(existing);
                 Uow.Commit();
@@ -97,6 +121,43 @@ namespace KLS.Services
             }
 
             return dto;
+        }
+
+        private void ApplyLegacyUpdate(TempPurchase existing, TempPurchaseItem dto, EnumHelper.PurchaseDocType docType)
+        {
+            // --- NEW: change unit logic (only when keyboxUnit has value) ---
+            if (dto.IsUnitChange && dto.LineType == EnumHelper.LineType.I.ToString())
+            {
+                ApplyKeyboxUnit(existing, dto);
+            }
+
+            existing.ApplyCommonEdits(dto.IsFree, dto.IsOut, dto.IsCRCG, dto.BillPrice, dto.FinalPrice, dto.Notes, dto.ExpiryDate);
+
+            if (docType == EnumHelper.PurchaseDocType.Bill)
+                existing.ApplyBill(dto.OrdQty0, dto.OrdQty1);
+            else
+                existing.ApplyPO(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
+
+            existing.CustomDutyRate = dto.CustomDutyRate;
+            existing.TariffPercent = dto.TariffPercent;
+            existing.ImportCommission = dto.ImportCommission;
+            // 2026-06-29 (Plan 2a): persist ItemVolume so the cart can resync the volume snapshot
+            // from the item after an item-master edit (keeps the readiness chip honest).
+            existing.ItemVolume = dto.ItemVolume;
+        }
+
+        private void ApplyKeyboxUnit(TempPurchase existing, TempPurchaseItem dto)
+        {
+            if (dto.LineType != EnumHelper.LineType.I.ToString())
+                return;
+
+            var resolvedUnit = _itemUnitService.ResolveKeyboxUnit(existing.ItemId ?? 0, dto.Unit);
+
+            if (resolvedUnit != null)
+            {
+                // update unit on existing
+                existing.ApplyUnit(resolvedUnit.Unit, resolvedUnit.ItemUnitId, resolvedUnit.FactorToBase);
+            }
         }
 
         public TempPurchaseItem UpdateUnit(TempPurchaseItem dto)
