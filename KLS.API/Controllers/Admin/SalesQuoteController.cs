@@ -107,9 +107,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("EmailPdf/{id}")]
         [DisplayName("Email Quote PDF")]
         [PermissionKey("Customer.SalesQuote.EmailPdf")]
-        public IActionResult EmailPdf(int id)
+        public IActionResult EmailPdf(int id, [FromBody] SalesQuoteEmailPdfReq? req)
         {
-            _service.EmailPdf(id);
+            _service.EmailPdf(id, req);
             return Ok();
         }
     }

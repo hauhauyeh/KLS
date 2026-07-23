@@ -9,6 +9,10 @@ namespace KLS.Services
 {
     public class SalesQuoteService : BaseService, ISalesQuoteService
     {
+        private const int QuoteStatusDraft = 0;
+        private const int QuoteStatusSent = 1;
+        private const string CustomerUpdatePermission = "Customer.Customer.Update";
+
         private readonly IDocumentService _documentService;
         private readonly IEmailAuditService _emailAuditService;
         private readonly IWebHostEnvironment _env;
@@ -75,7 +79,7 @@ namespace KLS.Services
                 Email = payee.Email,
                 EmailPricesheet = payee.EmailPricesheet,
                 DefaultEmail = FirstEmail(payee.EmailPricesheet, payee.Email),
-                CanSaveToEmailPricesheet = HasPermission("Customer.Customer.Update")
+                CanSaveToEmailPricesheet = HasPermission(CustomerUpdatePermission)
             };
         }
 
@@ -109,38 +113,58 @@ namespace KLS.Services
             return Uow.SalesQuotes.ConvertToSales(salesQuoteId);
         }
 
-        public void EmailPdf(int salesQuoteId)
+        public void EmailPdf(int salesQuoteId, SalesQuoteEmailPdfReq? req)
         {
             var quote = GetById(salesQuoteId);
-            if (quote == null) return;
+            if (quote == null)
+                throw new KeyNotFoundException("Sales quote not found.");
+
+            var toEmail = req?.Email?.Trim();
+            if (string.IsNullOrWhiteSpace(toEmail))
+                throw new ArgumentException("Email is required.");
+
+            var payee = Uow.Payees.GetById(quote.PayeeId);
+            if (payee == null)
+                throw new KeyNotFoundException("Quote customer not found.");
+
+            if (req!.SaveToEmailPricesheet)
+                RequirePermission(CustomerUpdatePermission, "Customer update permission is required to save Price Sheet Email.");
 
             var pdfFile = _documentService.SalesQuote(salesQuoteId);
-            var payee = Uow.Payees.GetById(quote.PayeeId);
 
-            var toEmails = FirstEmail(payee?.EmailPricesheet, payee?.Email);
-
-            if (payee != null && !string.IsNullOrEmpty(toEmails))
+            if (req.SaveToEmailPricesheet)
             {
-                string subject = "Sales Quote #" + quote.QuoteNumber;
-                string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Please find attached your sales quote #" + quote.QuoteNumber + ".<br/><br/>";
-                string[] attcfiles = [pdfFile];
-
-                _emailAuditService.SendAndLog(new EmailAuditMessage
+                if (payee.EmailPricesheet != toEmail)
                 {
-                    To = toEmails,
-                    Subject = subject,
-                    HtmlBody = mailbody,
-                    Attachments = attcfiles,
-                    EmailCategory = EmailAudit.Category.Document,
-                    EmailType = EmailAudit.EmailType.SalesQuote,
-                    PayeeId = quote.PayeeId,
-                    DocumentType = EmailAudit.DocumentType.SalesQuote,
-                    DocumentId = salesQuoteId,
-                    DocumentNumber = quote.QuoteNumber.ToString(),
-                    Source = EmailAudit.Source.Manual,
-                    RequestedBy = UserContext.SystemUserId
-                });
+                    payee.EmailPricesheet = toEmail;
+                    payee.UpdatedAt = DateTime.UtcNow;
+                    Uow.Payees.Update(payee);
+                    Uow.Commit();
+                }
             }
+
+            string subject = "Sales Quote #" + quote.QuoteNumber;
+            string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Please find attached your sales quote #" + quote.QuoteNumber + ".<br/><br/>";
+            string[] attcfiles = [pdfFile];
+
+            _emailAuditService.SendAndLog(new EmailAuditMessage
+            {
+                To = toEmail,
+                Subject = subject,
+                HtmlBody = mailbody,
+                Attachments = attcfiles,
+                EmailCategory = EmailAudit.Category.Document,
+                EmailType = EmailAudit.EmailType.SalesQuote,
+                PayeeId = quote.PayeeId,
+                DocumentType = EmailAudit.DocumentType.SalesQuote,
+                DocumentId = salesQuoteId,
+                DocumentNumber = quote.QuoteNumber.ToString(),
+                Source = EmailAudit.Source.Manual,
+                RequestedBy = UserContext.SystemUserId
+            });
+
+            if (quote.StatusId == QuoteStatusDraft)
+                Uow.SalesQuotes.UpdateStatus(salesQuoteId, QuoteStatusSent);
         }
 
         private static string? FirstEmail(params string?[] emails)
@@ -165,6 +189,12 @@ namespace KLS.Services
                 return permissionKeys.Contains(permissionKey);
 
             return false;
+        }
+
+        private void RequirePermission(string permissionKey, string message)
+        {
+            if (!HasPermission(permissionKey))
+                throw new UnauthorizedAccessException(message);
         }
     }
 }
