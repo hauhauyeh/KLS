@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace KLS.Services
 {
@@ -11,15 +12,18 @@ namespace KLS.Services
         private readonly IDocumentService _documentService;
         private readonly IEmailAuditService _emailAuditService;
         private readonly IWebHostEnvironment _env;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public SalesQuoteService(IUnitOfWork uow,
             IDocumentService documentService,
             IEmailAuditService emailAuditService,
-            IWebHostEnvironment env) : base(uow)
+            IWebHostEnvironment env,
+            IHttpContextAccessor httpContextAccessor) : base(uow)
         {
             _documentService = documentService;
             _emailAuditService = emailAuditService;
             _env = env;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public PagingResponse<SalesQuoteList>? GetPagedList(SalesQuoteListReq req)
@@ -51,6 +55,27 @@ namespace KLS.Services
                 SalesQuote = quote,
                 Details = details.ToList(),
                 PayeeName = payee?.PayeeName
+            };
+        }
+
+        public SalesQuoteEmailContextDto? GetEmailContext(int salesQuoteId)
+        {
+            var quote = Uow.SalesQuotes.GetById(salesQuoteId);
+            if (quote == null) return null;
+
+            var payee = Uow.Payees.GetById(quote.PayeeId);
+            if (payee == null) return null;
+
+            return new SalesQuoteEmailContextDto
+            {
+                SalesQuoteId = quote.SalesQuoteId,
+                QuoteNumber = quote.QuoteNumber,
+                PayeeId = quote.PayeeId,
+                PayeeName = payee.PayeeName,
+                Email = payee.Email,
+                EmailPricesheet = payee.EmailPricesheet,
+                DefaultEmail = FirstEmail(payee.EmailPricesheet, payee.Email),
+                CanSaveToEmailPricesheet = HasPermission("Customer.Customer.Update")
             };
         }
 
@@ -127,6 +152,19 @@ namespace KLS.Services
             }
 
             return null;
+        }
+
+        private bool HasPermission(string permissionKey)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+
+            if (httpContext?.Items["IsAdmin"] is bool isAdmin && isAdmin)
+                return true;
+
+            if (httpContext?.Items["PermissionKeys"] is HashSet<string> permissionKeys)
+                return permissionKeys.Contains(permissionKey);
+
+            return false;
         }
     }
 }
