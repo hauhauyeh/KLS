@@ -44,6 +44,54 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Purchase_Allocation] @PurchaseId, @RefreshVolume", PurchaseIdParam, RefreshVolumeParam);
         }
 
+        public void AllocateVendorDirectInvcIfNeeded(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            DbContext.Database.ExecuteSqlRaw(@"
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Purchase p
+    WHERE p.PurchaseId = @PurchaseId
+      AND p.StageId = 6
+      AND ISNULL(p.IsDropShip, 0) = 0
+      AND ISNULL(p.IsShipment, 0) = 0
+      AND NOT EXISTS (
+          SELECT 1
+          FROM dbo.ShipmentPurchase sp
+          WHERE sp.PurchaseId = p.PurchaseId
+      )
+      AND EXISTS (
+          SELECT 1
+          FROM dbo.PurchaseDetail pd
+          JOIN dbo.Item i ON i.ItemId = pd.ItemId
+          WHERE pd.PurchaseId = p.PurchaseId
+            AND i.ItemType = 'Inventory'
+      )
+      AND (
+          EXISTS (
+              SELECT 1
+              FROM dbo.PurchaseDetail pd
+              JOIN dbo.Account a ON a.AccountId = pd.AccountId
+              WHERE pd.PurchaseId = p.PurchaseId
+                AND pd.ItemId IS NULL
+                AND a.AccountCode = '@INVC'
+                AND ROUND(ISNULL(pd.FinalQty, 0) * ISNULL(pd.FinalPrice, 0), 2) <> 0
+          )
+          OR EXISTS (
+              SELECT 1
+              FROM dbo.PurchaseDetail pd
+              WHERE pd.PurchaseId = p.PurchaseId
+                AND pd.ItemId IS NOT NULL
+                AND ISNULL(pd.LandedCost, 0) <> 0
+          )
+      )
+)
+BEGIN
+    EXEC dbo.Purchase_Allocation @PurchaseId = @PurchaseId, @RefreshVolume = 0;
+END", PurchaseIdParam);
+        }
+
         public void UnAllocation(int shipmentPurchaseId)
         {
             var ShipmentPurchaseIdParam = new SqlParameter("@ShipmentPurchaseId", shipmentPurchaseId);

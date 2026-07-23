@@ -15,6 +15,8 @@ namespace KLS.Contract.Interfaces
 
         void Allocation(int purchaseId, bool refreshVolume = false);
 
+        void AllocateVendorDirectInvcIfNeeded(int purchaseId);
+
         void UnAllocation(int shipmentPurchaseId);
 
         void Delete(int shipmentId);
