@@ -15,16 +15,24 @@ namespace KLS.Models
 
         public int ItemId { get; set; }
 
+        public string? ItemCode { get; set; }
+
         public string? ItemName { get; set; }
 
         public string CountryCode { get; set; } = string.Empty;
 
         public string? CountryName { get; set; }
 
+        public string? HSNCode { get; set; }
+
         [Column(TypeName = "decimal(9,6)")]
         public decimal? DutyRate { get; set; }
 
         [Column(TypeName = "decimal(9,4)")]
         public decimal? TariffRate { get; set; }
+
+        public string? Notes { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
     }
 }

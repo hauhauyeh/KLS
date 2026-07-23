@@ -22,14 +22,20 @@ namespace KLS.Models
         public int ItemId { get; set; }
 
         [Required]
-        [StringLength(3)]
+        [StringLength(2)]
         public string CountryCode { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string? HSNCode { get; set; }
 
         [Column(TypeName = "decimal(9,6)")]
         public decimal? DutyRate { get; set; }
 
         [Column(TypeName = "decimal(9,4)")]
         public decimal? TariffRate { get; set; }
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

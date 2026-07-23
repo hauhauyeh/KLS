@@ -263,12 +263,16 @@ namespace KLS.Services
             if (!string.IsNullOrEmpty(dto.Unit))
                 unit = _itemUnitService.ResolveKeyboxUnit(item.ItemId, dto.Unit);
 
+            // Phase 3: default duty/tariff from the current ItemTariff setup. Preserve NULL rather
+            // than coercing to 0 - a NULL line rate means "no rate set" (same signal as no ItemTariff
+            // row), which a later allocation precheck can distinguish from a genuine 0% rate. The cart
+            // readiness coach and shipment allocation already treat NULL as 0 for their math.
             var itemTariff = GetVendorCountryTariff(item.ItemId, dto.PayeeId);
 
             if (itemTariff != null)
             {
-                tempPurchase.CustomDutyRate = itemTariff.DutyRate ?? 0;
-                tempPurchase.TariffPercent = itemTariff.TariffRate ?? 0;
+                tempPurchase.CustomDutyRate = itemTariff.DutyRate;
+                tempPurchase.TariffPercent = itemTariff.TariffRate;
             }
 
             // Default = pure vendor cost (RecentBaseCost); landed RecentCost only as fallback for units not yet backfilled.
@@ -323,6 +327,10 @@ namespace KLS.Services
             return GetListById(tempItem.PayeeId, tempItem.PurchaseId, tempPurchase.TempPurchaseId);
         }
 
+        // Canonical tariff resolver for PO/Bill line defaulting (Phase 3): the current ItemTariff
+        // row for this item + the vendor/payee country resolved to ISO alpha-2. Vendor country is
+        // the agreed rule for now (country-of-origin is a later enhancement). A future allocation
+        // precheck MUST mirror this exact match (ItemId + alpha-2 CountryCode) to avoid drift.
         private ItemTariff? GetVendorCountryTariff(int itemId, int payeeId)
         {
             var countryCode = GetPayeeAlpha2CountryCode(payeeId);
