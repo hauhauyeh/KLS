@@ -44,6 +44,8 @@ namespace KLS.Contract.Interfaces
         // and derives duty amounts in the service without duplicating landed-cost math.
         IEnumerable<BillBasisUsability> BillBasisUsability(int shipmentId);
 
+        IEnumerable<ShipmentReallocationCandidate> ReallocationCandidates(int shipmentId);
+
         AllocationValidationResult ValidateAllocation(int purchaseId);
 
         List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);
