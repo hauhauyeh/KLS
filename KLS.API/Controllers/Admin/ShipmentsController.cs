@@ -186,6 +186,21 @@ namespace KLS.API.Controllers.Admin
             return Ok(_shipmentService.ValidateAllocationByShipmentDetail(shipmentId, method));
         }
 
+        [HttpGet("TariffRatePrecheck/{purchaseId}")]
+        [PermissionKey("Vendor.Shipment.List")]
+        public IActionResult TariffRatePrecheck(int purchaseId)
+        {
+            return Ok(_shipmentService.TariffRatePrecheck(purchaseId));
+        }
+
+        [HttpPost("RefreshTariffRates/{purchaseId}")]
+        [DisplayName("Refresh Purchase Tariff Rates")]
+        [PermissionKey("Vendor.Shipment.Update")]
+        public IActionResult RefreshTariffRates(int purchaseId)
+        {
+            return Ok(_shipmentService.RefreshTariffRates(purchaseId));
+        }
+
 
         [HttpPost("CleanupReallocation/{shipmentId}")]
         [DisplayName("Cleanup Shipment Reallocation")]
