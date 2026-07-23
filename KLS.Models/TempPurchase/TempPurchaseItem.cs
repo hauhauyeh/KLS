@@ -161,5 +161,8 @@ namespace KLS.Models
 
         [NotMapped]
         public bool IsUnitChange { get; set; }
+
+        [NotMapped]
+        public EnumHelper.TempPurchaseUpdateKind UpdateKind { get; set; }
     }
 }

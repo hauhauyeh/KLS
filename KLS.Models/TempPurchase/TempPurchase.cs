@@ -91,19 +91,43 @@ namespace KLS.Models
 
         public void ApplyCommonEdits(bool isFree, bool isOut, bool isCrcg, decimal? billPrice, decimal? finalPrice, string? notes, DateOnly? expiryDate)
         {
+            ApplyFlags(isFree, isOut, isCrcg);
+            ApplyPrices(billPrice, finalPrice);
+            ApplyMetadata(notes, expiryDate);
+        }
+
+        public void ApplyPrices(decimal? billPrice, decimal? finalPrice)
+        {
+            BillPrice = billPrice;
+            FinalPrice = finalPrice;
+        }
+
+        public void ApplyFlags(bool isFree, bool isOut, bool isCrcg)
+        {
             IsFree = isFree;
             IsOut = isOut;
             IsCRCG = isCrcg;
+        }
 
-            BillPrice = billPrice;
-            FinalPrice = finalPrice;
-
+        public void ApplyMetadata(string? notes, DateOnly? expiryDate)
+        {
             Notes = notes;
             ExpiryDate = expiryDate;
         }
 
         // PO: only ordered qty changes (and flags/notes/expiry/etc)
         public void ApplyPO(decimal? ordQty0, decimal? ordQty1, decimal? shipQty)
+        {
+            ApplyPOQuantities(ordQty0, ordQty1, shipQty);
+        }
+
+        // Bill:
+        public void ApplyBill(decimal? ordQty0, decimal? ordQty1)
+        {
+            ApplyBillQuantities(ordQty0, ordQty1);
+        }
+
+        public void ApplyPOQuantities(decimal? ordQty0, decimal? ordQty1, decimal? shipQty)
         {
             OrdQty0 = ordQty0;
             OrdQty1 = ordQty1;
@@ -114,8 +138,7 @@ namespace KLS.Models
             ApplyFlagRules(docType: EnumHelper.PurchaseDocType.PO);
         }
 
-        // Bill:
-        public void ApplyBill(decimal? ordQty0, decimal? ordQty1)
+        public void ApplyBillQuantities(decimal? ordQty0, decimal? ordQty1)
         {
             OrdQty0 = ordQty0;
             OrdQty1 = ordQty1;

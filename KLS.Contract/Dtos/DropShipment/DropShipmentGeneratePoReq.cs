@@ -6,5 +6,6 @@ namespace KLS.Contract.Dtos.DropShipment
         public int VendorPayeeId { get; set; }
         public DateTime? ArrivalDate { get; set; }
         public string? FactorPO { get; set; }
+        public string? CustPONumber { get; set; }
     }
 }
