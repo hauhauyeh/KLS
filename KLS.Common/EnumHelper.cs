@@ -128,6 +128,16 @@ namespace KLS.Common
             Bill = 2
         }
 
+        public enum TempPurchaseUpdateKind
+        {
+            General = 0,
+            Price = 1,
+            Quantity = 2,
+            Flag = 3,
+            Unit = 4,
+            Metadata = 5
+        }
+
         public enum EmailLogEvent
         {
             Invoice = 1,
