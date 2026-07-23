@@ -369,26 +369,81 @@ namespace KLS.Services
             return Uow.Shipments.ValidateAllocationByShipmentDetail(shipmentId, method);
         }
 
-        public ReallocateResponse Reallocate(ReallocateReq req)
+        public ShipmentReallocationCleanupRes CleanupReallocationForShipment(int shipmentId)
         {
-            // Update charge methods via direct SQL — avoids EF tracking conflicts
-            if (req.Charges != null)
-            {
-                foreach (var ov in req.Charges)
+            _ = Uow.Shipments.Find(s => s.ShipmentId == shipmentId).FirstOrDefault()
+                ?? throw new KeyNotFoundException("Shipment not found.");
+
+            var candidates = Uow.Shipments.ReallocationCandidates(shipmentId).ToList();
+            var go = candidates
+                .Where(c => c.Action == "GO")
+                .OrderBy(c => c.PurchaseNumber)
+                .ToList();
+            var skipped = candidates
+                .Where(c => c.Action.StartsWith("SKIP", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(c => c.PurchaseNumber)
+                .Select(c => new ShipmentReallocationSkip
                 {
-                    Uow.ShipmentCharges.Find(c => c.ChargeId == ov.ChargeId)
-                        .ExecuteUpdate(setters => setters
-                            .SetProperty(c => c.AllocationMethod, ov.AllocationMethod)
-                            .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
+                    PurchaseId = c.PurchaseId,
+                    PurchaseNumber = c.PurchaseNumber,
+                    Action = c.Action,
+                    Reason = c.Reason
+                })
+                .ToList();
+
+            var res = new ShipmentReallocationCleanupRes
+            {
+                ShipmentId = shipmentId,
+                Skipped = skipped,
+                SkippedCount = skipped.Count
+            };
+
+            foreach (var candidate in go)
+            {
+                try
+                {
+                    Uow.Shipments.Allocation(candidate.PurchaseId, refreshVolume: true);
+                    res.ReallocatedPurchaseIds.Add(candidate.PurchaseId);
+                    res.ReallocatedPurchaseNumbers.Add(candidate.PurchaseNumber);
+                }
+                catch (Exception ex)
+                {
+                    res.Status = "ERROR";
+                    res.ReallocatedCount = res.ReallocatedPurchaseIds.Count;
+                    res.Message = $"ERROR: bill #{candidate.PurchaseNumber} failed: {ex.Message}";
+                    return res;
                 }
             }
 
-            // Run allocation
-            Uow.Shipments.Allocation(req.PurchaseId, req.RefreshVolume);
+            res.ReallocatedCount = res.ReallocatedPurchaseIds.Count;
 
-            // Return results
-            var results = Uow.Shipments.AllocationResult(req.PurchaseId);
-            return new ReallocateResponse { Results = results.ToList() };
+            if (res.ReallocatedCount > 0)
+            {
+                res.Status = "GO_REALLOCATED";
+                var goMessage = res.ReallocatedCount == 1
+                    ? $"GO: reallocated bill #{res.ReallocatedPurchaseNumbers[0]}."
+                    : $"GO: reallocated {res.ReallocatedCount} bills ({string.Join(", ", res.ReallocatedPurchaseNumbers.Select(n => $"#{n}"))}).";
+                var skipMessage = res.SkippedCount == 0
+                    ? ""
+                    : res.SkippedCount == 1
+                        ? $" SKIP: bill #{res.Skipped[0].PurchaseNumber}: {res.Skipped[0].Reason}"
+                        : $" SKIP: {res.SkippedCount} bills skipped.";
+                res.Message = $"{goMessage}{skipMessage}";
+                return res;
+            }
+
+            if (res.SkippedCount > 0)
+            {
+                res.Status = "SKIPPED_BLOCKED";
+                res.Message = res.SkippedCount == 1
+                    ? $"SKIP: bill #{res.Skipped[0].PurchaseNumber}: {res.Skipped[0].Reason}"
+                    : $"SKIP: {res.SkippedCount} bills skipped.";
+                return res;
+            }
+
+            res.Status = "GO_NO_ACTION";
+            res.Message = "GO: no reallocation needed.";
+            return res;
         }
 
         // Phase C: split-on-entry helper. Creates/updates per-bill charges (ShipmentPurchaseId NOT NULL)

@@ -23,30 +23,33 @@ namespace KLS.Models
         public List<AllocationMethodSummary> Methods { get; set; } = new();
     }
 
-    public class AllocationResultItem
-    {
-        public string ChargeType { get; set; } = "";
-        public string RequestedMethod { get; set; } = "";
-        public string UsedMethod { get; set; } = "";
-        public int ItemCount { get; set; }
-        public int FallbackCount { get; set; }
-    }
-
-    public class ReallocateReq
+    public class ShipmentReallocationSkip
     {
         public int PurchaseId { get; set; }
-        public bool RefreshVolume { get; set; }
-        public List<ChargeMethodOverride>? Charges { get; set; }
+
+        public int PurchaseNumber { get; set; }
+
+        public string Action { get; set; } = "";
+
+        public string Reason { get; set; } = "";
     }
 
-    public class ChargeMethodOverride
+    public class ShipmentReallocationCleanupRes
     {
-        public int ChargeId { get; set; }
-        public string AllocationMethod { get; set; } = "";
-    }
+        public int ShipmentId { get; set; }
 
-    public class ReallocateResponse
-    {
-        public List<AllocationResultItem> Results { get; set; } = new();
+        public string Status { get; set; } = "";
+
+        public List<int> ReallocatedPurchaseIds { get; set; } = new();
+
+        public List<int> ReallocatedPurchaseNumbers { get; set; } = new();
+
+        public List<ShipmentReallocationSkip> Skipped { get; set; } = new();
+
+        public int ReallocatedCount { get; set; }
+
+        public int SkippedCount { get; set; }
+
+        public string Message { get; set; } = "";
     }
 }

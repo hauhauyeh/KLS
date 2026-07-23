@@ -48,6 +48,7 @@ namespace KLS.Services
 
         public ItemTariff Create(ItemTariff itemTariff)
         {
+            ValidateRates(itemTariff);
             itemTariff.CountryCode = NormalizeCountryCodeToAlpha2(itemTariff.CountryCode);
 
             Uow.ItemTariffs.Add(itemTariff);
@@ -58,14 +59,18 @@ namespace KLS.Services
 
         public ItemTariff? Update(ItemTariff itemTariff)
         {
+            ValidateRates(itemTariff);
+
             var existing = GetById(itemTariff.ItemTariffId);
 
             if (existing != null)
             {
                 existing.ItemId = itemTariff.ItemId;
                 existing.CountryCode = NormalizeCountryCodeToAlpha2(itemTariff.CountryCode);
+                existing.HSNCode = itemTariff.HSNCode;
                 existing.DutyRate = itemTariff.DutyRate;
                 existing.TariffRate = itemTariff.TariffRate;
+                existing.Notes = itemTariff.Notes;
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 Uow.ItemTariffs.Update(existing);
@@ -73,6 +78,15 @@ namespace KLS.Services
             }
 
             return existing;
+        }
+
+        private static void ValidateRates(ItemTariff itemTariff)
+        {
+            if (itemTariff.DutyRate.HasValue && itemTariff.DutyRate.Value < 0)
+                throw new ArgumentException("Duty rate cannot be negative.");
+
+            if (itemTariff.TariffRate.HasValue && itemTariff.TariffRate.Value < 0)
+                throw new ArgumentException("Tariff rate cannot be negative.");
         }
 
         public void Delete(int itemTariffId)

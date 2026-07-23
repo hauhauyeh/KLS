@@ -44,6 +44,54 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Purchase_Allocation] @PurchaseId, @RefreshVolume", PurchaseIdParam, RefreshVolumeParam);
         }
 
+        public void AllocateVendorDirectInvcIfNeeded(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            DbContext.Database.ExecuteSqlRaw(@"
+IF EXISTS (
+    SELECT 1
+    FROM dbo.Purchase p
+    WHERE p.PurchaseId = @PurchaseId
+      AND p.StageId = 6
+      AND ISNULL(p.IsDropShip, 0) = 0
+      AND ISNULL(p.IsShipment, 0) = 0
+      AND NOT EXISTS (
+          SELECT 1
+          FROM dbo.ShipmentPurchase sp
+          WHERE sp.PurchaseId = p.PurchaseId
+      )
+      AND EXISTS (
+          SELECT 1
+          FROM dbo.PurchaseDetail pd
+          JOIN dbo.Item i ON i.ItemId = pd.ItemId
+          WHERE pd.PurchaseId = p.PurchaseId
+            AND i.ItemType = 'Inventory'
+      )
+      AND (
+          EXISTS (
+              SELECT 1
+              FROM dbo.PurchaseDetail pd
+              JOIN dbo.Account a ON a.AccountId = pd.AccountId
+              WHERE pd.PurchaseId = p.PurchaseId
+                AND pd.ItemId IS NULL
+                AND a.AccountCode = '@INVC'
+                AND ROUND(ISNULL(pd.FinalQty, 0) * ISNULL(pd.FinalPrice, 0), 2) <> 0
+          )
+          OR EXISTS (
+              SELECT 1
+              FROM dbo.PurchaseDetail pd
+              WHERE pd.PurchaseId = p.PurchaseId
+                AND pd.ItemId IS NOT NULL
+                AND ISNULL(pd.LandedCost, 0) <> 0
+          )
+      )
+)
+BEGIN
+    EXEC dbo.Purchase_Allocation @PurchaseId = @PurchaseId, @RefreshVolume = 0;
+END", PurchaseIdParam);
+        }
+
         public void UnAllocation(int shipmentPurchaseId)
         {
             var ShipmentPurchaseIdParam = new SqlParameter("@ShipmentPurchaseId", shipmentPurchaseId);
@@ -162,6 +210,126 @@ namespace KLS.Data.Repositories
                 .ToList();
         }
 
+        public IEnumerable<ShipmentReallocationCandidate> ReallocationCandidates(int shipmentId)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+
+            var sql = """
+                WITH Linked AS
+                (
+                    SELECT
+                        sp.ShipmentId,
+                        sp.ShipmentPurchaseId,
+                        p.PurchaseId,
+                        p.PurchaseNumber,
+                        p.StageId,
+                        p.IsDropShip,
+                        p.IsLocked,
+                        PaymentApplied = ISNULL(p.PaymentApplied, 0),
+                        DiscountApplied = ISNULL(p.DiscountApplied, 0)
+                    FROM dbo.ShipmentPurchase sp
+                    INNER JOIN dbo.Purchase p ON p.PurchaseId = sp.PurchaseId
+                    WHERE sp.ShipmentId = @ShipmentId
+                ),
+                Alloc AS
+                (
+                    SELECT
+                        l.PurchaseId,
+                        LastAllocAt = MAX(sa.CreatedAt)
+                    FROM Linked l
+                    INNER JOIN dbo.PurchaseDetail pd ON pd.PurchaseId = l.PurchaseId
+                    INNER JOIN dbo.ShipmentAllocation sa ON sa.PurchaseDetailId = pd.PurchaseDetailId
+                    INNER JOIN dbo.ShipmentCharge sc ON sc.ChargeId = sa.ChargeId
+                    INNER JOIN dbo.ShipmentPurchase sp
+                        ON sp.ShipmentId = sc.ShipmentId
+                       AND sp.PurchaseId = l.PurchaseId
+                    GROUP BY l.PurchaseId
+                ),
+                Flags AS
+                (
+                    SELECT
+                        l.PurchaseId,
+                        a.LastAllocAt,
+                        IsStale = CAST(CASE
+                            WHEN a.LastAllocAt IS NOT NULL
+                             AND (
+                                EXISTS
+                                (
+                                    SELECT 1
+                                    FROM dbo.PurchaseDetail pd
+                                    INNER JOIN dbo.Item i ON i.ItemId = pd.ItemId
+                                    WHERE pd.PurchaseId = l.PurchaseId
+                                      AND pd.ItemId IS NOT NULL
+                                      AND i.UpdatedAt > a.LastAllocAt
+                                )
+                                OR EXISTS
+                                (
+                                    SELECT 1
+                                    FROM dbo.ShipmentCharge sc
+                                    WHERE sc.ShipmentId = l.ShipmentId
+                                      AND sc.UpdatedAt IS NOT NULL
+                                      AND sc.UpdatedAt > a.LastAllocAt
+                                )
+                             )
+                            THEN 1 ELSE 0
+                        END AS bit),
+                        IsMissingAllocation = CAST(CASE
+                            WHEN a.LastAllocAt IS NULL
+                             AND EXISTS
+                             (
+                                SELECT 1
+                                FROM dbo.ShipmentCharge sc
+                                WHERE sc.ShipmentId = l.ShipmentId
+                                  AND ISNULL(sc.ChargeAmount, 0) <> 0
+                             )
+                            THEN 1 ELSE 0
+                        END AS bit)
+                    FROM Linked l
+                    LEFT JOIN Alloc a ON a.PurchaseId = l.PurchaseId
+                )
+                SELECT
+                    l.ShipmentId,
+                    l.ShipmentPurchaseId,
+                    l.PurchaseId,
+                    l.PurchaseNumber,
+                    l.StageId,
+                    l.IsDropShip,
+                    l.IsLocked,
+                    l.PaymentApplied,
+                    l.DiscountApplied,
+                    f.LastAllocAt,
+                    f.IsStale,
+                    f.IsMissingAllocation,
+                    Action = CASE
+                        WHEN l.IsDropShip = 1 THEN 'SKIP_DROP_SHIP'
+                        WHEN ISNULL(l.StageId, 0) <> 6
+                          OR l.IsLocked = 1
+                          OR l.PaymentApplied <> 0
+                          OR l.DiscountApplied <> 0 THEN 'SKIP_BLOCKED'
+                        WHEN f.IsStale = 1 OR f.IsMissingAllocation = 1 THEN 'GO'
+                        ELSE 'NO_ACTION'
+                    END,
+                    Reason = CASE
+                        WHEN l.IsDropShip = 1 THEN 'Drop-ship bill is excluded from landed-cost allocation.'
+                        WHEN ISNULL(l.StageId, 0) <> 6 THEN 'Goods bill is not in Bill stage.'
+                        WHEN l.IsLocked = 1 THEN 'Goods bill is locked.'
+                        WHEN l.PaymentApplied <> 0 THEN 'Goods bill has payment applied.'
+                        WHEN l.DiscountApplied <> 0 THEN 'Goods bill has discount applied.'
+                        WHEN f.IsStale = 1 THEN 'Needs reallocation.'
+                        WHEN f.IsMissingAllocation = 1 THEN 'Missing allocation.'
+                        ELSE 'No reallocation needed.'
+                    END
+                FROM Linked l
+                INNER JOIN Flags f ON f.PurchaseId = l.PurchaseId
+                ORDER BY l.PurchaseNumber
+                """;
+
+            return DbContext.ShipmentReallocationCandidate
+                .FromSqlRaw(sql, ShipmentIdParam)
+                .AsNoTracking()
+                .ToList();
+        }
+
         public AllocationValidationResult ValidateAllocation(int purchaseId)
             => RunValidateAllocation(new SqlParameter("@PurchaseId", purchaseId));
 
@@ -250,51 +418,6 @@ namespace KLS.Data.Repositories
             }
 
             return items;
-        }
-
-        public IEnumerable<AllocationResultItem> AllocationResult(int purchaseId)
-        {
-            var results = new List<AllocationResultItem>();
-
-            var sql = @"
-                SELECT sc.ChargeType, sc.AllocationMethod AS RequestedMethod, sa.AllocationMethod AS UsedMethod,
-                       COUNT(*) AS ItemCount,
-                       SUM(CASE WHEN sa.AllocationMethod = 'BY_VALUE_FALLBACK' THEN 1 ELSE 0 END) AS FallbackCount
-                FROM dbo.ShipmentAllocation sa
-                JOIN dbo.ShipmentCharge sc ON sa.ChargeId = sc.ChargeId
-                JOIN dbo.ShipmentPurchase sp ON sc.ShipmentId = sp.ShipmentId
-                WHERE sp.PurchaseId = @PurchaseId
-                GROUP BY sc.ChargeType, sc.AllocationMethod, sa.AllocationMethod";
-
-            var conn = DbContext.Database.GetDbConnection();
-            var wasClosed = conn.State != System.Data.ConnectionState.Open;
-
-            if (wasClosed) conn.Open();
-            try
-            {
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = sql;
-                cmd.Parameters.Add(new SqlParameter("@PurchaseId", purchaseId));
-
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    results.Add(new AllocationResultItem
-                    {
-                        ChargeType = reader.GetString(0),
-                        RequestedMethod = reader.GetString(1),
-                        UsedMethod = reader.GetString(2),
-                        ItemCount = reader.GetInt32(3),
-                        FallbackCount = reader.GetInt32(4)
-                    });
-                }
-            }
-            finally
-            {
-                if (wasClosed) conn.Close();
-            }
-
-            return results;
         }
 
         private static object[] BuildPagedList(ShipmentListReq shipmentListReq)

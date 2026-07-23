@@ -15,6 +15,8 @@ namespace KLS.Contract.Interfaces
 
         void Allocation(int purchaseId, bool refreshVolume = false);
 
+        void AllocateVendorDirectInvcIfNeeded(int purchaseId);
+
         void UnAllocation(int shipmentPurchaseId);
 
         void Delete(int shipmentId);
@@ -44,6 +46,8 @@ namespace KLS.Contract.Interfaces
         // and derives duty amounts in the service without duplicating landed-cost math.
         IEnumerable<BillBasisUsability> BillBasisUsability(int shipmentId);
 
+        IEnumerable<ShipmentReallocationCandidate> ReallocationCandidates(int shipmentId);
+
         AllocationValidationResult ValidateAllocation(int purchaseId);
 
         List<AllocationMissingItem> ValidateAllocationDetail(int purchaseId, string method);
@@ -54,6 +58,5 @@ namespace KLS.Contract.Interfaces
 
         List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
 
-        IEnumerable<AllocationResultItem> AllocationResult(int purchaseId);
     }
 }

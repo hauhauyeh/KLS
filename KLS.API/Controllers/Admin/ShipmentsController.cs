@@ -187,10 +187,12 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("Reallocate")]
-        public IActionResult Reallocate([FromBody] ReallocateReq req)
+        [HttpPost("CleanupReallocation/{shipmentId}")]
+        [DisplayName("Cleanup Shipment Reallocation")]
+        [PermissionKey("Vendor.Shipment.Update")]
+        public IActionResult CleanupReallocation(int shipmentId)
         {
-            return Ok(_shipmentService.Reallocate(req));
+            return Ok(_shipmentService.CleanupReallocationForShipment(shipmentId));
         }
 
 
