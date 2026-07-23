@@ -81,6 +81,14 @@ namespace KLS.Services
                         ApplyKeyboxUnit(existing, dto);
                         break;
 
+                    case EnumHelper.TempPurchaseUpdateKind.QuantityUnit:
+                        ApplyKeyboxUnit(existing, dto);
+                        if (docType == EnumHelper.PurchaseDocType.Bill)
+                            existing.ApplyBillQuantities(dto.OrdQty0, dto.OrdQty1);
+                        else
+                            existing.ApplyPOQuantities(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
+                        break;
+
                     case EnumHelper.TempPurchaseUpdateKind.Quantity:
                         if (docType == EnumHelper.PurchaseDocType.Bill)
                             existing.ApplyBillQuantities(dto.OrdQty0, dto.OrdQty1);
