@@ -369,6 +369,25 @@ namespace KLS.Services
             return Uow.Shipments.ValidateAllocationByShipmentDetail(shipmentId, method);
         }
 
+        public PurchaseTariffRatePrecheckResult TariffRatePrecheck(int purchaseId)
+        {
+            var rows = Uow.Shipments.TariffRatePrecheck(purchaseId);
+
+            return new PurchaseTariffRatePrecheckResult
+            {
+                MatchCount = rows.Count(r => r.Status == "MATCH"),
+                DifferentCount = rows.Count(r => r.Status == "DIFFERENT"),
+                MissingSetupCount = rows.Count(r => r.Status == "MISSING_SETUP"),
+                NoCountryCount = rows.Count(r => r.Status == "NO_COUNTRY"),
+                Rows = rows
+            };
+        }
+
+        public PurchaseTariffRateRefreshResult RefreshTariffRates(int purchaseId)
+        {
+            return Uow.Shipments.RefreshTariffRates(purchaseId);
+        }
+
         public ShipmentReallocationCleanupRes CleanupReallocationForShipment(int shipmentId)
         {
             _ = Uow.Shipments.Find(s => s.ShipmentId == shipmentId).FirstOrDefault()

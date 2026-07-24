@@ -49,6 +49,10 @@ namespace KLS.Contract.Services
 
         List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
 
+        PurchaseTariffRatePrecheckResult TariffRatePrecheck(int purchaseId);
+
+        PurchaseTariffRateRefreshResult RefreshTariffRates(int purchaseId);
+
         ShipmentReallocationCleanupRes CleanupReallocationForShipment(int shipmentId);
 
         // Phase C: split-on-entry helper - creates/updates per-bill charges for one shipment + charge type.

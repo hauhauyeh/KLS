@@ -58,5 +58,9 @@ namespace KLS.Contract.Interfaces
 
         List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method);
 
+        List<PurchaseTariffRatePrecheckRow> TariffRatePrecheck(int purchaseId);
+
+        PurchaseTariffRateRefreshResult RefreshTariffRates(int purchaseId);
+
     }
 }

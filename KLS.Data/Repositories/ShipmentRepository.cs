@@ -383,6 +383,25 @@ END", PurchaseIdParam);
         public List<AllocationMissingItem> ValidateAllocationByShipmentDetail(int shipmentId, string method)
             => RunValidateAllocationDetail(method, new SqlParameter("@ShipmentId", shipmentId), new SqlParameter("@Method", method));
 
+        public List<PurchaseTariffRatePrecheckRow> TariffRatePrecheck(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            return DbContext.PurchaseTariffRatePrecheckRows
+                .FromSqlRaw("[dbo].[Purchase_TariffRatePrecheck] @PurchaseId", PurchaseIdParam)
+                .ToList();
+        }
+
+        public PurchaseTariffRateRefreshResult RefreshTariffRates(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            return DbContext.PurchaseTariffRateRefreshResults
+                .FromSqlRaw("[dbo].[Purchase_RefreshTariffRates] @PurchaseId", PurchaseIdParam)
+                .AsEnumerable()
+                .FirstOrDefault() ?? new PurchaseTariffRateRefreshResult();
+        }
+
         // Shared runner for [Shipment_ValidateAllocationDetail]. Bill scope (@PurchaseId) or shipment
         // scope (@ShipmentId); @Method is always supplied. Bound by name.
         private List<AllocationMissingItem> RunValidateAllocationDetail(string method, params SqlParameter[] parameters)

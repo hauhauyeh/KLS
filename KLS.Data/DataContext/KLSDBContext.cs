@@ -151,6 +151,8 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
+            modelBuilder.Entity<PurchaseTariffRatePrecheckRow>().HasNoKey();
+            modelBuilder.Entity<PurchaseTariffRateRefreshResult>().HasNoKey();
 
             // SalesQuote tables
             modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
@@ -504,6 +506,10 @@ namespace KLS.Data.DataContext
         public virtual DbSet<ShipmentReallocationCandidate> ShipmentReallocationCandidate { get; set; }
 
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
+
+        public virtual DbSet<PurchaseTariffRatePrecheckRow> PurchaseTariffRatePrecheckRows { get; set; }
+
+        public virtual DbSet<PurchaseTariffRateRefreshResult> PurchaseTariffRateRefreshResults { get; set; }
 
         public virtual DbSet<PromotionList> PromotionList { get; set; }
 

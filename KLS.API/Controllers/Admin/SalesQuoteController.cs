@@ -42,6 +42,16 @@ namespace KLS.API.Controllers.Admin
             return Ok(_service.GetDetail(id));
         }
 
+        [HttpGet("EmailContext/{id}")]
+        [DisplayName("Quote Email Context")]
+        [PermissionKey("Customer.SalesQuote.EmailPdf")]
+        public IActionResult EmailContext(int id)
+        {
+            var context = _service.GetEmailContext(id);
+            if (context == null) return NotFound();
+            return Ok(context);
+        }
+
         [HttpPost("Insert")]
         [DisplayName("Create Quote")]
         [PermissionKey("Customer.SalesQuote.Create")]
@@ -97,9 +107,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("EmailPdf/{id}")]
         [DisplayName("Email Quote PDF")]
         [PermissionKey("Customer.SalesQuote.EmailPdf")]
-        public IActionResult EmailPdf(int id)
+        public IActionResult EmailPdf(int id, [FromBody] SalesQuoteEmailPdfReq? req)
         {
-            _service.EmailPdf(id);
+            _service.EmailPdf(id, req);
             return Ok();
         }
     }
