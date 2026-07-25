@@ -21,6 +21,8 @@ namespace KLS.Contract.Services
 
         void Delete(int timesheetId);
 
+        int BatchDelete(int payeeId, DateOnly? startDate, DateOnly? endDate);
+
         void Inject(int timesheetId, bool isClone);
 
         PayPeriod? GetPayPeriod();
