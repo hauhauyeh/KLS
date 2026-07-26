@@ -30,6 +30,12 @@ namespace KLS.Models
 
         public string? ItemName { get; set; }
 
+        public int? CategoryId { get; set; }
+
+        public string? FullCategoryPath { get; set; }
+
+        public decimal? CustomerLast3MAmount { get; set; }
+
         public string? Unit { get; set; }
 
         public decimal? RecentCost { get; set; }
