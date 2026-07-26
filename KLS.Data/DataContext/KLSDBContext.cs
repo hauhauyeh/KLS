@@ -153,6 +153,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRatePrecheckRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRateRefreshResult>().HasNoKey();
+            modelBuilder.Entity<ItemQuoteManagerRow>().HasNoKey();
 
             // SalesQuote tables
             modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
@@ -492,6 +493,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<LiabilityTxList> LiabilityTxList { get; set; }
 
         public virtual DbSet<TargetQuotePrice> TargetQuotePrice { get; set; }
+
+        public virtual DbSet<ItemQuoteManagerRow> ItemQuoteManagerRows { get; set; }
 
         public virtual DbSet<ShipmentList> ShipmentList { get; set; }
 

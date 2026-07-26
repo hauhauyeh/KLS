@@ -161,6 +161,8 @@ namespace KLS.Data.Repositories
 
         public ITempItemQuoteRepository TempItemQuotes { get { return new TempItemQuoteRepository(DbContext); } }
 
+        public IItemQuoteManagerRepository ItemQuoteManager { get { return new ItemQuoteManagerRepository(DbContext); } }
+
         public IItemHistoryRepository ItemHistories { get { return new ItemHistoryRepository(DbContext); } }
 
         public IPurchaseStageRepository PurchaseStages { get { return new PurchaseStageRepository(DbContext); } }
