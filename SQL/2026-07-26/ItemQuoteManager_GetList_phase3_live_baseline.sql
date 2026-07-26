@@ -3,7 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[ItemQuoteManager_GetList] -- EXEC dbo.ItemQuoteManager_GetList @EmpId = 100050, @PayeeId = 302017
+CREATE   PROCEDURE [dbo].[ItemQuoteManager_GetList] -- EXEC dbo.ItemQuoteManager_GetList @EmpId = 100050, @PayeeId = 302017
     @EmpId INT,
     @PayeeId INT
 AS
@@ -77,16 +77,6 @@ BEGIN
             iu.P1,
             BaseMarkup = @BaseMarkup,
             IsBaseToRecentCost = @IsBaseToRecentCost,
-            IsShareBasePrice = @IsShareBasePrice,
-            SharedBaseMarkup = @SharedBaseMarkup,
-            BasePrice = basePrice.Price,
-            BasePriceSource = CASE WHEN @IsBaseToRecentCost = 1 THEN 'Recent Cost' ELSE 'P1' END,
-            BaseMarkupPrice = baseWithCustomerRules.Price,
-            BaseMarkupSource = CASE
-                WHEN @IsShareBasePrice = 1 AND @SharedBaseMarkup <> 0 THEN 'Shared Base Markup'
-                WHEN @BaseMarkup <> 0 THEN 'Own Base Markup'
-                ELSE 'None'
-            END,
             OwnMarkupPercent = t.MarkupPercent,
             OwnTargetPrice = t.TargetPrice,
             OwnIsFixed = t.IsFixed,
@@ -180,16 +170,6 @@ BEGIN
             iu.P1,
             BaseMarkup = @BaseMarkup,
             IsBaseToRecentCost = @IsBaseToRecentCost,
-            IsShareBasePrice = @IsShareBasePrice,
-            SharedBaseMarkup = @SharedBaseMarkup,
-            BasePrice = basePrice.Price,
-            BasePriceSource = CASE WHEN @IsBaseToRecentCost = 1 THEN 'Recent Cost' ELSE 'P1' END,
-            BaseMarkupPrice = baseWithCustomerRules.Price,
-            BaseMarkupSource = CASE
-                WHEN @IsShareBasePrice = 1 AND @SharedBaseMarkup <> 0 THEN 'Shared Base Markup'
-                WHEN @BaseMarkup <> 0 THEN 'Own Base Markup'
-                ELSE 'None'
-            END,
             OwnMarkupPercent = CONVERT(DECIMAL(18,4), NULL),
             OwnTargetPrice = CONVERT(DECIMAL(18,4), NULL),
             OwnIsFixed = CONVERT(BIT, 0),
@@ -212,15 +192,6 @@ BEGIN
         INNER JOIN dbo.ItemUnit iu ON iu.ItemUnitId = shared.ItemUnitId
         LEFT JOIN dbo.View_Category vc ON vc.CategoryId = i.CategoryId
         LEFT JOIN CustomerItemSales90 sales90 ON sales90.ItemId = shared.ItemId
-        CROSS APPLY (
-            SELECT Price = CASE WHEN @IsBaseToRecentCost = 1 THEN ISNULL(iu.RecentCost, 0) ELSE ISNULL(iu.P1, 0) END
-        ) basePrice
-        CROSS APPLY (
-            SELECT Price = CASE WHEN @BaseMarkup <> 0 THEN ROUND(basePrice.Price * (1 + @BaseMarkup), @PriceDecimals) ELSE basePrice.Price END
-        ) ownBase
-        CROSS APPLY (
-            SELECT Price = CASE WHEN @IsShareBasePrice = 1 AND @SharedBaseMarkup <> 0 THEN ROUND(basePrice.Price * (1 + @SharedBaseMarkup), @PriceDecimals) ELSE ownBase.Price END
-        ) baseWithCustomerRules
         OUTER APPLY dbo.Fn_GetPrice(@PayeeId, shared.ItemId, shared.ItemUnitId) price
         WHERE shared.PayeeId = @ShareQuoteId
           AND @ShareQuoteId IS NOT NULL
@@ -239,8 +210,6 @@ BEGIN
             OwnItemQuoteId, SharedItemQuoteId, ItemCode, ItemName,
             CategoryId, FullCategoryPath, CustomerLast3MAmount,
             Unit, RecentCost, P1, BaseMarkup, IsBaseToRecentCost,
-            IsShareBasePrice, SharedBaseMarkup, BasePrice, BasePriceSource,
-            BaseMarkupPrice, BaseMarkupSource,
             OwnMarkupPercent, OwnTargetPrice, OwnIsFixed,
             SharedMarkupPercent, SharedTargetPrice, SharedIsFixed,
             MarkupPercent, TargetPrice, IsFixed, FinalPrice, FinalPriceReason
@@ -254,8 +223,6 @@ BEGIN
             OwnItemQuoteId, SharedItemQuoteId, ItemCode, ItemName,
             CategoryId, FullCategoryPath, CustomerLast3MAmount,
             Unit, RecentCost, P1, BaseMarkup, IsBaseToRecentCost,
-            IsShareBasePrice, SharedBaseMarkup, BasePrice, BasePriceSource,
-            BaseMarkupPrice, BaseMarkupSource,
             OwnMarkupPercent, OwnTargetPrice, OwnIsFixed,
             SharedMarkupPercent, SharedTargetPrice, SharedIsFixed,
             MarkupPercent, TargetPrice, IsFixed, FinalPrice, FinalPriceReason
@@ -267,8 +234,6 @@ BEGIN
         OwnItemQuoteId, SharedItemQuoteId, ItemCode, ItemName,
         CategoryId, FullCategoryPath, CustomerLast3MAmount,
         Unit, RecentCost, P1, BaseMarkup, IsBaseToRecentCost,
-        IsShareBasePrice, SharedBaseMarkup, BasePrice, BasePriceSource,
-        BaseMarkupPrice, BaseMarkupSource,
         OwnMarkupPercent, OwnTargetPrice, OwnIsFixed,
         SharedMarkupPercent, SharedTargetPrice, SharedIsFixed,
         MarkupPercent, TargetPrice, IsFixed, FinalPrice, FinalPriceReason

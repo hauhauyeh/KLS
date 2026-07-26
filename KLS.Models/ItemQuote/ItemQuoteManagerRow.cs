@@ -47,6 +47,19 @@ namespace KLS.Models
 
         public bool IsBaseToRecentCost { get; set; }
 
+        public bool IsShareBasePrice { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? SharedBaseMarkup { get; set; }
+
+        public decimal? BasePrice { get; set; }
+
+        public string? BasePriceSource { get; set; }
+
+        public decimal? BaseMarkupPrice { get; set; }
+
+        public string? BaseMarkupSource { get; set; }
+
         [Column(TypeName = "decimal(18,4)")]
         public decimal? OwnMarkupPercent { get; set; }
 
