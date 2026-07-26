@@ -3,7 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[ItemQuoteManager_GetList] -- EXEC dbo.ItemQuoteManager_GetList @EmpId = 100050, @PayeeId = 302017
+CREATE   PROCEDURE [dbo].[ItemQuoteManager_GetList] -- EXEC dbo.ItemQuoteManager_GetList @EmpId = 100050, @PayeeId = 302017
     @EmpId INT,
     @PayeeId INT
 AS
@@ -146,10 +146,10 @@ BEGIN
         ) effective
         CROSS APPLY (
             SELECT FinalPriceReason = CASE
-                WHEN t.MarkupPercent IS NOT NULL THEN 'Own Target'
+                WHEN t.MarkupPercent IS NOT NULL THEN 'Own Markup'
                 WHEN ISNULL(t.TargetPrice, 0) <> 0 THEN 'Own Target'
                 WHEN ISNULL(shared.TargetPrice, 0) <> 0 THEN 'Shared Target'
-                WHEN @IsShareBasePrice = 1 AND @SharedBaseMarkup <> 0 THEN 'Shared Markup'
+                WHEN @IsShareBasePrice = 1 AND @SharedBaseMarkup <> 0 THEN 'Shared Base Markup'
                 WHEN @BaseMarkup <> 0 THEN 'Base Markup'
                 ELSE 'Base'
             END
@@ -201,9 +201,9 @@ BEGIN
             IsFixed = shared.IsFixed,
             FinalPrice = price.Price,
             FinalPriceReason = CASE
-                WHEN shared.MarkupPercent IS NOT NULL THEN 'Shared Target'
+                WHEN shared.MarkupPercent IS NOT NULL THEN 'Shared Markup'
                 WHEN ISNULL(shared.TargetPrice, 0) <> 0 THEN 'Shared Target'
-                WHEN @IsShareBasePrice = 1 AND @SharedBaseMarkup <> 0 THEN 'Shared Markup'
+                WHEN @IsShareBasePrice = 1 AND @SharedBaseMarkup <> 0 THEN 'Shared Base Markup'
                 WHEN @BaseMarkup <> 0 THEN 'Base Markup'
                 ELSE 'Base'
             END
