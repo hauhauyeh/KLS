@@ -36,10 +36,6 @@ namespace KLS.Models
 
         public string Status { get; set; } = "Pending";
 
-        public long? MatchedTxId { get; set; }
-
-        public long? MatchedTxDetailId { get; set; }
-
         public DateOnly? ClearedBankDate { get; set; }
 
         public DateTime? MatchedAt { get; set; }

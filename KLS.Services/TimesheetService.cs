@@ -143,6 +143,30 @@ namespace KLS.Services
             Uow.Commit();
         }
 
+        public int BatchDelete(int payeeId, DateOnly? startDate, DateOnly? endDate)
+        {
+            // InTime is stored in UTC. Reuse the same UTC-date comparison as BuildTimesheetQuery
+            // so the deleted set equals exactly what the list displays for this range.
+            // When no date range is supplied, delete the employee's entire timesheet history.
+            var qry = Uow.Timesheets.GetAll().Where(t => t.PayeeId == payeeId);
+
+            if (startDate.HasValue)
+                qry = qry.Where(t => DateOnly.FromDateTime(t.InTime) >= startDate.Value);
+
+            if (endDate.HasValue)
+                qry = qry.Where(t => DateOnly.FromDateTime(t.InTime) <= endDate.Value);
+
+            var ids = qry.Select(t => t.TimesheetId).ToList();
+
+            if (ids.Count == 0)
+                return 0;
+
+            Uow.Timesheets.RemoveRange(ids);
+            Uow.Commit();
+
+            return ids.Count;
+        }
+
         public void Inject(int timesheetId, bool isClone)
         {
             Uow.Timesheets.Inject(timesheetId, isClone);

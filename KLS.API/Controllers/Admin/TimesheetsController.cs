@@ -75,6 +75,17 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpDelete("Batch")]
+        [DisplayName("Batch Delete Timesheets")]
+        [PermissionKey("Employee.Timesheet.Delete")]
+        public IActionResult BatchDelete([FromQuery] int payeeId, [FromQuery] DateOnly? startDate, [FromQuery] DateOnly? endDate)
+        {
+            var count = _timesheetService.BatchDelete(payeeId, startDate, endDate);
+
+            return Ok(new { Deleted = count });
+        }
+
+
         [HttpPost("Inject/{timesheetId}")]
         public IActionResult Inject(int timesheetId, [FromQuery] bool isClone)
         {
