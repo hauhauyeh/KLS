@@ -16,6 +16,7 @@ namespace KLS.Models
         public int SalesId { get; set; }
 
         public int SalesNumber { get; set; }
+        public string? SalesDocNumber { get; set; }
         public int? ParentSalesNumber { get; set; }
         public string? DocType { get; set; }
 
