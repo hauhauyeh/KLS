@@ -549,7 +549,7 @@
                     </colgroup>
                     <tr>
                         <td class="invoice-info-label">@docNumberLabel</td>
-                        <td class="invoice-info">@Model.Invoice.SalesNumber</td>
+                        <td class="invoice-info">@Model.SalesDisplayNumber</td>
                     </tr>
                     <tr>
                         <td class="invoice-info-label">@docDateLabel</td>
@@ -646,7 +646,7 @@
     <div class="right-width right-panel-fixed">
         <!-- Sidebar content remains unchanged -->
         <div class="invoice-barcode">
-            *@Model.Invoice.SalesNumber*
+            *@Model.SalesDisplayNumber*
         </div>
         <table class="route-info-table">
             <colgroup>
@@ -692,7 +692,7 @@
                     {
                         <tr>
                             <td>@string.Format("{0:d}", s.ShipDate)</td>
-                            <td>@s.SalesNumber</td>
+                            <td>@Model.GetSalesDisplayNumber(s)</td>
                             <td class="text-right">
                                 @string.Format("{0:c}", s.AmountDue)
                                 @if (s.IsPastDue)

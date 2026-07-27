@@ -466,7 +466,7 @@
                 <div class="d-flex justify-content-between">
                     <div class="invoice-label">Ticket</div>
                     <div class="invoice-barcode">
-                        *@Model.Invoice.SalesNumber*
+                        *@Model.SalesDisplayNumber*
                     </div>
                 </div>
                 <table>
@@ -476,7 +476,7 @@
                     </colgroup>
                     <tr>
                         <td class="invoice-info-label">Invoice #</td>
-                        <td class="invoice-info">@Model.Invoice.SalesNumber</td>
+                        <td class="invoice-info">@Model.SalesDisplayNumber</td>
                     </tr>
                     <tr>
                         <td class="invoice-info-label">Invoice Date</td>

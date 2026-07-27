@@ -42,6 +42,7 @@ namespace KLS.Services
                 Statement = CustStmt(invoice.ShipId),
                 Company = _companyService.GetDefault(),
                 HasDiscount = _systemSettingService.GetByKey<Boolean>(GlobalKey.SYSTEM_HAS_DISCOUNT),
+                UseSalesDocNumber = _systemSettingService.GetByKey<Boolean>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),
                 //Promotions = _PromotionManager.GetDisplay(),
             };
         }
