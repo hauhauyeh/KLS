@@ -68,6 +68,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ITempBombSalesService, TempBombSalesService>();
             services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped<IItemQuoteService, ItemQuoteService>();
+            services.AddScoped<IItemQuoteManagerService, ItemQuoteManagerService>();
             services.AddScoped<ITempItemQuoteService, TempItemQuoteService>();
             services.AddScoped<IItemHistoryService, ItemHistoryService>();
             services.AddScoped<ISalesStageService, SalesStageService>();

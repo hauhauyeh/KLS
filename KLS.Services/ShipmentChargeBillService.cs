@@ -65,7 +65,6 @@ namespace KLS.Services
 
             var isNew = req.ShipmentChargeBillId == 0;
             ShipmentChargeBill? bill = null;
-            var wasBilled = false;
 
             if (!isNew)
             {
@@ -76,11 +75,8 @@ namespace KLS.Services
                 if (bill.ShipmentId != req.ShipmentId)
                     throw new ArgumentException("Charge bill does not belong to this shipment.");
 
-                wasBilled = bill.PurchaseId.HasValue;
+                EnsureLinkedBillIsEditable(bill.PurchaseId, "Charge bill cannot be edited because its generated AP bill is paid or locked.");
             }
-
-            if (HasLockedShipmentBill(req.ShipmentId))
-                throw new InvalidOperationException("Charge bills are read-only because a generated AP bill is paid or locked.");
 
             var isFirstBill = isNew && !Uow.ShipmentChargeBills.Exists(b => b.ShipmentId == req.ShipmentId);
             var legacySourceCharges = isFirstBill
@@ -158,12 +154,6 @@ namespace KLS.Services
                 }
 
                 Uow.Shipments.RebuildChargesFromChargeBills(req.ShipmentId);
-
-                if (wasBilled)
-                {
-                    _shipmentService.GenerateBill(req.ShipmentId);
-                    Uow.ShipmentChargeBills.Reload(bill!);
-                }
             });
 
             return GetById(bill!.ShipmentChargeBillId)!;
@@ -177,9 +167,6 @@ namespace KLS.Services
 
             if (bill.PurchaseId.HasValue)
                 throw new InvalidOperationException("Billed charge bills cannot be deleted.");
-
-            if (HasLockedShipmentBill(bill.ShipmentId))
-                throw new InvalidOperationException("Charge bills are read-only because a generated AP bill is paid or locked.");
 
             EnsureSplitTotalsRemainMatched(bill.ShipmentId, bill.ShipmentChargeBillId, [], "deleting");
 
@@ -356,13 +343,19 @@ namespace KLS.Services
                 throw new ArgumentException("At least one Freight line greater than zero is required before generating AP bills.");
         }
 
-        private bool HasLockedShipmentBill(int shipmentId)
+        private void EnsureLinkedBillIsEditable(int? purchaseId, string message)
         {
-            return Uow.Purchases
-                .Find(p => p.IsShipment
-                        && p.SourceShipmentId == shipmentId
+            if (!purchaseId.HasValue)
+                return;
+
+            var isLocked = Uow.Purchases
+                .Find(p => p.PurchaseId == purchaseId.Value
+                        && p.IsShipment
                         && (p.IsLocked || (p.PaymentApplied ?? 0m) > 0m))
                 .Any();
+
+            if (isLocked)
+                throw new InvalidOperationException(message);
         }
 
         private static List<ShipmentChargeBillLineReq> NormalizeLines(IEnumerable<ShipmentChargeBillLineReq>? lines)

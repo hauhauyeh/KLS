@@ -122,6 +122,8 @@ namespace KLS.Contract.Interfaces
 
         ITempItemQuoteRepository TempItemQuotes { get; }
 
+        IItemQuoteManagerRepository ItemQuoteManager { get; }
+
         IItemHistoryRepository ItemHistories { get; }
 
         IPurchaseStageRepository PurchaseStages { get; }
