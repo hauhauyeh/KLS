@@ -790,7 +790,8 @@ namespace KLS.Services
                     PaymentDiscount = d.PaymentDiscount,
                     ShortDiscount = d.ShortDiscount,
                     OtherDiscount = d.OtherDiscount,
-                    SalesNumber = d.Sales?.SalesNumber ?? 0
+                    SalesNumber = d.Sales?.SalesNumber ?? 0,
+                    SalesDocNumber = d.Sales?.SalesDocNumber
                 }).ToList()
             };
         }
