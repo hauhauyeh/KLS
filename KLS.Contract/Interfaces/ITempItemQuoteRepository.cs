@@ -1,4 +1,4 @@
-﻿using KLS.Models;
+using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +9,5 @@ namespace KLS.Contract.Interfaces
 {
     public interface ITempItemQuoteRepository : IRepository<TempItemQuote>
     {
-        IQueryable<TempItemQuoteList>? GetList(TempItemQuoteReq tempReq);
     }
 }
