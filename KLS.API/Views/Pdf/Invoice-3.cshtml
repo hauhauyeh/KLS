@@ -634,7 +634,8 @@
         <div class="route-info-grid info-table-wrap">
             <div class="d-flex justify-content-end w-100">
                 <div class="barcode">
-                    *S-@Model.Invoice.SalesId*
+                    @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
+                    *@Model.Invoice.SalesNumber*
                 </div>
             </div>
             <table class="route-info-table">
