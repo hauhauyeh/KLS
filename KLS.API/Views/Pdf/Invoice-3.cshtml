@@ -604,7 +604,7 @@
                 </colgroup>
                 <tr>
                     <td class="invoice-info-label">@docNumberLabel</td>
-                    <td class="invoice-info">@Model.Invoice.SalesNumber</td>
+                    <td class="invoice-info">@Model.SalesDisplayNumber</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">@docDateLabel</td>
@@ -634,7 +634,7 @@
         <div class="route-info-grid info-table-wrap">
             <div class="d-flex justify-content-end w-100">
                 <div class="barcode">
-                    *@Model.Invoice.SalesNumber*
+                    *S-@Model.Invoice.SalesId*
                 </div>
             </div>
             <table class="route-info-table">

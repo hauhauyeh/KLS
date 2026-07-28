@@ -12,6 +12,8 @@ namespace KLS.Models
 
         public SalesList? Sales { get; set; }
 
+        public string? SalesDisplayNumber { get; set; }
+
         public ICollection<SalesDetailList>? SalesDetails { get; set; }
 
         public bool IsPriceZero { get; set; }

@@ -12,6 +12,8 @@ namespace KLS.Models.Reports
         [Key]
         public int? SalesNumber { get; set; }
 
+        public string? SalesDocNumber { get; set; }
+
         public int? StageId { get; set; }
 
         public DateOnly ShipDate { get; set; }

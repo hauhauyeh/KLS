@@ -62,6 +62,14 @@ namespace KLS.Services
 
         public VendorPayment? Save(VendorPayment vendorPayment)
         {
+            // Editing re-runs VendorPayment_Insert, which DELETEs the payment before rewriting it.
+            // On a Bank Feed generated payment the delete trigger tries to remove the journal while
+            // BankFeedMatch still points at it, so this would fail on FK_BankFeedMatch_TxDetail with
+            // a raw constraint error. Reverse unwinds the match and the payment together.
+            if (vendorPayment.VendorPaymentId > 0
+                && Uow.BankFeedSources.IsGeneratedVendorPayment(vendorPayment.VendorPaymentId))
+                throw new Exception("This payment was created from a bank feed row. Reverse it from Bank Feed before editing it.");
+
             var newPaymentId = Uow.VendorPayments.Save(vendorPayment);
 
             return GetById(newPaymentId);
@@ -70,6 +78,13 @@ namespace KLS.Services
         public void Delete(int vendorPaymentId)
         {
             var payment = GetById(vendorPaymentId);
+
+            // A payment Bank Feed generated is still matched to its bank row. Deleting it here
+            // would fail on FK_BankFeedMatch_TxDetail with a raw constraint error, and would
+            // leave the BankFeedSource row pointing at a payment that no longer exists.
+            // Reversing from Bank Feed unwinds the match, the payment and the link together.
+            if (Uow.BankFeedSources.IsGeneratedVendorPayment(vendorPaymentId))
+                throw new Exception("This payment was created from a bank feed row. Reverse it from Bank Feed instead of deleting it here.");
 
             if (payment != null && !payment.IsLocked)
             {
@@ -92,6 +107,13 @@ namespace KLS.Services
 
         public void VoidCheck(int vendorPaymentId)
         {
+            // Void does not delete: it flags IsVoid and posts a reversing journal, so it would
+            // succeed here and leave the bank row Matched with an Active BankFeedSource pointing
+            // at a voided payment. Reverse then refuses (voided) and Unmatch refuses (generated),
+            // stranding the row with no way out. Blocking void keeps Reverse the single exit.
+            if (Uow.BankFeedSources.IsGeneratedVendorPayment(vendorPaymentId))
+                throw new Exception("This payment was created from a bank feed row. Reverse it from Bank Feed instead of voiding it.");
+
             Uow.VendorPayments.VoidCheck(vendorPaymentId);
         }
 

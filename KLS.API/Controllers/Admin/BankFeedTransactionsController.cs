@@ -61,6 +61,31 @@ namespace KLS.API.Controllers.Admin
             return Ok(_bankFeedTransactionService.GetMatchCandidates(id));
         }
 
+        [HttpGet("OpenBills")]
+        [DisplayName("Bank Feed Open Bills")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult OpenBills([FromQuery] BankFeedOpenBillsReq req)
+        {
+            return Ok(_bankFeedTransactionService.GetOpenBills(req));
+        }
+
+        [HttpPost("CreateVendorPayment")]
+        [DisplayName("Create Vendor Payment From Bank Feed")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult CreateVendorPayment([FromBody] BankFeedCreateVendorPaymentReq req)
+        {
+            return Ok(_bankFeedTransactionService.CreateVendorPayment(req));
+        }
+
+        [HttpPost("ReverseVendorPayment")]
+        [DisplayName("Reverse Bank Feed Vendor Payment")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult ReverseVendorPayment([FromBody] BankFeedReverseReq req)
+        {
+            _bankFeedTransactionService.ReverseVendorPayment(req);
+            return Ok();
+        }
+
         [HttpPost("Match")]
         [DisplayName("Match Bank Feed")]
         [PermissionKey("Accounting.BankFeed.Match")]

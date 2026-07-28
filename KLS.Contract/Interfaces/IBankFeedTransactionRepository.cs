@@ -12,6 +12,12 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<BankFeedMatchCandidate> GetMatchCandidates(long bankFeedTransactionId);
 
+        IQueryable<BankFeedOpenBill> GetOpenBills(BankFeedOpenBillsReq req);
+
+        int CountOpenBills(BankFeedOpenBillsReq req);
+
+        int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson, int empId);
+
         void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy);
 
         void UnMatchTx(long bankFeedTransactionId);

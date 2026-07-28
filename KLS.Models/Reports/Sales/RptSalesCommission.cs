@@ -29,7 +29,9 @@ namespace KLS.Models.Reports
 
         public string? SalesRepName { get; set; }
 
-        public int? SalesNum { get; set; }
+        public int? SalesNumber { get; set; }
+
+        public string? SalesDocNumber { get; set; }
 
         public int? ShipId { get; set; }
 
@@ -59,6 +61,8 @@ namespace KLS.Models.Reports
         public string? SalesRepName { get; set; }
 
         public int? SalesNum { get; set; }
+
+        public string? SalesDocNumber { get; set; }
 
         public int? ShipId { get; set; }
 

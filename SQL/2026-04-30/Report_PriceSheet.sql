@@ -26,7 +26,7 @@ BEGIN
         i.ItemCode,
         i.ItemName,
         i.ItemName2,
-        CASE WHEN @ShareQuoteId IS NOT NULL THEN CONVERT(bit, 1) ELSE CONVERT(bit, 0) END AS IsShared,
+        CASE WHEN @ShareQuoteId IS NOT NULL AND @HasOwnList = 0 THEN CONVERT(bit, 1) ELSE CONVERT(bit, 0) END AS IsShared,
         p.Price,
         iu.Unit,
         v.RootNode,

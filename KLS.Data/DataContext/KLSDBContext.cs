@@ -63,6 +63,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankRecon>().ToTable("BankRecon");
             modelBuilder.Entity<BankFeedAccount>().ToTable("BankFeedAccount");
             modelBuilder.Entity<BankFeedTransaction>().ToTable("BankFeedTransaction");
+            modelBuilder.Entity<BankFeedSource>().ToTable("BankFeedSource");
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
             modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
             modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
@@ -144,6 +145,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankTx>().HasNoKey();
             modelBuilder.Entity<BankFeedTransactionList>().HasNoKey();
             modelBuilder.Entity<BankFeedMatchCandidate>().HasNoKey();
+            modelBuilder.Entity<BankFeedOpenBill>().HasNoKey();
             modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
             modelBuilder.Entity<CustomerPaymentEditEligibility>().HasNoKey();
             modelBuilder.Entity<RptSalesYearlyRow>().HasNoKey();
@@ -240,6 +242,7 @@ namespace KLS.Data.DataContext
         public DbSet<BankRecon> BankRecons { get; set; }
         public DbSet<BankFeedAccount> BankFeedAccounts { get; set; }
         public DbSet<BankFeedTransaction> BankFeedTransactions { get; set; }
+        public DbSet<BankFeedSource> BankFeedSources { get; set; }
 
         public DbSet<BankReconBalance> BankReconBalances { get; set; }
 
@@ -407,6 +410,7 @@ namespace KLS.Data.DataContext
         public virtual DbSet<CheckRegister> CheckRegister { get; set; }
         public virtual DbSet<BankFeedTransactionList> BankFeedTransactionList { get; set; }
         public virtual DbSet<BankFeedMatchCandidate> BankFeedMatchCandidate { get; set; }
+        public virtual DbSet<BankFeedOpenBill> BankFeedOpenBill { get; set; }
 
         public virtual DbSet<EmpAdvance> EmpAdvance { get; set; }
 
@@ -477,8 +481,6 @@ namespace KLS.Data.DataContext
         public virtual DbSet<TempSalesItem> TempSalesItem { get; set; }
 
         public virtual DbSet<BombSalesItem> BombSalesItem { get; set; }
-
-        public virtual DbSet<TempItemQuoteList> TempItemQuoteList { get; set; }
 
         public virtual DbSet<ShipRouteSummary> ShipRouteSummary { get; set; }
 

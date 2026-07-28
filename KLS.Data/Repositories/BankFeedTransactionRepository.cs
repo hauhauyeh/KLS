@@ -43,6 +43,48 @@ namespace KLS.Data.Repositories
                 "[dbo].[BankFeed_GetMatchTxList] @BankFeedTransactionId", param);
         }
 
+        public IQueryable<BankFeedOpenBill> GetOpenBills(BankFeedOpenBillsReq req)
+        {
+            var param = BuildOpenBillsParam(req);
+            return DbContext.BankFeedOpenBill.FromSqlRaw(
+                "[dbo].[BankFeed_GetOpenBills] @BankFeedTransactionId,@PayeeId,@Search,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                param);
+        }
+
+        public int CountOpenBills(BankFeedOpenBillsReq req)
+        {
+            req.IsCount = true;
+            var param = BuildOpenBillsParam(req);
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[BankFeed_GetOpenBills] @BankFeedTransactionId,@PayeeId,@Search,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                param);
+            var output = param[6] as SqlParameter;
+            return output!.Value == DBNull.Value ? 0 : Convert.ToInt32(output.Value);
+        }
+
+        public int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson, int empId)
+        {
+            var newPaymentId = new SqlParameter
+            {
+                ParameterName = "@NewVendorPaymentId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[BankFeed_CreateVendorPayment] @BankFeedTransactionId,@PayeeId,@PaymentMethod,@ReferenceId,@LinesJson,@DifferenceMemo,@EmpId,@NewVendorPaymentId OUTPUT",
+                new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
+                new SqlParameter("@PayeeId", req.PayeeId),
+                new SqlParameter("@PaymentMethod", (object?)req.PaymentMethod ?? DBNull.Value),
+                new SqlParameter("@ReferenceId", (object?)req.ReferenceId ?? DBNull.Value),
+                new SqlParameter("@LinesJson", linesJson),
+                new SqlParameter("@DifferenceMemo", (object?)req.DifferenceMemo ?? DBNull.Value),
+                new SqlParameter("@EmpId", empId),
+                newPaymentId);
+
+            return newPaymentId.Value == DBNull.Value ? 0 : Convert.ToInt32(newPaymentId.Value);
+        }
+
         public void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy)
         {
             DbContext.Database.ExecuteSqlRaw(
@@ -57,6 +99,25 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw(
                 "[dbo].[BankFeed_UnMatchTx] @BankFeedTransactionId",
                 new SqlParameter("@BankFeedTransactionId", bankFeedTransactionId));
+        }
+
+        private object[] BuildOpenBillsParam(BankFeedOpenBillsReq req)
+        {
+            object[] param = {
+                new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
+                new SqlParameter("@PayeeId", req.PayeeId),
+                !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value),
+                new SqlParameter("@Pageno", req.Pageno),
+                new SqlParameter("@Pagesize", req.Pagesize),
+                new SqlParameter("@IsCount", req.IsCount),
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+            return param;
         }
 
         private object[] BuildListParam(BankFeedListReq req)

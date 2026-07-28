@@ -16,6 +16,8 @@ namespace KLS.Models.Reports
 
         public int? SalesNumber { get; set; }
 
+        public string? SalesDocNumber { get; set; }
+
         // Customer's PO reference (source column Sales.CustPONumber, aliased
         // as PONumber in the SP output).
         public string? PONumber { get; set; }

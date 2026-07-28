@@ -14,6 +14,8 @@ namespace KLS.Models.Reports
 
         public int? SalesNumber { get; set; }
 
+        public string? SalesDocNumber { get; set; }
+
         public string? ShipRoute { get; set; }
 
         public string? PayeeName { get; set; }

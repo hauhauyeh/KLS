@@ -27,5 +27,7 @@ namespace KLS.Models
         public decimal? OtherDiscount { get; set; }
 
         public int SalesNumber { get; set; }
+
+        public string? SalesDocNumber { get; set; }
     }
 }

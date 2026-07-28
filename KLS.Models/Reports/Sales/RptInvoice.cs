@@ -21,6 +21,27 @@ namespace KLS.Models.Reports
 
         public bool HasDiscount { get; set; }
 
+        public bool UseSalesDocNumber { get; set; }
+
+        public string SalesDisplayNumber
+        {
+            get
+            {
+                if (UseSalesDocNumber && !string.IsNullOrWhiteSpace(Invoice?.SalesDocNumber))
+                    return Invoice.SalesDocNumber;
+
+                return Invoice?.SalesNumber.ToString() ?? string.Empty;
+            }
+        }
+
+        public string GetSalesDisplayNumber(KLS.Models.Sales? sales)
+        {
+            if (UseSalesDocNumber && !string.IsNullOrWhiteSpace(sales?.SalesDocNumber))
+                return sales.SalesDocNumber;
+
+            return sales?.SalesNumber.ToString() ?? string.Empty;
+        }
+
         public int? TotalItems
         {
             get

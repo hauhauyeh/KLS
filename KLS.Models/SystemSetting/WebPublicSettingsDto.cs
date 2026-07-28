@@ -6,6 +6,8 @@ namespace KLS.Models
 
         public bool EnforceStockLimit { get; set; }
 
+        public bool UseSalesDocNumber { get; set; }
+
         public string CurrencyCode { get; set; } = "USD";
 
         public string? MetaTitle { get; set; }

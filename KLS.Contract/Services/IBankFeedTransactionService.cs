@@ -12,6 +12,12 @@ namespace KLS.Contract.Services
 
         List<BankFeedMatchCandidate> GetMatchCandidates(long bankFeedTransactionId);
 
+        PagingResponse<BankFeedOpenBill> GetOpenBills(BankFeedOpenBillsReq req);
+
+        int CreateVendorPayment(BankFeedCreateVendorPaymentReq req);
+
+        void ReverseVendorPayment(BankFeedReverseReq req);
+
         void Match(List<BankFeedMatchReq> reqs);
 
         int Unmatch(BankFeedBulkActionReq req);

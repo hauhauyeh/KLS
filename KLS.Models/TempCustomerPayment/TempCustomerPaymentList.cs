@@ -61,6 +61,8 @@ namespace KLS.Models
 
         public int SalesNumber { get; set; }
 
+        public string? SalesDocNumber { get; set; }
+
         public DateOnly ShipDate { get; set; }
 
         public decimal? SalesTotal { get; set; }

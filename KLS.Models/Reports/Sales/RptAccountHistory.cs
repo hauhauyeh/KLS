@@ -7,6 +7,7 @@ namespace KLS.Models.Reports
         [Key]
         public int SalesId { get; set; }
         public int SalesNumber { get; set; }
+        public string? SalesDocNumber { get; set; }
         public string? DocType { get; set; }
         public DateTime? ShipDate { get; set; }
         public decimal SalesTotal { get; set; }
