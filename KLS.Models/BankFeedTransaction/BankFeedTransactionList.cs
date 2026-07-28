@@ -48,5 +48,11 @@ namespace KLS.Models
         public long? MatchCandidateTxId { get; set; }
 
         public long? MatchCandidateTxDetailId { get; set; }
+
+        /// <summary>
+        /// True when Bank Feed created the transaction itself rather than matching an existing
+        /// one. Such a row must be reversed, not unmatched.
+        /// </summary>
+        public bool IsGenerated { get; set; }
     }
 }

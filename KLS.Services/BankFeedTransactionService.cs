@@ -137,6 +137,48 @@ namespace KLS.Services
             return Uow.BankFeedTransactions.GetMatchCandidates(bankFeedTransactionId).ToList();
         }
 
+        public PagingResponse<BankFeedOpenBill> GetOpenBills(BankFeedOpenBillsReq req)
+        {
+            if (req.PayeeId <= 0)
+                throw new Exception("Please select a vendor.");
+
+            var list = Uow.BankFeedTransactions.GetOpenBills(req).ToList();
+            var count = Uow.BankFeedTransactions.CountOpenBills(req);
+
+            return new PagingResponse<BankFeedOpenBill>(count, req.Pageno, req.Pagesize)
+            {
+                RowData = list
+            };
+        }
+
+        /// <summary>
+        /// Everything here is a courtesy: the stored procedure re-checks all of it and is the
+        /// authority. These run first only so the common mistakes give a readable message
+        /// instead of a raw THROW.
+        /// </summary>
+        public int CreateVendorPayment(BankFeedCreateVendorPaymentReq req)
+        {
+            if (req.PayeeId <= 0)
+                throw new Exception("Please select a vendor.");
+
+            if (req.Lines == null || !req.Lines.Any())
+                throw new Exception("Please select at least one bill to pay.");
+
+            if (req.Lines.Any(l => l.ApplyAmount <= 0))
+                throw new Exception("Each selected bill needs an apply amount greater than zero.");
+
+            if (req.Lines.Select(l => l.PurchaseId).Distinct().Count() != req.Lines.Count)
+                throw new Exception("The same bill was selected more than once.");
+
+            if (string.Equals(req.PaymentMethod, "CHECK", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Check payments cannot be created from a bank feed row. Use ACH, E-Check, Cash, Handwrite Check or Credit Card.");
+
+            var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+                req.Lines.Select(l => new { l.PurchaseId, l.ApplyAmount, l.DiscountAmount }));
+
+            return Uow.BankFeedTransactions.CreateVendorPayment(req, linesJson, UserContext.EmpId);
+        }
+
         public void Match(List<BankFeedMatchReq> reqs)
         {
             if (reqs == null || !reqs.Any())
@@ -156,6 +198,19 @@ namespace KLS.Services
             }
         }
 
+        /// <summary>
+        /// Reverses a transaction Bank Feed created: deletes the payment, restores the bill
+        /// balances and journal, and returns the bank row to Pending.
+        /// </summary>
+        public void ReverseVendorPayment(BankFeedReverseReq req)
+        {
+            if (!Uow.BankFeedSources.HasActiveSource(req.BankFeedTransactionId))
+                throw new Exception("This bank feed row has no transaction created by Bank Feed to reverse.");
+
+            Uow.BankFeedSources.ReverseVendorPayment(
+                req.BankFeedTransactionId, req.ReverseReason, UserContext.EmpId);
+        }
+
         public int Unmatch(BankFeedBulkActionReq req)
         {
             if (req.BankFeedTransactionIds == null || !req.BankFeedTransactionIds.Any())
@@ -168,6 +223,18 @@ namespace KLS.Services
 
             if (!transactions.Any())
                 throw new Exception("No eligible transactions found to unmatch.");
+
+            // Unmatch only detaches the link. On a row Bank Feed generated, that would leave the
+            // payment alive and the row back at Pending — free to be paid a second time. Those
+            // rows must go through Reverse, which deletes the payment as well.
+            var generated = transactions
+                .Where(t => Uow.BankFeedSources.HasActiveSource(t.BankFeedTransactionId))
+                .ToList();
+
+            if (generated.Any())
+                throw new Exception(generated.Count == transactions.Count
+                    ? "This transaction was created by Bank Feed. Use Reverse instead of Unmatch."
+                    : $"{generated.Count} of the selected transactions were created by Bank Feed. Use Reverse on those instead of Unmatch.");
 
             foreach (var tx in transactions)
             {
