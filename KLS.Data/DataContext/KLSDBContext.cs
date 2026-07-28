@@ -482,8 +482,6 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<BombSalesItem> BombSalesItem { get; set; }
 
-        public virtual DbSet<TempItemQuoteList> TempItemQuoteList { get; set; }
-
         public virtual DbSet<ShipRouteSummary> ShipRouteSummary { get; set; }
 
         public virtual DbSet<ShipRouteDetail> ShipRouteDetail { get; set; }

@@ -108,6 +108,27 @@ namespace KLS.Services
             return Uow.Sales.Find(c => c.SalesNumber == salesNumber).FirstOrDefault();
         }
 
+        private bool UseSalesDocNumber()
+        {
+            return _systemSettingService.GetByKey<bool>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED);
+        }
+
+        private string SalesDisplayNumber(Sales sales)
+        {
+            if (UseSalesDocNumber() && !string.IsNullOrWhiteSpace(sales.SalesDocNumber))
+                return sales.SalesDocNumber;
+
+            return sales.SalesNumber.ToString();
+        }
+
+        private string SalesDisplayNumber(SalesList sales)
+        {
+            if (UseSalesDocNumber() && !string.IsNullOrWhiteSpace(sales.SalesDocNumber))
+                return sales.SalesDocNumber;
+
+            return sales.SalesNumber.ToString();
+        }
+
         public SalesList? GetListById(int salesId)
         {
             var listReq = new SalesListReq
@@ -368,8 +389,9 @@ namespace KLS.Services
 
             if (payee != null && !string.IsNullOrEmpty(toEmails))
             {
+                var salesDisplayNumber = SalesDisplayNumber(sales);
                 string subject = "Invoice File";
-                string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Here is a your invoice file for the order#" + sales.SalesNumber + "<br/><br/>";
+                string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Here is a your invoice file for the order#" + salesDisplayNumber + "<br/><br/>";
                 string[] attcfiles = [pdfFile];
 
                 _emailAuditService.SendAndLog(new EmailAuditMessage
@@ -383,7 +405,7 @@ namespace KLS.Services
                     PayeeId = sales.BillId,
                     DocumentType = EmailAudit.DocumentType.Invoice,
                     DocumentId = salesId,
-                    DocumentNumber = sales.SalesNumber.ToString(),
+                    DocumentNumber = salesDisplayNumber,
                     Source = EmailAudit.Source.Manual,
                     RequestedBy = UserContext.SystemUserId
                 });
@@ -698,7 +720,7 @@ namespace KLS.Services
 
             if (!string.IsNullOrEmpty(toPhone))
             {
-                string msgbody = "Dear " + payee.PayeeName + "! We've received your order. Your order number " + sales.SalesNumber + " will be ship on " + sales.ShipDate?.ToString("MM/dd/yyyy") + ".";
+                string msgbody = "Dear " + payee.PayeeName + "! We've received your order. Your order number " + SalesDisplayNumber(sales) + " will be ship on " + sales.ShipDate?.ToString("MM/dd/yyyy") + ".";
 
                 _twilioService.SendMessage(toPhone, msgbody);
             }
@@ -756,7 +778,7 @@ namespace KLS.Services
             if (!string.IsNullOrEmpty(toPhone))
             {
                 var payee = Uow.Payees.GetById(UserContext.EmpId);
-                string msgbody = "Dear " + payee.PayeeName + "! We've received your order. Your order number " + sales.SalesNumber + " will be ship on " + sales.ShipDate?.ToString("MM/dd/yyyy") + ".";
+                string msgbody = "Dear " + payee.PayeeName + "! We've received your order. Your order number " + SalesDisplayNumber(sales) + " will be ship on " + sales.ShipDate?.ToString("MM/dd/yyyy") + ".";
 
                 _twilioService.SendMessage(toPhone, msgbody);
             }
@@ -964,6 +986,7 @@ namespace KLS.Services
             var salesEmail = new SalesDetailDto
             {
                 Sales = sales,
+                SalesDisplayNumber = SalesDisplayNumber(sales),
                 SalesDetails = Uow.Sales.GetSalesDetails(salesId)?.ToList()
             };
 
@@ -974,7 +997,7 @@ namespace KLS.Services
                 salesEmail.PayeeName = payee.PayeeName;
 
                 string toEmails = payee.Email;
-                string subject = "Thank You for Your Order – #" + sales.SalesNumber;
+                string subject = "Thank You for Your Order – #" + salesEmail.SalesDisplayNumber;
 
                 string mailBody = _emailService.RenderEmailTemplate("~/Views/Invoice.cshtml", salesEmail);
 
@@ -991,11 +1014,11 @@ namespace KLS.Services
                     PayeeId = payee.PayeeId,
                     DocumentType = EmailAudit.DocumentType.Invoice,
                     DocumentId = salesId,
-                    DocumentNumber = sales.SalesNumber.ToString(),
+                    DocumentNumber = salesEmail.SalesDisplayNumber,
                     Source = EmailAudit.Source.System
                 });
 
-                subject = "New Order Received – #" + sales.SalesNumber + " - " + payee.PayeeName;
+                subject = "New Order Received – #" + salesEmail.SalesDisplayNumber + " - " + payee.PayeeName;
 
                 // Admin notification
                 _emailAuditService.SendAndLog(new EmailAuditMessage
@@ -1007,7 +1030,7 @@ namespace KLS.Services
                     EmailType = EmailAudit.EmailType.WebOrderAdminNotification,
                     DocumentType = EmailAudit.DocumentType.Invoice,
                     DocumentId = salesId,
-                    DocumentNumber = sales.SalesNumber.ToString(),
+                    DocumentNumber = salesEmail.SalesDisplayNumber,
                     Source = EmailAudit.Source.System
                 });
             }

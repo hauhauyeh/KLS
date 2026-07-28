@@ -7,7 +7,9 @@ namespace KLS.Models.Reports
         [Key]
         public int RowId { get; set; }
 
-        public int? SalesNum { get; set; }
+        public int? SalesNumber { get; set; }
+
+        public string? SalesDocNumber { get; set; }
 
         public DateOnly? ShipDate { get; set; }
 
