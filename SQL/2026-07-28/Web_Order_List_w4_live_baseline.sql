@@ -1,12 +1,7 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 -- 2026-07-28 W1A: expose SalesDocNumber for web order list contract.
--- 2026-07-28 W4A: parameterize web order search and whitelist sort identifiers.
 -- EXEC dbo.Web_Order_List @Pageno = 1, @Pagesize = 20, @Search = NULL, @StartDate = NULL, @EndDate = NULL, @PayeeId = 301919, @SortField = NULL, @SortOrder = NULL, @IsCount = 0, @TotalCount = 0
-CREATE OR ALTER PROCEDURE [dbo].[Web_Order_List]
+CREATE   PROCEDURE [dbo].[Web_Order_List]
 
 	@Pageno int,
 	@Pagesize int,
@@ -26,12 +21,6 @@ BEGIN
  
 	DECLARE @Qry NVARCHAR(MAX);
 	DECLARE @Today DATE = GETDATE();
-	DECLARE @SearchTrimmed NVARCHAR(50) = NULLIF(LTRIM(RTRIM(@Search)), '');
-	DECLARE @SearchInt INT = TRY_CONVERT(INT, NULLIF(LTRIM(RTRIM(@Search)), ''));
-	DECLARE @SearchAmount DECIMAL(18, 2) = TRY_CONVERT(DECIMAL(18, 2), NULLIF(LTRIM(RTRIM(@Search)), ''));
-	DECLARE @SortExpression NVARCHAR(100);
-	DECLARE @SortDirection NVARCHAR(4);
-	DECLARE @OffsetRows INT = @PageSize * (@Pageno - 1);
  
 	IF @IsCount=1
 		SET @Qry='SELECT @RCount=COUNT(s.SalesNumber)'
@@ -102,74 +91,32 @@ BEGIN
 		WHERE p.PayeeType=''c'''
 
 	
-	SET @Qry += ' AND s.ShipId=@PayeeId'
+	SET @Qry += ' AND s.ShipId='+CONVERT(varchar,@PayeeId)+''
 
-	IF @SearchTrimmed IS NOT NULL
-		SET @Qry += ' AND (
-			(@SearchInt IS NOT NULL AND s.SalesNumber = @SearchInt)
-			OR (@SearchAmount IS NOT NULL AND s.SalesTotal = @SearchAmount)
-			OR s.SalesDocNumber LIKE ''%'' + @SearchTrimmed + ''%''
-		)'
+	IF @Search is not null	
+		SET @Qry += ' AND (s.SalesNumber='+@Search+' or s.SalesTotal='+@Search+')'
  
 	IF @StartDate is not null
-		SET @Qry += ' AND s.ShipDate>=@StartDate'
+		SET @Qry += ' AND s.ShipDate>='''+CONVERT(VARCHAR,@StartDate)+''''
 
 	IF @EndDate is not null
-		SET @Qry += ' AND s.ShipDate<=@EndDate'
+		SET @Qry += ' AND s.ShipDate<='''+CONVERT(VARCHAR,@EndDate)+''''
 
 	IF @IsCount=1
 	BEGIN
-		EXEC sp_executesql
-			@Qry,
-			N'@PayeeId INT, @SearchTrimmed NVARCHAR(50), @SearchInt INT, @SearchAmount DECIMAL(18, 2), @StartDate DATE, @EndDate DATE, @RCount INT OUTPUT',
-			@PayeeId = @PayeeId,
-			@SearchTrimmed = @SearchTrimmed,
-			@SearchInt = @SearchInt,
-			@SearchAmount = @SearchAmount,
-			@StartDate = @StartDate,
-			@EndDate = @EndDate,
-			@RCount = @TotalCount OUTPUT
+		EXEC sp_executesql @Qry,N'@RCount int OUTPUT',@RCount=@TotalCount OUTPUT
 		RETURN
 	END
 
-	SET @SortField = NULLIF(LTRIM(RTRIM(@SortField)), '');
-	SET @SortOrder = UPPER(NULLIF(LTRIM(RTRIM(@SortOrder)), ''));
-	SET @SortDirection = CASE WHEN @SortOrder = 'ASC' THEN 'ASC' ELSE 'DESC' END;
-	SET @SortExpression = CASE @SortField
-		WHEN 'SalesNumber' THEN 's.SalesNumber'
-		WHEN 'SalesDocNumber' THEN 's.SalesDocNumber'
-		WHEN 'SalesDate' THEN 's.SalesDate'
-		WHEN 'ShipDate' THEN 's.ShipDate'
-		WHEN 'ShipRoute' THEN 's.ShipRoute'
-		WHEN 'RouteOrder' THEN 's.RouteOrder'
-		WHEN 'PayeeName' THEN 'p.PayeeName'
-		WHEN 'SalesTotal' THEN 's.SalesTotal'
-		WHEN 'AmountDue' THEN 's.AmountDue'
-		WHEN 'StageName' THEN 'ss.StageName'
-		WHEN 'PaymentStatusName' THEN 'ps.PaymentStatusName'
-		ELSE NULL
-	END;
-
 	IF @SortField is not null
-		SET @Qry+=' ORDER BY '+ISNULL(@SortExpression, 's.SalesNumber')+' '+@SortDirection
+		SET @Qry+=' ORDER BY '+@SortField+' '+@SortOrder+''
 	ELSE IF @StartDate IS NOT NULL
 		SET @Qry += ' ORDER BY s.ShipRoute,s.RouteOrder,p.PayeeName,s.SalesNumber'
 	ELSE
 		SET @Qry += ' ORDER BY s.SalesNumber DESC'
 	
-	SET @Qry += ' OFFSET @OffsetRows ROWS 
-	FETCH NEXT @Pagesize ROWS ONLY '
+	SET @Qry += ' OFFSET '+ CONVERT(VARCHAR(100),(@PageSize * (@Pageno - 1))) +' ROWS 
+	FETCH NEXT '+ CONVERT(VARCHAR(100),@Pagesize) +' ROWS ONLY '
  
-	EXEC sp_executesql
-		@Qry,
-		N'@PayeeId INT, @SearchTrimmed NVARCHAR(50), @SearchInt INT, @SearchAmount DECIMAL(18, 2), @StartDate DATE, @EndDate DATE, @OffsetRows INT, @Pagesize INT',
-		@PayeeId = @PayeeId,
-		@SearchTrimmed = @SearchTrimmed,
-		@SearchInt = @SearchInt,
-		@SearchAmount = @SearchAmount,
-		@StartDate = @StartDate,
-		@EndDate = @EndDate,
-		@OffsetRows = @OffsetRows,
-		@Pagesize = @Pagesize
+	EXEC (@Qry)
 END
-GO
