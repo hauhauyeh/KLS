@@ -492,7 +492,8 @@
                 <div class="d-flex justify-content-between">
                     <div class="invoice-label">INVOICE</div>
                     <div class="invoice-barcode">
-                        *S-@Model.Invoice.SalesId*
+                        @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
+                        *@Model.Invoice.SalesNumber*
                     </div>
                 </div>
                 <table>

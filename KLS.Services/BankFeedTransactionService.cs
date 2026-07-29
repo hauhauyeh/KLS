@@ -173,10 +173,28 @@ namespace KLS.Services
             if (string.Equals(req.PaymentMethod, "CHECK", StringComparison.OrdinalIgnoreCase))
                 throw new Exception("Check payments cannot be created from a bank feed row. Use ACH, E-Check, Cash, Handwrite Check or Credit Card.");
 
+            var resolving = req.ResolvingLines ?? new List<BankFeedResolvingLineReq>();
+
+            if (resolving.Any(l => l.Amount <= 0))
+                throw new Exception("Each resolving line needs an amount greater than zero.");
+
+            if (resolving.Any() && !req.ChargePayeeId.HasValue)
+                throw new Exception("Please choose who the bank charge is billed to.");
+
+            if (resolving.Count > 5)
+                throw new Exception("A bank feed row can carry at most 5 resolving lines.");
+
             var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
                 req.Lines.Select(l => new { l.PurchaseId, l.ApplyAmount, l.DiscountAmount }));
 
-            return Uow.BankFeedTransactions.CreateVendorPayment(req, linesJson, UserContext.EmpId);
+            // Null rather than "[]" when there is nothing to resolve, so the procedure takes its
+            // untouched pre-4B path rather than parsing an empty array.
+            var resolvingJson = resolving.Any()
+                ? Newtonsoft.Json.JsonConvert.SerializeObject(
+                    resolving.Select(l => new { l.AccountId, l.Amount, l.Notes }))
+                : null;
+
+            return Uow.BankFeedTransactions.CreateVendorPayment(req, linesJson, resolvingJson, UserContext.EmpId);
         }
 
         public void Match(List<BankFeedMatchReq> reqs)
@@ -202,12 +220,25 @@ namespace KLS.Services
         /// Reverses a transaction Bank Feed created: deletes the payment, restores the bill
         /// balances and journal, and returns the bank row to Pending.
         /// </summary>
-        public void ReverseVendorPayment(BankFeedReverseReq req)
+        /// <summary>
+        /// Projected to id + name only: the picker needs nothing else, and returning the whole
+        /// Payee entity would drag 64 columns of unrelated master data into a lookup.
+        /// </summary>
+        public BankFeedChargePayee? GetLastChargePayee()
+        {
+            var payee = Uow.BankFeedSources.GetLastChargePayee();
+
+            return payee == null
+                ? null
+                : new BankFeedChargePayee { PayeeId = payee.PayeeId, PayeeName = payee.PayeeName };
+        }
+
+        public void ReverseGenerated(BankFeedReverseReq req)
         {
             if (!Uow.BankFeedSources.HasActiveSource(req.BankFeedTransactionId))
                 throw new Exception("This bank feed row has no transaction created by Bank Feed to reverse.");
 
-            Uow.BankFeedSources.ReverseVendorPayment(
+            Uow.BankFeedSources.ReverseGenerated(
                 req.BankFeedTransactionId, req.ReverseReason, UserContext.EmpId);
         }
 

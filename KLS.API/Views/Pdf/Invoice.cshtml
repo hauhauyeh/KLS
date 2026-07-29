@@ -646,7 +646,8 @@
     <div class="right-width right-panel-fixed">
         <!-- Sidebar content remains unchanged -->
         <div class="invoice-barcode">
-            *S-@Model.Invoice.SalesId*
+            @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
+            *@Model.Invoice.SalesNumber*
         </div>
         <table class="route-info-table">
             <colgroup>

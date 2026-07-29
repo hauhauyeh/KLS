@@ -50,7 +50,10 @@ namespace KLS.Services
 
             var invoice = _reportService.Invoice(req.SalesId.Value);
 
-            var template = "~/Views/Pdf/SalesOrder.cshtml";
+            var documentFormat = _systemSettingService.GetByKey<int>(GlobalKey.DOCUMENT_FORMAT);
+            var template = documentFormat == 4
+                ? "~/Views/Pdf/SalesOrder-4.cshtml"
+                : "~/Views/Pdf/SalesOrder.cshtml";
             var html = _pdfService.RenderTemplate(template, invoice);
 
             var fileName = (invoice.Invoice.DocType == "CM" ? "CreditMemo-" : "SalesOrder-") + invoice.Invoice.SalesNumber + ".pdf";
@@ -932,6 +935,7 @@ namespace KLS.Services
                 {
                     2 => "~/Views/Pdf/Invoice-2.cshtml",
                     3 => "~/Views/Pdf/Invoice-3.cshtml",
+                    4 => "~/Views/Pdf/Invoice-4.cshtml",
                     _ => "~/Views/Pdf/Invoice.cshtml"
                 };
 
@@ -989,7 +993,9 @@ namespace KLS.Services
 
                 var template = "~/Views/Pdf/PickTicket.cshtml";
                 var documentFormat = _systemSettingService.GetByKey<Int32>(GlobalKey.DOCUMENT_FORMAT);
-                if (documentFormat == 3)
+                if (documentFormat == 4)
+                    template = "~/Views/Pdf/PickTicket-4.cshtml";
+                else if (documentFormat == 3)
                     template = "~/Views/Pdf/PickTicket-3.cshtml";
 
                 var html = _pdfService.RenderTemplate(template, invoice);
@@ -1081,7 +1087,10 @@ namespace KLS.Services
         {
             var report = _reportService.SalesQuote(salesQuoteId);
 
-            var template = "~/Views/Pdf/SalesQuote.cshtml";
+            var documentFormat = _systemSettingService.GetByKey<int>(GlobalKey.DOCUMENT_FORMAT);
+            var template = documentFormat == 4
+                ? "~/Views/Pdf/SalesQuote-4.cshtml"
+                : "~/Views/Pdf/SalesQuote.cshtml";
             var html = _pdfService.RenderTemplate(template, report);
 
             var fileName = "SalesQuote-" + report.Quote!.QuoteNumber + ".pdf";
