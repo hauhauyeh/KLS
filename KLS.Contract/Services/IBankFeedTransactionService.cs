@@ -16,7 +16,9 @@ namespace KLS.Contract.Services
 
         int CreateVendorPayment(BankFeedCreateVendorPaymentReq req);
 
-        void ReverseVendorPayment(BankFeedReverseReq req);
+        BankFeedChargePayee? GetLastChargePayee();
+
+        void ReverseGenerated(BankFeedReverseReq req);
 
         void Match(List<BankFeedMatchReq> reqs);
 

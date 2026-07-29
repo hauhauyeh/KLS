@@ -62,7 +62,8 @@ namespace KLS.Data.Repositories
             return output!.Value == DBNull.Value ? 0 : Convert.ToInt32(output.Value);
         }
 
-        public int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson, int empId)
+        public int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson,
+                                       string? resolvingLinesJson, int empId)
         {
             var newPaymentId = new SqlParameter
             {
@@ -71,14 +72,31 @@ namespace KLS.Data.Repositories
                 SqlDbType = System.Data.SqlDbType.Int
             };
 
+            // Parameters are passed BY NAME, not positionally. The procedure gained
+            // @ResolvingLinesJson and @ChargePayeeId in the middle of its signature, and a
+            // positional call would have silently shifted every argument after them - the same
+            // failure that forced a trailing-only parameter on VendorPayment_Insert. Keep the
+            // "@X = @X" form so future parameters cannot repeat it.
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[BankFeed_CreateVendorPayment] @BankFeedTransactionId,@PayeeId,@PaymentMethod,@ReferenceId,@LinesJson,@DifferenceMemo,@EmpId,@NewVendorPaymentId OUTPUT",
+                "[dbo].[BankFeed_CreateVendorPayment] " +
+                "@BankFeedTransactionId = @BankFeedTransactionId, " +
+                "@PayeeId = @PayeeId, " +
+                "@PaymentMethod = @PaymentMethod, " +
+                "@ReferenceId = @ReferenceId, " +
+                "@LinesJson = @LinesJson, " +
+                "@DifferenceMemo = @DifferenceMemo, " +
+                "@ResolvingLinesJson = @ResolvingLinesJson, " +
+                "@ChargePayeeId = @ChargePayeeId, " +
+                "@EmpId = @EmpId, " +
+                "@NewVendorPaymentId = @NewVendorPaymentId OUTPUT",
                 new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
                 new SqlParameter("@PayeeId", req.PayeeId),
                 new SqlParameter("@PaymentMethod", (object?)req.PaymentMethod ?? DBNull.Value),
                 new SqlParameter("@ReferenceId", (object?)req.ReferenceId ?? DBNull.Value),
                 new SqlParameter("@LinesJson", linesJson),
                 new SqlParameter("@DifferenceMemo", (object?)req.DifferenceMemo ?? DBNull.Value),
+                new SqlParameter("@ResolvingLinesJson", (object?)resolvingLinesJson ?? DBNull.Value),
+                new SqlParameter("@ChargePayeeId", (object?)req.ChargePayeeId ?? DBNull.Value),
                 new SqlParameter("@EmpId", empId),
                 newPaymentId);
 

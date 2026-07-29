@@ -77,12 +77,20 @@ namespace KLS.API.Controllers.Admin
             return Ok(_bankFeedTransactionService.CreateVendorPayment(req));
         }
 
-        [HttpPost("ReverseVendorPayment")]
-        [DisplayName("Reverse Bank Feed Vendor Payment")]
+        /// <summary>Payee used on the most recent bank charge, so the picker opens pre-filled.</summary>
+        [HttpGet("LastChargePayee")]
         [PermissionKey("Accounting.BankFeed.Match")]
-        public IActionResult ReverseVendorPayment([FromBody] BankFeedReverseReq req)
+        public IActionResult LastChargePayee()
         {
-            _bankFeedTransactionService.ReverseVendorPayment(req);
+            return Ok(_bankFeedTransactionService.GetLastChargePayee());
+        }
+
+        [HttpPost("ReverseGenerated")]
+        [DisplayName("Reverse Bank Feed Generated Transactions")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult ReverseGenerated([FromBody] BankFeedReverseReq req)
+        {
+            _bankFeedTransactionService.ReverseGenerated(req);
             return Ok();
         }
 

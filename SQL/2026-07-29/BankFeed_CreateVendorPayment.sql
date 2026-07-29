@@ -1,0 +1,537 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+-- =============================================================================================
+-- BankFeed_CreateVendorPayment
+--   Creates a VendorPayment from a pending money-out bank feed row, applies it to the selected
+--   open bills, posts the journal, registers what was generated, and matches the bank row.
+--   Plan: plan/bank-feed-create-phase-1-open-bill.md  (Slice 3, decision D6)
+--
+-- 2026-07-29 KLS-4B: resolving lines. The bank amount may now exceed the bills being paid, with
+--   the gap absorbed by expense lines the user chooses - a wire fee, a bank charge. Until now
+--   that case could not be entered at all: 50112 demanded the applied total equal the bank
+--   amount while 50111 capped it at the bills' open balance, and both cannot hold at once.
+--
+--   The gap becomes a SECOND document, created through VendorPayment_InsertPayNow (the existing
+--   expense module). Both documents post a line on the bank account, and BankFeed_MatchTx
+--   already requires the SUM of matched detail lines to equal the bank amount - so the
+--   invariant is not relaxed, it gains a second term.
+--
+--   Plan: plan/bank-feed-create-phase-4b-resolving-lines.md
+--
+-- 2026-07-28 FIX_ORPHAN_DRAFT: guard 50113 now ignores a draft whose VendorPaymentId points at
+--   a payment that no longer exists. Nothing in the system purges TempVendorPayment, so deleting
+--   a payment ANYWHERE - the Vendor Payments screen, or this feature's own reverse - stranded an
+--   IsApplied=1 row for a document the user can no longer open, and the guard then refused every
+--   subsequent create for that vendor. BankFeed_ReverseVendorPayment now clears its own draft
+--   (2026-07-28 version, step 7); this change covers the delete paths outside the feature.
+--   No other logic changed; the previous version is
+--   KLS/SQL/2026-07-27/BankFeed_CreateVendorPayment.sql.
+--
+-- One procedure owns the whole flow so there is ONE transaction boundary and ONE error path.
+-- The C# service does no orchestration - it serialises the lines to JSON and calls this once.
+--
+-- Steps: validate -> seed TempVendorPayment -> VendorPayment_Insert -> locate journal ->
+--        insert BankFeedSource -> BankFeed_MatchTx.
+--
+-- Not accepted as parameters, by design:
+--   @PaymentDate           - always the bank row's PostedDate (D3)
+--   @DifferenceResolution  - derived here from the amounts (D9)
+--   @Notes                 - built from the bank description
+--   @DifferenceAccountId   - VendorPayment_Insert hardcodes discounts to '@IDR' (D1)
+--
+-- Error numbers 50101-50119 and 50130-50141. BankFeed_MatchTx owns 50001-50008;
+--   BankFeed_GetOpenBills 50201+; BankFeed_ReverseGenerated 50301+.
+--   50120-50123 are reserved for a shelved phase (4a) and deliberately skipped.
+--   Note Shipment_GenerateChargeBills also throws 50101-50108. That collision is pre-existing
+--   and harmless - nothing branches on the number - so do not renumber either procedure.
+-- =============================================================================================
+
+CREATE OR ALTER PROCEDURE [dbo].[BankFeed_CreateVendorPayment]
+    @BankFeedTransactionId BIGINT,
+    @PayeeId               INT,
+    @PaymentMethod         NVARCHAR(50),
+    @ReferenceId           NVARCHAR(100) = NULL,
+    @LinesJson             NVARCHAR(MAX),
+    @DifferenceMemo        NVARCHAR(500) = NULL,
+    -- 2026-07-29 KLS-4B. [{"AccountId":133,"Amount":10.00,"Notes":"wire fee"}]
+    -- NULL or empty = no resolving lines, and this procedure behaves exactly as it did before.
+    @ResolvingLinesJson    NVARCHAR(MAX) = NULL,
+    -- Who the charge document is billed to. Required only when there are resolving lines.
+    @ChargePayeeId         INT           = NULL,
+    @EmpId                 INT,
+    @NewVendorPaymentId    INT           = NULL OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    ---------------------------------------------------------------------------------------
+    -- A. Parse the lines. Touches no database state, so it sits outside the transaction.
+    ---------------------------------------------------------------------------------------
+    IF @LinesJson IS NULL OR ISJSON(@LinesJson) <> 1
+        THROW 50107, 'No bills were selected for this payment.', 1;
+
+    SELECT PurchaseId,
+           ApplyAmount,
+           ISNULL(DiscountAmount, 0) AS DiscountAmount
+    INTO #Lines
+    FROM OPENJSON(@LinesJson)
+    WITH (PurchaseId     INT,
+          ApplyAmount    DECIMAL(18,2),
+          DiscountAmount DECIMAL(18,2));
+
+    IF NOT EXISTS (SELECT 1 FROM #Lines)
+        THROW 50107, 'No bills were selected for this payment.', 1;
+
+    -- 2026-07-29 KLS-4B. Absent or empty is the ordinary case and leaves everything below
+    -- behaving exactly as it did before this parameter existed.
+    CREATE TABLE #Resolving
+    (
+        AccountId INT            NULL,
+        Amount    DECIMAL(18,2)  NULL,
+        Notes     NVARCHAR(255)  NULL
+    );
+
+    IF @ResolvingLinesJson IS NOT NULL AND LTRIM(RTRIM(@ResolvingLinesJson)) <> ''
+    BEGIN
+        IF ISJSON(@ResolvingLinesJson) <> 1
+            THROW 50130, 'The resolving lines are not valid.', 1;
+
+        INSERT INTO #Resolving (AccountId, Amount, Notes)
+        SELECT AccountId, Amount, Notes
+        FROM OPENJSON(@ResolvingLinesJson)
+        WITH (AccountId INT, Amount DECIMAL(18,2), Notes NVARCHAR(255));
+    END
+
+    ---------------------------------------------------------------------------------------
+    -- The transaction opens BEFORE validation on purpose.
+    -- The UPDLOCK on BankFeedTransaction below only holds for the life of a transaction.
+    -- Without it two users clicking Create on the same bank row would both pass the
+    -- "no Active BankFeedSource" check and both create a payment: BankFeed_MatchTx does not
+    -- reject an already-Matched row, so the second would happily attach a second payment.
+    -- Validation still runs before any write, so a THROW here rolls back nothing.
+    ---------------------------------------------------------------------------------------
+    BEGIN TRAN;
+    BEGIN TRY
+
+        -----------------------------------------------------------------------------------
+        -- B. Load the bank feed row and the GL account it maps to
+        -----------------------------------------------------------------------------------
+        DECLARE @Status         VARCHAR(20),
+                @PostedDate     DATE,
+                @BankAmount     DECIMAL(18,2),
+                @Description    NVARCHAR(500),
+                @BankAccountId  INT,
+                @IsAccountDebit BIT;
+
+        SELECT @Status         = bft.[Status],
+               @PostedDate     = bft.PostedDate,
+               @BankAmount     = bft.Amount,
+               @Description    = bft.[Description],
+               @BankAccountId  = bfa.AccountId,
+               @IsAccountDebit = a.IsAccountDebit
+        FROM dbo.BankFeedTransaction AS bft WITH (UPDLOCK, HOLDLOCK)
+        LEFT JOIN dbo.BankFeedAccount AS bfa
+            ON bfa.BankFeedAccountId = bft.BankFeedAccountId
+        LEFT JOIN dbo.Account AS a
+            ON a.AccountId = bfa.AccountId
+        WHERE bft.BankFeedTransactionId = @BankFeedTransactionId;
+
+        -----------------------------------------------------------------------------------
+        -- C. Validate. Everything THROWs; nothing has been written yet.
+        -----------------------------------------------------------------------------------
+        IF @Status IS NULL
+            THROW 50101, 'Bank feed transaction not found.', 1;
+
+        IF @Status <> 'Pending'
+            THROW 50102, 'Only pending bank feed transactions can create a payment.', 1;
+
+        IF @BankAmount >= 0
+            THROW 50103, 'Only money-out bank feed transactions can pay open bills.', 1;
+
+        IF @BankAccountId IS NULL
+            THROW 50104, 'This bank feed row is not mapped to a GL account.', 1;
+
+        -- The bank line posts as -PaymentAmount only for a debit (asset) account. On a credit
+        -- account the sign flips and BankFeed_MatchTx would reject the amount with a much less
+        -- helpful message, so catch the misconfiguration here.
+        IF @IsAccountDebit <> 1
+            THROW 50118, 'The GL account mapped to this bank feed is not a debit account.', 1;
+
+        IF EXISTS (SELECT 1 FROM dbo.BankFeedSource
+                   WHERE BankFeedTransactionId = @BankFeedTransactionId
+                     AND [Status] = 'Active')
+            THROW 50105, 'This bank feed row already has a transaction created by Bank Feed. Reverse it first.', 1;
+
+        -- 'CHECK' is excluded: VendorPayment_Insert would call Get_CheckNumber, which
+        -- overwrites @ReferenceId and consumes a number from CheckTracker. A bank feed row
+        -- already carries its own check number, so both behaviours are wrong here.
+        IF @PaymentMethod IS NULL
+           OR @PaymentMethod NOT IN ('ACH', 'E-CHECK', 'CASH', 'HANDWRITE CHECK', 'CREDIT CARD')
+            THROW 50106, 'Unsupported payment method for a bank feed payment.', 1;
+
+        IF EXISTS (SELECT 1 FROM #Lines
+                   WHERE ApplyAmount IS NULL OR ApplyAmount <= 0 OR DiscountAmount < 0)
+            THROW 50108, 'Each selected bill needs an apply amount greater than zero.', 1;
+
+        -- Without this, two lines for one bill could each pass the per-line balance check
+        -- while together exceeding it - VendorPayment_Insert's own guard is also per-row.
+        IF EXISTS (SELECT 1 FROM #Lines GROUP BY PurchaseId HAVING COUNT(*) > 1)
+            THROW 50117, 'The same bill was selected more than once.', 1;
+
+        IF EXISTS (SELECT 1
+                   FROM #Lines AS l
+                   LEFT JOIN dbo.Purchase AS p ON p.PurchaseId = l.PurchaseId
+                   WHERE p.PurchaseId IS NULL
+                      OR p.StageId <> 6
+                      OR p.AmountDue <= 0)
+            THROW 50109, 'One or more selected bills are no longer open.', 1;
+
+        IF EXISTS (SELECT 1
+                   FROM #Lines AS l
+                   JOIN dbo.Purchase AS p ON p.PurchaseId = l.PurchaseId
+                   WHERE p.PayeeId <> @PayeeId)
+            THROW 50110, 'All selected bills must belong to the same vendor.', 1;
+
+        IF EXISTS (SELECT 1
+                   FROM #Lines AS l
+                   JOIN dbo.Purchase AS p ON p.PurchaseId = l.PurchaseId
+                   WHERE l.ApplyAmount + l.DiscountAmount > p.AmountDue)
+            THROW 50111, 'Apply plus discount cannot exceed a bill''s open balance.', 1;
+
+        -----------------------------------------------------------------------------------
+        -- C1. Resolving lines (2026-07-29 KLS-4B).
+        --     With none supplied, #Resolving is empty, @ResolvingTotal is 0, and the invariant
+        --     below reduces to exactly the pre-4B check.
+        -----------------------------------------------------------------------------------
+        DECLARE @ResolvingTotal DECIMAL(18,2) =
+            ISNULL((SELECT SUM(Amount) FROM #Resolving), 0);
+
+        IF EXISTS (SELECT 1 FROM #Resolving)
+        BEGIN
+            IF EXISTS (SELECT 1 FROM #Resolving WHERE Amount IS NULL OR Amount <= 0)
+                THROW 50131, 'Each resolving line needs an amount greater than zero.', 1;
+
+            IF (SELECT COUNT(*) FROM #Resolving) > 5
+                THROW 50134, 'A bank feed row can carry at most 5 resolving lines.', 1;
+
+            IF EXISTS (SELECT 1 FROM #Resolving AS r
+                       WHERE NOT EXISTS (SELECT 1 FROM dbo.Account AS a
+                                         WHERE a.AccountId = r.AccountId))
+                THROW 50132, 'One or more resolving lines use an account that does not exist.', 1;
+
+            -- Posting a resolving line to the bank account would net against the bank line and
+            -- vanish; posting it to AP would double-count what the payment side already owns.
+            IF EXISTS (SELECT 1 FROM #Resolving WHERE AccountId = @BankAccountId)
+                THROW 50133, 'A resolving line cannot post to the bank account of this bank feed row.', 1;
+
+            IF EXISTS (SELECT 1 FROM #Resolving AS r
+                       JOIN dbo.Account AS a ON a.AccountId = r.AccountId
+                       WHERE a.AccountCode = '@AP')
+                THROW 50135, 'A resolving line cannot post to Accounts Payable.', 1;
+
+            IF @ChargePayeeId IS NULL
+                THROW 50140, 'Please choose who the bank charge is billed to.', 1;
+
+            IF NOT EXISTS (SELECT 1 FROM dbo.Payee WHERE PayeeId = @ChargePayeeId)
+                THROW 50141, 'The selected charge payee does not exist.', 1;
+
+            -- TempPurchase is keyed on (EmpId, PayeeId). VendorPayment_InsertPayNow reads the
+            -- rows for that key and then DELETEs them WITHOUT a PurchaseId filter, so an
+            -- in-progress purchase edit for the same payee would be destroyed without even
+            -- being absorbed. Same shape as guard 50113, and strictly worse.
+            IF EXISTS (SELECT 1 FROM dbo.TempPurchase
+                       WHERE EmpId = @EmpId AND PayeeId = @ChargePayeeId)
+                THROW 50137, 'You have an unsaved purchase or expense draft for the charge payee. Finish or discard it first.', 1;
+        END
+
+        -- The invariant the journal depends on: the cash side of everything created here IS the
+        -- bank row. BankFeed_MatchTx re-checks the same sum against the journal (step H), which
+        -- is the second line of defence behind this.
+        IF (SELECT SUM(ApplyAmount) FROM #Lines) + @ResolvingTotal <> ABS(@BankAmount)
+            THROW 50112, 'The applied total plus any resolving lines must equal the bank amount.', 1;
+
+        -- The bank moved LESS than was applied to bills, which means something else funded the
+        -- difference - a vendor credit or an advance. Posting a plausible-looking journal for
+        -- the wrong reason is worse than refusing.
+        IF ABS(@BankAmount) - (SELECT SUM(ApplyAmount) FROM #Lines) < 0
+            THROW 50136, 'The bills applied exceed the bank amount. Vendor credits are not supported here.', 1;
+
+        -- TempVendorPayment is keyed on (EmpId, PayeeId) only. VendorPayment_Insert reads every
+        -- IsApplied=1 row for that key and then deletes them all, so an open manual draft for
+        -- the same vendor would be absorbed into this payment and destroyed.
+        --
+        -- Only IsApplied=1 blocks. The manual payment screen seeds a row per open bill via
+        -- VendorPayment_Inject and never cleans them up, so untouched IsApplied=0 rows pile up
+        -- from abandoned sessions (98 such rows live at the time of writing). Those carry no
+        -- user intent, contribute nothing to the payment, and are re-seeded on next open -
+        -- blocking on them would fail the create for stale junk the user never chose.
+        --
+        -- 2026-07-28: and only a draft for a payment that STILL EXISTS can be harmed.
+        -- VendorPayment_Inject stamps injected rows with the VendorPaymentId they came from;
+        -- nothing purges them, so deleting a payment strands an IsApplied=1 row pointing at a
+        -- document the user can no longer open. That debris is not a draft anyone can "finish
+        -- or discard" - it is unreachable from the UI - so blocking on it left the vendor
+        -- permanently unusable here. VendorPaymentId = 0 is a genuine new-payment draft and
+        -- always blocks.
+        IF EXISTS (SELECT 1
+                   FROM dbo.TempVendorPayment AS t
+                   WHERE t.EmpId     = @EmpId
+                     AND t.PayeeId   = @PayeeId
+                     AND t.IsApplied = 1
+                     AND (t.VendorPaymentId = 0
+                          OR EXISTS (SELECT 1 FROM dbo.VendorPayment AS vp
+                                     WHERE vp.VendorPaymentId = t.VendorPaymentId)))
+            THROW 50113, 'You have an unsaved vendor payment draft for this vendor. Finish or discard it first.', 1;
+
+        IF EXISTS (SELECT 1 FROM #Lines WHERE DiscountAmount > 0)
+           AND (@DifferenceMemo IS NULL OR LTRIM(RTRIM(@DifferenceMemo)) = '')
+            THROW 50116, 'A memo is required when a discount is applied.', 1;
+
+        -----------------------------------------------------------------------------------
+        -- C2. Capture the totals NOW, while Purchase.AmountDue is still pre-payment.
+        --     VendorPayment_Insert calls VendorPayment_UpdatePurchase, which rewrites
+        --     AmountDue for every bill it touches. Reading these after step E would give
+        --     post-payment balances and store a negative DifferenceAmount in every case.
+        -----------------------------------------------------------------------------------
+        DECLARE @AppliedTotal         DECIMAL(18,2),
+                @DiscountTotal        DECIMAL(18,2),
+                @SelectedOpenTotal    DECIMAL(18,2),
+                @DifferenceAmount     DECIMAL(18,2),
+                @DifferenceResolution VARCHAR(50);
+
+        SELECT @AppliedTotal      = SUM(l.ApplyAmount),
+               @DiscountTotal     = SUM(l.DiscountAmount),
+               @SelectedOpenTotal = SUM(p.AmountDue)
+        FROM #Lines AS l
+        JOIN dbo.Purchase AS p ON p.PurchaseId = l.PurchaseId;
+
+        SET @DifferenceAmount = @SelectedOpenTotal - @AppliedTotal;
+
+        SET @DifferenceResolution =
+            CASE WHEN @DifferenceAmount  = 0                THEN 'None'
+                 WHEN @DiscountTotal     = 0                THEN 'Partial'
+                 WHEN @DiscountTotal     = @DifferenceAmount THEN 'Discount'
+                 ELSE 'Mixed'
+            END;
+
+        -----------------------------------------------------------------------------------
+        -- D. Seed the staging table VendorPayment_Insert reads from
+        -----------------------------------------------------------------------------------
+        INSERT INTO dbo.TempVendorPayment
+            (EmpId, PayeeId, VendorPaymentId, PurchaseId, AmountDue,
+             PaymentApplied, DiscountApplied, IsApplied)
+        SELECT @EmpId, @PayeeId, 0, l.PurchaseId, p.AmountDue,
+               l.ApplyAmount, l.DiscountAmount, 1
+        FROM #Lines AS l
+        JOIN dbo.Purchase AS p ON p.PurchaseId = l.PurchaseId;
+
+        -----------------------------------------------------------------------------------
+        -- E. Create the payment, apply it, and post the journal.
+        --    @PaymentType is passed but VendorPayment_Insert overwrites it from
+        --    @PaymentMethod - that is why step F reads the stored value back.
+        --    The procedure deletes the TempVendorPayment rows itself on success.
+        -----------------------------------------------------------------------------------
+        DECLARE @Notes NVARCHAR(255) = LEFT(N'Bank feed: ' + ISNULL(@Description, N''), 255);
+
+        EXEC dbo.VendorPayment_Insert
+            @VendorPaymentId = 0,
+            @PayeeId         = @PayeeId,
+            @PaymentDate     = @PostedDate,
+            @PaymentType     = N'Bill Payment',
+            @PaymentMethod   = @PaymentMethod,
+            @ReferenceId     = @ReferenceId,
+            @FromAccountId   = @BankAccountId,
+            @PaymentAmount   = @AppliedTotal,
+            @Notes           = @Notes,
+            @EmpId           = @EmpId,
+            @NewPaymentId    = @NewVendorPaymentId OUTPUT;
+
+        IF @NewVendorPaymentId IS NULL OR @NewVendorPaymentId <= 0
+            THROW 50119, 'The vendor payment could not be created.', 1;
+
+        -----------------------------------------------------------------------------------
+        -- F. Locate the journal it posted. VendorPayment_Insert returns no TxId, so the
+        --    handle is (SourceDocType, SourceDocNumber) - exactly what TRG_Delete_VendorPmtTx
+        --    uses to delete it. Assert a single row rather than taking TOP 1: this is money,
+        --    and if the assumption ever breaks it should stop rather than guess.
+        -----------------------------------------------------------------------------------
+        DECLARE @PaymentNumber  INT,
+                @NewPaymentType NVARCHAR(100),
+                @TxId           BIGINT,
+                @TxDetailId     BIGINT,
+                @RowCheck       INT;
+
+        SELECT @PaymentNumber  = PaymentNumber,
+               @NewPaymentType = PaymentType
+        FROM dbo.VendorPayment
+        WHERE VendorPaymentId = @NewVendorPaymentId;
+
+        SELECT @RowCheck = COUNT(*), @TxId = MIN(TxId)
+        FROM dbo.TransactionJournal
+        WHERE SourceDocType   = @NewPaymentType
+          AND SourceDocNumber = @PaymentNumber;
+
+        IF @RowCheck <> 1
+            THROW 50114, 'Could not identify the journal transaction for the new payment.', 1;
+
+        SELECT @RowCheck = COUNT(*), @TxDetailId = MIN(TxDetailId)
+        FROM dbo.TransactionJournalDetail
+        WHERE TxId = @TxId
+          AND AccountId = @BankAccountId;
+
+        IF @RowCheck <> 1
+            THROW 50115, 'Could not identify the bank line of the new journal transaction.', 1;
+
+        -----------------------------------------------------------------------------------
+        -- F2. The charge document (2026-07-29 KLS-4B). Skipped entirely when there are no
+        --     resolving lines.
+        --
+        --     PayNow is used rather than a General Journal because a PayNow IS a
+        --     VendorPayment: SourceDocType stays 'VendorPayment' below, so every Phase 1
+        --     guard keeps working unedited, and TRG_Delete_VendorPmtTx already deletes the
+        --     Purchase a PayNow generates - so reversal needs no new code either.
+        -----------------------------------------------------------------------------------
+        DECLARE @ChargePaymentId INT           = NULL,
+                @ChargeTxId      BIGINT        = NULL,
+                @ChargeTxDetail  BIGINT        = NULL,
+                @ChargeMethod    NVARCHAR(50),
+                @ChargeNumber    INT,
+                @ChargeType      NVARCHAR(100);
+
+        IF EXISTS (SELECT 1 FROM #Resolving)
+        BEGIN
+            -- 'CHECK' would make VendorPayment_InsertPayNow call Get_CheckNumber, consuming a
+            -- CheckTracker number for something that is not a cheque. 50106 already blocks it
+            -- on the payment side; this is belt and braces for a value that cannot arrive.
+            SET @ChargeMethod = CASE WHEN @PaymentMethod = 'CHECK' THEN 'ACH' ELSE @PaymentMethod END;
+
+            -- One row per resolving line, all LineType 'A' (account lines).
+            --
+            -- The Bill* columns are not optional padding: VendorPayment_InsertPayNow rebuilds
+            -- the header from the detail rows, taking VendorTotal from SUM(BillQty * BillPrice)
+            -- and PurchaseTotal from SUM(FinalQty * FinalPrice) - two separate sums. Seeding
+            -- only the Final* columns yields VendorTotal 0 against a real PurchaseTotal, i.e. a
+            -- bill claiming the vendor billed nothing. The journal is unaffected, so it would
+            -- pass every balance check and surface only on a purchase report.
+            --
+            -- FactorToBase must be 1, never NULL or 0: account lines are divided by it
+            -- (ROUND(FinalQty / NULLIF(FactorToBase,0), 6)) to produce the journal line's Qty.
+            INSERT INTO dbo.TempPurchase
+                (EmpId, PayeeId, PurchaseId, LineId, LineType, AccountId, ItemId,
+                 FinalQty, FinalPrice, FinalExtTotal,
+                 BillQty, BillPrice, BillExtTotal, ReceiveQty,
+                 FactorToBase, Notes, ChangeStatus)
+            SELECT @EmpId, @ChargePayeeId, 0,
+                   ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
+                   'A', r.AccountId, NULL,
+                   1, r.Amount, r.Amount,
+                   1, r.Amount, r.Amount, 1,
+                   1, r.Notes, NULL
+            FROM #Resolving AS r;
+
+            EXEC dbo.VendorPayment_InsertPayNow
+                @VendorPaymentId = 0,
+                @PayeeId         = @ChargePayeeId,
+                @PaymentDate     = @PostedDate,          -- same date as the payment (D3)
+                @PaymentMethod   = @ChargeMethod,
+                @FromAccountId   = @BankAccountId,
+                @ReferenceId     = @ReferenceId,
+                @PaymentAmount   = @ResolvingTotal,
+                @Notes           = @Notes,
+                @EmpId           = @EmpId,
+                @NewPaymentId    = @ChargePaymentId OUTPUT;
+
+            IF @ChargePaymentId IS NULL OR @ChargePaymentId <= 0
+                THROW 50138, 'The bank charge could not be created.', 1;
+
+            -- Same journal lookup idiom as step F. Read PaymentType back rather than assuming
+            -- 'Check': VendorPayment_InsertPayNow rewrites it from @PaymentMethod, so a credit
+            -- card charge is 'Credit Card Charge' and the lookup key differs.
+            SELECT @ChargeNumber = PaymentNumber,
+                   @ChargeType   = PaymentType
+            FROM dbo.VendorPayment
+            WHERE VendorPaymentId = @ChargePaymentId;
+
+            SELECT @RowCheck = COUNT(*), @ChargeTxId = MIN(TxId)
+            FROM dbo.TransactionJournal
+            WHERE SourceDocType   = @ChargeType
+              AND SourceDocNumber = @ChargeNumber;
+
+            IF @RowCheck <> 1
+                THROW 50139, 'Could not identify the journal transaction for the bank charge.', 1;
+
+            SELECT @RowCheck = COUNT(*), @ChargeTxDetail = MIN(TxDetailId)
+            FROM dbo.TransactionJournalDetail
+            WHERE TxId = @ChargeTxId
+              AND AccountId = @BankAccountId;
+
+            IF @RowCheck <> 1
+                THROW 50139, 'Could not identify the bank line of the bank charge journal.', 1;
+        END
+
+        -----------------------------------------------------------------------------------
+        -- G. Register what Bank Feed generated, so it can be traced and reversed.
+        --    OriginalBankAmount keeps the SIGNED bank amount (negative for money out);
+        --    AppliedAmount and DifferenceAmount are positive.
+        --
+        --    Both rows carry SourceDocType 'VendorPayment' - the charge is a PayNow, which is
+        --    a VendorPayment. Mode is what distinguishes them, and it is what the reverse
+        --    reports on. This is why no CK constraint on SourceDocType had to change.
+        -----------------------------------------------------------------------------------
+        INSERT INTO dbo.BankFeedSource
+            (BankFeedTransactionId, SourceDocType, SourceDocId, TxId,
+             [Mode], [Status], OriginalBankAmount, AppliedAmount, DifferenceAmount,
+             DifferenceResolution, DifferenceMemo, CreatedAt, CreatedBy)
+        VALUES
+            (@BankFeedTransactionId, 'VendorPayment', @NewVendorPaymentId, @TxId,
+             'PayOpenBill', 'Active', @BankAmount, @AppliedTotal, @DifferenceAmount,
+             @DifferenceResolution, @DifferenceMemo, SYSUTCDATETIME(), @EmpId);
+
+        IF @ChargePaymentId IS NOT NULL
+            INSERT INTO dbo.BankFeedSource
+                (BankFeedTransactionId, SourceDocType, SourceDocId, TxId,
+                 [Mode], [Status], OriginalBankAmount, AppliedAmount, DifferenceAmount,
+                 DifferenceResolution, DifferenceMemo, CreatedAt, CreatedBy)
+            VALUES
+                (@BankFeedTransactionId, 'VendorPayment', @ChargePaymentId, @ChargeTxId,
+                 'ResolveDifference', 'Active', @BankAmount, @ResolvingTotal, 0,
+                 -- The charge closes its own bill in full, so it has no difference of its own.
+                 'None', @DifferenceMemo, SYSUTCDATETIME(), @EmpId);
+
+        -----------------------------------------------------------------------------------
+        -- H. Match through the existing path, so create and manual match cannot drift.
+        --    It re-validates account / amount / not-already-matched / not-locked, sets the
+        --    journal BankDate (VendorPayment_Insert leaves it NULL on new payments), and
+        --    moves the header to Matched.
+        --
+        --    With a charge present this passes TWO items. BankFeed_MatchTx sums their bank
+        --    lines and compares the total to the bank amount, which is the second line of
+        --    defence behind 50112 - and it is the same procedure manual match uses, so the
+        --    two paths cannot drift apart.
+        -----------------------------------------------------------------------------------
+        DECLARE @MatchItemsJson NVARCHAR(MAX) =
+            (SELECT TxId, TxDetailId
+             FROM (SELECT @TxId AS TxId, @TxDetailId AS TxDetailId
+                   UNION ALL
+                   SELECT @ChargeTxId, @ChargeTxDetail WHERE @ChargePaymentId IS NOT NULL) AS m
+             FOR JSON PATH);
+
+        EXEC dbo.BankFeed_MatchTx
+            @BankFeedTransactionId = @BankFeedTransactionId,
+            @MatchItemsJson        = @MatchItemsJson,
+            @MatchedBy             = @EmpId;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        -- BankFeed_MatchTx rolls back on its own failure, which ends this transaction too.
+        -- The @@TRANCOUNT guard is what stops a second rollback attempt here. Do not remove it.
+        IF @@TRANCOUNT > 0 ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END
+GO

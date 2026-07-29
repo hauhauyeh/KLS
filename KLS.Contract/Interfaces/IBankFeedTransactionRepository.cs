@@ -16,7 +16,8 @@ namespace KLS.Contract.Interfaces
 
         int CountOpenBills(BankFeedOpenBillsReq req);
 
-        int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson, int empId);
+        int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson,
+                                string? resolvingLinesJson, int empId);
 
         void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy);
 

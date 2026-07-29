@@ -26,10 +26,35 @@ namespace KLS.Data.Repositories
                           && c.Status == "Active");
         }
 
-        public void ReverseVendorPayment(long bankFeedTransactionId, string? reverseReason, int empId)
+        /// <summary>
+        /// The payee used on the most recent Bank Feed charge, so the picker can open
+        /// pre-filled. Null before the first charge is ever created.
+        /// </summary>
+        /// <remarks>
+        /// History rather than configuration: it tracks what the business actually does instead
+        /// of what someone typed once at deploy time, and it needs no setting, no seed file and
+        /// no DBA task to change. Reversed rows count - a reversed charge still tells you which
+        /// payee the business uses.
+        /// Global rather than per user: a reasonable AP team is one or two people, and scoping
+        /// it per user would make the picker open empty once for each of them instead of once
+        /// overall.
+        /// </remarks>
+        public Payee? GetLastChargePayee()
+        {
+            // SourceDocId is long (it is polymorphic) while VendorPaymentId is int, so the join
+            // needs an explicit widening - C# will not infer it inside an equals clause.
+            return (from bfs in DbContext.BankFeedSources
+                    join vp in DbContext.VendorPayments on bfs.SourceDocId equals (long)vp.VendorPaymentId
+                    join p in DbContext.Payees on vp.PayeeId equals p.PayeeId
+                    where bfs.Mode == "ResolveDifference"
+                    orderby bfs.BankFeedSourceId descending
+                    select p).FirstOrDefault();
+        }
+
+        public void ReverseGenerated(long bankFeedTransactionId, string? reverseReason, int empId)
         {
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[BankFeed_ReverseVendorPayment] @BankFeedTransactionId,@ReverseReason,@EmpId",
+                "[dbo].[BankFeed_ReverseGenerated] @BankFeedTransactionId,@ReverseReason,@EmpId",
                 new SqlParameter("@BankFeedTransactionId", bankFeedTransactionId),
                 new SqlParameter("@ReverseReason", (object?)reverseReason ?? DBNull.Value),
                 new SqlParameter("@EmpId", empId));
