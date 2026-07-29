@@ -47,7 +47,7 @@
     /* Header and footer height utility classes:
                                            - Used to reserve space for header/footer */
     .header-height {
-        height: 252px;
+        height: 286px;
     }
 
     .footer-height {
@@ -192,7 +192,7 @@
         top: 0;
         display: grid;
         grid-template-columns: 45% 30% 25%; /* Columns: Logo | Invoice Info | Route Info */
-        grid-template-rows: 130px 102px 18px; /* Rows: Row 1 | Row 2 | Row 3 */
+        grid-template-rows: 34px 130px 102px 18px; /* Rows: Title | Row 1 | Row 2 | Row 3 */
         width: 100%;
     }
 
@@ -213,6 +213,18 @@
 
     .route-info-grid {
         padding-left: 15px;
+    }
+
+    .company-display-title {
+        grid-column: 1 / span 3;
+        text-align: center;
+        font-family: "Segoe UI", Calibri, Arial, sans-serif;
+        font-size: 28px;
+        font-weight: bold;
+        line-height: 1.05;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 
     /* (Optional) To add space between invoice info and route info
@@ -564,6 +576,8 @@
          FIXED HEADER: COMPANY/INVOICE INFO
     =========================================== -->
     <div class="main-table-header-grid header-height">
+
+        <div class="company-display-title">@Model.Company.DisplayName</div>
 
         <!-- 1st Row: Company name and address -->
         <div class="comp-logo-grid">
