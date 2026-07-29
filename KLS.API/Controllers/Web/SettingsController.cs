@@ -2,6 +2,7 @@ using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace KLS.API.Controllers.Web
 {
@@ -33,9 +34,13 @@ namespace KLS.API.Controllers.Web
         public IActionResult GetPublic()
         {
             var seo = _companyService.GetSeo();
+            var company = _companyService.GetDefault();
+            var companyCode = NormalizeClientKey(company?.CompanyCode);
 
             return Ok(new WebPublicSettingsDto
             {
+                ClientKey = companyCode,
+                CompanyCode = companyCode,
                 PortalMode = _portalModeService.GetMode().ToString(),
                 EnforceStockLimit = _systemSettingService.GetByKey<bool>(GlobalKey.WEB_ENFORCE_STOCK_LIMIT),
                 UseSalesDocNumber = _systemSettingService.GetByKey<bool>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),
@@ -47,7 +52,32 @@ namespace KLS.API.Controllers.Web
                 GoogleTagId = seo?.GoogleTagId,
                 JsonLd = seo?.JsonLd,
                 OrderCheckoutHour = _systemSettingService.GetByKey<int>(GlobalKey.WEB_ORDER_CHECKOUT_HOUR),
+                ClientExperience = GetClientExperience(),
             });
+        }
+
+        private object? GetClientExperience()
+        {
+            var json = _systemSettingService.GetByKey<string>(GlobalKey.WEB_CLIENT_EXPERIENCE_JSON);
+
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                return doc.RootElement.Clone();
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        private static string? NormalizeClientKey(string? value)
+        {
+            var key = value?.Trim().ToUpperInvariant();
+            return string.IsNullOrWhiteSpace(key) ? null : key;
         }
 
         #endregion

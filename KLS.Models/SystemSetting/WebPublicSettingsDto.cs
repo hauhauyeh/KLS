@@ -2,6 +2,10 @@ namespace KLS.Models
 {
     public class WebPublicSettingsDto
     {
+        public string? ClientKey { get; set; }
+
+        public string? CompanyCode { get; set; }
+
         public string PortalMode { get; set; } = "B2B";
 
         public bool EnforceStockLimit { get; set; }
@@ -23,5 +27,7 @@ namespace KLS.Models
         public string? JsonLd { get; set; }
 
         public int OrderCheckoutHour { get; set; }
+
+        public object? ClientExperience { get; set; }
     }
 }
