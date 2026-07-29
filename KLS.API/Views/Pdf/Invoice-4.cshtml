@@ -1,0 +1,827 @@
+﻿@using KLS.Common
+@using KLS.Models.Reports
+@model RptInvoice
+@{
+    var isCreditMemo = Model.Invoice?.DocType == "CM";
+    var docLabel = isCreditMemo ? "CREDIT MEMO" : "INVOICE";
+    var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Invoice #";
+    var docDateLabel = isCreditMemo ? "Date" : "Invoice Date";
+
+    var colSpan = 6;
+}
+
+<style>
+    @@media print {
+        @@page {
+            size: letter;
+            margin-top: 0.2in;
+            margin-bottom: 0.2in;
+            margin-left: 0.2in;
+            margin-right: 0.2in;
+        }
+    }
+
+    /* Base body styles:
+                                           - Remove default margin
+                                           - Set main font and size */
+    body {
+        margin: 0;
+        font-size: 15px;
+        font-family: Calibri;
+        /* Alternative: 'Poppins', Arial, Helvetica, sans-serif; */
+    }
+
+    /* Base table styles:
+                                           - Full width
+                                           - Collapse borders
+                                           - Remove default spacing/padding
+                                           - Fixed layout for even columns */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        padding: 0;
+        table-layout: fixed !important;
+    }
+
+    /* Header and footer height utility classes:
+                                           - Used to reserve space for header/footer */
+    .header-height {
+        height: 286px;
+    }
+
+    .footer-height {
+        height: 130px;
+    }
+
+
+    /* ===========================
+                                           UTILITY CLASSES
+                                        =========================== */
+
+    /* Font size utilities */
+    .font10 {
+        font-size: 10px;
+    }
+
+    .font12 {
+        font-size: 12px;
+    }
+
+    .font13 {
+        font-size: 13px;
+    }
+
+    .font14 {
+        font-size: 14px;
+    }
+
+    .font15 {
+        font-size: 15px;
+    }
+
+    /* Text styling utilities */
+    .upparcase {
+        text-transform: uppercase;
+    }
+
+    .font600 {
+        font-weight: 600;
+    }
+
+    .chinese {
+        font-family: 'Microsoft YaHei', sans-serif;
+    }
+
+    /* Text alignment utilities */
+    .text-left {
+        text-align: left;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    /* Overflow control utility:
+                                           - Prevents text from wrapping and overflows with ellipsis */
+    .no-overflow {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    /* Flex utilities for layout alignment */
+    .d-flex {
+        display: flex;
+    }
+
+    .justify-content-between {
+        justify-content: space-between;
+    }
+
+    .justify-content-end {
+        justify-content: end;
+    }
+
+    /* Table border utility:
+                                           - Removes right border when needed */
+    .border-right-0 {
+        border-right: 0 !important;
+    }
+
+
+    /* ===========================
+                                           INVOICE DETAIL TABLE STYLES
+                                        =========================== */
+
+    /* Invoice table cell styles:
+                                           - 14px font for detail rows
+                                           - Space below each cell for clarity
+                                           - Align content to top */
+    .main-table tbody td {
+        font-size: 14px;
+        padding-bottom: 5px !important;
+        vertical-align: top;
+    }
+
+    /* Prevent page breaks inside invoice table rows when printing */
+    .main-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* UPC code cell:
+                                           - Monospaced font for barcode-like appearance
+                                           - Larger font and centered */
+    .upc-code {
+        font-family: 'IDAutomationUPCEANXXS' !important;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    /* Highlight for comment content (e.g. note or lbs..) */
+    .highlight-comment {
+        background-color: #e6e6e6;
+        border-radius: 4px;
+        padding: 0px 6px 1px 6px;
+    }
+
+    /* Group row in item table (e.g. for item category headers) */
+    .invoice-item-group {
+        background-color: grey;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 2px 10px 2px;
+    }
+
+    /* ========================================================
+                                           INVOICE HEADER LAYOUT & GRID SETUP
+                                        ======================================================== */
+
+    /* Main header grid: fixed at top of page, defines 3 columns for
+                                           company logo, invoice info, and route info.
+                                           3 grid rows: logo/info/route (row 1), ship-to/instruction (row 2),
+                                           and item table header (row 3). */
+    .main-table-header-grid {
+        position: fixed;
+        top: 0;
+        display: grid;
+        grid-template-columns: 45% 30% 25%; /* Columns: Logo | Invoice Info | Route Info */
+        grid-template-rows: 34px 130px 102px 18px; /* Rows: Title | Row 1 | Row 2 | Row 3 */
+        width: 100%;
+    }
+
+    /* Grid cells for each header section: uses flex for vertical stacking.
+                                           Applies to all header blocks. */
+    .comp-logo-grid,
+    .inv-info-grid,
+    .route-info-grid,
+    .ship-to-grid,
+    .instruction-grid {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        box-sizing: border-box;
+        padding: 0px 0px;
+        overflow: hidden;
+    }
+
+    .route-info-grid {
+        padding-left: 15px;
+    }
+
+    .company-display-title {
+        grid-column: 1 / span 3;
+        text-align: center;
+        font-family: "Segoe UI", Calibri, Arial, sans-serif;
+        font-size: 28px;
+        font-weight: bold;
+        line-height: 1.05;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    /* (Optional) To add space between invoice info and route info
+                                        .inv-info-grid { margin-right: 5px; } */
+
+    /* "Instruction" cell: spans columns 2 and 3 in the second grid row */
+    .instruction-grid {
+        grid-column: 2 / span 2;
+    }
+
+    /* ========================================================
+                                           1ST ROW: COMPANY LOGO, INVOICE INFO, ROUTE INFO
+                                        ======================================================== */
+
+    /* Company name block: large bold font for brand emphasis */
+    .comp-name {
+        font-family: "Segoe UI", Impact, Arial, sans-serif;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        line-height: 1.1;
+    }
+
+    /* English company name: keep block display for vertical stacking */
+    .comp-name-en {
+        display: block;
+        /* Inherits size and weight from parent */
+    }
+
+    /* Chinese company name: slightly smaller, tighter spacing */
+    .comp-name-cn {
+        display: block;
+        font-size: 11px;
+        font-weight: normal;
+        line-height: 1.1; /* Reduces gap below English line */
+        /* margin-top: -2px;   /* Use if you need to pull up closer */
+    }
+
+    /* Company address: small, condensed font */
+    .comp-address {
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    /* Invoice label and barcode area: fixed height for row alignment */
+    .info-label {
+        height: 36px;
+        font-size: 26px;
+        font-weight: bold;
+        text-align: left; /* Left by default */
+    }
+
+    /* Route info barcode: larger, barcode font, right-aligned */
+    .route-info-grid .barcode {
+        text-align: right;
+        font-family: 'Free 3 of 9', monospace;
+        font-size: 40px;
+        height: 36px;
+    }
+
+    /* Table wrap for invoice/route info: fills available row space */
+    .info-table-wrap {
+        flex: 1 1 0;
+        display: flex;
+        align-items: flex-start;
+    }
+
+        .info-table-wrap table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+
+            /* Table cells in info tables: light border, padded for readability */
+            .info-table-wrap table td,
+            .info-table-wrap table th {
+                border: 1px solid #888 !important;
+                padding: 3px 5px;
+            }
+
+    /* Info table label cells: smaller, bold, left-aligned */
+    .invoice-info-label, .route-info-label {
+        font-size: 11px;
+        font-weight: bold;
+        text-align: left;
+        padding: 3px 5px !important;
+    }
+
+    /* Info table value cells: slightly larger, centered */
+    .invoice-info, .route-info {
+        font-size: 12.5px;
+        text-align: center;
+        padding: 3px 5px !important;
+    }
+
+    /* ========================================================
+                                           2ND ROW: SHIP-TO & INSTRUCTION BLOCKS
+                                        ======================================================== */
+
+    /* "Ship To" and "Instruction" section labels: black background, white text, full width */
+    .ship-to-label,
+    .instruction-label {
+        background: #222;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        width: 100%;
+        display: block;
+        text-align: center;
+        padding: 2px 0px;
+        /* border-radius: 4px; */
+        box-sizing: border-box;
+        margin-bottom: 2px;
+    }
+
+    /* Customer name: large, bold, slight indent */
+    .cust-name {
+        font-size: 15px;
+        font-weight: bold;
+        line-height: 1.2;
+        margin-bottom: 2px;
+        margin-left: 2px;
+    }
+
+    /* Customer address: medium font, slight indent */
+    .cust-address {
+        font-size: 13px;
+        line-height: 1.1;
+        margin-left: 2px;
+    }
+
+    /* Instruction text: normal font, slight indent */
+    .instruction {
+        font-size: 12px;
+        margin-left: 2px;
+    }
+
+    /* ========================================================
+                                           3RD ROW: ITEM TABLE HEADER (SPANS ALL COLUMNS)
+                                        ======================================================== */
+
+    /* Item table header row: spans all 3 columns, aligns at bottom */
+    .table-header-row {
+        grid-column: 1 / span 3;
+        display: flex;
+        align-items: flex-end;
+        height: 20px;
+    }
+
+        /* Item table: full width, collapse borders */
+        .table-header-row table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Table header cells: dark background, white text, medium size */
+        .table-header-row td,
+        .table-header-row th {
+            font-size: 12px;
+            font-weight: 500;
+            background: #303030;
+            color: #fff;
+            padding: 2px 6px;
+        }
+
+    /* =========================================
+                                           INVOICE FOOTER LAYOUT & STYLES
+                                        ========================================= */
+
+    /* Main footer grid:
+                                           - Fixed to the bottom of the page
+                                           - 3 rows (driver note, main content, fine print)
+                                           - 4 columns (payment, signature, totals, invoice totals) */
+    .main-table-footer-grid {
+        position: fixed;
+        bottom: 0;
+        display: grid;
+        grid-template-rows: 80px 50px; /* Row 1: driver note, Row 2: payment/signature/totals, Row 3: fine print */
+        grid-template-columns: 28% 28% 22% 22%; /* Col 1: payment, Col 2: signature, Col 3: totals, Col 4: invoice totals */
+    }
+
+    /* Driver note row:
+                                           - Spans columns 1 to 3
+                                           - Centered text, medium font size */
+    .driver-note-grid {
+        grid-column: 1 / span 3;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    /* Payment area: leftmost column, row 2 */
+    .payment-grid {
+        grid-column: 1 / span 1;
+    }
+
+    /* Table for payment details (check/cash) */
+    .t1 {
+        width: 100%;
+        height: 100%;
+        border-spacing: 0;
+    }
+
+        .t1 td {
+            font-size: 12px;
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+    /* Signature area: second column, bordered top and bottom */
+    .Signature-grid {
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        grid-column: 2 / span 1;
+    }
+
+    /* Totals block: third column */
+    .total-grid {
+        grid-column: 3 / span 1;
+    }
+
+    /* Invoice totals (subtotal, tax, total): fourth column */
+    .inv-total-grid {
+        grid-column: 4 / span 1;
+    }
+
+    /* Table for totals:
+                                           - Used in .total-grid and .inv-total-grid columns */
+    .t2 {
+        width: 100%;
+        height: 100%;
+        border-spacing: 0;
+    }
+
+        .t2 td {
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid black;
+            /* width: 50%; */ /* Optional: cell width */
+            padding-left: 3px;
+            padding-right: 5px;
+        }
+
+    /* Fine print:
+                                           - Spans all 4 columns in last row
+                                           - Small, justified, dark text for disclaimers or additional notes */
+    .fineprint-grid {
+        grid-column: 1 / span 4;
+        margin-top: 2px;
+        text-align: justify;
+        font-size: 9px;
+        line-height: 1.1;
+        color: #333333 !important;
+    }
+
+    .w-100 {
+        width: 100%;
+    }
+
+</style>
+
+<!-- ===========================================
+     MAIN INVOICE TABLE (DETAIL LINES)
+=========================================== -->
+<div>
+    <table class="main-table">
+        <colgroup>
+            <col style="width: 11%;">
+            <col style="width: 10%;">
+            <col style="width: 45%;">
+            <col style="width: 16%;">
+            <col style="width: 8%;">
+            <col style="width: 10%;">
+        </colgroup>
+        <thead>
+            <!-- Reserve space for the fixed header -->
+            <tr>
+                <td colspan="@colSpan">
+                    <div class="header-height">&nbsp;</div>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Loop through each invoice item detail -->
+            @foreach (var itmdetail in Model.InvoiceDetails)
+            {
+                // If it's a group header row (e.g. category)
+                if (itmdetail.IsGroup)
+                {
+                    @* Uncomment below to show group row
+            <tr>
+            <td colspan="@colSpan">
+            <div class="invoice-item-group">@itmdetail.ItemDesc1</div>
+            </td>
+            </tr>
+            *@
+                }
+                else // Regular item row
+                {
+                    <tr>
+                        <td><span>@itmdetail.ItemCode</span></td>
+                        <td class="no-overflow">
+                            <strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit
+                        </td>
+                        <td>
+                            <span style="line-height:1;">
+                                <strong>@itmdetail.ItemName</strong><br />
+                                <span class="font10 chinese">@itmdetail.ItemName2</span>&nbsp;
+                                <span class="font10 upparcase">@itmdetail.PackSize</span>
+                                <!-- Show comment if available -->
+                                @if (!string.IsNullOrEmpty(itmdetail.Notes))
+                                {
+                                    <span class="highlight-comment font12">
+                                        @itmdetail.Notes
+                                    </span>
+                                }
+                                <!-- Show FIFO history if available -->
+                                @if (!string.IsNullOrEmpty(itmdetail.FIFOHistory))
+                                {
+                                    <span class="font12">
+                                        @itmdetail.FIFOHistory
+                                    </span>
+                                }
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="upc-code">@itmdetail.EncodedBarcode</span>
+                        </td>
+                        <td class="text-center">
+                            <span>@string.Format("{0:c}", itmdetail.UnitPrice)</span>
+                        </td>
+                        <td class="text-right">
+                            <span>@string.Format("{0:c}", itmdetail.ExtTotal)</span>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+        <tfoot>
+            <!-- Reserve space for the fixed footer -->
+            <tr>
+                <td colspan="@colSpan">
+                    <div class="footer-height">&nbsp;</div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- ===========================================
+         FIXED HEADER: COMPANY/INVOICE INFO
+    =========================================== -->
+    <div class="main-table-header-grid header-height">
+
+        <div class="company-display-title">@Model.Company.DisplayName</div>
+
+        <!-- 1st Row: Company name and address -->
+        <div class="comp-logo-grid">
+            <div class="comp-name">
+                <div>
+                    @if (Model.Company.HasLogo)
+                    {
+                        <img src="@Model.Company.LogoUrl" class="img-fluid" height="55" />
+                    }
+                    else
+                    {
+                        <span style="font-family: 'Segoe UI'; font-size: 26px; font-weight: bold;">
+                            @Model.Company.CompanyName
+                        </span>
+                    }
+                </div>
+                <div style="font-size: 12px; margin-top: 2px;">
+                    @Model.Company.CompanyName2
+                </div>
+            </div>
+            <div class="comp-address">
+                @Model.Company.AddressLine1<br />
+                @Model.Company.City @Model.Company.State @Model.Company.ZipCode<br />
+                @Model.Company.Phone<br />
+                <strong>@Model.Company.Website</strong>
+            </div>
+        </div>
+
+        <!-- 1st Row: Invoice information block -->
+        <div class="inv-info-grid info-table-wrap">
+            <div class="d-flex justify-content-between">
+                <div class="info-label">@docLabel</div>
+            </div>
+            <table>
+                <colgroup>
+                    <col style="width: 40%;" />
+                    <col style="width: 60%;" />
+                </colgroup>
+                <tr>
+                    <td class="invoice-info-label">@docNumberLabel</td>
+                    <td class="invoice-info">@Model.SalesDisplayNumber</td>
+                </tr>
+                <tr>
+                    <td class="invoice-info-label">@docDateLabel</td>
+                    <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
+                </tr>
+                <tr>
+                    <td class="invoice-info-label">Terms</td>
+                    <td class="invoice-info" style="white-space:nowrap;">
+                        @Model.Invoice.TermName
+                    </td>
+                </tr>
+                <tr>
+                    <td class="invoice-info-label">PO</td>
+                    @if (string.IsNullOrEmpty(Model.Invoice.CustPONumber))
+                    {
+                        <td class="invoice-info">&nbsp;</td>
+                    }
+                    else
+                    {
+                        <td class="invoice-info">@Model.Invoice.CustPONumber</td>
+                    }
+                </tr>
+            </table>
+        </div>
+
+        <!-- 1st Row: Barcode/Route info -->
+        <div class="route-info-grid info-table-wrap">
+            <div class="d-flex justify-content-end w-100">
+                <div class="barcode">
+                    @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
+                    *@Model.Invoice.SalesNumber*
+                </div>
+            </div>
+            <table class="route-info-table">
+                <colgroup>
+                    <col style="width: 40%;" />
+                    <col style="width: 60%;" />
+                </colgroup>
+                <tr>
+                    <td class="route-info-label">Route</td>
+                    <td class="route-info">
+                        @if (Model.Invoice.IsLoadSeparate)
+                        {
+                            <strong class="load-separate">@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder Of @Model.Invoice.RouteDrops</strong>
+                        }
+                        else
+                        {
+                            <strong>@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder Of @Model.Invoice.RouteDrops</strong>
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td class="route-info-label">Sales Rep</td>
+                    <td class="route-info">@Model.Invoice.SalesRepName</td>
+                </tr>
+                <tr>
+                    <td class="route-info-label">Truck #</td>
+                    @if (string.IsNullOrEmpty(Model.Invoice.TruckNumber))
+                    {
+                        <td class="route-info">&nbsp;</td>
+                    }
+                    else
+                    {
+                        <td class="route-info">@Model.Invoice.TruckNumber</td>
+                    }
+                </tr>
+                <tr>
+                    <td class="route-info-label">Driver</td>
+                    @if (string.IsNullOrEmpty(Model.Invoice.DriverName))
+                    {
+                        <td class="route-info">&nbsp;</td>
+                    }
+                    else
+                    {
+                        <td class="route-info">@Model.Invoice.DriverName</td>
+                    }
+                </tr>
+            </table>
+        </div>
+
+        <!-- 2nd Row: Ship-to and special instructions -->
+        <div class="ship-to-grid">
+            <div class="ship-to-label highlight-dark">Ship To</div>
+            <div class="cust-name">
+                @Model.Invoice.ShipName
+            </div>
+            <div class="cust-address">
+                @Model.Invoice.ShipAddress<br />
+                @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
+                @Model.Invoice.ShipPhone1
+            </div>
+        </div>
+        <div class="instruction-grid">
+            <div class="instruction-label highlight-dark">Instruction</div>
+            <div class="instruction">@Model.Invoice.Instruction</div>
+        </div>
+
+        <!-- 3rd Row: Table header for line items -->
+        <div class="table-header-row">
+            <table class="main-table">
+                <colgroup>
+                    <col style="width: 11%;" />
+                    <col style="width: 10%;" />
+                    <col style="width: 45%;" />
+                    <col style="width: 16%;" />
+                    <col style="width: 8%;" />
+                    <col style="width: 10%;" />
+                </colgroup>
+                <thead>
+                    <tr class="item-header">
+                        <td>Code</td>
+                        <td>Qty</td>
+                        <td>Description</td>
+                        <td class="text-center">UPC</td>
+                        <td class="text-center">Price</td>
+                        <td class="text-right">Amount</td>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===========================================
+         FIXED FOOTER: PAYMENT, SIGNATURE, TOTALS
+    =========================================== -->
+    <div class="main-table-footer-grid footer-height">
+        <!-- Row 1: Driver note (empty by default) -->
+        @* <div class="driver-note-grid">&nbsp;</div> *@
+
+        <!-- Row 2, Column 1: Payment details (Check, Cash) -->
+        <div class="payment-grid">
+            <table class="t1">
+                <colgroup>
+                    <col style="width: 18%;">
+                    <col style="width: 41%;">
+                    <col style="width: 41%;">
+                </colgroup>
+                <tr>
+                    <td style="font-weight: bold; vertical-align: top;">Check</td>
+                    <td style="vertical-align: bottom;">#</td>
+                    <td style="vertical-align: bottom;">$</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold; vertical-align: top;">Cash</td>
+                    <td style="vertical-align: bottom;">Init</td>
+                    <td style="vertical-align: bottom;">$</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Row 2, Column 2: Signature area -->
+        <div class="Signature-grid" style="position: relative;">
+            <span style="font-size: 12px; font-weight: bold; padding-left: 3px;">Signature</span>
+            <span style="position: absolute; bottom:2px; left:0; font-size: 10px; padding-left: 3px;">Recevied above in good conditions</span>
+        </div>
+
+        <!-- Row 2, Column 3: Totals for item/case/weight -->
+        <div class="total-grid">
+            <table class="t2">
+                <colgroup>
+                    <col style="width: 50%;">
+                    <col style="width: 50%;">
+                </colgroup>
+                <tr>
+                    <td class="text-center">Total Item</td>
+                    <td class="text-center border-right-0">@Model.TotalItems</td>
+                </tr>
+                <tr>
+                    <td class="text-center">Total Cases</td>
+                    <td class="text-center border-right-0">@string.Format("{0:0.##}", Model.TotalCases)</td>
+                </tr>
+                <tr>
+                    <td class="text-center">Total Weight</td>
+                    <td class="text-center border-right-0">@string.Format("{0:0.00}", Model.TotalWeight)</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Row 2, Column 4: Invoice financial totals -->
+        <div class="inv-total-grid">
+            <table class="t2">
+                <colgroup>
+                    <col style="width: 40%;">
+                    <col style="width: 60%;">
+                </colgroup>
+                <tr>
+                    <td class="text-right">Subtotal</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.Invoice.SubTotal)</td>
+                </tr>
+                <tr>
+                    <td class="text-right">Tax</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.Invoice.TaxTotal)</td>
+                </tr>
+                <tr>
+                    <td class="text-right">Total</td>
+                    <td class="text-right">@string.Format("{0:c}", Model.Invoice.SalesTotal)</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Row 3: Fine print (bottom of footer, spans all columns) -->
+        <div class="fineprint-grid">
+            @Model.Company.InvoiceFinePrint
+        </div>
+    </div>
+</div>
