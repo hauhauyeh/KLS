@@ -42,6 +42,8 @@ namespace KLS.API.Controllers.Web
                 ClientKey = companyCode,
                 CompanyCode = companyCode,
                 CompanyDisplayName = company?.DisplayName,
+                CompanyIdentity = BuildCompanyIdentity(company, companyCode),
+                CompanyContact = BuildCompanyContact(company),
                 PortalMode = _portalModeService.GetMode().ToString(),
                 EnforceStockLimit = _systemSettingService.GetByKey<bool>(GlobalKey.WEB_ENFORCE_STOCK_LIMIT),
                 UseSalesDocNumber = _systemSettingService.GetByKey<bool>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),
@@ -55,6 +57,47 @@ namespace KLS.API.Controllers.Web
                 OrderCheckoutHour = _systemSettingService.GetByKey<int>(GlobalKey.WEB_ORDER_CHECKOUT_HOUR),
                 ClientExperience = GetClientExperience(),
             });
+        }
+
+        private static CompanyIdentityDto? BuildCompanyIdentity(Company? company, string? companyCode)
+        {
+            if (company == null)
+                return null;
+
+            return new CompanyIdentityDto
+            {
+                Code = companyCode,
+                DisplayName = Clean(company.DisplayName),
+                CompanyName = Clean(company.CompanyName),
+                Website = Clean(company.Website),
+                WebLogoUrl = Clean(company.WebLogoUrl),
+                WebFaviconUrl = Clean(company.WebFaviconUrl),
+            };
+        }
+
+        private static CompanyContactDto? BuildCompanyContact(Company? company)
+        {
+            if (company == null)
+                return null;
+
+            return new CompanyContactDto
+            {
+                Phone = Clean(company.Phone),
+                SupportPhone = Clean(company.SupportPhone),
+                Email = Clean(company.Email),
+                SupportEmail = Clean(company.SupportEmail),
+                SalesEmail = Clean(company.SalesEmail),
+                PublicContactName = Clean(company.PublicContactName),
+                PublicAddressName = Clean(company.PublicAddressName),
+                AddressLine1 = Clean(company.AddressLine1),
+                AddressLine2 = Clean(company.AddressLine2),
+                City = Clean(company.City),
+                State = Clean(company.State),
+                ZipCode = Clean(company.ZipCode),
+                CountryCode = Clean(company.CountryCode),
+                FullAddress = Clean(company.FullAddress),
+                BusinessHours = Clean(company.BusinessHours),
+            };
         }
 
         private object? GetClientExperience()
@@ -79,6 +122,12 @@ namespace KLS.API.Controllers.Web
         {
             var key = value?.Trim().ToUpperInvariant();
             return string.IsNullOrWhiteSpace(key) ? null : key;
+        }
+
+        private static string? Clean(string? value)
+        {
+            var clean = value?.Trim();
+            return string.IsNullOrWhiteSpace(clean) ? null : clean;
         }
 
         #endregion

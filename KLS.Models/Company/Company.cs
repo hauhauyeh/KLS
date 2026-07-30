@@ -47,7 +47,13 @@ namespace KLS.Models
 
         public string? Phone { get; set; }
 
+        public string? SupportPhone { get; set; }
+
         public string? Website { get; set; }
+
+        public string? SupportEmail { get; set; }
+
+        public string? SalesEmail { get; set; }
 
         public string? AddressLine1 { get; set; }
 
@@ -60,6 +66,16 @@ namespace KLS.Models
         public string? ZipCode { get; set; }
 
         public string? CountryCode { get; set; }
+
+        public string? BusinessHours { get; set; }
+
+        public string? PublicAddressName { get; set; }
+
+        public string? PublicContactName { get; set; }
+
+        public string? WebLogoUrl { get; set; }
+
+        public string? WebFaviconUrl { get; set; }
 
         public bool HasLogo { get; set; }
 
