@@ -6,6 +6,8 @@ namespace KLS.Models
 
         public string? CompanyCode { get; set; }
 
+        public string? CompanyDisplayName { get; set; }
+
         public string PortalMode { get; set; } = "B2B";
 
         public bool EnforceStockLimit { get; set; }

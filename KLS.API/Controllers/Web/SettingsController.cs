@@ -41,6 +41,7 @@ namespace KLS.API.Controllers.Web
             {
                 ClientKey = companyCode,
                 CompanyCode = companyCode,
+                CompanyDisplayName = company?.DisplayName,
                 PortalMode = _portalModeService.GetMode().ToString(),
                 EnforceStockLimit = _systemSettingService.GetByKey<bool>(GlobalKey.WEB_ENFORCE_STOCK_LIMIT),
                 UseSalesDocNumber = _systemSettingService.GetByKey<bool>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),
