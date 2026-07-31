@@ -55,7 +55,7 @@ namespace KLS.API.Controllers.Web
                 GoogleTagId = seo?.GoogleTagId,
                 JsonLd = seo?.JsonLd,
                 OrderCheckoutHour = _systemSettingService.GetByKey<int>(GlobalKey.WEB_ORDER_CHECKOUT_HOUR),
-                ClientExperience = GetClientExperience(),
+                ClientExperience = GetClientExperience(companyCode),
             });
         }
 
@@ -100,9 +100,23 @@ namespace KLS.API.Controllers.Web
             };
         }
 
-        private object? GetClientExperience()
+        private object? GetClientExperience(string? companyCode)
         {
-            var json = _systemSettingService.GetByKey<string>(GlobalKey.WEB_CLIENT_EXPERIENCE_JSON);
+            var clientKey = NormalizeClientKey(companyCode);
+
+            if (!string.IsNullOrWhiteSpace(clientKey))
+            {
+                var clientExperience = GetClientExperienceByKey($"{GlobalKey.WEB_CLIENT_EXPERIENCE_JSON}_{clientKey}");
+                if (clientExperience != null)
+                    return clientExperience;
+            }
+
+            return GetClientExperienceByKey(GlobalKey.WEB_CLIENT_EXPERIENCE_JSON);
+        }
+
+        private object? GetClientExperienceByKey(string settingKey)
+        {
+            var json = _systemSettingService.GetByKey<string>(settingKey);
 
             if (string.IsNullOrWhiteSpace(json))
                 return null;
