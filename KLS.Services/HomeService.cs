@@ -17,6 +17,7 @@ namespace KLS.Services
         private const int TopSellingLimit = 10;
         private const int TopCategoryGroupCount = 5;
         private const int ProductsPerGroup = 10;
+        private const int ProductCandidateMultiplier = 4;
 
         private readonly ICategoryRollupHelper _categoryRollup;
 
@@ -76,19 +77,23 @@ namespace KLS.Services
 
         private List<HomeCategory> GetFeaturedCategories(string baseUrl, CategoryRollup rollup)
         {
-            return Uow.ItemCategories
+            var categories = Uow.ItemCategories
                 .Find(c => c.ParentId == null && !c.Inactive)
                 .OrderBy(c => c.SortOrder)
                 .ThenBy(c => c.CategoryName)
                 .AsNoTracking()
                 .Take(FeaturedCategoryLimit)
-                .ToList()
+                .ToList();
+
+            var fallbackImageMap = BuildCategoryImageFallbackMap(categories, rollup, baseUrl);
+
+            return categories
                 .Select(c => new HomeCategory
                 {
                     CategoryId = c.CategoryId,
                     CategoryName = c.CategoryName,
                     DisplayName = c.DisplayName,
-                    ImageUrl = string.IsNullOrEmpty(c.ImageUrl) ? null : baseUrl + c.ImageUrl,
+                    ImageUrl = ResolveImageUrl(c.ImageUrl, baseUrl) ?? fallbackImageMap.GetValueOrDefault(c.CategoryId),
                     ItemCount = rollup.RolledUpCounts.GetValueOrDefault(c.CategoryId)
                 })
                 .ToList();
@@ -100,7 +105,7 @@ namespace KLS.Services
                 .Find(i => !i.Inactive)
                 .OrderByDescending(i => i.CreatedAt)
                 .ThenByDescending(i => i.ItemId)
-                .Take(NewArrivalsLimit)
+                .Take(NewArrivalsLimit * ProductCandidateMultiplier)
                 .AsNoTracking()
                 .ToList();
 
@@ -109,6 +114,8 @@ namespace KLS.Services
 
             return items
                 .Select(i => MapToHomeProduct(i, imageMap, categoryNameMap, baseUrl, "New"))
+                .OrderByDescending(p => !string.IsNullOrWhiteSpace(p.PrimaryImageUrl))
+                .Take(NewArrivalsLimit)
                 .ToList();
         }
 
@@ -117,7 +124,7 @@ namespace KLS.Services
             var items = Uow.Items
                 .Find(i => !i.Inactive && i.Last3M > 0)
                 .OrderByDescending(i => i.Last3M)
-                .Take(TopSellingLimit)
+                .Take(TopSellingLimit * ProductCandidateMultiplier)
                 .AsNoTracking()
                 .ToList();
 
@@ -126,6 +133,8 @@ namespace KLS.Services
 
             return items
                 .Select(i => MapToHomeProduct(i, imageMap, categoryNameMap, baseUrl))
+                .OrderByDescending(p => !string.IsNullOrWhiteSpace(p.PrimaryImageUrl))
+                .Take(TopSellingLimit)
                 .ToList();
         }
 
@@ -197,7 +206,62 @@ namespace KLS.Services
             return Uow.ItemImages
                 .Find(img => itemIds.Contains(img.ItemId) && img.IsPrimary && img.Has300)
                 .AsNoTracking()
-                .ToDictionary(img => img.ItemId, img => $"/Images/items/{img.ItemId}/{img.ImageIndex}-300.png");
+                .ToDictionary(img => img.ItemId, img => $"{baseUrl}/Images/items/{img.ItemId}/{img.ImageIndex}-300.png");
+        }
+
+        private Dictionary<int, string> BuildCategoryImageFallbackMap(
+            IReadOnlyCollection<ItemCategory> categories,
+            CategoryRollup rollup,
+            string baseUrl)
+        {
+            if (categories.Count == 0) return new Dictionary<int, string>();
+
+            var descendantToRoot = new Dictionary<int, int>();
+            foreach (var category in categories)
+            {
+                if (!string.IsNullOrWhiteSpace(category.ImageUrl)) continue;
+                if (!rollup.DescendantIds.TryGetValue(category.CategoryId, out var descendants)) continue;
+
+                foreach (var id in descendants)
+                {
+                    descendantToRoot[id] = category.CategoryId;
+                }
+            }
+
+            if (descendantToRoot.Count == 0) return new Dictionary<int, string>();
+
+            var descendantIds = descendantToRoot.Keys.ToList();
+            var candidateItems = Uow.Items
+                .Find(i => !i.Inactive && i.Last3M > 0 && i.CategoryId.HasValue && descendantIds.Contains(i.CategoryId.Value))
+                .OrderByDescending(i => i.Last3M)
+                .AsNoTracking()
+                .ToList();
+
+            var imageMap = BuildImageMap(candidateItems, baseUrl);
+            var result = new Dictionary<int, string>();
+
+            foreach (var item in candidateItems)
+            {
+                if (!item.CategoryId.HasValue) continue;
+                if (!descendantToRoot.TryGetValue(item.CategoryId.Value, out var rootCategoryId)) continue;
+                if (result.ContainsKey(rootCategoryId)) continue;
+                if (imageMap.TryGetValue(item.ItemId, out var imageUrl))
+                {
+                    result[rootCategoryId] = imageUrl;
+                }
+            }
+
+            return result;
+        }
+
+        private static string? ResolveImageUrl(string? imageUrl, string baseUrl)
+        {
+            if (string.IsNullOrWhiteSpace(imageUrl)) return null;
+            if (Uri.TryCreate(imageUrl, UriKind.Absolute, out _)) return imageUrl;
+
+            return imageUrl.StartsWith("/")
+                ? baseUrl + imageUrl
+                : $"{baseUrl}/{imageUrl}";
         }
 
         private Dictionary<int, string?> BuildCategoryNameMap(IReadOnlyCollection<Item> items)
@@ -239,7 +303,7 @@ namespace KLS.Services
                 ItemName2 = item.ItemName2,
                 SetPacking = item.SetPacking,
                 PackSize = item.PackSize,
-                PrimaryImageUrl = string.IsNullOrEmpty(imagePath) ? null : baseUrl + imagePath,
+                PrimaryImageUrl = imagePath,
                 CategoryId = item.CategoryId,
                 CategoryName = categoryName,
                 BadgeText = badgeText
