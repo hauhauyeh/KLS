@@ -523,6 +523,69 @@ namespace KLS.Services
             return _exportService.ToExcel(customers, "Customer");
         }
 
+        /// <summary>
+        /// Fills GooglePlaceId / GoogleLat / GoogleLong / FormatAddress / Distance for
+        /// customers that do not have them yet -- used after a bulk customer import,
+        /// where records are created straight in SQL and never pass through Create().
+        /// Safe to re-run: already-geocoded customers are skipped unless
+        /// <paramref name="overwriteExisting"/> is set.
+        /// </summary>
+        public GeocodeBackfillResult GeocodeBackfill(bool overwriteExisting)
+        {
+            var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
+
+            if (string.IsNullOrWhiteSpace(mapAPIKey))
+                throw new Exception("Google Maps API key is not configured (SystemSettings key GOOGLEMAPS_APIKEY).");
+
+            var customerType = EnumHelper.PayeeType.C.ToString();
+            var payees = Uow.Payees.Find(p => p.PayeeType == customerType).ToList();
+
+            var result = new GeocodeBackfillResult { Total = payees.Count };
+
+            foreach (var payee in payees)
+            {
+                if (string.IsNullOrWhiteSpace(payee.FullAddress))
+                {
+                    result.SkippedNoAddress++;
+                    continue;
+                }
+
+                if (!overwriteExisting && !string.IsNullOrWhiteSpace(payee.GooglePlaceId))
+                {
+                    result.SkippedAlreadyGeocoded++;
+                    continue;
+                }
+
+                var latlong = GetMapLatLong(payee.FullAddress, mapAPIKey);
+
+                if (latlong == null)
+                {
+                    result.Failed++;
+                    result.FailedPayeeIds.Add(payee.PayeeId);
+                    continue;
+                }
+
+                payee.GoogleLat = latlong.Latitude;
+                payee.GoogleLong = latlong.Longitude;
+                payee.GooglePlaceId = latlong.PlaceId;
+                payee.FormatAddress = latlong.FormatAddress;
+                payee.Distance = GetDistance(payee.FullAddress, mapAPIKey);
+                payee.UpdatedAt = DateTime.UtcNow;
+
+                Uow.Payees.Update(payee);
+                result.Updated++;
+
+                // Commit in batches so a timeout part-way through a long run keeps
+                // the work already done -- a re-run then picks up where it stopped.
+                if (result.Updated % 25 == 0)
+                    Uow.Commit();
+            }
+
+            Uow.Commit();
+
+            return result;
+        }
+
         private MapLatLong? GetMapLatLong(string address, string mapsApiKey)
         {
             try
