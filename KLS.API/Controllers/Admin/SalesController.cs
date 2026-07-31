@@ -183,12 +183,11 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpPost("EmailPdf/{salesId}")]
-        [DisplayName("Email Pdf Image")]
+        [DisplayName("Email Invoice")]
         [PermissionKey("Customer.Sale.EmailPdf")]
         public IActionResult EmailPdf(int salesId)
         {
-            _salesService.EmailPdf(salesId);
-            return Ok();
+            return Ok(_salesService.EmailPdf(salesId));
         }
 
 
