@@ -45,6 +45,8 @@ namespace KLS.Common
         public const string WEB_ENFORCE_STOCK_LIMIT = "WEB_ENFORCE_STOCK_LIMIT";
         public const string WEB_PORTAL_MODE = "WEB_PORTAL_MODE";
         public const string WEB_ORDER_CHECKOUT_HOUR = "WEB_ORDER_CHECKOUT_HOUR";
+        public const string WEB_CLIENT_EXPERIENCE_JSON = "WEB_CLIENT_EXPERIENCE_JSON";
+        public const string WEB_CLIENT_EXPERIENCE_JSON_PREVIOUS = "WEB_CLIENT_EXPERIENCE_JSON_PREVIOUS";
 
         public const string AUTO_PRINTINVOICE = "AUTO_PRINTINVOICE";
 

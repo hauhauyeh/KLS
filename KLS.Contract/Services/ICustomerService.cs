@@ -34,5 +34,7 @@ namespace KLS.Contract.Services
         void Register(RegisterReq registerReq, string url);
 
         DateOnly GetNextShipDate(int payeeId);
+
+        GeocodeBackfillResult GeocodeBackfill(bool overwriteExisting);
     }
 }

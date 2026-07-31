@@ -104,6 +104,13 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("GeocodeBackfill")]
+        public IActionResult GeocodeBackfill([FromQuery] bool overwriteExisting = false)
+        {
+            return Ok(_customerService.GeocodeBackfill(overwriteExisting));
+        }
+
+
         [HttpPost("EmailPricesheet/{payeeId}")]
         [DisplayName("Email Pricesheet")]
         [PermissionKey("Customer.Customer.EmailPricesheet")]
