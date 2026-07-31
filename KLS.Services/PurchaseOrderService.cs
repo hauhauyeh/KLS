@@ -18,17 +18,20 @@ namespace KLS.Services
         private readonly IDeleteLogService _deleteLogService;
         private readonly ICompanyService _companyService;
         private readonly IPDFService _pdfService;
+        private readonly ISystemSettingService _systemSettingService;
         private readonly IWebHostEnvironment _env;
 
         public PurchaseOrderService(IUnitOfWork uow,
             IDeleteLogService deleteLogService,
             ICompanyService companyService,
-            IPDFService pdfService, 
+            IPDFService pdfService,
+            ISystemSettingService systemSettingService,
             IWebHostEnvironment env) : base(uow)
         {
             _deleteLogService = deleteLogService;
             _companyService = companyService;
             _pdfService = pdfService;
+            _systemSettingService = systemSettingService;
             _env = env;
         }
 
@@ -123,7 +126,10 @@ namespace KLS.Services
                 RptPODetail = poDetail
             };
 
-            var poTemplate = "~/Views/Pdf/PO.cshtml";
+            var documentFormat = _systemSettingService.GetByKey<int>(GlobalKey.DOCUMENT_FORMAT);
+            var poTemplate = documentFormat == 4
+                ? "~/Views/Pdf/PO-4.cshtml"
+                : "~/Views/Pdf/PO.cshtml";
             var pohtml = _pdfService.RenderTemplate(poTemplate, rptPO);
 
             var fileName = "PO-" + purchaseId.ToString() + ".pdf";
