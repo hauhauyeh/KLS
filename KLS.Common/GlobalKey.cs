@@ -49,6 +49,7 @@ namespace KLS.Common
         public const string WEB_CLIENT_EXPERIENCE_JSON_PREVIOUS = "WEB_CLIENT_EXPERIENCE_JSON_PREVIOUS";
 
         public const string AUTO_PRINTINVOICE = "AUTO_PRINTINVOICE";
+        public const string SALES_LOAD_SEPARATE = "SALES_LOAD_SEPARATE";
 
     }
 }

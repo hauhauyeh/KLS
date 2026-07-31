@@ -223,6 +223,9 @@ namespace KLS.Services
 
         public void UpdateLoadSeparate(int salesId)
         {
+            if (!_systemSettingService.GetByKey<bool>(GlobalKey.SALES_LOAD_SEPARATE))
+                throw new InvalidOperationException("Load Separate is disabled for this company.");
+
             EnsureVisible(salesId);
 
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
