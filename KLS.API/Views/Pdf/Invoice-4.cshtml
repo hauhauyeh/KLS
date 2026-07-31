@@ -6,6 +6,7 @@
     var docLabel = isCreditMemo ? "CREDIT MEMO" : "INVOICE";
     var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Invoice #";
     var docDateLabel = isCreditMemo ? "Date" : "Invoice Date";
+    var companyName = Model.Company.CompanyName;
 
     var colSpan = 6;
 }
@@ -242,10 +243,15 @@
     /* Company name block: large bold font for brand emphasis */
     .comp-name {
         font-family: "Segoe UI", Impact, Arial, sans-serif;
-        font-size: 26px;
+        font-size: 18px;
         font-weight: bold;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
         line-height: 1.1;
+    }
+
+    .comp-logo-grid img {
+        max-height: 58px;
+        max-width: 220px;
     }
 
     /* English company name: keep block display for vertical stacking */
@@ -577,7 +583,7 @@
     =========================================== -->
     <div class="main-table-header-grid header-height">
 
-        <div class="company-display-title">@Model.Company.DisplayName</div>
+        <div class="company-display-title">@companyName</div>
 
         <!-- 1st Row: Company name and address -->
         <div class="comp-logo-grid">
@@ -585,18 +591,21 @@
                 <div>
                     @if (Model.Company.HasLogo)
                     {
-                        <img src="@Model.Company.LogoUrl" class="img-fluid" height="55" />
+                        <img src="@Model.Company.LogoUrl" class="img-fluid" />
                     }
                     else
                     {
-                        <span style="font-family: 'Segoe UI'; font-size: 26px; font-weight: bold;">
-                            @Model.Company.CompanyName
+                        <span>
+                            @companyName
                         </span>
                     }
                 </div>
-                <div style="font-size: 12px; margin-top: 2px;">
-                    @Model.Company.CompanyName2
-                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Company.CompanyName2))
+                {
+                    <div style="font-size: 12px; margin-top: 2px;">
+                        @Model.Company.CompanyName2
+                    </div>
+                }
             </div>
             <div class="comp-address">
                 @Model.Company.AddressLine1<br />
