@@ -8,7 +8,7 @@ namespace KLS.Models
 {
     public class ForgotPassword
     {
-        public string? Username { get; set; }
+        public string? Greeting { get; set; }
 
         public string? ResetUrl { get; set; }
     }

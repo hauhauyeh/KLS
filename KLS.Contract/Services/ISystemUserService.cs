@@ -17,6 +17,8 @@ namespace KLS.Contract.Services
 
         bool UserNameExists(string username, int payeeId);
 
+        bool EmailExists(string email, int payeeId);
+
         void UpdateUser(SystemUser user);
 
         void UpdateToken(SystemUser user);

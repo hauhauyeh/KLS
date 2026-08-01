@@ -11,6 +11,7 @@ using Square;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -223,6 +224,9 @@ namespace KLS.Services
 
         public void UpdateLoadSeparate(int salesId)
         {
+            if (!_systemSettingService.GetByKey<bool>(GlobalKey.SALES_LOAD_SEPARATE))
+                throw new InvalidOperationException("Load Separate is disabled for this company.");
+
             EnsureVisible(salesId);
 
             Uow.Sales.Find(c => c.SalesId == salesId).ExecuteUpdate(setters => setters
@@ -367,48 +371,161 @@ namespace KLS.Services
             Uow.Sales.SingleAllocation(salesId);
         }
 
-        public void EmailPdf(int salesId)
+        public SalesEmailInvoiceResult EmailPdf(int salesId)
         {
             EnsureVisible(salesId);
 
             var sales = GetById(salesId);
 
             if (sales == null)
-                return;
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
 
-            var pdfFile = Path.Combine(_env.WebRootPath, "InvoicePdf", sales.SalesNumber + ".pdf");
+            var salesDisplayNumber = SalesDisplayNumber(sales);
+            var recipient = GetInvoiceEmailRecipient(sales);
 
-            if (!IsInvoicePdfExist(sales.SalesNumber))
+            if (recipient.Payee == null || string.IsNullOrEmpty(recipient.Email))
+                throw new InvalidOperationException("Customer does not have an invoice email address.");
+
+            var cleanInvoiceFile = _documentService.Invoice(new DocumentReq { SalesId = salesId, SalesNumber = sales.SalesNumber });
+            var signedBolFile = GetSignedBolPath(sales.SalesNumber);
+            var tempFolder = CreateEmailAttachmentFolder();
+
+            try
             {
-                pdfFile = _documentService.Invoice(new DocumentReq { SalesId = salesId, SalesNumber = sales.SalesNumber });
-            }
+                var attachments = BuildInvoiceEmailAttachments(tempFolder, salesDisplayNumber, cleanInvoiceFile, signedBolFile);
+                var subject = $"Invoice {salesDisplayNumber}";
+                var mailbody = BuildInvoiceEmailBody(recipient.Payee.PayeeName, salesDisplayNumber);
 
-            var payee = Uow.Payees.GetById(sales.ShipId.Value);
-
-            var toEmails = FirstEmail(payee?.EmailInvoice, payee?.Email);
-
-            if (payee != null && !string.IsNullOrEmpty(toEmails))
-            {
-                var salesDisplayNumber = SalesDisplayNumber(sales);
-                string subject = "Invoice File";
-                string mailbody = "Hi " + payee.PayeeName + ",<br/><br/>Here is a your invoice file for the order#" + salesDisplayNumber + "<br/><br/>";
-                string[] attcfiles = [pdfFile];
-
-                _emailAuditService.SendAndLog(new EmailAuditMessage
+                var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
                 {
-                    To = toEmails,
+                    To = recipient.Email,
                     Subject = subject,
                     HtmlBody = mailbody,
-                    Attachments = attcfiles,
+                    Attachments = attachments,
                     EmailCategory = EmailAudit.Category.Document,
                     EmailType = EmailAudit.EmailType.Invoice,
-                    PayeeId = sales.BillId,
+                    PayeeId = recipient.Payee.PayeeId,
                     DocumentType = EmailAudit.DocumentType.Invoice,
                     DocumentId = salesId,
                     DocumentNumber = salesDisplayNumber,
                     Source = EmailAudit.Source.Manual,
                     RequestedBy = UserContext.SystemUserId
                 });
+
+                var sent = string.IsNullOrEmpty(error);
+
+                return new SalesEmailInvoiceResult
+                {
+                    DeliveryStatus = sent ? EmailAudit.DeliveryStatus.Sent : EmailAudit.DeliveryStatus.Failed,
+                    Message = sent
+                        ? "Invoice email sent."
+                        : "Invoice email failed.",
+                    To = recipient.Email,
+                    DocumentNumber = salesDisplayNumber,
+                    SignedBolAttached = !string.IsNullOrEmpty(signedBolFile),
+                    AttachmentCount = attachments.Length,
+                    ErrorMessage = sent ? null : error
+                };
+            }
+            finally
+            {
+                DeleteEmailAttachmentFolder(tempFolder);
+            }
+        }
+
+        private (Payee? Payee, string? Email) GetInvoiceEmailRecipient(Sales sales)
+        {
+            Payee? billTo = sales.BillId.HasValue
+                ? Uow.Payees.GetById(sales.BillId.Value)
+                : null;
+            var billToEmail = FirstEmail(billTo?.EmailInvoice, billTo?.Email);
+
+            if (billTo != null && !string.IsNullOrEmpty(billToEmail))
+                return (billTo, billToEmail);
+
+            Payee? shipTo = sales.ShipId.HasValue
+                ? Uow.Payees.GetById(sales.ShipId.Value)
+                : null;
+            var shipToEmail = FirstEmail(shipTo?.EmailInvoice, shipTo?.Email);
+
+            if (shipTo != null && !string.IsNullOrEmpty(shipToEmail))
+                return (shipTo, shipToEmail);
+
+            return (billTo ?? shipTo, null);
+        }
+
+        private string? GetSignedBolPath(int salesNumber)
+        {
+            var path = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
+
+            return File.Exists(path) ? path : null;
+        }
+
+        private string CreateEmailAttachmentFolder()
+        {
+            var folder = Path.Combine(_env.WebRootPath, "EmailAttachments", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+
+            return folder;
+        }
+
+        private static string[] BuildInvoiceEmailAttachments(string tempFolder, string salesDisplayNumber, string cleanInvoiceFile, string? signedBolFile)
+        {
+            if (string.IsNullOrWhiteSpace(cleanInvoiceFile) || !File.Exists(cleanInvoiceFile))
+                throw new FileNotFoundException("Generated invoice PDF was not found.", cleanInvoiceFile);
+
+            var safeNumber = SafeFilePart(salesDisplayNumber);
+            var attachments = new List<string>();
+            var cleanInvoiceAttachment = Path.Combine(tempFolder, $"Invoice-{safeNumber}.pdf");
+
+            File.Copy(cleanInvoiceFile, cleanInvoiceAttachment, true);
+            attachments.Add(cleanInvoiceAttachment);
+
+            if (!string.IsNullOrEmpty(signedBolFile) && File.Exists(signedBolFile))
+            {
+                var signedBolAttachment = Path.Combine(tempFolder, $"Signed-BOL-{safeNumber}.pdf");
+                File.Copy(signedBolFile, signedBolAttachment, true);
+                attachments.Add(signedBolAttachment);
+            }
+
+            return attachments.ToArray();
+        }
+
+        private string BuildInvoiceEmailBody(string? payeeName, string salesDisplayNumber)
+        {
+            var customerName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(payeeName) ? "Customer" : payeeName);
+            var invoiceNumber = WebUtility.HtmlEncode(salesDisplayNumber);
+            var paymentInstructions = _systemSettingService.GetByKey<string>(GlobalKey.INVOICE_EMAIL_PAYMENT_INSTRUCTIONS);
+            var paymentBlock = string.IsNullOrWhiteSpace(paymentInstructions)
+                ? ""
+                : Environment.NewLine + paymentInstructions.Trim();
+
+            return $"""
+                <p>Hello {customerName},</p>
+                <p>Please find attached invoice {invoiceNumber}.</p>
+                <p>If available, the signed Bill of Lading is attached for your records.</p>
+                {paymentBlock}
+                <p>Thank you.</p>
+                """;
+        }
+
+        private static string SafeFilePart(string value)
+        {
+            var safe = Regex.Replace(value, @"[^\w.-]+", "-").Trim('-');
+
+            return string.IsNullOrWhiteSpace(safe) ? "Invoice" : safe;
+        }
+
+        private static void DeleteEmailAttachmentFolder(string folder)
+        {
+            try
+            {
+                if (Directory.Exists(folder))
+                    Directory.Delete(folder, true);
+            }
+            catch
+            {
+                // Best-effort cleanup only. The email send/log result is already known.
             }
         }
 

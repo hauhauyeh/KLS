@@ -54,9 +54,19 @@ namespace KLS.Services
 
         public SystemUser? CheckEmpUsername(LoginReq loginReq)
         {
+            if (string.IsNullOrWhiteSpace(loginReq.Username))
+                return null;
+
+            var id = loginReq.Username;
+
+            // Username first, email as fallback. Keeping them as two lookups (instead of one OR)
+            // means a username always wins over someone else's email if the two ever collide.
             return Uow.SystemUsers
-                .Find(e => e.Username == loginReq.Username && !e.Inactive && e.PayeeId.ToString().StartsWith("1"))
-                .FirstOrDefault();
+                    .Find(e => e.Username == id && !e.Inactive && e.PayeeId.ToString().StartsWith("1"))
+                    .FirstOrDefault()
+                ?? Uow.SystemUsers
+                    .Find(e => e.Email == id && !e.Inactive && e.PayeeId.ToString().StartsWith("1"))
+                    .FirstOrDefault();
         }
 
         public SystemUser GetById(int userId)
@@ -72,6 +82,11 @@ namespace KLS.Services
         public bool UserNameExists(string username, int payeeId)
         {
             return Uow.SystemUsers.Exists(c => c.Username.ToLower() == username.ToLower() && c.PayeeId != payeeId);
+        }
+
+        public bool EmailExists(string email, int payeeId)
+        {
+            return Uow.SystemUsers.Exists(c => c.Email.ToLower() == email.ToLower() && c.PayeeId != payeeId);
         }
 
         public void UpdateUser(SystemUser user)
@@ -143,7 +158,7 @@ namespace KLS.Services
             var jwtClaim = new JWTClaim
             {
                 Portal = EnumHelper.Portal.Admin.ToString(),
-                Username = user.Username,
+                Username = user.Username ?? user.Email,
                 PayeeId = user.PayeeId,
                 UserId = user.SystemUserId,
                 RefreshToken = refreshToken,
@@ -270,7 +285,7 @@ namespace KLS.Services
 
             var model = new ForgotPassword
             {
-                Username = user.Username ?? user.Email,
+                Greeting = "Employee",
                 ResetUrl = resetUrl
             };
 

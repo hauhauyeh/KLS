@@ -73,6 +73,10 @@ namespace KLS.Services
                 employeeDTO.Password = Utilities.Decrypt(user.PasswordHash);
             }
 
+            // Assigned after the InjectFrom calls: Payee also has an Email column, so without this
+            // the modal would show Payee.Email. SystemUser is the source of truth for the login email.
+            employeeDTO.Email = user?.Email;
+
             return employeeDTO;
         }
 
@@ -85,10 +89,14 @@ namespace KLS.Services
         {
             var newPayeeId = GetMaxEmployeeId();
 
+            var email = string.IsNullOrWhiteSpace(employeeDTO.Email) ? null : employeeDTO.Email.Trim();
+            var hasLogin = !string.IsNullOrEmpty(employeeDTO.Username) || email != null;
+
             var payee = new Payee();
             payee.InjectFrom(employeeDTO);
             payee.PayeeId = newPayeeId;
             payee.PayeeType = EnumHelper.PayeeType.E.ToString();
+            payee.Email = email;
 
             Uow.Payees.Add(payee);
             Uow.Commit();
@@ -99,12 +107,13 @@ namespace KLS.Services
 
             Uow.Employees.Add(employee);
 
-            if (!string.IsNullOrEmpty(employeeDTO.Username))
+            if (hasLogin)
             {
                 var user = new SystemUser
                 {
                     PayeeId = newPayeeId,
                     SystemRoleId = employeeDTO.RoleId,
+                    Email = email,
                     Username = employeeDTO.Username,
                     PasswordHash = Utilities.Encrypt(employeeDTO.Password),
                     Inactive = employeeDTO.IsClosed
@@ -126,8 +135,12 @@ namespace KLS.Services
             if (employee == null || existingPayee == null)
                 return null;
 
+            var email = string.IsNullOrWhiteSpace(employeeDTO.Email) ? null : employeeDTO.Email.Trim();
+            var hasLogin = !string.IsNullOrEmpty(employeeDTO.Username) || email != null;
+
             // --- Update Payee Fields ---
             existingPayee.PayeeName = employeeDTO.PayeeName;
+            existingPayee.Email = email;
             existingPayee.Address = employeeDTO.Address;
             existingPayee.City = employeeDTO.City;
             existingPayee.State = employeeDTO.State;
@@ -184,9 +197,10 @@ namespace KLS.Services
 
             if (user != null)
             {
-                if (!string.IsNullOrEmpty(employeeDTO.Username))
+                if (hasLogin)
                 {
                     user.SystemRoleId = employeeDTO.RoleId;
+                    user.Email = email;
                     user.Username = employeeDTO.Username;
                     user.PasswordHash = Utilities.Encrypt(employeeDTO.Password);
                     user.Inactive = employeeDTO.IsClosed;
@@ -197,12 +211,13 @@ namespace KLS.Services
             }
             else
             {
-                if (!string.IsNullOrEmpty(employeeDTO.Username))
+                if (hasLogin)
                 {
                     var newuser = new SystemUser
                     {
                         PayeeId = employeeDTO.PayeeId,
                         SystemRoleId = employeeDTO.RoleId,
+                        Email = email,
                         Username = employeeDTO.Username,
                         PasswordHash = Utilities.Encrypt(employeeDTO.Password),
                         Inactive = employeeDTO.IsClosed

@@ -32,7 +32,7 @@
     }
 
     .header-height {
-        height: 245px;
+        height: 279px;
     }
 
     .footer-height {
@@ -130,8 +130,17 @@
         position: fixed;
         top: 0;
         display: grid;
-        grid-template-rows: 135px 110px; /* Two rows */
+        grid-template-rows: 34px 135px 110px;
         grid-template-columns: 45% 30% 25%; /* Default column setting */
+    }
+
+    .company-display-title {
+        grid-column: 1 / span 3;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        line-height: 34px;
+        font-family: "Segoe UI", Calibri, Arial, sans-serif;
     }
 
     .comp-logo-grid {
@@ -145,6 +154,11 @@
         line-height: 1;
         padding-left: 10px;
         margin-bottom: 10px;
+    }
+
+    .comp-logo-grid img {
+        max-height: 58px;
+        max-width: 220px;
     }
 
     .comp-address {
@@ -163,7 +177,7 @@
     }
 
     .invoice-label {
-        font-size: 26px;
+        font-size: 24px;
         font-weight: bold;
         margin-bottom: 5px;
     }
@@ -463,20 +477,25 @@
         </table>
 
         <div class="main-table-header-grid left-width header-height">
+            <div class="company-display-title">@Model.Company.CompanyName</div>
+
             <div class="comp-logo-grid">
                 <div class="comp-name">
                     <div>
                         @if (Model.Company.HasLogo)
                         {
-                            <img src="@Model.Company.LogoUrl" class="img-fluid" height="55" />
+                            <img src="@Model.Company.LogoUrl" class="img-fluid" />
                         }
                         else
                         {
-                            <span style="font-family: 'Segoe UI'; font-size: 28px; font-weight:bold;">@Model.Company.CompanyName</span>
+                            <span>@Model.Company.CompanyName</span>
                         }
                     </div>
 
-                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Company.CompanyName2))
+                    {
+                        <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                    }
                 </div>
                 <div class="comp-address">
                     @Model.Company.AddressLine1<br />
@@ -488,7 +507,7 @@
             </div>
             <div class="inv-info-grid">
                 <div class="d-flex justify-content-between">
-                    <div class="invoice-label">Ticket</div>
+                    <div class="invoice-label">Packing Slip</div>
                 </div>
                 <table>
                     <colgroup>

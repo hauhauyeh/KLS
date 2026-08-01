@@ -86,6 +86,9 @@ namespace KLS.API.Controllers.Admin
             if (!string.IsNullOrEmpty(employeeDTO.Username) && _userService.UserNameExists(employeeDTO.Username, employeeDTO.PayeeId))
                 return Conflict("Username already exists");
 
+            if (!string.IsNullOrWhiteSpace(employeeDTO.Email) && _userService.EmailExists(employeeDTO.Email.Trim(), employeeDTO.PayeeId))
+                return Conflict("Email already exists");
+
             var created = _employeeService.Create(employeeDTO);
 
             return Ok(created);
@@ -109,6 +112,9 @@ namespace KLS.API.Controllers.Admin
 
             if (!string.IsNullOrEmpty(employeeDTO.Username) && _userService.UserNameExists(employeeDTO.Username, employeeDTO.PayeeId))
                 return Conflict("Username already exists");
+
+            if (!string.IsNullOrWhiteSpace(employeeDTO.Email) && _userService.EmailExists(employeeDTO.Email.Trim(), employeeDTO.PayeeId))
+                return Conflict("Email already exists");
 
             var updated = _employeeService.Update(employeeDTO);
 
