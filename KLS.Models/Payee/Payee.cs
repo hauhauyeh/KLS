@@ -24,6 +24,12 @@ namespace KLS.Models
         public string? PayeeType { get; set; }
         public string? PayeeName { get; set; }
 
+        /// <summary>
+        /// Hidden system account (SYS1/SYS2). Excluded from every employee list,
+        /// search and dropdown. Never set through the UI - see SystemAccounts_Seed.sql.
+        /// </summary>
+        public bool IsSystemAccount { get; set; }
+
         public string? GoogleAddress { get; set; }
         public string? GoogleMapLink { get; set; }
         public string? GooglePlaceId { get; set; }

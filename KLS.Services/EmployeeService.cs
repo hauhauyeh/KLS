@@ -24,7 +24,7 @@ namespace KLS.Services
 
         public IEnumerable<EmployeeList>? GetActive()
         {
-            var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString()).OrderBy(c => c.PayeeName).ToList();
+            var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString() && !c.IsSystemAccount).OrderBy(c => c.PayeeName).ToList();
 
             var employees = payees.Select(p => new EmployeeList().InjectFrom(p)).Cast<EmployeeList>()
                 .ToList();
@@ -34,7 +34,7 @@ namespace KLS.Services
 
         public IEnumerable<EmployeeList>? GetDrivers()
         {
-            var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString());
+            var payees = Uow.Payees.Find(c => c.IsClosed == false && c.PayeeType == EnumHelper.PayeeType.E.ToString() && !c.IsSystemAccount);
             var employees = Uow.Employees.Find(c => c.Department == "Warehouse" || c.Department == "Driver");
 
             var result = from p in payees
@@ -135,6 +135,13 @@ namespace KLS.Services
             if (employee == null || existingPayee == null)
                 return null;
 
+            // Hidden system accounts (SYS1/SYS2) are not editable through the API.
+            // They are invisible in the UI, so a caller reaching here has supplied a
+            // guessed PayeeId. Returning null makes the controller answer 404 rather
+            // than confirming the row exists.
+            if (existingPayee.IsSystemAccount)
+                return null;
+
             var email = string.IsNullOrWhiteSpace(employeeDTO.Email) ? null : employeeDTO.Email.Trim();
             var hasLogin = !string.IsNullOrEmpty(employeeDTO.Username) || email != null;
 
@@ -232,9 +239,18 @@ namespace KLS.Services
             return employeeDTO;
         }
 
-        public void Delete(int payeeId)
+        public bool Delete(int payeeId)
         {
+            var payee = Uow.Payees.GetById(payeeId);
+
+            // Same reasoning as Update: a hidden system account must not be
+            // deletable by a caller who guessed its id.
+            if (payee == null || payee.IsSystemAccount)
+                return false;
+
             Uow.Payees.Delete(payeeId);
+
+            return true;
         }
 
         public IEnumerable<PayeeSearch>? Search(PayeeSearchReq searchReq)

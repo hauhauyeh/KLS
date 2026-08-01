@@ -118,6 +118,9 @@ namespace KLS.API.Controllers.Admin
 
             var updated = _employeeService.Update(employeeDTO);
 
+            if (updated == null)
+                return NotFound($"Employee with Id {employeeDTO.PayeeId} not found.");
+
             return Ok(updated);
         }
 
@@ -127,7 +130,8 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Employee.Employee.Delete")]
         public IActionResult Delete(int id)
         {
-            _employeeService.Delete(id);
+            if (!_employeeService.Delete(id))
+                return NotFound($"Employee with Id {id} not found.");
 
             return Ok();
         }
