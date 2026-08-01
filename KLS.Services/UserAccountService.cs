@@ -211,7 +211,7 @@ namespace KLS.Services
 
             var model = new ForgotPassword
             {
-                Username = user.Username ?? user.Email,
+                Greeting = "Customer",
                 ResetUrl = resetUrl
             };
 
