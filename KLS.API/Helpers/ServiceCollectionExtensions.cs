@@ -129,6 +129,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IPortalModeService, PortalModeService>();
             services.AddScoped<IContactService, ContactService>();
             services.AddScoped<IWebClientExperienceService, WebClientExperienceService>();
+            services.AddScoped<IIntercompanyItemSyncService, IntercompanyItemSyncService>();
 
             // Marketplace Services
             services.AddScoped<IMarketAccountService, MarketAccountService>();

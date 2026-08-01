@@ -38,6 +38,7 @@ namespace KLS.Common
         public const string DOCUMENT_FORMAT = "DOCUMENT_FORMAT";
         public const string INVOICE_PRINT_USE_POPUP = "INVOICE_PRINT_USE_POPUP";
         public const string SALES_DOC_NUMBER_DISPLAY_ENABLED = "SALES_DOC_NUMBER_DISPLAY_ENABLED";
+        public const string INVOICE_EMAIL_PAYMENT_INSTRUCTIONS = "INVOICE_EMAIL_PAYMENT_INSTRUCTIONS";
 
         public const string LABEL_PRINTER_NAME = "LABEL_PRINTER_NAME";
         public const string DEFAULT_CCFEE_PERCENTAGE = "DEFAULT_CCFEE_PERCENTAGE";
@@ -49,6 +50,7 @@ namespace KLS.Common
         public const string WEB_CLIENT_EXPERIENCE_JSON_PREVIOUS = "WEB_CLIENT_EXPERIENCE_JSON_PREVIOUS";
 
         public const string AUTO_PRINTINVOICE = "AUTO_PRINTINVOICE";
+        public const string SALES_LOAD_SEPARATE = "SALES_LOAD_SEPARATE";
 
     }
 }
