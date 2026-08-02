@@ -335,7 +335,7 @@ BEGIN
     DECLARE @SafeSortOrder NVARCHAR(4) =
         CASE WHEN UPPER(ISNULL(@SortOrder, 'ASC')) = 'DESC' THEN 'DESC' ELSE 'ASC' END;
 
-    IF @SortField IN ('recent', 'cat', 'storage', 'exp', 'ItemCode', 'ItemName', 'LastAdjDate', 'BaseRecentCost')
+    IF @SortField IN ('recent', 'inventory', 'cat', 'storage', 'exp', 'ItemCode', 'ItemName', 'LastAdjDate', 'BaseRecentCost')
         SET @SafeSortField = @SortField;
 
     IF @SafeSortField IS NOT NULL
@@ -351,6 +351,8 @@ BEGIN
             SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'ExpiryDate ' + @SafeSortOrder + ', i.ItemName';
         ELSE IF @SafeSortField = 'recent'
             SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'i.CreatedAt DESC, i.ItemId DESC, i.ItemName';
+        ELSE IF @SafeSortField = 'inventory'
+            SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'ISNULL(i.LCloseQty, 0) + ISNULL((SELECT SUM(sd.BaseShipQty) FROM dbo.Sales s INNER JOIN dbo.SalesDetail sd ON s.SalesId = sd.SalesId WHERE s.ShipDate > CONVERT(DATE, GETDATE()) AND sd.ItemId = i.ItemId), 0) DESC, i.ItemName';
         ELSE IF @SafeSortField = 'ItemCode'
             SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'i.ItemCode ' + @SafeSortOrder + ', i.ItemName';
         ELSE IF @SafeSortField = 'ItemName'
@@ -458,6 +460,8 @@ BEGIN
         IF @SafeSortField IN ('recent', 'cat', 'storage')
             -- Old: SELECT * FROM #itmtbl ORDER BY Id;
             SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'Id';
+        ELSE IF @SafeSortField = 'inventory'
+            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'OnHandQty DESC, ItemName';
         ELSE IF @SafeSortField = 'exp'
             -- Old: SELECT * FROM #itmtbl ORDER BY ExpiryDate;
             SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'ExpiryDate ' + @SafeSortOrder + ', ItemName';
