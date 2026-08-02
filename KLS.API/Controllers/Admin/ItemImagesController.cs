@@ -57,6 +57,15 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        [HttpPost("{imageId}/reprocess-original")]
+        [DisplayName("Reprocess Product Image From Original")]
+        [PermissionKey("Product.ItemImage.Upload")]
+        public IActionResult ReprocessOriginal(int imageId)
+        {
+            _itemImageService.ReprocessOriginal(imageId);
+            return Ok();
+        }
+
 
         [HttpPost("{imageId}/process-bg-local")]
         [DisplayName("Process Background Removal (Local)")]

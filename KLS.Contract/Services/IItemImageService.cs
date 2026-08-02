@@ -12,6 +12,8 @@ namespace KLS.Contract.Services
 
         void Delete(int imageId);
 
+        void ReprocessOriginal(int imageId);
+
         Task<ImageProcessResult> ProcessBgLocal(int imageId);
 
         Task<ImageProcessResult> ProcessBgApi(int imageId);
