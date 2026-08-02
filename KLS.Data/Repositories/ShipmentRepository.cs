@@ -301,7 +301,6 @@ END", PurchaseIdParam);
                     f.IsStale,
                     f.IsMissingAllocation,
                     Action = CASE
-                        WHEN l.IsDropShip = 1 THEN 'SKIP_DROP_SHIP'
                         WHEN ISNULL(l.StageId, 0) <> 6
                           OR l.IsLocked = 1
                           OR l.PaymentApplied <> 0
@@ -310,7 +309,6 @@ END", PurchaseIdParam);
                         ELSE 'NO_ACTION'
                     END,
                     Reason = CASE
-                        WHEN l.IsDropShip = 1 THEN 'Drop-ship bill is excluded from landed-cost allocation.'
                         WHEN ISNULL(l.StageId, 0) <> 6 THEN 'Goods bill is not in Bill stage.'
                         WHEN l.IsLocked = 1 THEN 'Goods bill is locked.'
                         WHEN l.PaymentApplied <> 0 THEN 'Goods bill has payment applied.'
