@@ -24,10 +24,10 @@ namespace KLS.Data.Repositories
             var param = BuildParam(itemListReq);
 
             // 2026-05-07: replaced trailing @Visibility with @ShowInactive,@ShowDeleted.
-            // 2026-05-08: dropped @ShowDeleted (forward-removal of D toggle) so the
-            //             SP signature is now ...,@ShowInactive only.
+            // 2026-05-08: dropped @ShowDeleted (forward-removal of D toggle).
+            // 2026-08-02: added @ShowNonInventory as a shared scope flag beside @ShowInactive.
             //   Old (2026-05-07): "...,@TotalCount OUTPUT,@ShowInactive,@ShowDeleted"
-            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive", param);
+            return DbContext.ItemList.FromSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive,@ShowNonInventory", param);
         }
 
         public int Count(ItemListReq itemListReq)
@@ -35,8 +35,8 @@ namespace KLS.Data.Repositories
             itemListReq.IsCount = true;
             var param = BuildParam(itemListReq);
 
-            // 2026-05-08: dropped @ShowDeleted from SP signature (see GetPagedList note).
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive", param);
+            // 2026-08-02: trailing flags are @ShowInactive,@ShowNonInventory (see GetPagedList note).
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Item_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@Container,@CategoryId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@ShowInactive,@ShowNonInventory", param);
 
             var output = param[13] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -82,7 +82,8 @@ namespace KLS.Data.Repositories
                 // 2026-05-07: replaced with two ambient bits matching the new SP signature.
                 // 2026-05-08: dropped @ShowDeleted (forward-removal of D toggle).
                 //   Old (2026-05-07): new SqlParameter("@ShowDeleted", itemListReq.ShowDeleted)
-                new SqlParameter("@ShowInactive", itemListReq.ShowInactive)
+                new SqlParameter("@ShowInactive", itemListReq.ShowInactive),
+                new SqlParameter("@ShowNonInventory", itemListReq.ShowNonInventory)
             };
 
             return param;

@@ -1,8 +1,4 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE OR ALTER PROCEDURE [dbo].[Item_GetAllList]
+CREATE   PROCEDURE [dbo].[Item_GetAllList]
 (
     @Pageno        INT,
     @Pagesize      INT,
@@ -23,8 +19,7 @@ CREATE OR ALTER PROCEDURE [dbo].[Item_GetAllList]
     -- below; no caller flag controls it.
     -- @ShowInactive: when 1, results include rows where Inactive = 1.
     --                Default 0 keeps the page list active-only as before.
-    @ShowInactive  BIT = 0,
-    @ShowNonInventory BIT = 0
+    @ShowInactive  BIT = 0
 )
 AS
 BEGIN
@@ -138,8 +133,6 @@ BEGIN
                 NULL AS UpcomingQty,
                 NULL AS LastAdjDate,
                 CASE
-                    WHEN im.ImageId IS NOT NULL AND im.HasNoBg300 = 1
-                        THEN ''/Images/items/'' + CAST(im.ItemId AS VARCHAR(10)) + ''/'' + CAST(im.ImageIndex AS VARCHAR(10)) + ''-300-nobg.png''
                     WHEN im.ImageId IS NOT NULL AND im.Has300 = 1
                         THEN ''/Images/items/'' + CAST(im.ItemId AS VARCHAR(10)) + ''/'' + CAST(im.ImageIndex AS VARCHAR(10)) + ''-300.png''
                     ELSE NULL
@@ -173,8 +166,7 @@ BEGIN
         LEFT JOIN ItemImage im ON i.ItemId = im.ItemId AND im.IsPrimary = 1
         LEFT JOIN View_Category v ON v.CategoryId = i.CategoryId
         LEFT JOIN ItemStorage s ON s.StorageId = i.StorageId
-        WHERE i.ItemType IN (''Inventory'', ''NonInventory'')
-          AND (@ShowNonInventory = 1 OR i.ItemType = ''Inventory'') ';
+        WHERE ItemType IN (''Inventory'', ''NonInventory'') ';
 
     -- Filters
     IF @Id IS NOT NULL
@@ -233,7 +225,6 @@ BEGIN
                     SELECT TOP (1) ci.ItemId
                     FROM dbo.Item ci
                     WHERE ci.ItemType IN (''Inventory'', ''NonInventory'')
-                      AND (@ShowNonInventory = 1 OR ci.ItemType = ''Inventory'')
                       AND ci.IsDeleted = 0
                       ' + CASE WHEN @ShowInactive = 0 THEN 'AND ci.Inactive = 0' ELSE '' END + '
                       AND ci.ItemCode LIKE ''%' + @Search + '%''
@@ -254,7 +245,6 @@ BEGIN
                     SELECT TOP (1) ci.ItemId
                     FROM dbo.Item ci
                     WHERE ci.ItemType IN (''Inventory'', ''NonInventory'')
-                      AND (@ShowNonInventory = 1 OR ci.ItemType = ''Inventory'')
                       AND ci.IsDeleted = 0
                       ' + CASE WHEN @ShowInactive = 0 THEN 'AND ci.Inactive = 0' ELSE '' END + '
                       AND ci.ItemCode LIKE ''%' + @Search + '%''
@@ -326,43 +316,28 @@ BEGIN
     -- Count
     IF @IsCount = 1
     BEGIN
-        EXEC sp_executesql @Qry, N'@RCount INT OUTPUT, @ShowNonInventory BIT', @RCount = @TotalCount OUTPUT, @ShowNonInventory = @ShowNonInventory;
+        EXEC sp_executesql @Qry, N'@RCount INT OUTPUT', @RCount = @TotalCount OUTPUT;
         RETURN;
     END;
 
     -- Sorting
-    DECLARE @SafeSortField NVARCHAR(50) = NULL;
-    DECLARE @SafeSortOrder NVARCHAR(4) =
-        CASE WHEN UPPER(ISNULL(@SortOrder, 'ASC')) = 'DESC' THEN 'DESC' ELSE 'ASC' END;
-
-    IF @SortField IN ('recent', 'cat', 'storage', 'exp', 'ItemCode', 'ItemName', 'LastAdjDate', 'BaseRecentCost')
-        SET @SafeSortField = @SortField;
-
-    IF @SafeSortField IS NOT NULL
+    IF @SortField IS NOT NULL
     BEGIN
-        IF @SafeSortField = 'cat'
+        IF @SortField = 'cat'
             -- Old: SET @Qry += ' ORDER BY v.RootNode, ItemName';
             SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'v.RootNode, ItemName';
-        ELSE IF @SafeSortField = 'storage'
+        ELSE IF @SortField = 'storage'
             -- Old: SET @Qry += ' ORDER BY s.DisplayName, ItemName';
             SET @Qry += ' ORDER BY ' + @CodeMatchRank + 's.DisplayName, ItemName';
-        ELSE IF @SafeSortField = 'exp'
+        ELSE IF @SortField = 'exp'
             -- Old: SET @Qry += ' ORDER BY ExpiryDate';
-            SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'ExpiryDate ' + @SafeSortOrder + ', i.ItemName';
-        ELSE IF @SafeSortField = 'recent'
-            SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'i.CreatedAt DESC, i.ItemId DESC, i.ItemName';
-        ELSE IF @SafeSortField = 'ItemCode'
-            SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'i.ItemCode ' + @SafeSortOrder + ', i.ItemName';
-        ELSE IF @SafeSortField = 'ItemName'
-            SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'i.ItemName ' + @SafeSortOrder + ', i.ItemCode';
-        ELSE IF @SafeSortField = 'BaseRecentCost'
-            SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'bu.RecentCost ' + @SafeSortOrder + ', i.ItemName';
-        ELSE IF @SafeSortField = 'LastAdjDate'
-            SET @Qry += ' ORDER BY ' + @CodeMatchRank + '(SELECT MAX(a.AdjDate) FROM dbo.InventoryAdj a INNER JOIN dbo.InventoryAdjDetail ad ON a.AdjId = ad.AdjId WHERE ad.ItemId = i.ItemId) ' + @SafeSortOrder + ', i.ItemName';
+            SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'ExpiryDate';
+        ELSE
+            -- Old: SET @Qry += ' ORDER BY ' + @SortField + ' ' + @SortOrder;
+            SET @Qry += ' ORDER BY ' + @CodeMatchRank + @SortField + ' ' + @SortOrder;
     END
     ELSE
         -- Old: SET @Qry += ' ORDER BY i.Last3M DESC, ItemName';
-        -- Old direct-sort fallback: SET @Qry += ' ORDER BY ' + @SortField + ' ' + @SortOrder;
         SET @Qry += ' ORDER BY ' + @CodeMatchRank + 'i.Last3M DESC, ItemName';
 
     -- Pagination
@@ -371,7 +346,7 @@ BEGIN
         FETCH NEXT ' + CONVERT(VARCHAR, @Pagesize) + ' ROWS ONLY';
 
     INSERT INTO #itmtbl
-    EXEC sp_executesql @Qry, N'@ShowNonInventory BIT', @ShowNonInventory = @ShowNonInventory;
+    EXEC (@Qry);
 
     -- Post processing updates
     ;WITH FutureSales AS
@@ -453,29 +428,23 @@ BEGIN
 
     -- Final output
     DECLARE @FinalQry NVARCHAR(MAX);
-    IF @SafeSortField IS NOT NULL
+    IF @SortField IS NOT NULL
     BEGIN
-        IF @SafeSortField IN ('recent', 'cat', 'storage')
+        IF @SortField IN ('cat', 'storage')
             -- Old: SELECT * FROM #itmtbl ORDER BY Id;
             SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'Id';
-        ELSE IF @SafeSortField = 'exp'
+        ELSE IF @SortField = 'exp'
             -- Old: SELECT * FROM #itmtbl ORDER BY ExpiryDate;
-            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'ExpiryDate ' + @SafeSortOrder + ', ItemName';
-        ELSE IF @SafeSortField = 'ItemCode'
-            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'ItemCode ' + @SafeSortOrder + ', ItemName';
-        ELSE IF @SafeSortField = 'ItemName'
-            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'ItemName ' + @SafeSortOrder + ', ItemCode';
-        ELSE IF @SafeSortField = 'BaseRecentCost'
-            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'BaseRecentCost ' + @SafeSortOrder + ', ItemName';
-        ELSE IF @SafeSortField = 'LastAdjDate'
-            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'LastAdjDate ' + @SafeSortOrder + ', ItemName';
+            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'ExpiryDate';
+        ELSE
+            -- Old: SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @SortField + ' ' + ISNULL(@SortOrder, 'ASC');
+            SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + @SortField + ' ' + ISNULL(@SortOrder, 'ASC');
 
         EXEC(@FinalQry);
     END
     ELSE
     BEGIN
         -- Old: SELECT * FROM #itmtbl ORDER BY Last3M DESC, ItemName;
-        -- Old direct-sort fallback: SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @SortField + ' ' + ISNULL(@SortOrder, 'ASC');
         SET @FinalQry = 'SELECT * FROM #itmtbl ORDER BY ' + @FinalPinnedRank + 'Last3M DESC, ItemName';
         EXEC(@FinalQry);
     END;
