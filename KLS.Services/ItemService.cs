@@ -18,15 +18,18 @@ namespace KLS.Services
         private readonly ISystemSettingService _systemSettingService;
         private readonly ITwilioService _twilioService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IItemImageService _itemImageService;
 
         public ItemService(IUnitOfWork uow,
             ISystemSettingService systemSettingService,
             ITwilioService twilioService,
-            IHttpContextAccessor httpContextAccessor) : base(uow)
+            IHttpContextAccessor httpContextAccessor,
+            IItemImageService itemImageService) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _twilioService = twilioService;
             _httpContextAccessor = httpContextAccessor;
+            _itemImageService = itemImageService;
         }
 
         public PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq)
@@ -298,11 +301,26 @@ namespace KLS.Services
             }
             else
             {
+                var cloneImageSourceId = item.CloneWithImage ? item.CloneItemId : null;
+                if (item.CloneWithImage && !cloneImageSourceId.HasValue)
+                    throw new InvalidOperationException("Clone source item is required when cloning with image.");
+
+                if (cloneImageSourceId.HasValue)
+                {
+                    if (cloneImageSourceId.Value <= 0 || !Uow.Items.Exists(c => c.ItemId == cloneImageSourceId.Value))
+                        throw new InvalidOperationException("Clone source item not found.");
+
+                    _itemImageService.ValidateCloneImages(cloneImageSourceId.Value);
+                }
+
                 Uow.Items.Add(item);
                 Uow.Commit();
 
                 // Canonicalize SetPacking from the persisted units.
                 ItemSetPackingRecomputer.Apply(Uow, item.ItemId);
+
+                if (cloneImageSourceId.HasValue)
+                    _itemImageService.CloneImages(cloneImageSourceId.Value, item.ItemId);
             }
 
             //var mapItems = Uow.ItemCatalogMap.Filter(c => c.ItemId == item.ItemId).ToList();

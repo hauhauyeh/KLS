@@ -129,5 +129,11 @@ namespace KLS.Models
 
         [NotMapped]
         public decimal? DefaultRetailPercent { get; set; }
+
+        [NotMapped]
+        public int? CloneItemId { get; set; }
+
+        [NotMapped]
+        public bool CloneWithImage { get; set; }
     }
 }
