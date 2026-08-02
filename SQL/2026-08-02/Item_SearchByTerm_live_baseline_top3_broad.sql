@@ -1,10 +1,6 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 
-CREATE OR ALTER PROCEDURE [dbo].[Item_SearchByTerm]
+CREATE   PROCEDURE [dbo].[Item_SearchByTerm]
     @SearchTerm NVARCHAR(100),
     @ShowInactive BIT = 0
 AS
@@ -75,7 +71,7 @@ BEGIN
             LEN(b.ItemCode),
             b.ItemCode
     ),
-    RemainingMatches AS
+    TextMatches AS
     (
         SELECT
             b.ItemId,
@@ -86,17 +82,29 @@ BEGIN
             b.BaseUnit,
             b.ThumbnailPath,
             1 AS BucketRank,
-            1 AS SearchRank,
-            CHARINDEX(@SearchTerm, b.ItemCode + ' ' + b.ItemName + ' ' + ISNULL(b.ItemSearchTag, '')) AS SearchLoc
+            CASE
+                WHEN b.ItemName LIKE @SearchTerm + '%' THEN 4
+                WHEN b.ItemName LIKE '%' + @SearchTerm + '%' THEN 5
+                WHEN ISNULL(b.ItemSearchTag, '') LIKE '%' + @SearchTerm + '%' THEN 6
+            END AS SearchRank,
+            CASE
+                WHEN b.ItemName LIKE @SearchTerm + '%' THEN 0
+                WHEN b.ItemName LIKE '%' + @SearchTerm + '%' THEN CHARINDEX(@SearchTerm, b.ItemName)
+                WHEN ISNULL(b.ItemSearchTag, '') LIKE '%' + @SearchTerm + '%' THEN CHARINDEX(@SearchTerm, ISNULL(b.ItemSearchTag, ''))
+            END AS SearchLoc
         FROM BaseItems AS b
         WHERE NOT EXISTS (SELECT 1 FROM CodeMatches AS cm WHERE cm.ItemId = b.ItemId)
-          AND CHARINDEX(@SearchTerm, b.ItemCode + ' ' + b.ItemName + ' ' + ISNULL(b.ItemSearchTag, '')) > 0
+          AND (
+                 b.ItemName LIKE @SearchTerm + '%'
+              OR b.ItemName LIKE '%' + @SearchTerm + '%'
+              OR ISNULL(b.ItemSearchTag, '') LIKE '%' + @SearchTerm + '%'
+          )
     ),
     RankedResults AS
     (
         SELECT * FROM CodeMatches
         UNION ALL
-        SELECT * FROM RemainingMatches
+        SELECT * FROM TextMatches
     )
     SELECT TOP (100)
         ItemId,
@@ -119,4 +127,3 @@ BEGIN
         CASE WHEN BucketRank = 0 THEN ItemCode ELSE ItemName END,
         CASE WHEN BucketRank = 0 THEN ItemName ELSE ItemCode END;
 END
-GO
