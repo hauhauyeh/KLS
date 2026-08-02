@@ -81,18 +81,7 @@ namespace KLS.Services
             {
                 if (purchase.IsDropShip && purchase.DropShipSalesId != null)
                 {
-                    Uow.ExecuteInTransaction(() =>
-                    {
-                        var unlinkCount = Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
-                            .ExecuteUpdate(su => su
-                                .SetProperty(s => s.IsDropShip, false)
-                                .SetProperty(s => s.DropShipPurchaseId, (int?)null));
-
-                        if (unlinkCount == 0)
-                            throw new ArgumentException("Linked drop-ship sales order was not found.");
-
-                        Uow.Purchases.Find(c => c.PurchaseId == PurchaseId).ExecuteDelete();
-                    });
+                    CancelLinkedDropShipPurchaseDelete(purchase, PurchaseId);
                 }
                 else
                 {
