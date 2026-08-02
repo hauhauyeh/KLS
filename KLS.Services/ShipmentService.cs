@@ -506,20 +506,13 @@ namespace KLS.Services
 
             var purchaseIds = bills.Select(b => b.PurchaseId).Distinct().ToList();
 
-            // 2026-07-17 NO_LANDED_COST: drop-ship bills participate in freight split/audit
-            // but never in landed-cost allocation. Classify selected rows once and let each
-            // charge-type branch apply the rule explicitly.
+            // Drop-ship bills use the same split/basis rules as normal bills, then clear to COGS downstream.
             var selectedPurchases = Uow.Purchases
                 .Find(p => purchaseIds.Contains(p.PurchaseId))
                 .ToList();
-            var purchaseById = selectedPurchases.ToDictionary(p => p.PurchaseId);
-            var normalPurchaseIds = selectedPurchases
-                .Where(p => !p.IsDropShip)
+            var selectedPurchaseIds = selectedPurchases
                 .Select(p => p.PurchaseId)
                 .ToHashSet();
-            var isDropShipBySpId = bills.ToDictionary(
-                b => b.ShipmentPurchaseId,
-                b => purchaseById.TryGetValue(b.PurchaseId, out var p) && p.IsDropShip);
 
             // One-purchase-one-shipment backstop (assignment enforces it; this is defence in depth).
             var offenders = Uow.ShipmentPurchases
@@ -557,9 +550,6 @@ namespace KLS.Services
 
             if (isFreight)
             {
-                if (normalPurchaseIds.Count == 0)
-                    throw new ArgumentException("Freight split requires at least one normal vendor bill.");
-
                 billBasis = (req.BillBasis ?? "").Trim().ToUpperInvariant();
                 if (billBasis != "BY_PALLET" && billBasis != "BY_SPACE_PCT")
                     throw new ArgumentException("Freight requires BillBasis BY_PALLET or BY_SPACE_PCT.");
@@ -614,22 +604,6 @@ namespace KLS.Services
                     var amt = amount[r.ShipmentPurchaseId];
                     if (amt <= 0m) continue; // a zero-share bill bears no freight; no charge row
 
-                    if (isDropShipBySpId.TryGetValue(r.ShipmentPurchaseId, out var isDropShip) && isDropShip)
-                    {
-                        toAdd.Add(new ShipmentCharge
-                        {
-                            ShipmentId = req.ShipmentId,
-                            ShipmentPurchaseId = r.ShipmentPurchaseId,
-                            ChargeType = "Freight",
-                            ChargeAmount = amt,
-                            BillBasis = billBasis,
-                            LineBasis = AllocationMethods.NoLandedCost,
-                            AllocationMethod = AllocationMethods.NoLandedCost,
-                            UpdatedAt = DateTime.UtcNow
-                        });
-                        continue;
-                    }
-
                     if (!usability.TryGetValue(r.ShipmentPurchaseId, out var u))
                         throw new ArgumentException($"No basis-usability data for bill {BillLabel(r.ShipmentPurchaseId)}.");
 
@@ -660,9 +634,6 @@ namespace KLS.Services
             }
             else // duty / tariff: split the broker's actual total by each bill's duty/tariff weight.
             {
-                if (req.Rows.Any(r => isDropShipBySpId.TryGetValue(r.ShipmentPurchaseId, out var isDropShip) && isDropShip))
-                    throw new ArgumentException($"{chargeType} split does not support drop-ship bills.");
-
                 if (req.CarrierTotal < 0m)
                     throw new ArgumentException($"{chargeType} actual total cannot be negative.");
 
@@ -724,10 +695,7 @@ namespace KLS.Services
             var oldPurchaseIds = oldSpIds.Count == 0
                 ? new List<int>()
                 : Uow.ShipmentPurchases.Find(sp => oldSpIds.Contains(sp.ShipmentPurchaseId)).Select(sp => sp.PurchaseId).ToList();
-            var oldNormalPurchaseIds = oldPurchaseIds.Count == 0
-                ? new List<int>()
-                : Uow.Purchases.Find(p => oldPurchaseIds.Contains(p.PurchaseId) && !p.IsDropShip).Select(p => p.PurchaseId).ToList();
-            var affectedPurchaseIds = normalPurchaseIds.Union(oldNormalPurchaseIds).Distinct().ToList();
+            var affectedPurchaseIds = selectedPurchaseIds.Union(oldPurchaseIds).Distinct().ToList();
 
             // Atomic multi-table save: split inputs (pallet/space) + the per-bill charge group,
             // all-or-nothing. ExecuteInTransaction wraps ExecuteUpdate/ExecuteDelete/SaveChanges in one DB tx,
@@ -802,7 +770,6 @@ namespace KLS.Services
             public const string ByWeight = "BY_WEIGHT";
             public const string ByPallet = "BY_PALLET";
             public const string ByQuantity = "BY_QUANTITY";
-            public const string NoLandedCost = "NO_LANDED_COST";
         }
 
         private static string GetAllocationMethodFromChargeType(string? chargeTypeRaw)

@@ -91,6 +91,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("EmailPdf/{purchaseId}")]
+        [DisplayName("Email PO")]
+        [PermissionKey("Vendor.PurchaseOrder.EmailPdf")]
+        public IActionResult EmailPdf(int purchaseId)
+        {
+            return Ok(_purchaseOrderService.EmailPdf(purchaseId));
+        }
+
+
         [HttpPut("UpdateToBillStage/{purchaseId}")]
         [DisplayName("Convert To Bill")]
         [PermissionKey("Vendor.PurchaseOrder.ConvertToBill")]

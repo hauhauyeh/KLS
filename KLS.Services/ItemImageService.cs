@@ -100,6 +100,15 @@ namespace KLS.Services
             rgba.Save(outputPath, new PngEncoder());
         }
 
+        private static Image CropMaxCenteredSquare(Image source)
+        {
+            var size = Math.Min(source.Width, source.Height);
+            var x = (source.Width - size) / 2;
+            var y = (source.Height - size) / 2;
+
+            return source.Clone(ctx => ctx.Crop(new Rectangle(x, y, size, size)));
+        }
+
         private void AcquireProcessingLock(int imageId)
         {
             var entity = Uow.ItemImages.GetById(imageId);
@@ -205,6 +214,10 @@ namespace KLS.Services
         {
             TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-temp-python.png"));
             TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-temp-api.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-crop-temp.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-300-temp.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-1200-temp.png"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-2000-temp.png"));
         }
 
         #endregion
@@ -247,7 +260,10 @@ namespace KLS.Services
                 .ToList();
 
             var order = uploadReq.Order ?? new List<int>();
-            var files = uploadReq.files ?? new List<IFormFile>();
+            var files = uploadReq.CroppedFiles?.Any() == true
+                ? uploadReq.CroppedFiles
+                : uploadReq.files ?? new List<IFormFile>();
+            var originalFiles = uploadReq.OriginalFiles ?? new List<IFormFile>();
 
             // If UI didn't send order, fallback: keep DB order + append new at end
             if (order.Count == 0)
@@ -259,6 +275,8 @@ namespace KLS.Services
             int zeroCount = order.Count(x => x == 0);
             if (zeroCount != files.Count)
                 throw new Exception("Order placeholders (0) count must match uploaded files count.");
+            if (originalFiles.Count > 0 && originalFiles.Count != zeroCount)
+                throw new Exception("Original files count must match new image count.");
 
             // Validate all IDs belong to this item
             var validIds = dbImages.Select(x => x.ImageId).ToHashSet();
@@ -299,6 +317,7 @@ namespace KLS.Services
             int nextImageIndex = dbImages.Any() ? dbImages.Max(x => x.ImageIndex) + 1 : 1;
 
             int fileCursor = 0;
+            int originalFileCursor = 0;
 
             for (int i = 0; i < order.Count; i++)
             {
@@ -321,11 +340,15 @@ namespace KLS.Services
 
                 // New file
                 var file = files[fileCursor++];
+                var originalFile = originalFiles.Count > 0 ? originalFiles[originalFileCursor++] : file;
 
                 // Extension validation
-                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var ext = Path.GetExtension(originalFile.FileName).ToLowerInvariant();
                 if (string.IsNullOrEmpty(ext) || !AllowedExtensions.Contains(ext))
                     throw new Exception($"Unsupported file format '{ext}'. Allowed: {string.Join(", ", AllowedExtensions)}");
+                var cropExt = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (string.IsNullOrEmpty(cropExt) || !AllowedExtensions.Contains(cropExt))
+                    throw new Exception($"Unsupported cropped file format '{cropExt}'. Allowed: {string.Join(", ", AllowedExtensions)}");
 
                 int imageIndex = nextImageIndex++;
 
@@ -345,15 +368,25 @@ namespace KLS.Services
 
                 try
                 {
-                    // Save original
+                    // Save untouched original separately from the cropped display source.
                     var orgPath = Path.Combine(itemFolder, $"{imageIndex}-org{ext}");
                     using (var stream = new FileStream(orgPath, FileMode.Create))
                     {
-                        file.CopyTo(stream);
+                        originalFile.CopyTo(stream);
+                    }
+
+                    var hasSeparateCropSource = originalFiles.Count > 0;
+                    var cropPath = Path.Combine(itemFolder, $"{imageIndex}-crop.png");
+                    if (hasSeparateCropSource)
+                    {
+                        using var croppedStream = file.OpenReadStream();
+                        using var croppedImage = Image.Load(croppedStream);
+                        croppedImage.Save(cropPath, new PngEncoder());
                     }
 
                     // Generate with-bg sizes using ImageSharp
-                    using (var image = Image.Load(orgPath))
+                    var resizeSourcePath = hasSeparateCropSource ? cropPath : orgPath;
+                    using (var image = Image.Load(resizeSourcePath))
                     {
                         SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
                         SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-1200.png"), 1200);
@@ -373,6 +406,7 @@ namespace KLS.Services
                     Uow.Commit();
 
                     TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-org{ext}"));
+                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-crop.png"));
                     TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-300.png"));
                     TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-1200.png"));
                     TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-2000.png"));
@@ -382,6 +416,62 @@ namespace KLS.Services
             }
 
             Uow.Commit();
+        }
+
+        public void ReprocessOriginal(int imageId)
+        {
+            AcquireProcessingLock(imageId);
+
+            try
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                if (entity == null) throw new Exception("Image not found.");
+                if (string.IsNullOrWhiteSpace(entity.OriginalExtension))
+                    throw new Exception("Original image extension is missing.");
+
+                var itemFolder = GetItemFolder(entity.ItemId);
+                var idx = entity.ImageIndex;
+                var orgPath = Path.Combine(itemFolder, $"{idx}-org{entity.OriginalExtension}");
+                if (!File.Exists(orgPath))
+                    throw new FileNotFoundException($"Original image not found: {idx}-org{entity.OriginalExtension}");
+
+                var cropTemp = Path.Combine(itemFolder, $"{idx}-crop-temp.png");
+                var size300Temp = Path.Combine(itemFolder, $"{idx}-300-temp.png");
+                var size1200Temp = Path.Combine(itemFolder, $"{idx}-1200-temp.png");
+                var size2000Temp = Path.Combine(itemFolder, $"{idx}-2000-temp.png");
+
+                CleanupTempFiles(itemFolder, idx);
+
+                using (var original = Image.Load(orgPath))
+                using (var cropped = CropMaxCenteredSquare(original))
+                {
+                    cropped.Save(cropTemp, new PngEncoder());
+                    SaveResized(cropped, size300Temp, 300);
+                    SaveResized(cropped, size1200Temp, 1200);
+                    SaveResized(cropped, size2000Temp, 2000);
+                }
+
+                File.Move(cropTemp, Path.Combine(itemFolder, $"{idx}-crop.png"), overwrite: true);
+                File.Move(size300Temp, Path.Combine(itemFolder, $"{idx}-300.png"), overwrite: true);
+                File.Move(size1200Temp, Path.Combine(itemFolder, $"{idx}-1200.png"), overwrite: true);
+                File.Move(size2000Temp, Path.Combine(itemFolder, $"{idx}-2000.png"), overwrite: true);
+
+                entity.Has300 = true;
+                entity.Has1200 = true;
+                entity.Has2000 = true;
+                Uow.ItemImages.Update(entity);
+                Uow.Commit();
+            }
+            finally
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                if (entity != null)
+                {
+                    CleanupTempFiles(GetItemFolder(entity.ItemId), entity.ImageIndex);
+                }
+
+                ReleaseProcessingLock(imageId);
+            }
         }
 
         public void Delete(int imageId)
@@ -396,6 +486,7 @@ namespace KLS.Services
 
             // Delete all files for this image (tolerant — ignore missing)
             TryDeleteFile(Path.Combine(itemFolder, $"{idx}-org{ext}"));
+            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-crop.png"));
             TryDeleteFile(Path.Combine(itemFolder, $"{idx}-300.png"));
             TryDeleteFile(Path.Combine(itemFolder, $"{idx}-1200.png"));
             TryDeleteFile(Path.Combine(itemFolder, $"{idx}-2000.png"));

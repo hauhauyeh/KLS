@@ -21,6 +21,7 @@ namespace KLS.Common
         {
             public const string SalesQuote = "SalesQuote";
             public const string Invoice = "Invoice";
+            public const string PurchaseOrder = "PurchaseOrder";
             public const string PriceSheet = "PriceSheet";
             public const string Statement = "Statement";
             public const string ACHReceipt = "ACHReceipt";
@@ -37,6 +38,7 @@ namespace KLS.Common
         {
             public const string SalesQuote = "SalesQuote";
             public const string Invoice = "Invoice";
+            public const string PurchaseOrder = "PurchaseOrder";
             public const string Statement = "Statement";
             public const string PriceSheet = "PriceSheet";
             public const string ACHReceipt = "ACHReceipt";
