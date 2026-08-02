@@ -8,7 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace KLS.Services
@@ -19,6 +21,7 @@ namespace KLS.Services
         private readonly ICompanyService _companyService;
         private readonly IPDFService _pdfService;
         private readonly ISystemSettingService _systemSettingService;
+        private readonly IEmailAuditService _emailAuditService;
         private readonly IWebHostEnvironment _env;
 
         public PurchaseOrderService(IUnitOfWork uow,
@@ -26,12 +29,14 @@ namespace KLS.Services
             ICompanyService companyService,
             IPDFService pdfService,
             ISystemSettingService systemSettingService,
+            IEmailAuditService emailAuditService,
             IWebHostEnvironment env) : base(uow)
         {
             _deleteLogService = deleteLogService;
             _companyService = companyService;
             _pdfService = pdfService;
             _systemSettingService = systemSettingService;
+            _emailAuditService = emailAuditService;
             _env = env;
         }
 
@@ -76,18 +81,7 @@ namespace KLS.Services
             {
                 if (purchase.IsDropShip && purchase.DropShipSalesId != null)
                 {
-                    Uow.ExecuteInTransaction(() =>
-                    {
-                        var unlinkCount = Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
-                            .ExecuteUpdate(su => su
-                                .SetProperty(s => s.IsDropShip, false)
-                                .SetProperty(s => s.DropShipPurchaseId, (int?)null));
-
-                        if (unlinkCount == 0)
-                            throw new ArgumentException("Linked drop-ship sales order was not found.");
-
-                        Uow.Purchases.Find(c => c.PurchaseId == PurchaseId).ExecuteDelete();
-                    });
+                    CancelLinkedDropShipPurchaseDelete(purchase, PurchaseId);
                 }
                 else
                 {
@@ -143,6 +137,68 @@ namespace KLS.Services
             return poFile;
         }
 
+        public PurchaseOrderEmailPdfResult EmailPdf(int purchaseId)
+        {
+            var po = GetListById(purchaseId);
+
+            if (po == null)
+                throw new KeyNotFoundException($"Purchase order with Id {purchaseId} not found.");
+
+            if (!po.PayeeId.HasValue)
+                throw new ArgumentException("PO vendor is missing.");
+
+            var vendor = Uow.Payees.GetById(po.PayeeId.Value);
+            var recipient = vendor?.Email?.Trim();
+
+            if (vendor == null || string.IsNullOrWhiteSpace(recipient))
+                throw new ArgumentException("Vendor email is missing.");
+
+            var poNumber = po.PurchaseNumber.ToString();
+            var poFile = PrintPO(purchaseId);
+            var tempFolder = CreateEmailAttachmentFolder();
+
+            try
+            {
+                var attachments = BuildPurchaseOrderEmailAttachments(tempFolder, poNumber, poFile);
+                var subject = $"Purchase Order #{poNumber}";
+                var mailbody = BuildPurchaseOrderEmailBody(vendor.PayeeName, poNumber);
+
+                var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
+                {
+                    To = recipient,
+                    Subject = subject,
+                    HtmlBody = mailbody,
+                    Attachments = attachments,
+                    EmailCategory = EmailAudit.Category.Document,
+                    EmailType = EmailAudit.EmailType.PurchaseOrder,
+                    PayeeId = vendor.PayeeId,
+                    DocumentType = EmailAudit.DocumentType.PurchaseOrder,
+                    DocumentId = purchaseId,
+                    DocumentNumber = poNumber,
+                    Source = EmailAudit.Source.Manual,
+                    RequestedBy = UserContext.SystemUserId
+                });
+
+                var sent = string.IsNullOrEmpty(error);
+
+                return new PurchaseOrderEmailPdfResult
+                {
+                    DeliveryStatus = sent ? EmailAudit.DeliveryStatus.Sent : EmailAudit.DeliveryStatus.Failed,
+                    Message = sent
+                        ? "PO email sent."
+                        : "PO email failed.",
+                    To = recipient,
+                    DocumentNumber = poNumber,
+                    AttachmentCount = attachments.Length,
+                    ErrorMessage = sent ? null : error
+                };
+            }
+            finally
+            {
+                DeleteEmailAttachmentFolder(tempFolder);
+            }
+        }
+
         public POList? UpdateToBillStage(int purchaseId)
         {
             Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
@@ -156,5 +212,58 @@ namespace KLS.Services
             return GetListById(purchaseId);
         }
 
+        private string CreateEmailAttachmentFolder()
+        {
+            var folder = Path.Combine(_env.WebRootPath, "EmailAttachments", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+
+            return folder;
+        }
+
+        private static string[] BuildPurchaseOrderEmailAttachments(string tempFolder, string poNumber, string poFile)
+        {
+            if (string.IsNullOrWhiteSpace(poFile) || !File.Exists(poFile))
+                throw new FileNotFoundException("Generated PO PDF was not found.", poFile);
+
+            var safeNumber = SafeFilePart(poNumber);
+            var attachment = Path.Combine(tempFolder, $"PO-{safeNumber}.pdf");
+
+            File.Copy(poFile, attachment, true);
+
+            return new[] { attachment };
+        }
+
+        private string BuildPurchaseOrderEmailBody(string? vendorName, string poNumber)
+        {
+            var safeVendorName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(vendorName) ? "Vendor" : vendorName);
+            var safePoNumber = WebUtility.HtmlEncode(poNumber);
+            var companyName = WebUtility.HtmlEncode(_companyService.GetDefault()?.CompanyName ?? "KLS");
+
+            return $"""
+                <p>Hello {safeVendorName},</p>
+                <p>Please find attached Purchase Order #{safePoNumber}.</p>
+                <p>Thank you,<br>{companyName}</p>
+                """;
+        }
+
+        private static string SafeFilePart(string value)
+        {
+            var safe = Regex.Replace(value, @"[^\w.-]+", "-").Trim('-');
+
+            return string.IsNullOrWhiteSpace(safe) ? "PO" : safe;
+        }
+
+        private static void DeleteEmailAttachmentFolder(string folder)
+        {
+            try
+            {
+                if (Directory.Exists(folder))
+                    Directory.Delete(folder, true);
+            }
+            catch
+            {
+                // Best-effort cleanup only. The email send/log result is already known.
+            }
+        }
     }
 }

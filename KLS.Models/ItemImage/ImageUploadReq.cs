@@ -13,6 +13,10 @@ namespace KLS.Models
 
         public List<IFormFile>? files { get; set; }
 
+        public List<IFormFile>? OriginalFiles { get; set; }
+
+        public List<IFormFile>? CroppedFiles { get; set; }
+
         // Mixed order: existing IDs + 0 placeholders for NEW files
         // Example: [12, 0, 15, 0, 9]
         public List<int>? Order { get; set; }

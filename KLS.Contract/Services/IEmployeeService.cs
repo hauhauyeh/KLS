@@ -23,7 +23,8 @@ namespace KLS.Contract.Services
 
         EmployeeDTO? Update(EmployeeDTO payee);
 
-        void Delete(int payeeId);
+        /// <summary>Returns false when the employee does not exist or is a hidden system account.</summary>
+        bool Delete(int payeeId);
 
         IEnumerable<PayeeSearch>? Search(PayeeSearchReq searchReq);
     }

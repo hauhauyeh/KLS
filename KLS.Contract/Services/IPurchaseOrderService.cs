@@ -21,6 +21,8 @@ namespace KLS.Contract.Services
 
         string PrintPO(int purchaseId);
 
+        PurchaseOrderEmailPdfResult EmailPdf(int purchaseId);
+
         POList? UpdateToBillStage(int purchaseId);
 
     }
