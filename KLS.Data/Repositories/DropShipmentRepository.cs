@@ -172,13 +172,16 @@ namespace KLS.Data.Repositories
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
             var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var receiptDateParam = req.ReceiptDate.HasValue
+                ? new SqlParameter("@ReceiptDate", req.ReceiptDate.Value.ToDateTime(TimeOnly.MinValue))
+                : new SqlParameter("@ReceiptDate", DBNull.Value);
             var itemsJsonParam = string.IsNullOrWhiteSpace(req.ItemsJson)
                 ? new SqlParameter("@ItemsJson", DBNull.Value)
                 : new SqlParameter("@ItemsJson", req.ItemsJson);
 
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_UpdateReceiptQty] @PurchaseId,@EmpId,@ItemsJson",
-                purchaseIdParam, empIdParam, itemsJsonParam);
+                "[DropShipment_UpdateReceiptQty] @PurchaseId,@EmpId,@ReceiptDate,@ItemsJson",
+                purchaseIdParam, empIdParam, receiptDateParam, itemsJsonParam);
         }
 
         public void ConvertPOToBill(int purchaseId)

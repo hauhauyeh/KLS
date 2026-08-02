@@ -45,6 +45,9 @@ namespace KLS.Services
             if (req == null || string.IsNullOrWhiteSpace(req.ItemsJson))
                 throw new ArgumentException("Receipt items are required.");
 
+            if (!req.ReceiptDate.HasValue)
+                throw new ArgumentException("Receipt date is required.");
+
             Uow.DropShipments.UpdateReceiptQty(purchaseId, req);
         }
 
