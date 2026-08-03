@@ -15,6 +15,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<ItemSearch>? Search(ItemSearchReq searchReq);
 
+        IQueryable<ItemSearch>? PublicWebInventorySearch(string? searchTerm);
+
         void Delete(int itemId);
 
         IQueryable<ItemCalcUnit> GetCalcUnit(ItemPackingReq packingReq);

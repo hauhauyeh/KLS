@@ -18,6 +18,8 @@ namespace KLS.Models
 
         public bool UseSalesDocNumber { get; set; }
 
+        public bool PublicProductListEnabled { get; set; }
+
         public string CurrencyCode { get; set; } = "USD";
 
         public string? MetaTitle { get; set; }

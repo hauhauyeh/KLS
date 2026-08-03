@@ -47,6 +47,7 @@ namespace KLS.API.Controllers.Web
                 PortalMode = _portalModeService.GetMode().ToString(),
                 EnforceStockLimit = _systemSettingService.GetByKey<bool>(GlobalKey.WEB_ENFORCE_STOCK_LIMIT),
                 UseSalesDocNumber = _systemSettingService.GetByKey<bool>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),
+                PublicProductListEnabled = _systemSettingService.GetByKey<bool>(GlobalKey.WEB_PUBLIC_PRODUCT_LIST_ENABLE),
                 CurrencyCode = "USD",
                 MetaTitle = seo?.MetaTitle,
                 MetaTitleShort = seo?.MetaTitleShort,

@@ -411,11 +411,11 @@ namespace KLS.Services
             return BuildWebPagedList(webListReq, false);
         }
 
-        public PagingResponse<ItemWebList> GetPublicWebPagedList(ItemWebListReq webListReq)
+        public PagingResponse<ItemWebList> GetPublicWebPagedList(ItemWebListReq webListReq, bool includePrices = true)
         {
             webListReq.PayeeId = 0;
 
-            return BuildWebPagedList(webListReq, true);
+            return BuildWebPagedList(webListReq, includePrices);
         }
 
         private PagingResponse<ItemWebList> BuildWebPagedList(ItemWebListReq webListReq, bool forceBasePrice)
@@ -508,7 +508,8 @@ namespace KLS.Services
 
         public IEnumerable<ItemWebSearchList>? PublicWebSearch(string searchTerm)
         {
-            return BuildWebSearch(searchTerm);
+            var items = Uow.Items.PublicWebInventorySearch(searchTerm)?.ToList();
+            return MapWebSearch(items);
         }
 
         private IEnumerable<ItemWebSearchList>? BuildWebSearch(string searchTerm)
@@ -519,7 +520,11 @@ namespace KLS.Services
             // empty-defaulted req. Old:
             //   var items = Uow.Items.Search(new ItemSearchReq { IsActiveOnly = true, Term = searchTerm })?.ToList();
             var items = Uow.Items.Search(new ItemSearchReq { Term = searchTerm })?.ToList();
+            return MapWebSearch(items);
+        }
 
+        private IEnumerable<ItemWebSearchList>? MapWebSearch(IEnumerable<ItemSearch>? items)
+        {
             string baseUrl = GetbaseUrl();
 
             return items?.Select(c => new ItemWebSearchList

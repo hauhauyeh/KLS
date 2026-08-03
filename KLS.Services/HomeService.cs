@@ -55,7 +55,7 @@ namespace KLS.Services
         // walk is shared with PromoHelperService via ICategoryRollupHelper.
         private CategoryRollup BuildCategoryRollup()
         {
-            var directCounts = Uow.Items.Find(i => !i.Inactive)
+            var directCounts = Uow.Items.Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory")
                 .Where(i => i.CategoryId != null)
                 .GroupBy(i => i.CategoryId!.Value)
                 .Select(g => new { CategoryId = g.Key, Count = g.Count() })
@@ -102,7 +102,7 @@ namespace KLS.Services
         private List<HomeProduct> GetNewArrivals(string baseUrl)
         {
             var items = Uow.Items
-                .Find(i => !i.Inactive)
+                .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory")
                 .OrderByDescending(i => i.CreatedAt)
                 .ThenByDescending(i => i.ItemId)
                 .Take(NewArrivalsLimit * ProductCandidateMultiplier)
@@ -122,7 +122,7 @@ namespace KLS.Services
         private List<HomeProduct> GetTopSellingProducts(string baseUrl)
         {
             var items = Uow.Items
-                .Find(i => !i.Inactive && i.Last3M > 0)
+                .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory" && i.Last3M > 0)
                 .OrderByDescending(i => i.Last3M)
                 .Take(TopSellingLimit * ProductCandidateMultiplier)
                 .AsNoTracking()
@@ -165,7 +165,7 @@ namespace KLS.Services
 
             // Single products query across all 5 subtrees.
             var allProducts = Uow.Items
-                .Find(i => !i.Inactive && i.Last3M > 0 && i.CategoryId.HasValue && descendantIdList.Contains(i.CategoryId.Value))
+                .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory" && i.Last3M > 0 && i.CategoryId.HasValue && descendantIdList.Contains(i.CategoryId.Value))
                 .OrderByDescending(i => i.Last3M)
                 .AsNoTracking()
                 .ToList();
@@ -232,7 +232,7 @@ namespace KLS.Services
 
             var descendantIds = descendantToRoot.Keys.ToList();
             var candidateItems = Uow.Items
-                .Find(i => !i.Inactive && i.Last3M > 0 && i.CategoryId.HasValue && descendantIds.Contains(i.CategoryId.Value))
+                .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory" && i.Last3M > 0 && i.CategoryId.HasValue && descendantIds.Contains(i.CategoryId.Value))
                 .OrderByDescending(i => i.Last3M)
                 .AsNoTracking()
                 .ToList();
