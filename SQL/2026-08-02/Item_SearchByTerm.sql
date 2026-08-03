@@ -38,7 +38,7 @@ BEGIN
     ),
     CodeMatches AS
     (
-        SELECT TOP (3)
+        SELECT TOP (1)
             b.ItemId,
             b.ItemCode,
             b.ItemName,
@@ -47,31 +47,29 @@ BEGIN
             b.BaseUnit,
             b.ThumbnailPath,
             0 AS BucketRank,
-            CASE
-                WHEN b.ItemCode = @SearchTerm THEN 1
-                WHEN b.ItemCode LIKE @SearchTerm + '%' THEN 2
-                WHEN b.ItemCode LIKE '%' + @SearchTerm + '%' THEN 3
-            END AS SearchRank,
-            CASE
-                WHEN b.ItemCode = @SearchTerm THEN 0
-                WHEN b.ItemCode LIKE @SearchTerm + '%' THEN 0
-                WHEN b.ItemCode LIKE '%' + @SearchTerm + '%' THEN CHARINDEX(@SearchTerm, b.ItemCode)
-            END AS SearchLoc
+            r.SearchRank,
+            r.SearchLoc
         FROM BaseItems AS b
-        WHERE b.ItemCode = @SearchTerm
-           OR b.ItemCode LIKE @SearchTerm + '%'
-           OR b.ItemCode LIKE '%' + @SearchTerm + '%'
+        CROSS APPLY
+        (
+            SELECT
+                CASE
+                    WHEN b.ItemCode = @SearchTerm THEN 1
+                    WHEN b.ItemCode LIKE @SearchTerm + '%' THEN 2
+                    WHEN b.ItemCode LIKE '%' + @SearchTerm + '%' THEN 3
+                    ELSE 99
+                END AS SearchRank,
+                CASE
+                    WHEN b.ItemCode = @SearchTerm THEN 0
+                    WHEN b.ItemCode LIKE @SearchTerm + '%' THEN 0
+                    WHEN b.ItemCode LIKE '%' + @SearchTerm + '%' THEN CHARINDEX(@SearchTerm, b.ItemCode)
+                    ELSE 0
+                END AS SearchLoc
+        ) AS r
+        WHERE r.SearchRank < 99
         ORDER BY
-            CASE
-                WHEN b.ItemCode = @SearchTerm THEN 1
-                WHEN b.ItemCode LIKE @SearchTerm + '%' THEN 2
-                WHEN b.ItemCode LIKE '%' + @SearchTerm + '%' THEN 3
-            END,
-            CASE
-                WHEN b.ItemCode = @SearchTerm THEN 0
-                WHEN b.ItemCode LIKE @SearchTerm + '%' THEN 0
-                WHEN b.ItemCode LIKE '%' + @SearchTerm + '%' THEN CHARINDEX(@SearchTerm, b.ItemCode)
-            END,
+            r.SearchRank,
+            r.SearchLoc,
             LEN(b.ItemCode),
             b.ItemCode
     ),
