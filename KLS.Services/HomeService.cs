@@ -12,6 +12,7 @@ namespace KLS.Services
 {
     public class HomeService : BaseService, IHomeService
     {
+        private const string HiddenWebCategoryName = "Raw Material";
         private const int FeaturedCategoryLimit = 8;
         private const int NewArrivalsLimit = 10;
         private const int TopSellingLimit = 10;
@@ -28,12 +29,13 @@ namespace KLS.Services
 
         public HomePageData GetHomePageData(string baseUrl)
         {
-            var rollup = BuildCategoryRollup();
+            var hiddenCategoryIds = GetHiddenWebCategoryIds();
+            var rollup = BuildCategoryRollup(hiddenCategoryIds);
 
-            var featuredCategories = GetFeaturedCategories(baseUrl, rollup);
-            var topSelling = GetTopSellingProducts(baseUrl);
-            var newArrivals = GetNewArrivals(baseUrl);
-            var topCategoryGroups = GetTopCategoryGroups(baseUrl, featuredCategories, rollup);
+            var featuredCategories = GetFeaturedCategories(baseUrl, rollup, hiddenCategoryIds);
+            var topSelling = GetTopSellingProducts(baseUrl, hiddenCategoryIds);
+            var newArrivals = GetNewArrivals(baseUrl, hiddenCategoryIds);
+            var topCategoryGroups = GetTopCategoryGroups(baseUrl, featuredCategories, rollup, hiddenCategoryIds);
 
             return new HomePageData
             {
@@ -53,10 +55,11 @@ namespace KLS.Services
         // items in descendant sub-categories, otherwise top-level groups like "Meat" show
         // zero products when all SKUs live under children like "Beef" / "Pork". The tree
         // walk is shared with PromoHelperService via ICategoryRollupHelper.
-        private CategoryRollup BuildCategoryRollup()
+        private CategoryRollup BuildCategoryRollup(IReadOnlyCollection<int> hiddenCategoryIds)
         {
             var directCounts = Uow.Items.Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory")
                 .Where(i => i.CategoryId != null)
+                .Where(i => hiddenCategoryIds.Count == 0 || !hiddenCategoryIds.Contains(i.CategoryId!.Value))
                 .GroupBy(i => i.CategoryId!.Value)
                 .Select(g => new { CategoryId = g.Key, Count = g.Count() })
                 .ToDictionary(x => x.CategoryId, x => x.Count);
@@ -75,17 +78,18 @@ namespace KLS.Services
             };
         }
 
-        private List<HomeCategory> GetFeaturedCategories(string baseUrl, CategoryRollup rollup)
+        private List<HomeCategory> GetFeaturedCategories(string baseUrl, CategoryRollup rollup, IReadOnlyCollection<int> hiddenCategoryIds)
         {
             var categories = Uow.ItemCategories
                 .Find(c => c.ParentId == null && !c.Inactive)
+                .Where(c => hiddenCategoryIds.Count == 0 || !hiddenCategoryIds.Contains(c.CategoryId))
                 .OrderBy(c => c.SortOrder)
                 .ThenBy(c => c.CategoryName)
                 .AsNoTracking()
                 .Take(FeaturedCategoryLimit)
                 .ToList();
 
-            var fallbackImageMap = BuildCategoryImageFallbackMap(categories, rollup, baseUrl);
+            var fallbackImageMap = BuildCategoryImageFallbackMap(categories, rollup, hiddenCategoryIds, baseUrl);
 
             return categories
                 .Select(c => new HomeCategory
@@ -99,10 +103,11 @@ namespace KLS.Services
                 .ToList();
         }
 
-        private List<HomeProduct> GetNewArrivals(string baseUrl)
+        private List<HomeProduct> GetNewArrivals(string baseUrl, IReadOnlyCollection<int> hiddenCategoryIds)
         {
             var items = Uow.Items
                 .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory")
+                .Where(i => hiddenCategoryIds.Count == 0 || !i.CategoryId.HasValue || !hiddenCategoryIds.Contains(i.CategoryId.Value))
                 .OrderByDescending(i => i.CreatedAt)
                 .ThenByDescending(i => i.ItemId)
                 .Take(NewArrivalsLimit * ProductCandidateMultiplier)
@@ -119,10 +124,11 @@ namespace KLS.Services
                 .ToList();
         }
 
-        private List<HomeProduct> GetTopSellingProducts(string baseUrl)
+        private List<HomeProduct> GetTopSellingProducts(string baseUrl, IReadOnlyCollection<int> hiddenCategoryIds)
         {
             var items = Uow.Items
                 .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory" && i.Last3M > 0)
+                .Where(i => hiddenCategoryIds.Count == 0 || !i.CategoryId.HasValue || !hiddenCategoryIds.Contains(i.CategoryId.Value))
                 .OrderByDescending(i => i.Last3M)
                 .Take(TopSellingLimit * ProductCandidateMultiplier)
                 .AsNoTracking()
@@ -138,7 +144,11 @@ namespace KLS.Services
                 .ToList();
         }
 
-        private List<HomeCategoryProductGroup> GetTopCategoryGroups(string baseUrl, List<HomeCategory> featuredCategories, CategoryRollup rollup)
+        private List<HomeCategoryProductGroup> GetTopCategoryGroups(
+            string baseUrl,
+            List<HomeCategory> featuredCategories,
+            CategoryRollup rollup,
+            IReadOnlyCollection<int> hiddenCategoryIds)
         {
             // Skip featured categories that have no items anywhere in their subtree.
             var groupCategories = featuredCategories
@@ -156,6 +166,7 @@ namespace KLS.Services
                 if (!rollup.DescendantIds.TryGetValue(cat.CategoryId, out var descendants)) continue;
                 foreach (var id in descendants)
                 {
+                    if (hiddenCategoryIds.Contains(id)) continue;
                     descendantToRoot[id] = cat.CategoryId;
                 }
             }
@@ -166,6 +177,7 @@ namespace KLS.Services
             // Single products query across all 5 subtrees.
             var allProducts = Uow.Items
                 .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory" && i.Last3M > 0 && i.CategoryId.HasValue && descendantIdList.Contains(i.CategoryId.Value))
+                .Where(i => hiddenCategoryIds.Count == 0 || !hiddenCategoryIds.Contains(i.CategoryId!.Value))
                 .OrderByDescending(i => i.Last3M)
                 .AsNoTracking()
                 .ToList();
@@ -212,6 +224,7 @@ namespace KLS.Services
         private Dictionary<int, string> BuildCategoryImageFallbackMap(
             IReadOnlyCollection<ItemCategory> categories,
             CategoryRollup rollup,
+            IReadOnlyCollection<int> hiddenCategoryIds,
             string baseUrl)
         {
             if (categories.Count == 0) return new Dictionary<int, string>();
@@ -224,6 +237,7 @@ namespace KLS.Services
 
                 foreach (var id in descendants)
                 {
+                    if (hiddenCategoryIds.Contains(id)) continue;
                     descendantToRoot[id] = category.CategoryId;
                 }
             }
@@ -233,6 +247,7 @@ namespace KLS.Services
             var descendantIds = descendantToRoot.Keys.ToList();
             var candidateItems = Uow.Items
                 .Find(i => !i.Inactive && !i.IsDeleted && i.ItemType == "Inventory" && i.Last3M > 0 && i.CategoryId.HasValue && descendantIds.Contains(i.CategoryId.Value))
+                .Where(i => hiddenCategoryIds.Count == 0 || !hiddenCategoryIds.Contains(i.CategoryId!.Value))
                 .OrderByDescending(i => i.Last3M)
                 .AsNoTracking()
                 .ToList();
@@ -252,6 +267,34 @@ namespace KLS.Services
             }
 
             return result;
+        }
+
+        private List<int> GetHiddenWebCategoryIds()
+        {
+            var categories = Uow.ItemCategories.GetAll().AsNoTracking().ToList();
+            var childrenByParent = categories
+                .Where(c => c.ParentId.HasValue)
+                .GroupBy(c => c.ParentId!.Value)
+                .ToDictionary(g => g.Key, g => g.Select(c => c.CategoryId).ToList());
+
+            var hiddenIds = new HashSet<int>();
+            var stack = new Stack<int>(
+                categories
+                    .Where(c => string.Equals(c.CategoryName?.Trim(), HiddenWebCategoryName, StringComparison.OrdinalIgnoreCase))
+                    .Select(c => c.CategoryId));
+
+            while (stack.Count > 0)
+            {
+                var categoryId = stack.Pop();
+                if (!hiddenIds.Add(categoryId)) continue;
+
+                if (!childrenByParent.TryGetValue(categoryId, out var childIds)) continue;
+
+                foreach (var childId in childIds)
+                    stack.Push(childId);
+            }
+
+            return hiddenIds.ToList();
         }
 
         private static string? ResolveImageUrl(string? imageUrl, string baseUrl)

@@ -503,23 +503,13 @@ namespace KLS.Services
 
         public IEnumerable<ItemWebSearchList>? WebSearch(string searchTerm)
         {
-            return BuildWebSearch(searchTerm);
+            var items = Uow.Items.PublicWebInventorySearch(searchTerm)?.ToList();
+            return MapWebSearch(items);
         }
 
         public IEnumerable<ItemWebSearchList>? PublicWebSearch(string searchTerm)
         {
             var items = Uow.Items.PublicWebInventorySearch(searchTerm)?.ToList();
-            return MapWebSearch(items);
-        }
-
-        private IEnumerable<ItemWebSearchList>? BuildWebSearch(string searchTerm)
-        {
-            // 2026-05-07: ItemSearchReq.IsActiveOnly was replaced by two ambient bits
-            // (ShowInactive / ShowDeleted), both default false. The old "IsActiveOnly = true"
-            // (active-only) maps cleanly to both bits = false, so this just constructs an
-            // empty-defaulted req. Old:
-            //   var items = Uow.Items.Search(new ItemSearchReq { IsActiveOnly = true, Term = searchTerm })?.ToList();
-            var items = Uow.Items.Search(new ItemSearchReq { Term = searchTerm })?.ToList();
             return MapWebSearch(items);
         }
 
