@@ -66,7 +66,7 @@ namespace KLS.Models
                 SheetName = "Account",
                 DisplayName = "Trial Balance",
                 FileName = "OpeningBalance_Account",
-                GJNumber = 1,
+                GJNumber = 0,
                 ControlCode = null,
                 Columns = new[] { "AccountCode", "AccountName", "Balance", "Notes" }
             },

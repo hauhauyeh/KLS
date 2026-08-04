@@ -47,7 +47,7 @@ BEGIN
 
     SELECT @GJNumber = m.GJNumber
     FROM (VALUES
-            ('ACCOUNT',  1),
+            ('ACCOUNT',  0),
             ('AR',      -1),
             ('AP',      -2),
             ('INV',     -3),

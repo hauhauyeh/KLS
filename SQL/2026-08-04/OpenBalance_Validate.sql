@@ -47,7 +47,7 @@ BEGIN
     );
 
     INSERT INTO @Sections (SortOrder, Section, GJNumber, [RowCount], SectionTotal, LastImportedAt, ControlCode)
-    SELECT 1, 'ACCOUNT', 1,
+    SELECT 1, 'ACCOUNT', 0,
            COUNT(*),
            SUM(ISNULL(a.Balance, 0)),
            MAX(a.CreatedAt),
