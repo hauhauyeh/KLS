@@ -21,6 +21,8 @@ namespace KLS.Models
         // public string? Visibility { get; set; }
         public bool ShowInactive { get; set; }
 
+        public bool ShowNonInventory { get; set; }
+
         // ShowDeleted removed 2026-05-08 (forward-removal of D toggle). Deleted
         // items are now always hidden on the page list via an unconditional
         // WHERE clause inside Item_GetAllList; no caller flag controls it.

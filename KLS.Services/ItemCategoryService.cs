@@ -15,6 +15,7 @@ namespace KLS.Services
 {
     public class ItemCategoryService : BaseService, IItemCategoryService
     {
+        private const string HiddenWebCategoryName = "Raw Material";
         private readonly List<ItemCategory> _FlatCategory = new();
         private readonly IWebHostEnvironment hostingEnvironment;
 
@@ -60,18 +61,53 @@ namespace KLS.Services
 
         public IEnumerable<ItemCategoryTree> GetWebTree()
         {
-            var categories = Uow.ItemCategories.GetAll()
+            var allCategories = Uow.ItemCategories.GetAll().ToList();
+            var hiddenCategoryIds = GetHiddenWebCategoryIds(allCategories);
+
+            var categories = allCategories
                 .Where(c => !c.Inactive)
+                .Where(c => !hiddenCategoryIds.Contains(c.CategoryId))
                 .OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName)
                 .ToList();
 
-            var itemCounts = Uow.Items.Find(c => !c.Inactive)
+            var itemCountQry = Uow.Items.Find(c => !c.Inactive)
                 .Where(i => i.CategoryId != null)
+                .Where(i => hiddenCategoryIds.Count == 0 || !hiddenCategoryIds.Contains(i.CategoryId!.Value))
                 .GroupBy(i => i.CategoryId!.Value)
-                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+                .Select(g => new { CategoryId = g.Key, Count = g.Count() });
+
+            var itemCounts = itemCountQry
                 .ToDictionary(x => x.CategoryId, x => x.Count);
 
             return BuildWebTree(categories, null, itemCounts);
+        }
+
+        private static List<int> GetHiddenWebCategoryIds(IEnumerable<ItemCategory> categories)
+        {
+            var categoryList = categories.ToList();
+            var childrenByParent = categoryList
+                .Where(c => c.ParentId.HasValue)
+                .GroupBy(c => c.ParentId!.Value)
+                .ToDictionary(g => g.Key, g => g.Select(c => c.CategoryId).ToList());
+
+            var hiddenIds = new HashSet<int>();
+            var stack = new Stack<int>(
+                categoryList
+                    .Where(c => string.Equals(c.CategoryName?.Trim(), HiddenWebCategoryName, StringComparison.OrdinalIgnoreCase))
+                    .Select(c => c.CategoryId));
+
+            while (stack.Count > 0)
+            {
+                var categoryId = stack.Pop();
+                if (!hiddenIds.Add(categoryId)) continue;
+
+                if (!childrenByParent.TryGetValue(categoryId, out var childIds)) continue;
+
+                foreach (var childId in childIds)
+                    stack.Push(childId);
+            }
+
+            return hiddenIds.ToList();
         }
 
         private IEnumerable<ItemCategoryTree> BuildWebTree(IEnumerable<ItemCategory> itemCategories, int? parentId, Dictionary<int, int> itemCounts)

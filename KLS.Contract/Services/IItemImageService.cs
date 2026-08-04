@@ -10,6 +10,10 @@ namespace KLS.Contract.Services
 
         void Upload(ImageUploadReq uploadReq);
 
+        void ValidateCloneImages(int sourceItemId);
+
+        void CloneImages(int sourceItemId, int targetItemId);
+
         void Delete(int imageId);
 
         void ReprocessOriginal(int imageId);

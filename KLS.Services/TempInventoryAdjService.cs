@@ -26,6 +26,19 @@ namespace KLS.Services
             return Uow.TempInventoryAdjs.GetTempAdjItems(tempReq);
         }
 
+        private static decimal? NormalizeConvertQty(string? direction, decimal? qty)
+        {
+            if (!qty.HasValue)
+                return qty;
+
+            return direction switch
+            {
+                "S" => -Math.Abs(qty.Value),
+                "D" => Math.Abs(qty.Value),
+                _ => qty
+            };
+        }
+
         public TempInventoryItem Create(TempInventoryItem tempItem)
         {
             var item = _itemService.GetBySearch(tempItem.ItemCode);
@@ -47,6 +60,7 @@ namespace KLS.Services
             tempItem.PackSize = item.PackSize;
             tempItem.CurrentAvgCost = item.LAvgCost ?? 0;
             tempItem.NewQty = tempItem.NewQty ?? 0;
+            tempItem.NewQty = NormalizeConvertQty(tempItem.Direction, tempItem.NewQty);
             // Qty-only adjustments do not carry an entered adjustment price.
             // Leave it null by default so the saved adjustment row can keep
             // a blank Adj Price instead of an artificial 0.00.
@@ -72,7 +86,7 @@ namespace KLS.Services
 
             if (existing != null)
             {
-                existing.NewQty = tempAdj.NewQty;
+                existing.NewQty = NormalizeConvertQty(existing.Direction, tempAdj.NewQty);
                 existing.NewPrice = tempAdj.NewPrice;
                 existing.Notes = tempAdj.Notes;
 

@@ -44,6 +44,11 @@ namespace KLS.Services
             return folder;
         }
 
+        private string GetItemFolderPath(int itemId)
+        {
+            return Path.Combine(_env.WebRootPath, "Images", "items", itemId.ToString());
+        }
+
         private string GetScriptPath(string scriptName)
         {
             return Path.Combine(_env.ContentRootPath, "Python", scriptName);
@@ -220,6 +225,52 @@ namespace KLS.Services
             TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-2000-temp.png"));
         }
 
+        private static IEnumerable<string> GetFlaggedFileNames(ItemImage image)
+        {
+            var idx = image.ImageIndex;
+
+            if (image.Has300) yield return $"{idx}-300.png";
+            if (image.Has1200) yield return $"{idx}-1200.png";
+            if (image.Has2000) yield return $"{idx}-2000.png";
+            if (image.HasNoBg300) yield return $"{idx}-300-nobg.png";
+            if (image.HasNoBg1200) yield return $"{idx}-1200-nobg.png";
+            if (!string.IsNullOrWhiteSpace(image.OriginalExtension))
+                yield return $"{idx}-org{image.OriginalExtension}";
+        }
+
+        private static IEnumerable<string> GetOptionalCloneFileNames(ItemImage image)
+        {
+            yield return $"{image.ImageIndex}-crop.png";
+        }
+
+        private List<ItemImage> GetSourceCloneImages(int sourceItemId)
+        {
+            return Uow.ItemImages
+                .Find(x => x.ItemId == sourceItemId)
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.ImageIndex)
+                .ToList();
+        }
+
+        private void ValidateCloneImageFiles(int sourceItemId, List<ItemImage> images)
+        {
+            if (images.Count == 0) return;
+
+            var sourceFolder = GetItemFolderPath(sourceItemId);
+            if (!Directory.Exists(sourceFolder))
+                throw new DirectoryNotFoundException($"Source image folder not found for item {sourceItemId}.");
+
+            foreach (var image in images)
+            {
+                foreach (var fileName in GetFlaggedFileNames(image))
+                {
+                    var sourcePath = Path.Combine(sourceFolder, fileName);
+                    if (!File.Exists(sourcePath))
+                        throw new FileNotFoundException($"Source image file not found: {fileName}");
+                }
+            }
+        }
+
         #endregion
 
         #region --- Public Methods ---
@@ -248,6 +299,91 @@ namespace KLS.Services
         public ItemImage GetById(int imageId)
         {
             return Uow.ItemImages.GetById(imageId);
+        }
+
+        public void ValidateCloneImages(int sourceItemId)
+        {
+            var sourceImages = GetSourceCloneImages(sourceItemId);
+            ValidateCloneImageFiles(sourceItemId, sourceImages);
+        }
+
+        public void CloneImages(int sourceItemId, int targetItemId)
+        {
+            if (sourceItemId <= 0) throw new ArgumentException("Source item is required.", nameof(sourceItemId));
+            if (targetItemId <= 0) throw new ArgumentException("Target item is required.", nameof(targetItemId));
+            if (sourceItemId == targetItemId) throw new ArgumentException("Source and target item cannot be the same.");
+
+            var sourceImages = GetSourceCloneImages(sourceItemId);
+            if (sourceImages.Count == 0) return;
+
+            ValidateCloneImageFiles(sourceItemId, sourceImages);
+
+            if (Uow.ItemImages.Find(x => x.ItemId == targetItemId).Any())
+                throw new InvalidOperationException("Target item already has images.");
+
+            var sourceFolder = GetItemFolderPath(sourceItemId);
+            var targetFolder = GetItemFolder(targetItemId);
+            var copiedFiles = new List<string>();
+            var createdRows = new List<ItemImage>();
+
+            try
+            {
+                foreach (var source in sourceImages)
+                {
+                    var clone = new ItemImage
+                    {
+                        ItemId = targetItemId,
+                        ImageIndex = source.ImageIndex,
+                        OriginalExtension = source.OriginalExtension,
+                        SortOrder = source.SortOrder,
+                        IsPrimary = source.IsPrimary,
+                        IsProcessed = source.IsProcessed,
+                        IsProcessing = false,
+                        Has300 = source.Has300,
+                        Has1200 = source.Has1200,
+                        Has2000 = source.Has2000,
+                        HasNoBg300 = source.HasNoBg300,
+                        HasNoBg1200 = source.HasNoBg1200
+                    };
+
+                    Uow.ItemImages.Add(clone);
+                    createdRows.Add(clone);
+                }
+
+                Uow.Commit();
+
+                foreach (var image in sourceImages)
+                {
+                    var fileNames = GetFlaggedFileNames(image)
+                        .Concat(GetOptionalCloneFileNames(image)
+                            .Where(fileName => File.Exists(Path.Combine(sourceFolder, fileName))))
+                        .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var fileName in fileNames)
+                    {
+                        var sourcePath = Path.Combine(sourceFolder, fileName);
+                        var targetPath = Path.Combine(targetFolder, fileName);
+                        File.Copy(sourcePath, targetPath, overwrite: true);
+                        copiedFiles.Add(targetPath);
+                    }
+                }
+            }
+            catch
+            {
+                foreach (var image in createdRows)
+                {
+                    Uow.ItemImages.Remove(image);
+                }
+
+                Uow.Commit();
+
+                foreach (var file in copiedFiles)
+                {
+                    TryDeleteFile(file);
+                }
+
+                throw;
+            }
         }
 
         public void Upload(ImageUploadReq uploadReq)

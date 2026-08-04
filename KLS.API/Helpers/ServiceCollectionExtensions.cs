@@ -90,6 +90,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ITempCustomerPaymentService, TempCustomerPaymentService>();
             services.AddScoped<ITempExtraPaymentService, TempExtraPaymentService>();
             services.AddScoped<ILiabilityService, LiabilityService>();
+            services.AddScoped<IOpenBalanceService, OpenBalanceService>();
             services.AddScoped<ICheckTrackerService, CheckTrackerService>();
             services.AddScoped<IPaymentMethodService, PaymentMethodService>();
             services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();

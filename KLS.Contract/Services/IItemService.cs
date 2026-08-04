@@ -43,7 +43,7 @@ namespace KLS.Contract.Services
 
 
         PagingResponse<ItemWebList> GetWebPagedList(ItemWebListReq webListReq);
-        PagingResponse<ItemWebList> GetPublicWebPagedList(ItemWebListReq webListReq);
+        PagingResponse<ItemWebList> GetPublicWebPagedList(ItemWebListReq webListReq, bool includePrices = true);
 
         IEnumerable<ItemWebSearchList>? WebSearch(string searchTerm);
         IEnumerable<ItemWebSearchList>? PublicWebSearch(string searchTerm);

@@ -18,15 +18,18 @@ namespace KLS.Services
         private readonly ISystemSettingService _systemSettingService;
         private readonly ITwilioService _twilioService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IItemImageService _itemImageService;
 
         public ItemService(IUnitOfWork uow,
             ISystemSettingService systemSettingService,
             ITwilioService twilioService,
-            IHttpContextAccessor httpContextAccessor) : base(uow)
+            IHttpContextAccessor httpContextAccessor,
+            IItemImageService itemImageService) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _twilioService = twilioService;
             _httpContextAccessor = httpContextAccessor;
+            _itemImageService = itemImageService;
         }
 
         public PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq)
@@ -298,11 +301,26 @@ namespace KLS.Services
             }
             else
             {
+                var cloneImageSourceId = item.CloneWithImage ? item.CloneItemId : null;
+                if (item.CloneWithImage && !cloneImageSourceId.HasValue)
+                    throw new InvalidOperationException("Clone source item is required when cloning with image.");
+
+                if (cloneImageSourceId.HasValue)
+                {
+                    if (cloneImageSourceId.Value <= 0 || !Uow.Items.Exists(c => c.ItemId == cloneImageSourceId.Value))
+                        throw new InvalidOperationException("Clone source item not found.");
+
+                    _itemImageService.ValidateCloneImages(cloneImageSourceId.Value);
+                }
+
                 Uow.Items.Add(item);
                 Uow.Commit();
 
                 // Canonicalize SetPacking from the persisted units.
                 ItemSetPackingRecomputer.Apply(Uow, item.ItemId);
+
+                if (cloneImageSourceId.HasValue)
+                    _itemImageService.CloneImages(cloneImageSourceId.Value, item.ItemId);
             }
 
             //var mapItems = Uow.ItemCatalogMap.Filter(c => c.ItemId == item.ItemId).ToList();
@@ -393,11 +411,11 @@ namespace KLS.Services
             return BuildWebPagedList(webListReq, false);
         }
 
-        public PagingResponse<ItemWebList> GetPublicWebPagedList(ItemWebListReq webListReq)
+        public PagingResponse<ItemWebList> GetPublicWebPagedList(ItemWebListReq webListReq, bool includePrices = true)
         {
             webListReq.PayeeId = 0;
 
-            return BuildWebPagedList(webListReq, true);
+            return BuildWebPagedList(webListReq, includePrices);
         }
 
         private PagingResponse<ItemWebList> BuildWebPagedList(ItemWebListReq webListReq, bool forceBasePrice)
@@ -485,23 +503,18 @@ namespace KLS.Services
 
         public IEnumerable<ItemWebSearchList>? WebSearch(string searchTerm)
         {
-            return BuildWebSearch(searchTerm);
+            var items = Uow.Items.PublicWebInventorySearch(searchTerm)?.ToList();
+            return MapWebSearch(items);
         }
 
         public IEnumerable<ItemWebSearchList>? PublicWebSearch(string searchTerm)
         {
-            return BuildWebSearch(searchTerm);
+            var items = Uow.Items.PublicWebInventorySearch(searchTerm)?.ToList();
+            return MapWebSearch(items);
         }
 
-        private IEnumerable<ItemWebSearchList>? BuildWebSearch(string searchTerm)
+        private IEnumerable<ItemWebSearchList>? MapWebSearch(IEnumerable<ItemSearch>? items)
         {
-            // 2026-05-07: ItemSearchReq.IsActiveOnly was replaced by two ambient bits
-            // (ShowInactive / ShowDeleted), both default false. The old "IsActiveOnly = true"
-            // (active-only) maps cleanly to both bits = false, so this just constructs an
-            // empty-defaulted req. Old:
-            //   var items = Uow.Items.Search(new ItemSearchReq { IsActiveOnly = true, Term = searchTerm })?.ToList();
-            var items = Uow.Items.Search(new ItemSearchReq { Term = searchTerm })?.ToList();
-
             string baseUrl = GetbaseUrl();
 
             return items?.Select(c => new ItemWebSearchList
