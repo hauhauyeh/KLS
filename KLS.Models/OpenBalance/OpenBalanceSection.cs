@@ -79,7 +79,7 @@ namespace KLS.Models
                 FileName = "OpeningBalance_AR",
                 GJNumber = -1,
                 ControlCode = "@AR",
-                Columns = new[] { "PayeeId", "CustomerName", "InvoiceNumber", "Amount", "Notes" }
+                Columns = new[] { "CustomerName", "InvoiceNumber", "InvoiceDate", "Amount", "Notes", "PayeeId" }
             },
             new OpenBalanceSectionInfo
             {
