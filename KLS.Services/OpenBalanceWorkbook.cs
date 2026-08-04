@@ -99,7 +99,7 @@ namespace KLS.Services
                 ("Note", "Do not add or reorder columns. The importer reads them by position.")
             };
 
-            rows.AddRange(SectionNotes(info));
+            rows.AddRange(SectionNotes(info, asOfDate));
 
             var r = 2;
             foreach (var (field, value) in rows)
@@ -116,31 +116,43 @@ namespace KLS.Services
             ws.Column(2).Width = 90;
         }
 
-        private static IEnumerable<(string, string)> SectionNotes(OpenBalanceSectionInfo info)
+        private static IEnumerable<(string, string)> SectionNotes(OpenBalanceSectionInfo info, DateTime? asOfDate)
         {
+            var dateText = asOfDate?.ToString("yyyy-MM-dd") ?? "the as-of date";
+
             switch (info.Section)
             {
                 case OpenBalanceSection.Account:
+                    yield return ("Note", "This sheet lists your active balance-sheet accounts. Fill in the balance only for accounts that had an opening balance on " + dateText + ". Leave the rest blank -- blank rows are ignored.");
+                    yield return ("Note", "An account that is not listed can be added: type its AccountCode into a new row.");
                     yield return ("Note", "Balance: positive means the account's natural balance.");
                     yield return ("Note", "@AR, @AP, @INV and @ARE are CHECK FIGURES. They are compared against the matching section and are never posted to those accounts.");
                     yield return ("Note", "@OBE is calculated by the system. Do not enter it.");
                     break;
 
                 case OpenBalanceSection.AR:
+                    yield return ("Note", "This sheet lists all your active customers. Fill in the amount only for customers that owed you money on " + dateText + ". Leave the rest blank -- blank rows are ignored.");
+                    yield return ("Note", "A customer that is not listed can be added: type their Payee ID into a new row.");
                     yield return ("Note", "Amount: positive means the customer owes you. Negative is a customer credit.");
                     yield return ("Note", "InvoiceNumber is for reference only. Balances post per customer.");
                     break;
 
                 case OpenBalanceSection.AP:
+                    yield return ("Note", "This sheet lists all your active vendors. Fill in the amount only for vendors you owed on " + dateText + ". Leave the rest blank -- blank rows are ignored.");
+                    yield return ("Note", "A vendor that is not listed can be added: type their Payee ID into a new row.");
                     yield return ("Note", "Amount: positive means you owe the vendor.");
                     yield return ("Note", "BillNumber is for reference only. Balances post per vendor.");
                     break;
 
                 case OpenBalanceSection.ARE:
+                    yield return ("Note", "This sheet lists all your active employees. Fill in the amount only for employees that owed you money on " + dateText + ". Leave the rest blank -- blank rows are ignored.");
+                    yield return ("Note", "An employee that is not listed can be added: type their Payee ID into a new row.");
                     yield return ("Note", "Amount: positive means the employee owes you.");
                     break;
 
                 case OpenBalanceSection.INV:
+                    yield return ("Note", "This sheet lists all your active inventory products. Fill in Qty, Price and TotalValue only for products on hand on " + dateText + ". Leave the rest blank -- blank rows are ignored.");
+                    yield return ("Note", "A product that is not listed can be added: type its ItemCode into a new row.");
                     yield return ("Note", "Qty and Price are per base unit.");
                     yield return ("Note", "TotalValue must equal Qty x Price, to the cent.");
                     break;

@@ -14,7 +14,11 @@ namespace KLS.Contract.Interfaces
         /// stamp from the Instructions sheet, or null when the file was not
         /// produced by us.
         /// </summary>
-        List<OpenBalanceExcelRow> Preview(string filePath, OpenBalanceSection section, out DateTime? downloadedAt);
+        List<OpenBalanceExcelRow> Preview(
+            string filePath,
+            OpenBalanceSection section,
+            out DateTime? downloadedAt,
+            out int ignoredRowCount);
 
         /// <summary>
         /// Save and post one section in a single transaction. Returns the rows
@@ -26,6 +30,6 @@ namespace KLS.Contract.Interfaces
         void Unpost(OpenBalanceSection section);
 
         /// <summary>The saved rows for one section, shaped for the download workbook.</summary>
-        List<OpenBalanceExcelRow> GetSectionRows(OpenBalanceSection section);
+        List<OpenBalanceExcelRow> GetSectionRows(OpenBalanceSection section, bool includeMasterList);
     }
 }

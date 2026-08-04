@@ -29,6 +29,12 @@ GO
 -- one in OpenBalance_ImportPreview, IMEX=1 included. If they drift, the
 -- user approves one parse and the system performs another.
 --
+-- 2026-08-04: Blank seeded rows are ignored with the same predicates as
+-- OpenBalance_ImportPreview:
+--   ACCOUNT     Balance IS NULL
+--   AR/AP/ARE   Amount IS NULL
+--   INV         Qty/Price/TotalValue all NULL
+--
 -- No @EmpId parameter: the OpenBalance* tables have no user column, and
 -- a parameter that is accepted and discarded is worse than none.
 -- ============================================================
@@ -134,6 +140,7 @@ BEGIN
                 FROM dbo.Account x
                 WHERE x.AccountCode = t.AccountCode
             ) a
+            WHERE t.Balance IS NOT NULL
             ORDER BY t.AutoId;
 
             SET @RowCount = @@ROWCOUNT;
@@ -176,6 +183,7 @@ BEGIN
                 t.Notes,
                 GETUTCDATE()
             FROM @AR t
+            WHERE t.Amount IS NOT NULL
             ORDER BY t.AutoId;
 
             SET @RowCount = @@ROWCOUNT;
@@ -215,6 +223,7 @@ BEGIN
                 t.Notes,
                 GETUTCDATE()
             FROM @AP t
+            WHERE t.Amount IS NOT NULL
             ORDER BY t.AutoId;
 
             SET @RowCount = @@ROWCOUNT;
@@ -251,6 +260,7 @@ BEGIN
                 t.Notes,
                 GETUTCDATE()
             FROM @ARE t
+            WHERE t.Amount IS NOT NULL
             ORDER BY t.AutoId;
 
             SET @RowCount = @@ROWCOUNT;
@@ -297,6 +307,7 @@ BEGIN
                 FROM dbo.Item x
                 WHERE x.ItemCode = t.ItemCode
             ) i
+            WHERE NOT (t.Qty IS NULL AND t.Price IS NULL AND t.TotalValue IS NULL)
             ORDER BY t.AutoId;
 
             SET @RowCount = @@ROWCOUNT;
