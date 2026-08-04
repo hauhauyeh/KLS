@@ -53,5 +53,8 @@ namespace KLS.Common
         public const string AUTO_PRINTINVOICE = "AUTO_PRINTINVOICE";
         public const string SALES_LOAD_SEPARATE = "SALES_LOAD_SEPARATE";
 
+        /// <summary>The date every opening balance journal is posted on.</summary>
+        public const string SYSTEM_START_DATE = "SYSTEM_START_DATE";
+
     }
 }

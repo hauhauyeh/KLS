@@ -227,6 +227,8 @@ namespace KLS.Contract.Interfaces
 
         IDropShipmentRepository DropShipments { get; }
 
+        IOpenBalanceRepository OpenBalances { get; }
+
         ISalesQuoteRepository SalesQuotes { get; }
         ITempSalesQuoteRepository TempSalesQuotes { get; }
 
