@@ -46,8 +46,14 @@ namespace KLS.Models
 
         public string UploadToken { get; set; } = "";
 
-        /// <summary>Rows in the uploaded file.</summary>
+        /// <summary>Rows in the uploaded file that have numbers and will be saved.</summary>
         public int RowCount { get; set; }
+
+        /// <summary>Rows in the uploaded file with nothing typed in the section's number cells.</summary>
+        public int IgnoredRowCount { get; set; }
+
+        /// <summary>All uploaded rows parsed from the sheet: RowCount + IgnoredRowCount.</summary>
+        public int FileRowCount { get; set; }
 
         /// <summary>Rows currently held for this section, for the replace message.</summary>
         public int PriorRowCount { get; set; }

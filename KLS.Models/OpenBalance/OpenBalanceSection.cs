@@ -66,7 +66,7 @@ namespace KLS.Models
                 SheetName = "Account",
                 DisplayName = "Trial Balance",
                 FileName = "OpeningBalance_Account",
-                GJNumber = 1,
+                GJNumber = 0,
                 ControlCode = null,
                 Columns = new[] { "AccountCode", "AccountName", "Balance", "Notes" }
             },
@@ -79,7 +79,7 @@ namespace KLS.Models
                 FileName = "OpeningBalance_AR",
                 GJNumber = -1,
                 ControlCode = "@AR",
-                Columns = new[] { "PayeeId", "CustomerName", "InvoiceNumber", "Amount", "Notes" }
+                Columns = new[] { "CustomerName", "InvoiceNumber", "InvoiceDate", "Amount", "Notes", "PayeeId" }
             },
             new OpenBalanceSectionInfo
             {

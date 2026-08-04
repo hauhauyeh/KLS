@@ -6,6 +6,9 @@ GO
 -- ============================================================
 -- OpenBalance_ImportPreview
 -- 2026-08-04: NEW. Read-only companion to OpenBalance_Import.
+-- 2026-08-04: Blank seeded rows are ignored, counted in
+-- @IgnoredRowCount, and excluded from this result set. The predicates
+-- must stay identical to OpenBalance_Import.
 -- Parses ONE section's workbook and returns one row per Excel row,
 -- enriched with the database values the importer will actually use and
 -- a severity the screen can act on. Writes nothing.
@@ -44,7 +47,8 @@ CREATE OR ALTER PROCEDURE [dbo].[OpenBalance_ImportPreview]
 
     @FilePath       NVARCHAR(255),
     @Section        NVARCHAR(20),
-    @DownloadedAt   DATETIME OUTPUT
+    @DownloadedAt     DATETIME OUTPUT,
+    @IgnoredRowCount  INT = 0 OUTPUT
 
 AS
 BEGIN
@@ -55,6 +59,7 @@ BEGIN
     DECLARE @Msg  NVARCHAR(400);
 
     SET @DownloadedAt = NULL;
+    SET @IgnoredRowCount = 0;
 
     IF @Sec NOT IN ('ACCOUNT', 'AR', 'AP', 'INV', 'ARE')
     BEGIN
@@ -121,6 +126,10 @@ BEGIN
             THROW 51001, @Msg, 1;
         END CATCH
 
+        SELECT @IgnoredRowCount = COUNT(*)
+        FROM @Account
+        WHERE Balance IS NULL;
+
         SELECT
             t.AutoId                                            AS RowNo,
             t.AccountCode                                       AS Key1,
@@ -178,7 +187,10 @@ BEGIN
             SELECT COUNT(*) AS DupCount
             FROM @Account y
             WHERE y.AccountCode = t.AccountCode
+              AND y.Balance IS NOT NULL
         ) d
+
+        WHERE t.Balance IS NOT NULL
 
         ORDER BY t.AutoId;
     END
@@ -246,6 +258,10 @@ BEGIN
             THROW 51001, @Msg, 1;
         END CATCH
 
+        SELECT @IgnoredRowCount = COUNT(*)
+        FROM @Party
+        WHERE Amount IS NULL;
+
         SELECT
             t.AutoId                                            AS RowNo,
             CAST(t.PayeeId AS NVARCHAR(200))                    AS Key1,
@@ -288,7 +304,10 @@ BEGIN
             SELECT SUM(ISNULL(y.Amount, 0)) AS PayeeNet
             FROM @Party y
             WHERE y.PayeeId = t.PayeeId
+              AND y.Amount IS NOT NULL
         ) n
+
+        WHERE t.Amount IS NOT NULL
 
         ORDER BY t.AutoId;
     END
@@ -323,6 +342,12 @@ BEGIN
 
             THROW 51001, @Msg, 1;
         END CATCH
+
+        SELECT @IgnoredRowCount = COUNT(*)
+        FROM @Inv
+        WHERE Qty IS NULL
+          AND Price IS NULL
+          AND TotalValue IS NULL;
 
         SELECT
             t.AutoId                                            AS RowNo,
@@ -383,7 +408,10 @@ BEGIN
             SELECT COUNT(*) AS DupCount
             FROM @Inv y
             WHERE y.ItemCode = t.ItemCode
+              AND NOT (y.Qty IS NULL AND y.Price IS NULL AND y.TotalValue IS NULL)
         ) d
+
+        WHERE NOT (t.Qty IS NULL AND t.Price IS NULL AND t.TotalValue IS NULL)
 
         ORDER BY t.AutoId;
     END

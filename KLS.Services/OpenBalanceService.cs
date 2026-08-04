@@ -135,7 +135,7 @@ namespace KLS.Services
         {
             var info = OpenBalanceSectionInfo.Get(section);
 
-            var rows = Uow.OpenBalances.GetSectionRows(section);
+            var rows = Uow.OpenBalances.GetSectionRows(section, includeMasterList: true);
 
             var content = OpenBalanceWorkbook.Build(info, rows, AsOfDate());
 
@@ -146,7 +146,7 @@ namespace KLS.Services
         {
             var content = OpenBalanceWorkbook.BuildArchive(
                 OpenBalanceSectionInfo.All.ToList(),
-                info => Uow.OpenBalances.GetSectionRows(info.Section),
+                info => Uow.OpenBalances.GetSectionRows(info.Section, includeMasterList: false),
                 AsOfDate());
 
             return (content, $"OpeningBalance_All_{DateTime.Now:yyyyMMdd}.xlsx");
@@ -229,7 +229,7 @@ namespace KLS.Services
         /// </summary>
         private OpenBalancePreviewRes BuildPreview(string path, OpenBalanceSectionInfo info)
         {
-            var rows = Uow.OpenBalances.Preview(path, info.Section, out var downloadedAt);
+            var rows = Uow.OpenBalances.Preview(path, info.Section, out var downloadedAt, out var ignoredRowCount);
 
             var prior = Uow.OpenBalances.GetStatus()
                 .FirstOrDefault(r => r.Section == info.Token);
@@ -242,6 +242,8 @@ namespace KLS.Services
                 Section = info.Section,
                 SectionName = info.DisplayName,
                 RowCount = rows.Count,
+                IgnoredRowCount = ignoredRowCount,
+                FileRowCount = rows.Count + ignoredRowCount,
                 PriorRowCount = priorRowCount,
                 Total = rows.Sum(r => r.Amount ?? 0m),
                 Rows = rows
@@ -280,7 +282,8 @@ namespace KLS.Services
             {
                 res.NeedsConfirm = true;
                 res.ConfirmMessage =
-                    $"This file has no rows. Importing it will delete all {priorRowCount:N0} " +
+                    $"No row in this file has {ImportNumberPhrase(info.Section)} filled in. " +
+                    $"Importing it will delete all {priorRowCount:N0} " +
                     $"{info.DisplayName} rows.";
             }
             else if (priorRowCount > 0 && res.RowCount < priorRowCount)
@@ -345,6 +348,16 @@ namespace KLS.Services
                 return $"{names[0]} and {names[1]}";
 
             return string.Join(", ", names.Take(names.Count - 1)) + " and " + names[names.Count - 1];
+        }
+
+        private static string ImportNumberPhrase(OpenBalanceSection section)
+        {
+            switch (section)
+            {
+                case OpenBalanceSection.Account: return "a balance";
+                case OpenBalanceSection.INV: return "quantity, price or total value";
+                default: return "an amount";
+            }
         }
 
         #endregion

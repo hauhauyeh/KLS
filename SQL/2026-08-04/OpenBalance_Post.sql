@@ -14,7 +14,7 @@ GO
 -- GeneralJournal header with a fixed GJNumber and assume the number is
 -- free. UK_GeneralJournal_GJNumber enforces that, so the unpost is not
 -- optional -- it is the contract those procs were written against.
--- (GeneralJournal_OBAccount also deletes GJNumber 1 itself; running it
+-- (GeneralJournal_OBAccount also deletes GJNumber 0 itself; running it
 -- after the unpost is harmless.)
 --
 -- NO reconciliation call here. Per decision D3 a section imports and
