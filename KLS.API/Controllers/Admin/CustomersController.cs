@@ -199,6 +199,28 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpGet("{payeeId}/accounts/{userId}/password")]
+        [DisplayName("View Customer Web Account Password")]
+        [PermissionKey("Admin.CustomerWebAccount.ViewPassword")]
+        public IActionResult GetAccountPassword(int payeeId, int userId)
+        {
+            if (!IsCurrentUserAdmin())
+                return Forbid();
+
+            _customerService.EnsureVisible(payeeId);
+
+            var existing = _userAccountService.GetById(userId);
+            if (existing == null || existing.PayeeId != payeeId)
+                return NotFound("Account not found.");
+
+            var password = string.IsNullOrWhiteSpace(existing.PasswordHash)
+                ? string.Empty
+                : Utilities.Decrypt(existing.PasswordHash);
+
+            return Ok(new { Password = password });
+        }
+
+
         [HttpDelete("{payeeId}/accounts/{userId}")]
         public IActionResult DeleteAccount(int payeeId, int userId)
         {
