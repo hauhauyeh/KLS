@@ -151,7 +151,7 @@ namespace KLS.Data.Repositories
                     RowNo = GetInt(reader, ordinals, nameof(OpenBalanceExcelRow.RowNo)) ?? 0,
                     Key1 = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.Key1)),
                     Key2 = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.Key2)),
-                    DocumentDate = GetDateTime(reader, ordinals, nameof(OpenBalanceExcelRow.DocumentDate)),
+                    DocumentDate = GetDateOnlyString(reader, ordinals, nameof(OpenBalanceExcelRow.DocumentDate)),
                     ResolvedId = GetInt(reader, ordinals, nameof(OpenBalanceExcelRow.ResolvedId)),
                     ResolvedName = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.ResolvedName)),
                     Qty = GetDecimal(reader, ordinals, nameof(OpenBalanceExcelRow.Qty)),
@@ -190,12 +190,20 @@ namespace KLS.Data.Repositories
             return Convert.ToDecimal(reader.GetValue(ordinal));
         }
 
-        private static DateTime? GetDateTime(DbDataReader reader, IReadOnlyDictionary<string, int> ordinals, string name)
+        /// <summary>
+        /// Reads a SQL date column as plain yyyy-MM-dd text.
+        ///
+        /// Returning a DateTime here would hand the value to DateTimeMiddleware,
+        /// which treats every DateTime as UTC and shifts it into the user's
+        /// timezone, moving a date-only value onto the previous day for anyone
+        /// west of UTC. Document dates carry no time, so they never enter that path.
+        /// </summary>
+        private static string? GetDateOnlyString(DbDataReader reader, IReadOnlyDictionary<string, int> ordinals, string name)
         {
             if (!ordinals.TryGetValue(name, out var ordinal) || reader.IsDBNull(ordinal))
                 return null;
 
-            return Convert.ToDateTime(reader.GetValue(ordinal));
+            return Convert.ToDateTime(reader.GetValue(ordinal)).ToString("yyyy-MM-dd");
         }
     }
 }
