@@ -1,4 +1,5 @@
 ﻿using KLS.API.Helpers;
+using KLS.Common;
 using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -15,14 +16,18 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IDocumentService _documentService;
+        private readonly ISalesOrderDocumentStageEffectService _salesOrderDocumentStageEffectService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public DocumentsController(IDocumentService documentService)
+        public DocumentsController(
+            IDocumentService documentService,
+            ISalesOrderDocumentStageEffectService salesOrderDocumentStageEffectService)
         {
             _documentService = documentService;
+            _salesOrderDocumentStageEffectService = salesOrderDocumentStageEffectService;
         }
 
         #endregion
@@ -54,6 +59,8 @@ namespace KLS.API.Controllers.Admin
             if (!System.IO.File.Exists(filePath))
                 return NotFound("File not found.");
 
+            ApplySingleOrderStageEffect(documentReq, SalesOrderDocumentActionKeys.GenPickTicket);
+
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return File(fileStream, "application/pdf");
         }
@@ -68,6 +75,8 @@ namespace KLS.API.Controllers.Admin
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound("File not found.");
+
+            ApplySingleOrderStageEffect(documentReq, SalesOrderDocumentActionKeys.GenInvoice);
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return File(fileStream, "application/pdf");
@@ -215,6 +224,14 @@ namespace KLS.API.Controllers.Admin
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return File(fileStream, "application/pdf");
+        }
+
+        private void ApplySingleOrderStageEffect(DocumentReq documentReq, string actionKey)
+        {
+            if (documentReq.IsPrint || !documentReq.SalesId.HasValue)
+                return;
+
+            _salesOrderDocumentStageEffectService.ApplyAfterSuccess(documentReq.SalesId.Value, actionKey);
         }
 
         #endregion

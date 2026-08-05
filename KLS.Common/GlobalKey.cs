@@ -38,6 +38,7 @@ namespace KLS.Common
         public const string DOCUMENT_FORMAT = "DOCUMENT_FORMAT";
         public const string INVOICE_PRINT_USE_POPUP = "INVOICE_PRINT_USE_POPUP";
         public const string SALES_DOC_NUMBER_DISPLAY_ENABLED = "SALES_DOC_NUMBER_DISPLAY_ENABLED";
+        public const string SALES_ORDER_DOCUMENT_MENU_JSON = "SALES_ORDER_DOCUMENT_MENU_JSON";
         public const string INVOICE_EMAIL_PAYMENT_INSTRUCTIONS = "INVOICE_EMAIL_PAYMENT_INSTRUCTIONS";
 
         public const string LABEL_PRINTER_NAME = "LABEL_PRINTER_NAME";
