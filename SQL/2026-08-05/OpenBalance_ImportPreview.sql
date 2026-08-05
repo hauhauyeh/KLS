@@ -322,11 +322,18 @@ BEGIN
                 WHEN pay.PayeeId IS NULL                        THEN 'Error'
                 WHEN c.PayeeId IS NULL                          THEN 'Error'
                 WHEN ISNULL(pay.PayeeType, '') <> 'C'           THEN 'Error'
-                WHEN pay.IsClosed = 1                           THEN 'Error'
                 WHEN p.IsInvoiceDateValid = 0                   THEN 'Error'
                 WHEN LEN(ISNULL(p.CleanInvoiceNumber, '')) > 50 THEN 'Error'
                 WHEN d.DupCount > 1                             THEN 'Error'
                 WHEN ex.SalesId IS NOT NULL                     THEN 'Error'
+                -- 2026-08-05: closed is a warning, not an error. The download hands
+                -- back existing rows for closed customers, so blocking them here made
+                -- the workbook impossible to re-upload without silently dropping a
+                -- real balance. A closed customer cannot be newly chosen: the blank
+                -- starter rows only list active payees, so a closed one can only ever
+                -- arrive from a row that already existed. Old code:
+                -- WHEN pay.IsClosed = 1                        THEN 'Error'
+                WHEN pay.IsClosed = 1                           THEN 'Warning'
                 WHEN ISNULL(p.CleanCustomerName, '') <> ISNULL(pay.PayeeName, '')
                                                                 THEN 'Warning'
                 WHEN n.PayeeNet = 0                             THEN 'Warning'
@@ -346,8 +353,6 @@ BEGIN
                     THEN CONCAT('Payee ID ', p.PayeeId, ' is not a customer.')
                 WHEN ISNULL(pay.PayeeType, '') <> 'C'
                     THEN CONCAT('Payee ID ', p.PayeeId, ' is not a customer.')
-                WHEN pay.IsClosed = 1
-                    THEN CONCAT('Payee ID ', p.PayeeId, ' is closed.')
                 WHEN p.IsInvoiceDateValid = 0
                     THEN 'InvoiceDate must be blank, a real Excel date cell, or yyyy-MM-dd text.'
                 WHEN LEN(ISNULL(p.CleanInvoiceNumber, '')) > 50
@@ -356,6 +361,10 @@ BEGIN
                     THEN CONCAT('InvoiceNumber "', p.CleanInvoiceNumber, '" appears more than once for this customer in this workbook.')
                 WHEN ex.SalesId IS NOT NULL
                     THEN CONCAT('InvoiceNumber "', p.CleanInvoiceNumber, '" already exists for this customer.')
+                -- Kept in the same position as the severity CASE above, so the
+                -- message always describes the condition that set the severity.
+                WHEN pay.IsClosed = 1
+                    THEN CONCAT('Customer ', p.PayeeId, ' is closed; the balance will still be imported.')
                 WHEN ISNULL(p.CleanCustomerName, '') <> ISNULL(pay.PayeeName, '')
                     THEN 'CustomerName does not match the resolved customer name; PayeeId will be used.'
                 WHEN n.PayeeNet = 0
@@ -399,9 +408,244 @@ BEGIN
     END
 
     ------------------------------------------------------------------
-    -- AP  /  ARE
+    -- AP
+    --
+    -- 2026-08-05: split out of the old shared AP/ARE branch. AP is now a
+    -- name-first sheet with its own column order, its own date column and
+    -- its own reserved PurchaseNumber block, none of which ARE has.
+    -- ARE keeps the @Party shape below, unchanged.
     ------------------------------------------------------------------
-    ELSE IF @Sec IN ('AP', 'ARE')
+    ELSE IF @Sec = 'AP'
+    BEGIN
+        DECLARE @AP AS TABLE (
+            AutoId       INT IDENTITY(1,1),
+            VendorName   NVARCHAR(255)   NULL,
+            BillNumber   NVARCHAR(200)   NULL,
+            BillDateRaw  NVARCHAR(100)   NULL,
+            Amount       DECIMAL(18,2)   NULL,
+            Notes        NVARCHAR(400)   NULL,
+            PayeeId      INT             NULL
+        );
+
+        BEGIN TRY
+            SET @Qry = 'SELECT * FROM OPENROWSET(''Microsoft.ACE.OLEDB.12.0'',
+    ''Excel 12.0; HDR=yes; IMEX=1; Database=' + CONVERT(NVARCHAR(255), @FilePath) + ''', [AP$]);';
+
+            INSERT INTO @AP EXEC (@Qry);
+        END TRY
+        BEGIN CATCH
+            SET @Msg = CONCAT(
+                'Could not read an [AP] sheet from this workbook. Check that you picked '
+              + 'the right section and that the file is the downloaded AP workbook. (',
+                ERROR_MESSAGE(), ')');
+
+            THROW 51001, @Msg, 1;
+        END CATCH
+
+        SELECT @IgnoredRowCount = COUNT(*)
+        FROM @AP
+        WHERE Amount IS NULL;
+
+        DECLARE @FilledAPCount INT;
+        DECLARE @NextPurchaseNumber INT;
+        DECLARE @HasApReservedCollision BIT = 0;
+        DECLARE @ApReservedExhausted BIT = 0;
+
+        SELECT @FilledAPCount = COUNT(*)
+        FROM @AP
+        WHERE Amount IS NOT NULL;
+
+        -- A purchase sitting in the reserved block that no OpenBalanceAP row
+        -- links to did not come from an opening-balance import. Refuse to
+        -- allocate around it rather than risk colliding with real data.
+        SELECT @HasApReservedCollision =
+            CASE WHEN EXISTS (
+                SELECT 1
+                FROM dbo.Purchase p
+                WHERE p.PurchaseNumber BETWEEN 50001 AND 59999
+                  AND NOT EXISTS (
+                        SELECT 1
+                        FROM dbo.OpenBalanceAP o
+                        WHERE o.PurchaseId = p.PurchaseId
+                  )
+            ) THEN 1 ELSE 0 END;
+
+        -- Only numbers already inside the block matter here. Adopted opening
+        -- rows live at their original numbers outside it and never move.
+        SELECT @NextPurchaseNumber =
+            ISNULL(MAX(CASE
+                WHEN p.PurchaseNumber BETWEEN 50001 AND 59999
+                THEN p.PurchaseNumber
+            END), 50000) + 1
+        FROM dbo.Purchase p
+        INNER JOIN dbo.OpenBalanceAP o
+            ON o.PurchaseId = p.PurchaseId;
+
+        IF @NextPurchaseNumber + ISNULL(@FilledAPCount, 0) - 1 >= 60000
+            SET @ApReservedExhausted = 1;
+
+        ;WITH Filled AS (
+            SELECT
+                t.AutoId,
+                ROW_NUMBER() OVER (ORDER BY t.AutoId) AS FilledSeq,
+                NULLIF(LTRIM(RTRIM(t.VendorName)), '')  AS CleanVendorName,
+                NULLIF(LTRIM(RTRIM(t.BillNumber)), '')  AS CleanBillNumber,
+                NULLIF(LTRIM(RTRIM(t.BillDateRaw)), '') AS CleanBillDateRaw,
+                t.Amount,
+                t.Notes,
+                t.PayeeId
+            FROM @AP t
+            WHERE t.Amount IS NOT NULL
+        ),
+        Parsed AS (
+            SELECT
+                f.*,
+                @NextPurchaseNumber + f.FilledSeq - 1 AS PreviewPurchaseNumber,
+
+                -- Same date rules as AR: blank is fine, yyyy-MM-dd is fine, a
+                -- real Excel date cell is fine, anything ambiguous is rejected.
+                CASE
+                    WHEN f.CleanBillDateRaw IS NULL THEN CAST(NULL AS DATE)
+                    WHEN f.CleanBillDateRaw LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
+                     AND LEN(f.CleanBillDateRaw) = 10
+                    THEN TRY_CONVERT(DATE, f.CleanBillDateRaw, 23)
+                    WHEN (
+                            f.CleanBillDateRaw LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]%'
+                         OR PATINDEX('%[A-Za-z]%', f.CleanBillDateRaw) > 0
+                         )
+                     AND TRY_CONVERT(DATE, f.CleanBillDateRaw) IS NOT NULL
+                    THEN TRY_CONVERT(DATE, f.CleanBillDateRaw)
+                    ELSE CAST(NULL AS DATE)
+                END AS ParsedBillDate,
+                CASE
+                    WHEN f.CleanBillDateRaw IS NULL THEN 1
+                    WHEN f.CleanBillDateRaw LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
+                     AND LEN(f.CleanBillDateRaw) = 10
+                     AND TRY_CONVERT(DATE, f.CleanBillDateRaw, 23) IS NOT NULL
+                    THEN 1
+                    WHEN (
+                            f.CleanBillDateRaw LIKE '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]%'
+                         OR PATINDEX('%[A-Za-z]%', f.CleanBillDateRaw) > 0
+                         )
+                     AND TRY_CONVERT(DATE, f.CleanBillDateRaw) IS NOT NULL
+                    THEN 1
+                    ELSE 0
+                END AS IsBillDateValid
+            FROM Filled f
+        )
+        SELECT
+            p.AutoId                                            AS RowNo,
+            CAST(p.PayeeId AS NVARCHAR(200))                    AS Key1,
+            COALESCE(p.CleanBillNumber,
+                     CONCAT('OB-AP-', CONVERT(NVARCHAR(20), p.PreviewPurchaseNumber))) AS Key2,
+            p.ParsedBillDate                                    AS DocumentDate,
+            pay.PayeeId                                         AS ResolvedId,
+            pay.PayeeName                                       AS ResolvedName,
+            CAST(NULL AS DECIMAL(18,4))                         AS Qty,
+            CAST(NULL AS DECIMAL(18,4))                         AS Price,
+            p.Amount                                            AS Amount,
+            p.Notes                                             AS Notes,
+
+            CASE
+                WHEN @HasApReservedCollision = 1                THEN 'Error'
+                WHEN @ApReservedExhausted = 1                   THEN 'Error'
+                WHEN p.PayeeId IS NULL                          THEN 'Error'
+                WHEN pay.PayeeId IS NULL                        THEN 'Error'
+                WHEN v.PayeeId IS NULL
+                  OR ISNULL(pay.PayeeType, '') <> 'V'           THEN 'Error'
+                WHEN p.IsBillDateValid = 0                      THEN 'Error'
+                WHEN LEN(p.CleanBillNumber) > 200               THEN 'Error'
+                WHEN d.DupCount > 1                             THEN 'Error'
+                WHEN ex.PurchaseId IS NOT NULL                  THEN 'Error'
+                -- 2026-08-05: closed is a warning, not an error; same reasoning as AR.
+                -- A closed vendor can only reach the sheet through an existing row,
+                -- because the blank starter rows filter on Payee.IsClosed = 0.
+                WHEN pay.IsClosed = 1                           THEN 'Warning'
+                WHEN p.CleanVendorName IS NOT NULL
+                 AND pay.PayeeName IS NOT NULL
+                 AND p.CleanVendorName <> pay.PayeeName         THEN 'Warning'
+                WHEN n.PayeeNet = 0                             THEN 'Warning'
+                ELSE 'OK'
+            END                                                 AS Severity,
+
+            CASE
+                WHEN @HasApReservedCollision = 1
+                    THEN 'Reserved opening AP PurchaseNumber range 50001-59999 already contains purchases that are not opening-balance rows.'
+                WHEN @ApReservedExhausted = 1
+                    THEN 'Reserved opening AP PurchaseNumber range 50001-59999 does not have enough remaining numbers.'
+                WHEN p.PayeeId IS NULL
+                    THEN 'PayeeId is required. Pick the vendor from the dropdown so it fills in.'
+                WHEN pay.PayeeId IS NULL
+                    THEN CONCAT('Payee ID ', p.PayeeId, ' does not exist.')
+                WHEN v.PayeeId IS NULL
+                  OR ISNULL(pay.PayeeType, '') <> 'V'
+                    THEN CONCAT('Payee ID ', p.PayeeId, ' is not a vendor.')
+                WHEN p.IsBillDateValid = 0
+                    THEN 'BillDate must be blank or yyyy-MM-dd.'
+                WHEN LEN(p.CleanBillNumber) > 200
+                    THEN 'BillNumber is longer than 200 characters.'
+                WHEN d.DupCount > 1
+                    THEN 'This BillNumber appears more than once for the same vendor in this file.'
+                WHEN ex.PurchaseId IS NOT NULL
+                    THEN 'This BillNumber already exists for this vendor on a purchase that is not an opening balance.'
+                -- Kept in the same position as the severity CASE above.
+                WHEN pay.IsClosed = 1
+                    THEN CONCAT('Vendor ', p.PayeeId, ' is closed; the balance will still be imported.')
+                WHEN p.CleanVendorName IS NOT NULL
+                 AND pay.PayeeName IS NOT NULL
+                 AND p.CleanVendorName <> pay.PayeeName
+                    THEN 'VendorName does not match the resolved vendor name; PayeeId will be used.'
+                WHEN n.PayeeNet = 0
+                    THEN 'This vendor''s rows net to zero, so nothing will be posted for them.'
+                ELSE NULL
+            END                                                 AS [Message]
+
+        FROM Parsed p
+
+        LEFT JOIN dbo.Payee pay
+            ON pay.PayeeId = p.PayeeId
+
+        LEFT JOIN dbo.Vendor v
+            ON v.PayeeId = p.PayeeId
+
+        -- Only non-opening purchases count as a conflict. Opening rows are the
+        -- ones this import owns and replaces, including the adopted legacy
+        -- purchases, which are identified by their OpenBalanceAP link.
+        OUTER APPLY (
+            SELECT TOP (1) pu.PurchaseId
+            FROM dbo.Purchase pu
+            WHERE p.CleanBillNumber IS NOT NULL
+              AND pu.PayeeId = p.PayeeId
+              AND pu.VendorDocNumber = p.CleanBillNumber
+              AND NOT EXISTS (
+                    SELECT 1
+                    FROM dbo.OpenBalanceAP o
+                    WHERE o.PurchaseId = pu.PurchaseId
+              )
+        ) ex
+
+        CROSS APPLY (
+            SELECT COUNT(*) AS DupCount
+            FROM Parsed y
+            WHERE p.CleanBillNumber IS NOT NULL
+              AND y.CleanBillNumber = p.CleanBillNumber
+              AND y.PayeeId = p.PayeeId
+        ) d
+
+        CROSS APPLY (
+            SELECT SUM(ISNULL(y.Amount, 0)) AS PayeeNet
+            FROM Parsed y
+            WHERE y.PayeeId = p.PayeeId
+              AND y.Amount IS NOT NULL
+        ) n
+
+        ORDER BY p.AutoId;
+    END
+
+    ------------------------------------------------------------------
+    -- ARE
+    ------------------------------------------------------------------
+    ELSE IF @Sec = 'ARE'
     BEGIN
         DECLARE @Party AS TABLE (
             AutoId      INT IDENTITY(1,1),
@@ -412,7 +656,6 @@ BEGIN
             Notes       NVARCHAR(400)   NULL
         );
 
-        -- ARE has no document-number column, so it needs its own shape.
         DECLARE @Emp AS TABLE (
             AutoId      INT IDENTITY(1,1),
             PayeeId     INT             NULL,
@@ -421,34 +664,23 @@ BEGIN
             Notes       NVARCHAR(400)   NULL
         );
 
-        DECLARE @SheetName NVARCHAR(20) =
-            CASE @Sec WHEN 'AP' THEN 'AP' ELSE 'ARE' END;
-
         BEGIN TRY
-            IF @Sec = 'AP'
-            BEGIN
-                SET @Qry = 'SELECT * FROM OPENROWSET(''Microsoft.ACE.OLEDB.12.0'',
-    ''Excel 12.0; HDR=yes; IMEX=1; Database=' + CONVERT(NVARCHAR(255), @FilePath) + ''', [AP$]);';
-
-                INSERT INTO @Party EXEC (@Qry);
-            END
-            ELSE
-            BEGIN
-                SET @Qry = 'SELECT * FROM OPENROWSET(''Microsoft.ACE.OLEDB.12.0'',
+            SET @Qry = 'SELECT * FROM OPENROWSET(''Microsoft.ACE.OLEDB.12.0'',
     ''Excel 12.0; HDR=yes; IMEX=1; Database=' + CONVERT(NVARCHAR(255), @FilePath) + ''', [ARE$]);';
 
-                INSERT INTO @Emp EXEC (@Qry);
+            INSERT INTO @Emp EXEC (@Qry);
 
-                INSERT INTO @Party (PayeeId, PartyName, DocNumber, Amount, Notes)
-                SELECT PayeeId, PartyName, NULL, Amount, Notes
-                FROM @Emp
-                ORDER BY AutoId;
-            END
+            -- ARE has no document-number column, so it is widened into the
+            -- shared shape with a NULL DocNumber.
+            INSERT INTO @Party (PayeeId, PartyName, DocNumber, Amount, Notes)
+            SELECT PayeeId, PartyName, NULL, Amount, Notes
+            FROM @Emp
+            ORDER BY AutoId;
         END TRY
         BEGIN CATCH
             SET @Msg = CONCAT(
-                'Could not read a [', @SheetName, '] sheet from this workbook. Check that you picked '
-              + 'the right section and that the file is the downloaded ', @SheetName, ' workbook. (',
+                'Could not read an [ARE] sheet from this workbook. Check that you picked '
+              + 'the right section and that the file is the downloaded ARE workbook. (',
                 ERROR_MESSAGE(), ')');
 
             THROW 51001, @Msg, 1;
