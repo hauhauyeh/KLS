@@ -23,6 +23,9 @@ namespace KLS.Models
         /// <summary>InvoiceNumber (AR) or BillNumber (AP). Null elsewhere.</summary>
         public string? Key2 { get; set; }
 
+        /// <summary>InvoiceDate for AR source rows. Null elsewhere.</summary>
+        public DateTime? DocumentDate { get; set; }
+
         /// <summary>AccountId / PayeeId / ItemId, resolved from the database. Null when unresolved.</summary>
         public int? ResolvedId { get; set; }
 

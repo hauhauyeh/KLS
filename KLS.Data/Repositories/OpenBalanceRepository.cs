@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace KLS.Data.Repositories
@@ -50,15 +51,12 @@ namespace KLS.Data.Repositories
                 SqlDbType = SqlDbType.Int
             };
 
-            // Materialise here. The proc contains INSERT ... EXEC, and SQL Server
-            // rejects a SELECT composed over an INSERT-EXEC. Returning IQueryable
-            // would let a caller add a .Where()/.OrderBy() that EF turns into a
-            // wrapping subquery, breaking the proc at runtime. Returning List<>
-            // makes that unreachable.
-            var rows = DbContext.OpenBalanceExcelRow
-                .FromSqlRaw("[dbo].[OpenBalance_ImportPreview] @FilePath,@Section,@DownloadedAt OUTPUT,@IgnoredRowCount OUTPUT",
-                    filePathParam, sectionParam, downloadedAtParam, ignoredRowCountParam)
-                .ToList();
+            var rows = ExecuteOpenBalanceRows(
+                "dbo.OpenBalance_ImportPreview",
+                filePathParam,
+                sectionParam,
+                downloadedAtParam,
+                ignoredRowCountParam);
 
             downloadedAt = downloadedAtParam.Value is DateTime stamp ? stamp : null;
             ignoredRowCount = Convert.ToInt32(ignoredRowCountParam.Value);
@@ -106,10 +104,98 @@ namespace KLS.Data.Repositories
 
             var includeMasterListParam = new SqlParameter("@IncludeMasterList", includeMasterList);
 
-            return DbContext.OpenBalanceExcelRow
-                .FromSqlRaw("[dbo].[OpenBalance_GetRows] @Section,@IncludeMasterList",
-                    sectionParam, includeMasterListParam)
-                .ToList();
+            return ExecuteOpenBalanceRows(
+                "dbo.OpenBalance_GetRows",
+                sectionParam,
+                includeMasterListParam);
+        }
+
+        private List<OpenBalanceExcelRow> ExecuteOpenBalanceRows(string procedureName, params SqlParameter[] parameters)
+        {
+            var connection = DbContext.Database.GetDbConnection();
+            var closeConnection = connection.State != ConnectionState.Open;
+
+            using var command = connection.CreateCommand();
+            command.CommandText = procedureName;
+            command.CommandType = CommandType.StoredProcedure;
+
+            foreach (var parameter in parameters)
+                command.Parameters.Add(parameter);
+
+            if (closeConnection)
+                connection.Open();
+
+            try
+            {
+                using var reader = command.ExecuteReader();
+                return ReadOpenBalanceRows(reader);
+            }
+            finally
+            {
+                if (closeConnection)
+                    connection.Close();
+            }
+        }
+
+        private static List<OpenBalanceExcelRow> ReadOpenBalanceRows(DbDataReader reader)
+        {
+            var ordinals = Enumerable.Range(0, reader.FieldCount)
+                .ToDictionary(reader.GetName, i => i, StringComparer.OrdinalIgnoreCase);
+
+            var rows = new List<OpenBalanceExcelRow>();
+
+            while (reader.Read())
+            {
+                rows.Add(new OpenBalanceExcelRow
+                {
+                    RowNo = GetInt(reader, ordinals, nameof(OpenBalanceExcelRow.RowNo)) ?? 0,
+                    Key1 = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.Key1)),
+                    Key2 = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.Key2)),
+                    DocumentDate = GetDateTime(reader, ordinals, nameof(OpenBalanceExcelRow.DocumentDate)),
+                    ResolvedId = GetInt(reader, ordinals, nameof(OpenBalanceExcelRow.ResolvedId)),
+                    ResolvedName = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.ResolvedName)),
+                    Qty = GetDecimal(reader, ordinals, nameof(OpenBalanceExcelRow.Qty)),
+                    Price = GetDecimal(reader, ordinals, nameof(OpenBalanceExcelRow.Price)),
+                    Amount = GetDecimal(reader, ordinals, nameof(OpenBalanceExcelRow.Amount)),
+                    Notes = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.Notes)),
+                    Severity = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.Severity)) ?? OpenBalanceSeverity.OK,
+                    Message = GetString(reader, ordinals, nameof(OpenBalanceExcelRow.Message))
+                });
+            }
+
+            return rows;
+        }
+
+        private static string? GetString(DbDataReader reader, IReadOnlyDictionary<string, int> ordinals, string name)
+        {
+            if (!ordinals.TryGetValue(name, out var ordinal) || reader.IsDBNull(ordinal))
+                return null;
+
+            return Convert.ToString(reader.GetValue(ordinal));
+        }
+
+        private static int? GetInt(DbDataReader reader, IReadOnlyDictionary<string, int> ordinals, string name)
+        {
+            if (!ordinals.TryGetValue(name, out var ordinal) || reader.IsDBNull(ordinal))
+                return null;
+
+            return Convert.ToInt32(reader.GetValue(ordinal));
+        }
+
+        private static decimal? GetDecimal(DbDataReader reader, IReadOnlyDictionary<string, int> ordinals, string name)
+        {
+            if (!ordinals.TryGetValue(name, out var ordinal) || reader.IsDBNull(ordinal))
+                return null;
+
+            return Convert.ToDecimal(reader.GetValue(ordinal));
+        }
+
+        private static DateTime? GetDateTime(DbDataReader reader, IReadOnlyDictionary<string, int> ordinals, string name)
+        {
+            if (!ordinals.TryGetValue(name, out var ordinal) || reader.IsDBNull(ordinal))
+                return null;
+
+            return Convert.ToDateTime(reader.GetValue(ordinal));
         }
     }
 }
