@@ -6,8 +6,7 @@
 --   "singleOrder": {
 --     "GenInvoice": {
 --       "label": "Gen Invoice/CM",
---       "visible": true,
---       "stageIdAfterSuccess": 3
+--       "visible": true
 --     },
 --     "EmailInvoice": {
 --       "label": "Email Invoice",
@@ -38,8 +37,7 @@ DECLARE @Json NVARCHAR(MAX) = N'{
   "singleOrder": {
     "GenInvoice": {
       "label": "Gen Invoice/CM",
-      "visible": true,
-      "stageIdAfterSuccess": 3
+      "visible": true
     },
     "EmailInvoice": {
       "label": "Email Invoice",

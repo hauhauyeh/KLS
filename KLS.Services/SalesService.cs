@@ -31,6 +31,7 @@ namespace KLS.Services
         private readonly IMxMerchantService _mxMerchantService;
         private readonly IMemoryCache _memoryCache;
         private readonly ISystemSettingService _systemSettingService;
+        private readonly ISalesOrderDocumentStageEffectService _salesOrderDocumentStageEffectService;
 
         public SalesService(IUnitOfWork uow,
             IWebHostEnvironment env,
@@ -44,7 +45,8 @@ namespace KLS.Services
             ISquareService squareService,
             IMxMerchantService mxMerchantService,
             IMemoryCache memoryCache,
-            ISystemSettingService systemSettingService) : base(uow)
+            ISystemSettingService systemSettingService,
+            ISalesOrderDocumentStageEffectService salesOrderDocumentStageEffectService) : base(uow)
         {
             _env = env;
             _documentService = documentService;
@@ -58,6 +60,7 @@ namespace KLS.Services
             _mxMerchantService = mxMerchantService;
             _memoryCache = memoryCache;
             _systemSettingService = systemSettingService;
+            _salesOrderDocumentStageEffectService = salesOrderDocumentStageEffectService;
         }
 
         public PagingResponse<SalesList> GetPagedList(SalesListReq salesListReq)
@@ -413,6 +416,11 @@ namespace KLS.Services
                 });
 
                 var sent = string.IsNullOrEmpty(error);
+
+                if (sent)
+                    _salesOrderDocumentStageEffectService.ApplyAfterSuccess(
+                        salesId,
+                        SalesOrderDocumentActionKeys.EmailInvoice);
 
                 return new SalesEmailInvoiceResult
                 {
