@@ -18,8 +18,7 @@ namespace KLS.Services
     public static class OpenBalanceWorkbook
     {
         private const string InstructionsSheet = "Instructions";
-        private const int ArTemplatePrefillLastRow = 5000;
-        private const string ArCustomerNamesDefinedName = "ARCustomerNames";
+        private const int TemplatePrefillLastRow = 5000;
 
         /// <summary>
         /// The key the upload reads back to detect that the section changed
@@ -32,17 +31,27 @@ namespace KLS.Services
         {
             using var workbook = new XLWorkbook();
             var rowList = rows.ToList();
-            var customerDisplayNames = info.Section == OpenBalanceSection.AR
-                ? BuildCustomerDisplayNames(rowList)
+            var lookupTemplate = LookupTemplateFor(info.Section);
+            var partyDisplayNames = lookupTemplate != null
+                ? BuildPartyDisplayNames(rowList)
                 : null;
 
             WriteInstructions(workbook, info, asOfDate);
-            WriteData(workbook, info, rowList, customerDisplayNames);
+            WriteData(workbook, info, rowList, partyDisplayNames);
 
-            if (info.Section == OpenBalanceSection.AR && customerDisplayNames != null)
+            if (lookupTemplate != null && partyDisplayNames != null)
             {
-                var customerLookup = WriteCustomerLookup(workbook, rowList, customerDisplayNames);
-                ApplyArTemplateHelpers(workbook, workbook.Worksheet(info.SheetName), customerLookup, customerDisplayNames.Count);
+                var (sheetName, nameHeader, definedName) = lookupTemplate.Value;
+                var lookupSheet = WritePartyLookup(workbook, rowList, partyDisplayNames, sheetName, nameHeader);
+
+                // PayeeId is the last column on the name-first templates by design.
+                ApplyLookupTemplate(
+                    workbook,
+                    workbook.Worksheet(info.SheetName),
+                    lookupSheet,
+                    partyDisplayNames.Count,
+                    definedName,
+                    info.Columns.Length);
             }
 
             using var stream = new MemoryStream();
@@ -152,10 +161,15 @@ namespace KLS.Services
                     break;
 
                 case OpenBalanceSection.AP:
-                    yield return ("Note", "This sheet lists all your active vendors. Fill in the amount only for vendors you owed on " + dateText + ". Leave the rest blank -- blank rows are ignored.");
-                    yield return ("Note", "A vendor that is not listed can be added: type their Payee ID into a new row.");
-                    yield return ("Note", "Amount: positive means you owe the vendor.");
-                    yield return ("Note", "BillNumber is for reference only. Balances post per vendor.");
+                    yield return ("Note", "This sheet lists all your active vendors. Use one row per open bill you owed on " + dateText + ". Leave rows with blank Amount alone -- blank rows are ignored.");
+                    yield return ("Note", "VendorName is the client-facing field: pick it from the dropdown. PayeeId is the system match key, fills in by itself, and stays in the last column for support review.");
+                    yield return ("Note", "If PayeeId stays blank, the VendorName did not match the vendor list.");
+                    yield return ("Note", "For more than one bill from the same vendor, copy or insert another row and keep the same VendorName.");
+                    yield return ("Note", "BillDate is optional and should be typed as yyyy-MM-dd. Existing opening-balance rows download with blank BillDate until bill dates are stored durably.");
+                    yield return ("Note", "Amount: positive means you owe the vendor. Negative is a vendor credit.");
+                    yield return ("Note", "BillNumber is the original vendor bill number for reference/source-record use. Balances post per vendor.");
+                    yield return ("Note", "The Vendors sheet exists only for the PayeeId lookup. Do not edit, rename or delete it.");
+                    yield return ("Note", "If a vendor you owe is not in the list, add the vendor in KLS first, then download this template again.");
                     break;
 
                 case OpenBalanceSection.ARE:
@@ -177,7 +191,7 @@ namespace KLS.Services
             XLWorkbook workbook,
             OpenBalanceSectionInfo info,
             IEnumerable<OpenBalanceExcelRow> rows,
-            IReadOnlyDictionary<int, string>? customerDisplayNames = null)
+            IReadOnlyDictionary<int, string>? partyDisplayNames = null)
         {
             var ws = workbook.Worksheets.Add(info.SheetName);
 
@@ -189,7 +203,7 @@ namespace KLS.Services
             var r = 2;
             foreach (var row in rows)
             {
-                WriteRow(ws, info, r, row, customerDisplayNames);
+                WriteRow(ws, info, r, row, partyDisplayNames);
                 r++;
             }
 
@@ -204,7 +218,7 @@ namespace KLS.Services
             OpenBalanceSectionInfo info,
             int r,
             OpenBalanceExcelRow row,
-            IReadOnlyDictionary<int, string>? customerDisplayNames)
+            IReadOnlyDictionary<int, string>? partyDisplayNames)
         {
             switch (info.Section)
             {
@@ -216,15 +230,20 @@ namespace KLS.Services
                     break;
 
                 case OpenBalanceSection.AP:
-                    SetNumber(ws.Cell(r, 1), ParseInt(row.Key1));
-                    ws.Cell(r, 2).SetValue(row.ResolvedName ?? "");
-                    ws.Cell(r, 3).SetValue(row.Key2 ?? "");
+                    ws.Cell(r, 1).SetValue(PartyDisplayName(row, partyDisplayNames));
+                    ws.Cell(r, 2).SetValue(row.Key2 ?? "");
+
+                    // BillDate has no durable source yet: OpenBalanceAP stores only
+                    // AsOfDate, which is the opening date, not the bill date.
+                    ws.Cell(r, 3).SetValue("");
+
                     SetNumber(ws.Cell(r, 4), row.Amount);
                     ws.Cell(r, 5).SetValue(row.Notes ?? "");
+                    SetNumber(ws.Cell(r, 6), ParseInt(row.Key1));
                     break;
 
                 case OpenBalanceSection.AR:
-                    ws.Cell(r, 1).SetValue(CustomerDisplayName(row, customerDisplayNames));
+                    ws.Cell(r, 1).SetValue(PartyDisplayName(row, partyDisplayNames));
                     ws.Cell(r, 2).SetValue(row.Key2 ?? "");
                     ws.Cell(r, 3).SetValue("");
                     SetNumber(ws.Cell(r, 4), row.Amount);
@@ -250,30 +269,53 @@ namespace KLS.Services
             }
         }
 
-        private static IXLWorksheet WriteCustomerLookup(
+        /// <summary>
+        /// The name-first sections, and only those, get a hidden lookup sheet plus a
+        /// PayeeId formula. Null means the section is entered by code or id and needs
+        /// neither. The lookup sheet name is local to the workbook: unlike
+        /// OpenBalanceSectionInfo.SheetName, no stored procedure reads it.
+        /// </summary>
+        private static (string SheetName, string NameHeader, string DefinedName)? LookupTemplateFor(OpenBalanceSection section)
+        {
+            switch (section)
+            {
+                case OpenBalanceSection.AR: return ("Customers", "CustomerName", "ARCustomerNames");
+                case OpenBalanceSection.AP: return ("Vendors", "VendorName", "APVendorNames");
+                default: return null;
+            }
+        }
+
+        /// <summary>
+        /// The hidden lookup sheet the name-first templates match against.
+        /// Always PayeeId in column A and the display name in column B, which is
+        /// what ApplyLookupTemplate's INDEX/MATCH assumes.
+        /// </summary>
+        private static IXLWorksheet WritePartyLookup(
             XLWorkbook workbook,
             IEnumerable<OpenBalanceExcelRow> rows,
-            IReadOnlyDictionary<int, string> customerDisplayNames)
+            IReadOnlyDictionary<int, string> partyDisplayNames,
+            string sheetName,
+            string nameHeader)
         {
-            var ws = workbook.Worksheets.Add("Customers");
+            var ws = workbook.Worksheets.Add(sheetName);
 
             ws.Cell(1, 1).Value = "PayeeId";
-            ws.Cell(1, 2).Value = "CustomerName";
+            ws.Cell(1, 2).Value = nameHeader;
             ws.Row(1).Style.Font.Bold = true;
 
-            var customers = rows
-                .Where(r => r.ResolvedId.HasValue && customerDisplayNames.ContainsKey(r.ResolvedId.Value))
+            var parties = rows
+                .Where(r => r.ResolvedId.HasValue && partyDisplayNames.ContainsKey(r.ResolvedId.Value))
                 .Select(r => r.ResolvedId!.Value)
                 .Distinct()
-                .OrderBy(id => customerDisplayNames[id], StringComparer.OrdinalIgnoreCase)
+                .OrderBy(id => partyDisplayNames[id], StringComparer.OrdinalIgnoreCase)
                 .ThenBy(id => id)
                 .ToList();
 
             var rowNumber = 2;
-            foreach (var payeeId in customers)
+            foreach (var payeeId in parties)
             {
                 SetNumber(ws.Cell(rowNumber, 1), payeeId);
-                ws.Cell(rowNumber, 2).SetValue(customerDisplayNames[payeeId]);
+                ws.Cell(rowNumber, 2).SetValue(partyDisplayNames[payeeId]);
                 rowNumber++;
             }
 
@@ -285,33 +327,43 @@ namespace KLS.Services
             return ws;
         }
 
-        private static void ApplyArTemplateHelpers(
+        /// <summary>
+        /// Fills the PayeeId column from the name the client picked, and puts the
+        /// lookup names behind a dropdown so the name is one they can match.
+        /// </summary>
+        private static void ApplyLookupTemplate(
             XLWorkbook workbook,
-            IXLWorksheet arSheet,
-            IXLWorksheet customerLookup,
-            int customerCount)
+            IXLWorksheet dataSheet,
+            IXLWorksheet lookupSheet,
+            int partyCount,
+            string definedName,
+            int idColumn)
         {
-            for (var row = 2; row <= ArTemplatePrefillLastRow; row++)
+            // Read the name off the sheet itself so the formula cannot point at a
+            // sheet the workbook does not have.
+            var lookupName = lookupSheet.Name;
+
+            for (var row = 2; row <= TemplatePrefillLastRow; row++)
             {
-                arSheet.Cell(row, 6).FormulaA1 =
-                    $"IF(A{row}=\"\",\"\",IFERROR(INDEX(Customers!$A:$A,MATCH(A{row},Customers!$B:$B,0)),\"\"))";
+                dataSheet.Cell(row, idColumn).FormulaA1 =
+                    $"IF(A{row}=\"\",\"\",IFERROR(INDEX({lookupName}!$A:$A,MATCH(A{row},{lookupName}!$B:$B,0)),\"\"))";
             }
 
-            if (customerCount > 0)
+            if (partyCount > 0)
             {
-                var customerNames = customerLookup.Range(2, 2, customerCount + 1, 2);
-                workbook.DefinedNames.Add(ArCustomerNamesDefinedName, customerNames);
+                var partyNames = lookupSheet.Range(2, 2, partyCount + 1, 2);
+                workbook.DefinedNames.Add(definedName, partyNames);
 
-                var validation = arSheet.Range(2, 1, ArTemplatePrefillLastRow, 1).CreateDataValidation();
-                validation.List("=" + ArCustomerNamesDefinedName, true);
+                var validation = dataSheet.Range(2, 1, TemplatePrefillLastRow, 1).CreateDataValidation();
+                validation.List("=" + definedName, true);
                 validation.IgnoreBlanks = true;
                 validation.InCellDropdown = true;
             }
         }
 
-        private static IReadOnlyDictionary<int, string> BuildCustomerDisplayNames(IEnumerable<OpenBalanceExcelRow> rows)
+        private static IReadOnlyDictionary<int, string> BuildPartyDisplayNames(IEnumerable<OpenBalanceExcelRow> rows)
         {
-            var customers = rows
+            var parties = rows
                 .Where(r => r.ResolvedId.HasValue)
                 .Select(r => new
                 {
@@ -323,26 +375,26 @@ namespace KLS.Services
                 .Select(g => g.First())
                 .ToList();
 
-            var duplicateNames = customers
+            var duplicateNames = parties
                 .GroupBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            return customers.ToDictionary(
+            return parties.ToDictionary(
                 c => c.PayeeId,
                 c => duplicateNames.Contains(c.Name)
                     ? $"{c.Name} [PayeeId: {c.PayeeId}]"
                     : c.Name);
         }
 
-        private static string CustomerDisplayName(
+        private static string PartyDisplayName(
             OpenBalanceExcelRow row,
-            IReadOnlyDictionary<int, string>? customerDisplayNames)
+            IReadOnlyDictionary<int, string>? partyDisplayNames)
         {
             if (row.ResolvedId.HasValue &&
-                customerDisplayNames != null &&
-                customerDisplayNames.TryGetValue(row.ResolvedId.Value, out var displayName))
+                partyDisplayNames != null &&
+                partyDisplayNames.TryGetValue(row.ResolvedId.Value, out var displayName))
             {
                 return displayName;
             }
@@ -374,13 +426,16 @@ namespace KLS.Services
                     break;
 
                 case OpenBalanceSection.AP:
-                    Text(ws, 3, rowCount);          // Invoice / Bill number
-                    Text(ws, 5, rowCount);          // Notes
-                    Money(ws, 4, rowCount);
+                    var apRowCount = Math.Max(rowCount, TemplatePrefillLastRow);
+                    Text(ws, 1, apRowCount);        // VendorName
+                    Text(ws, 2, apRowCount);        // BillNumber
+                    Text(ws, 3, apRowCount);        // BillDate
+                    Text(ws, 5, apRowCount);        // Notes
+                    Money(ws, 4, apRowCount);
                     break;
 
                 case OpenBalanceSection.AR:
-                    var arRowCount = Math.Max(rowCount, ArTemplatePrefillLastRow);
+                    var arRowCount = Math.Max(rowCount, TemplatePrefillLastRow);
                     Text(ws, 1, arRowCount);        // CustomerName
                     Text(ws, 2, arRowCount);        // InvoiceNumber
                     Text(ws, 3, arRowCount);        // InvoiceDate
