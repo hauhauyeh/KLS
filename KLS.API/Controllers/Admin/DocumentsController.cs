@@ -15,14 +15,18 @@ namespace KLS.API.Controllers.Admin
         #region --- Member(s) ---
 
         private readonly IDocumentService _documentService;
+        private readonly ISalesOrderDocumentStageEffectService _salesOrderDocumentStageEffectService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public DocumentsController(IDocumentService documentService)
+        public DocumentsController(
+            IDocumentService documentService,
+            ISalesOrderDocumentStageEffectService salesOrderDocumentStageEffectService)
         {
             _documentService = documentService;
+            _salesOrderDocumentStageEffectService = salesOrderDocumentStageEffectService;
         }
 
         #endregion
@@ -53,6 +57,11 @@ namespace KLS.API.Controllers.Admin
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound("File not found.");
+
+            if (!documentReq.IsPrint && documentReq.SalesId.HasValue)
+                _salesOrderDocumentStageEffectService.ApplyAfterSuccess(
+                    documentReq.SalesId.Value,
+                    KLS.Common.SalesOrderDocumentActionKeys.GenPickTicket);
 
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return File(fileStream, "application/pdf");

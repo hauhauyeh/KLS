@@ -23,6 +23,18 @@ namespace KLS.Models
         /// <summary>InvoiceNumber (AR) or BillNumber (AP). Null elsewhere.</summary>
         public string? Key2 { get; set; }
 
+        /// <summary>
+        /// InvoiceDate (AR) or BillDate (AP) as yyyy-MM-dd. Null elsewhere.
+        ///
+        /// Deliberately a string, not a DateTime. DateTimeMiddleware is registered
+        /// globally as a JsonConverter&lt;DateTime&gt; and treats every DateTime as UTC,
+        /// converting it into the user's timezone on the way out. That turns a
+        /// date-only value like 2023-12-25 into 2023-12-24T19:00:00 for an
+        /// eastern-timezone user, which is the wrong DAY, not just a wrong format.
+        /// A document date has no time and no timezone, so it travels as text.
+        /// </summary>
+        public string? DocumentDate { get; set; }
+
         /// <summary>AccountId / PayeeId / ItemId, resolved from the database. Null when unresolved.</summary>
         public int? ResolvedId { get; set; }
 
