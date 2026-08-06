@@ -83,6 +83,22 @@ namespace KLS.Models
 
         public string? InvoiceFinePrint { get; set; }
 
+        public string? InvoicePaymentTitle { get; set; }
+
+        public string? InvoicePaymentBankName { get; set; }
+
+        public string? InvoicePaymentAccountName { get; set; }
+
+        public string? InvoicePaymentAccountNumber { get; set; }
+
+        public string? InvoicePaymentRoutingNumber { get; set; }
+
+        public string? InvoicePaymentAchRoutingNumber { get; set; }
+
+        public string? InvoicePaymentZelleEmail { get; set; }
+
+        public string? InvoicePaymentZellePhone { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }

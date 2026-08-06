@@ -28,16 +28,15 @@ namespace KLS.Services
                 };
                 email.From.Add(new MailboxAddress(setting.DisplayName, setting.FromEmail));
 
-                List<string> toemails = [];
-
-                if (!string.IsNullOrEmpty(to))
-                    toemails = to.Split(';').ToList();
+                var toemails = ParseEmailList(to);
 
                 if (toemails.Count > 0)
                 {
                     foreach (var toemail in toemails)
                         email.To.Add(MailboxAddress.Parse(toemail));
                 }
+
+                AddAdminBcc(email, setting.AdminEmail, toemails);
 
                 var builder = new BodyBuilder
                 {
@@ -71,6 +70,35 @@ namespace KLS.Services
         public string RenderEmailTemplate(string templatePath, object model)
         {
             return RazorTemplateEngine.RenderAsync(templatePath, model).Result;
+        }
+
+        private static List<string> ParseEmailList(string? emails)
+        {
+            if (string.IsNullOrWhiteSpace(emails))
+                return [];
+
+            return emails
+                .Split(';')
+                .Select(email => email.Trim())
+                .Where(email => !string.IsNullOrWhiteSpace(email))
+                .ToList();
+        }
+
+        private static void AddAdminBcc(MimeMessage email, string? adminEmail, List<string> toemails)
+        {
+            var adminEmails = ParseEmailList(adminEmail);
+            if (adminEmails.Count == 0)
+                return;
+
+            var existingEmails = new HashSet<string>(toemails, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var admin in adminEmails)
+            {
+                if (!existingEmails.Add(admin))
+                    continue;
+
+                email.Bcc.Add(MailboxAddress.Parse(admin));
+            }
         }
     }
 }
