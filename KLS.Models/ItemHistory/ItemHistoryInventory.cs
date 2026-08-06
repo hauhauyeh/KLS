@@ -20,6 +20,8 @@ namespace KLS.Models
 
         public int? SourceDocNumber { get; set; }
 
+        public string? SalesDocNumber { get; set; }
+
         public decimal? InventoryQty { get; set; }
 
         public decimal? Price { get; set; }
