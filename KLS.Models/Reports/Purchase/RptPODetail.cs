@@ -28,6 +28,7 @@ namespace KLS.Models.Reports
 
         public decimal? BillQty { get; set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? BillPrice { get; set; }
 
         public decimal? OrdQty1 { get; set; }
@@ -36,6 +37,7 @@ namespace KLS.Models.Reports
 
         public decimal? FinalQty { get; set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? FinalPrice { get; set; }
 
         public string? Notes { get; set; }

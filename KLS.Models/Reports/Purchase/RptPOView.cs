@@ -16,6 +16,8 @@ namespace KLS.Models.Reports
 
         public List<RptPODetail>? RptPODetail { get; set; }
 
+        public int PriceDecimals { get; set; } = 2;
+
         public int TotalItems
         {
             get
