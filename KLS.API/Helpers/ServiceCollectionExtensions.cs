@@ -17,6 +17,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
             services.AddScoped<IEmailAuditService, EmailAuditService>();
+            services.AddScoped<IArEmailPaymentInstructionRenderer, ArEmailPaymentInstructionRenderer>();
             services.AddScoped<ISystemRoleService, SystemRoleService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();
             services.AddScoped<ISystemUserService, SystemUserService>();
