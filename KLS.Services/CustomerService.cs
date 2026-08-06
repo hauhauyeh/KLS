@@ -2,11 +2,15 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using KLS.Models.Reports;
+using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json.Linq;
 using Omu.ValueInjecter;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
@@ -25,6 +29,8 @@ namespace KLS.Services
         private readonly IEmailAuditService _emailAuditService;
         private readonly IExportService _exportService;
         private readonly IPortalModeService _portalModeService;
+        private readonly IWebHostEnvironment _env;
+        private readonly IArEmailPaymentInstructionRenderer _arEmailPaymentInstructionRenderer;
 
         public CustomerService(IUnitOfWork uow,
             ISystemSettingService systemSettingService,
@@ -35,7 +41,9 @@ namespace KLS.Services
             IEmailService emailService,
             IEmailAuditService emailAuditService,
             IExportService exportService,
-            IPortalModeService portalModeService) : base(uow)
+            IPortalModeService portalModeService,
+            IWebHostEnvironment env,
+            IArEmailPaymentInstructionRenderer arEmailPaymentInstructionRenderer) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _companyService = companyService;
@@ -46,6 +54,8 @@ namespace KLS.Services
             _emailAuditService = emailAuditService;
             _exportService = exportService;
             _portalModeService = portalModeService;
+            _env = env;
+            _arEmailPaymentInstructionRenderer = arEmailPaymentInstructionRenderer;
         }
 
         public PagingResponse<CustomerList> GetPagedList(CustomerListReq customerListReq)
@@ -486,34 +496,191 @@ namespace KLS.Services
             });
         }
 
-        public void EmailStatement(int payeeId)
+        public CustomerStatementEmailResult EmailStatement(int payeeId)
         {
             var customer = GetById(payeeId);
 
             string? toEmails = FirstEmail(customer?.EmailStmt, customer?.EmailInvoice, customer?.Email);
 
             if (string.IsNullOrEmpty(toEmails))
-                throw new Exception("Email address not found");
+            {
+                return new CustomerStatementEmailResult
+                {
+                    Sent = false,
+                    DeliveryStatus = EmailAudit.DeliveryStatus.Failed,
+                    Message = "Statement email failed. Customer email address not found.",
+                    RecipientEmail = null,
+                    AttachmentCount = 0,
+                    Error = "Customer email address not found."
+                };
+            }
 
             var statement = Uow.Reports.CustStmt(payeeId);
+            var company = _companyService.GetDefault();
+            var totalDue = CalculateStatementTotalDue(statement);
+            var tempFolder = CreateEmailAttachmentFolder();
 
-            string subject = "A/R Statement";
-            string mailBody = _pdfService.RenderTemplate("~/Views/Statement.cshtml", statement);
-
-            _emailAuditService.SendAndLog(new EmailAuditMessage
+            try
             {
-                To = toEmails,
-                Subject = subject,
-                HtmlBody = mailBody,
-                EmailCategory = EmailAudit.Category.Document,
-                EmailType = EmailAudit.EmailType.Statement,
-                PayeeId = customer?.PayeeId,
-                DocumentType = EmailAudit.DocumentType.Statement,
-                RelatedEntityType = EmailAudit.RelatedEntity.Payee,
-                RelatedEntityId = customer?.PayeeId,
-                Source = EmailAudit.Source.Manual,
-                RequestedBy = UserContext.SystemUserId
-            });
+                var attachments = BuildStatementEmailAttachments(tempFolder, statement, customer, payeeId);
+                var subject = BuildStatementEmailSubject(company);
+                var mailBody = BuildStatementEmailBody(customer?.PayeeName, totalDue, company);
+
+                var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
+                {
+                    To = toEmails,
+                    Subject = subject,
+                    HtmlBody = mailBody,
+                    Attachments = attachments,
+                    EmailCategory = EmailAudit.Category.Document,
+                    EmailType = EmailAudit.EmailType.Statement,
+                    PayeeId = customer?.PayeeId,
+                    DocumentType = EmailAudit.DocumentType.Statement,
+                    RelatedEntityType = EmailAudit.RelatedEntity.Payee,
+                    RelatedEntityId = customer?.PayeeId,
+                    Source = EmailAudit.Source.Manual,
+                    RequestedBy = UserContext.SystemUserId
+                });
+
+                var sent = string.IsNullOrEmpty(error);
+
+                return new CustomerStatementEmailResult
+                {
+                    Sent = sent,
+                    DeliveryStatus = sent ? EmailAudit.DeliveryStatus.Sent : EmailAudit.DeliveryStatus.Failed,
+                    Message = sent
+                        ? "Statement email sent."
+                        : "Statement email failed.",
+                    RecipientEmail = toEmails,
+                    AttachmentCount = attachments.Length,
+                    Error = sent ? null : error
+                };
+            }
+            finally
+            {
+                DeleteEmailAttachmentFolder(tempFolder);
+            }
+        }
+
+        private string[] BuildStatementEmailAttachments(string tempFolder, RptCustStmt statement, CustomerDto? customer, int payeeId)
+        {
+            var statementHtml = _pdfService.RenderTemplate("~/Views/Statement.cshtml", statement);
+            var customerFilePart = SafeFilePart(customer?.PayeeName ?? payeeId.ToString());
+            var statementFile = Path.Combine(tempFolder, $"Statement_{customerFilePart}_{DateTime.Today:yyyyMMdd}.pdf");
+
+            using (var pdf = _pdfService.HtmlToPDF(statementHtml))
+            {
+                pdf.SaveAs(statementFile);
+            }
+
+            if (!File.Exists(statementFile))
+                throw new FileNotFoundException("Generated statement PDF was not found.", statementFile);
+
+            return new[] { statementFile };
+        }
+
+        private static decimal CalculateStatementTotalDue(RptCustStmt statement)
+        {
+            return statement.Details?.Sum(g => g.Sales?.Sum(s => s.AmountDue) ?? 0m) ?? 0m;
+        }
+
+        private static string BuildStatementEmailSubject(Company? company)
+        {
+            var companyName = CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS";
+
+            return $"Statement from {companyName}";
+        }
+
+        private string BuildStatementEmailBody(string? payeeName, decimal totalDue, Company? company)
+        {
+            var customerName = WebUtility.HtmlEncode(CleanEmailText(payeeName) ?? "Customer");
+            var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
+            var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
+            var amountDue = WebUtility.HtmlEncode(FormatCurrency(totalDue));
+            var paymentBlock = totalDue > 0m ? _arEmailPaymentInstructionRenderer.Render(company) : "";
+            var dueSummary = totalDue > 0m
+                ? $"""<span style="font-size:14px;color:#333333;">Total Amount Due:</span><br><span style="font-size:30px;font-weight:700;color:#333333;">{amountDue}</span>"""
+                : """<span style="display:inline-block;padding:7px 16px;background:#168a4a;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:1px;border-radius:4px;">NO BALANCE</span>""";
+            var bodyMessage = totalDue > 0m
+                ? $"Your statement with a total amount due of <strong>{amountDue}</strong> is attached."
+                : "Your statement is attached for your records. No balance is currently due.";
+
+            return $"""
+                <table role="presentation" cellpadding="0" cellspacing="0" style="width:660px;max-width:100%;border-collapse:collapse;border:1px solid #d9deea;font-family:Arial,Helvetica,sans-serif;color:#222222;background:#ffffff;">
+                    <tr>
+                        <td style="background:#7e8eae;color:#ffffff;padding:11px 28px;font-size:20px;font-weight:600;">
+                            {companyName}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background:#eef2fa;padding:24px 28px;border-bottom:1px solid #d9deea;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+                                <tr>
+                                    <td style="font-size:24px;font-weight:700;color:#333333;">Statement</td>
+                                    <td style="text-align:right;">{dueSummary}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:22px 28px;font-size:16px;line-height:1.45;">
+                            <p style="margin:0 0 18px 0;">Dear {customerName}:</p>
+                            <p style="margin:0 0 16px 0;">{bodyMessage}</p>
+                            <p style="margin:0 0 16px 0;">Please review the attached statement PDF for account details.</p>
+                            {paymentBlock}
+                            <p style="margin:18px 0 16px 0;">Thank you for your business. We appreciate it very much.</p>
+                            <p style="margin:0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="height:28px;background:#22283d;font-size:0;line-height:0;">&nbsp;</td>
+                    </tr>
+                </table>
+                """;
+        }
+
+        private string CreateEmailAttachmentFolder()
+        {
+            var folder = Path.Combine(_env.WebRootPath, "EmailAttachments", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(folder);
+
+            return folder;
+        }
+
+        private static string SafeFilePart(string value)
+        {
+            var safe = Regex.Replace(value, @"[^\w.-]+", "-").Trim('-');
+
+            return string.IsNullOrWhiteSpace(safe) ? "Statement" : safe;
+        }
+
+        private static string FormatCurrency(decimal amount)
+        {
+            return string.Format("{0:C}", amount);
+        }
+
+        private static string? CleanEmailText(string? value)
+        {
+            var clean = value?.Trim();
+            return string.IsNullOrEmpty(clean) ? null : clean;
+        }
+
+        private static string BuildCompanyPhoneLine(string companyPhone)
+        {
+            return string.IsNullOrEmpty(companyPhone) ? "" : "<br>" + companyPhone;
+        }
+
+        private static void DeleteEmailAttachmentFolder(string folder)
+        {
+            try
+            {
+                if (Directory.Exists(folder))
+                    Directory.Delete(folder, true);
+            }
+            catch
+            {
+                // Best-effort cleanup only. The email send/log result is already known.
+            }
         }
 
         public byte[] Export()

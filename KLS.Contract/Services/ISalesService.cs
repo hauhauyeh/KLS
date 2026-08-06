@@ -46,6 +46,8 @@ namespace KLS.Contract.Services
 
         SalesList UpdatePartially(int salesId);
 
+        SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId);
+
         SalesList UpdateNameDate(SalesUpdateReq updateReq);
 
         SalesList InsertShippingCharge(SalesUpdateReq updateReq);
@@ -58,7 +60,7 @@ namespace KLS.Contract.Services
 
         void SingleAllocation(int salesId);
 
-        SalesEmailInvoiceResult EmailPdf(int salesId);
+        SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null);
 
         int MergeOrder(SalesMergeReq mergeReq);
 

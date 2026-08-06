@@ -185,9 +185,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("EmailPdf/{salesId}")]
         [DisplayName("Email Invoice")]
         [PermissionKey("Customer.Sale.EmailPdf")]
-        public IActionResult EmailPdf(int salesId)
+        public IActionResult EmailPdf(int salesId, [FromBody] SalesEmailInvoiceReq? req)
         {
-            return Ok(_salesService.EmailPdf(salesId));
+            return Ok(_salesService.EmailPdf(salesId, req));
         }
 
 
@@ -214,6 +214,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult UpdatePartially(int salesId)
         {
             return Ok(_salesService.UpdatePartially(salesId));
+        }
+
+        [HttpPut("DropShipStage3PriceNoteUpdate/{salesId}")]
+        [DisplayName("Update Drop Ship Price/Comment")]
+        [PermissionKey("Customer.Sale.Update")]
+        public IActionResult DropShipStage3PriceNoteUpdate(int salesId)
+        {
+            return Ok(_salesService.DropShipStage3PriceNoteUpdate(salesId));
         }
 
 

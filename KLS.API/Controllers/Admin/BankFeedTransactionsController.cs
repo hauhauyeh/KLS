@@ -69,12 +69,44 @@ namespace KLS.API.Controllers.Admin
             return Ok(_bankFeedTransactionService.GetOpenBills(req));
         }
 
+        [HttpGet("UndepositedPayments")]
+        [DisplayName("Bank Feed Undeposited Payments")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult UndepositedPayments([FromQuery] BankFeedUndepositedPaymentsReq req)
+        {
+            return Ok(_bankFeedTransactionService.GetUndepositedPayments(req));
+        }
+
         [HttpPost("CreateVendorPayment")]
         [DisplayName("Create Vendor Payment From Bank Feed")]
         [PermissionKey("Accounting.BankFeed.Match")]
         public IActionResult CreateVendorPayment([FromBody] BankFeedCreateVendorPaymentReq req)
         {
             return Ok(_bankFeedTransactionService.CreateVendorPayment(req));
+        }
+
+        [HttpGet("OpenInvoices")]
+        [DisplayName("Bank Feed Open Invoices")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult OpenInvoices([FromQuery] BankFeedOpenInvoicesReq req)
+        {
+            return Ok(_bankFeedTransactionService.GetOpenInvoices(req));
+        }
+
+        [HttpPost("CreateDeposit")]
+        [DisplayName("Create Deposit From Bank Feed")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult CreateDeposit([FromBody] BankFeedCreateDepositReq req)
+        {
+            return Ok(_bankFeedTransactionService.CreateDeposit(req));
+        }
+
+        [HttpPost("CreateInvoiceDeposit")]
+        [DisplayName("Receive Open Invoices From Bank Feed")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult CreateInvoiceDeposit([FromBody] BankFeedCreateInvoiceDepositReq req)
+        {
+            return Ok(_bankFeedTransactionService.CreateInvoiceDeposit(req));
         }
 
         /// <summary>Payee used on the most recent bank charge, so the picker opens pre-filled.</summary>
