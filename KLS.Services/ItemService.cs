@@ -244,18 +244,26 @@ namespace KLS.Services
                     {
                         if (unit.ItemUnitId == 0)
                         {
-                            // TEMPORARY GATE (2026-07-03): combine-up (× N, MultipleToBase > 1) is not yet threaded
-                            // through the conversion paths -> reject on the item-save create path too (base is
-                            // Multiple=1, so this only blocks combine-up non-base units). Remove when Phase B lands.
-                            if (unit.MultipleToBase > 1)
-                                throw new InvalidOperationException("Combine-up units (× N, larger than the base) aren't supported yet — use a ÷ N unit for now.");
+                            unit.FactorToBase = unit.FactorToBase < 1 ? 1 : unit.FactorToBase;
+                            unit.MultipleToBase = unit.MultipleToBase < 1 ? 1 : unit.MultipleToBase;
+
+                            if (unit.MultipleToBase != 1 && unit.FactorToBase != 1)
+                                throw new InvalidOperationException("A unit ratio must be a whole ×N or ÷N of the base (one side must be 1).");
+
+                            if (unit.MultipleToBase == 1 && unit.FactorToBase == 1)
+                                throw new InvalidOperationException("Enter a unit ratio of 2 or more (e.g. ×6 or ÷12).");
+
+                            var dup = existingUnits.Any(u => !u.Inactive
+                                && u.MultipleToBase == unit.MultipleToBase
+                                && u.FactorToBase == unit.FactorToBase);
+                            if (dup)
+                                throw new InvalidOperationException("An active unit with this ratio already exists on this item. Inactivate it first, or use a different ratio.");
 
                             var baseUnitCost = existingUnits.FirstOrDefault(u => u.IsBaseUnit)?.RecentCost;
 
                             // NEW UNIT: add
                             unit.ItemId = item.ItemId;
-                            // 2026-07-06: cost per unit = baseUnitCost * MultipleToBase / FactorToBase (combine-up threaded).
-                            // Identity today (behind the :238 gate, Mult=1); correct once the gate is removed.
+                            // 2026-07-06: cost per unit = baseUnitCost * MultipleToBase / FactorToBase.
                             unit.RecentCost = baseUnitCost * unit.MultipleToBase / unit.FactorToBase;
                             Uow.ItemUnits.Add(unit);
                         }

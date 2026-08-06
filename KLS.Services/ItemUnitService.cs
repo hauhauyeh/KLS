@@ -186,14 +186,6 @@ namespace KLS.Services
             if (multipleToBase == 1 && factorToBase == 1)
                 throw new InvalidOperationException("Enter a unit ratio of 2 or more (e.g. ×6 or ÷12).");
 
-            // TEMPORARY GATE (2026-07-03): combine-up (× N, MultipleToBase > 1) is NOT yet threaded through the
-            // conversion paths (Sales_Insert / Purchase_Insert / RecalcQAV base-qty, C# base-qty sites, FE price
-            // sites). A × N unit would compute BaseQty = Qty / 1 (wrong inventory + costing). Reject it here --
-            // the authoritative gate; the UI ÷-only toggle is just UX. REMOVE this once Phase B lands and
-            // combine-up is verified safe end-to-end.
-            if (multipleToBase > 1)
-                throw new InvalidOperationException("Combine-up units (× N, larger than the base) aren't supported yet — use a ÷ N unit for now.");
-
             // Friendly duplicate check (the filtered unique index UX_ItemUnit_Ratio also enforces this at the DB).
             var dup = Uow.ItemUnits
                 .Find(u => u.ItemId == itemId && !u.Inactive
