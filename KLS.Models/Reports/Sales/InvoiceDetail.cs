@@ -26,6 +26,7 @@ namespace KLS.Models.Reports
 
         public string? Unit { get; set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? UnitPrice { get; set; }
 
         public decimal? ShipQty { get; set; }
@@ -59,6 +60,7 @@ namespace KLS.Models.Reports
 
         public bool IsTaxable { get; set; }
 
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? ListPrice { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]

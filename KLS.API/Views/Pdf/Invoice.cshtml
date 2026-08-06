@@ -489,7 +489,7 @@
                                     @* <td class="text-right font11">@string.Format("{0:c}", itmdetail.OrgPrice)</td>
                                     <td class="text-right font11">@string.Format("{0:0.#%}", itmdetail.Discount)</td> *@
                                 }
-                                <td class="text-right font12">@string.Format("{0:c}", itmdetail.UnitPrice)</td>
+                                <td class="text-right font12">@Utilities.FormatPrice(itmdetail.UnitPrice, Model.PriceDecimals)</td>
                                 <td class="text-right font12">
                                     @string.Format("{0:c}", itmdetail.ExtTotal)
                                     @if (itmdetail.IsTaxable)

@@ -1,3 +1,4 @@
+@using KLS.Common
 @using KLS.Models.Reports
 @model RptSalesQuote
 @{
@@ -320,7 +321,7 @@
                             </span>
                         </td>
                         @* <td class="text-center"><span>@item.Barcode</span></td> *@
-                        <td class="text-center"><span>@string.Format("{0:c}", item.UnitPrice)</span></td>
+                        <td class="text-center"><span>@Utilities.FormatPrice(item.UnitPrice, Model.PriceDecimals)</span></td>
                         <td class="text-right"><span>@string.Format("{0:c}", item.ExtTotal)</span></td>
                     </tr>
                 }

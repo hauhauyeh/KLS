@@ -23,6 +23,8 @@ namespace KLS.Models.Reports
 
         public bool UseSalesDocNumber { get; set; }
 
+        public int PriceDecimals { get; set; } = 2;
+
         public string SalesDisplayNumber
         {
             get

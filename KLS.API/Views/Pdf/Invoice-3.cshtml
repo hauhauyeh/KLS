@@ -541,7 +541,7 @@
                             <span class="upc-code">@itmdetail.EncodedBarcode</span>
                         </td>
                         <td class="text-center">
-                            <span>@string.Format("{0:c}", itmdetail.UnitPrice)</span>
+                            <span>@Utilities.FormatPrice(itmdetail.UnitPrice, Model.PriceDecimals)</span>
                         </td>
                         <td class="text-right">
                             <span>@string.Format("{0:c}", itmdetail.ExtTotal)</span>

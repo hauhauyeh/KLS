@@ -156,6 +156,15 @@ namespace KLS.Common
             return price;
         }
 
+        public static string FormatPrice(decimal? price, int priceDecimals)
+        {
+            if (!price.HasValue)
+                return string.Empty;
+
+            var decimals = priceDecimals == 4 ? 4 : 2;
+            return string.Format("{0:C" + decimals + "}", price.Value);
+        }
+
         public static string GetIpAddress(HttpContext httpContext)
         {
             var ipadd = httpContext.Connection.RemoteIpAddress.ToString();

@@ -43,6 +43,7 @@ namespace KLS.Services
                 Company = _companyService.GetDefault(),
                 HasDiscount = _systemSettingService.GetByKey<Boolean>(GlobalKey.SYSTEM_HAS_DISCOUNT),
                 UseSalesDocNumber = _systemSettingService.GetByKey<Boolean>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),
+                PriceDecimals = _systemSettingService.GetPriceDecimals(),
                 //Promotions = _PromotionManager.GetDisplay(),
             };
         }
@@ -65,6 +66,7 @@ namespace KLS.Services
                 Customer = customer,
                 SalesRepName = salesRepName,
                 Company = _companyService.GetDefault(),
+                PriceDecimals = _systemSettingService.GetPriceDecimals(),
             };
         }
 
