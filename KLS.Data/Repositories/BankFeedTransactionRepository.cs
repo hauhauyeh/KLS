@@ -62,6 +62,25 @@ namespace KLS.Data.Repositories
             return output!.Value == DBNull.Value ? 0 : Convert.ToInt32(output.Value);
         }
 
+        public IQueryable<BankFeedUndepositedPayment> GetUndepositedPayments(BankFeedUndepositedPaymentsReq req)
+        {
+            var param = BuildUndepositedPaymentsParam(req);
+            return DbContext.BankFeedUndepositedPayment.FromSqlRaw(
+                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                param);
+        }
+
+        public int CountUndepositedPayments(BankFeedUndepositedPaymentsReq req)
+        {
+            req.IsCount = true;
+            var param = BuildUndepositedPaymentsParam(req);
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                param);
+            var output = param[5] as SqlParameter;
+            return output!.Value == DBNull.Value ? 0 : Convert.ToInt32(output.Value);
+        }
+
         public int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson,
                                        string? resolvingLinesJson, int empId)
         {
@@ -103,6 +122,37 @@ namespace KLS.Data.Repositories
             return newPaymentId.Value == DBNull.Value ? 0 : Convert.ToInt32(newPaymentId.Value);
         }
 
+        public int CreateDeposit(BankFeedCreateDepositReq req, string paymentIdsJson, int empId)
+        {
+            var newTFId = new SqlParameter
+            {
+                ParameterName = "@NewTFId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            // Parameters by name, same as CreateVendorPayment: a future parameter added
+            // mid-signature must not silently shift the ones after it.
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[BankFeed_CreateDeposit] " +
+                "@BankFeedTransactionId = @BankFeedTransactionId, " +
+                "@PaymentIdsJson = @PaymentIdsJson, " +
+                "@DifferenceKind = @DifferenceKind, " +
+                "@DifferenceAccountId = @DifferenceAccountId, " +
+                "@DifferenceMemo = @DifferenceMemo, " +
+                "@EmpId = @EmpId, " +
+                "@NewTFId = @NewTFId OUTPUT",
+                new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
+                new SqlParameter("@PaymentIdsJson", paymentIdsJson),
+                new SqlParameter("@DifferenceKind", req.DifferenceKind),
+                new SqlParameter("@DifferenceAccountId", (object?)req.DifferenceAccountId ?? DBNull.Value),
+                new SqlParameter("@DifferenceMemo", (object?)req.DifferenceMemo ?? DBNull.Value),
+                new SqlParameter("@EmpId", empId),
+                newTFId);
+
+            return newTFId.Value == DBNull.Value ? 0 : Convert.ToInt32(newTFId.Value);
+        }
+
         public void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy)
         {
             DbContext.Database.ExecuteSqlRaw(
@@ -117,6 +167,24 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw(
                 "[dbo].[BankFeed_UnMatchTx] @BankFeedTransactionId",
                 new SqlParameter("@BankFeedTransactionId", bankFeedTransactionId));
+        }
+
+        private object[] BuildUndepositedPaymentsParam(BankFeedUndepositedPaymentsReq req)
+        {
+            object[] param = {
+                new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
+                !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value),
+                new SqlParameter("@Pageno", req.Pageno),
+                new SqlParameter("@Pagesize", req.Pagesize),
+                new SqlParameter("@IsCount", req.IsCount),
+                new SqlParameter()
+                {
+                    ParameterName = "@TotalCount",
+                    Direction = System.Data.ParameterDirection.Output,
+                    SqlDbType = System.Data.SqlDbType.Int
+                }
+            };
+            return param;
         }
 
         private object[] BuildOpenBillsParam(BankFeedOpenBillsReq req)

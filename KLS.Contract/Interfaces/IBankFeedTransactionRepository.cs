@@ -16,8 +16,14 @@ namespace KLS.Contract.Interfaces
 
         int CountOpenBills(BankFeedOpenBillsReq req);
 
+        IQueryable<BankFeedUndepositedPayment> GetUndepositedPayments(BankFeedUndepositedPaymentsReq req);
+
+        int CountUndepositedPayments(BankFeedUndepositedPaymentsReq req);
+
         int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson,
                                 string? resolvingLinesJson, int empId);
+
+        int CreateDeposit(BankFeedCreateDepositReq req, string paymentIdsJson, int empId);
 
         void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy);
 

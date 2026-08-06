@@ -146,6 +146,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankFeedTransactionList>().HasNoKey();
             modelBuilder.Entity<BankFeedMatchCandidate>().HasNoKey();
             modelBuilder.Entity<BankFeedOpenBill>().HasNoKey();
+            modelBuilder.Entity<BankFeedUndepositedPayment>().HasNoKey();
             modelBuilder.Entity<ItemUnitListRow>().HasNoKey();
             modelBuilder.Entity<CustomerPaymentEditEligibility>().HasNoKey();
             modelBuilder.Entity<RptSalesYearlyRow>().HasNoKey();
@@ -413,6 +414,7 @@ namespace KLS.Data.DataContext
         public virtual DbSet<BankFeedTransactionList> BankFeedTransactionList { get; set; }
         public virtual DbSet<BankFeedMatchCandidate> BankFeedMatchCandidate { get; set; }
         public virtual DbSet<BankFeedOpenBill> BankFeedOpenBill { get; set; }
+        public virtual DbSet<BankFeedUndepositedPayment> BankFeedUndepositedPayment { get; set; }
 
         public virtual DbSet<EmpAdvance> EmpAdvance { get; set; }
 

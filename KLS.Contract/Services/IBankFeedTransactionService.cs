@@ -14,7 +14,11 @@ namespace KLS.Contract.Services
 
         PagingResponse<BankFeedOpenBill> GetOpenBills(BankFeedOpenBillsReq req);
 
+        PagingResponse<BankFeedUndepositedPayment> GetUndepositedPayments(BankFeedUndepositedPaymentsReq req);
+
         int CreateVendorPayment(BankFeedCreateVendorPaymentReq req);
+
+        int CreateDeposit(BankFeedCreateDepositReq req);
 
         BankFeedChargePayee? GetLastChargePayee();
 

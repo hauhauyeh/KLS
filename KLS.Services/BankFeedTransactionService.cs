@@ -151,6 +151,17 @@ namespace KLS.Services
             };
         }
 
+        public PagingResponse<BankFeedUndepositedPayment> GetUndepositedPayments(BankFeedUndepositedPaymentsReq req)
+        {
+            var list = Uow.BankFeedTransactions.GetUndepositedPayments(req).ToList();
+            var count = Uow.BankFeedTransactions.CountUndepositedPayments(req);
+
+            return new PagingResponse<BankFeedUndepositedPayment>(count, req.Pageno, req.Pagesize)
+            {
+                RowData = list
+            };
+        }
+
         /// <summary>
         /// Everything here is a courtesy: the stored procedure re-checks all of it and is the
         /// authority. These run first only so the common mistakes give a readable message
@@ -195,6 +206,33 @@ namespace KLS.Services
                 : null;
 
             return Uow.BankFeedTransactions.CreateVendorPayment(req, linesJson, resolvingJson, UserContext.EmpId);
+        }
+
+        /// <summary>
+        /// Courtesy checks only, like CreateVendorPayment: BankFeed_CreateDeposit re-checks
+        /// everything and is the authority.
+        /// </summary>
+        public int CreateDeposit(BankFeedCreateDepositReq req)
+        {
+            if (req.CustomerPaymentIds == null || !req.CustomerPaymentIds.Any())
+                throw new Exception("Please select at least one payment to deposit.");
+
+            if (req.CustomerPaymentIds.Distinct().Count() != req.CustomerPaymentIds.Count)
+                throw new Exception("The same payment was selected more than once.");
+
+            var kinds = new[] { "None", "BankFee", "Rounding", "Account" };
+            if (!kinds.Contains(req.DifferenceKind))
+                throw new Exception("Unsupported difference kind.");
+
+            if (req.DifferenceKind == "Account" && !req.DifferenceAccountId.HasValue)
+                throw new Exception("Please choose the account for the difference.");
+
+            if (req.DifferenceKind != "None" && string.IsNullOrWhiteSpace(req.DifferenceMemo))
+                throw new Exception("A memo is required when a difference is allocated.");
+
+            var paymentIdsJson = Newtonsoft.Json.JsonConvert.SerializeObject(req.CustomerPaymentIds);
+
+            return Uow.BankFeedTransactions.CreateDeposit(req, paymentIdsJson, UserContext.EmpId);
         }
 
         public void Match(List<BankFeedMatchReq> reqs)
