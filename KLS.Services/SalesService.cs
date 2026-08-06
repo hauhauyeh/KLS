@@ -333,6 +333,13 @@ namespace KLS.Services
             return GetListById(salesId)!;
         }
 
+        public SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId)
+        {
+            EnsureVisible(salesId);
+
+            return Uow.Sales.DropShipStage3PriceNoteUpdate(salesId);
+        }
+
         public SalesList UpdateNameDate(SalesUpdateReq updateReq)
         {
             EnsureVisible(updateReq.SalesId);
