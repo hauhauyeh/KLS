@@ -208,6 +208,20 @@ namespace KLS.Services
             return Uow.BankFeedTransactions.CreateVendorPayment(req, linesJson, resolvingJson, UserContext.EmpId);
         }
 
+        public PagingResponse<BankFeedOpenInvoice> GetOpenInvoices(BankFeedOpenInvoicesReq req)
+        {
+            if (req.PayeeId <= 0)
+                throw new Exception("Please select a customer.");
+
+            var list = Uow.BankFeedTransactions.GetOpenInvoices(req).ToList();
+            var count = Uow.BankFeedTransactions.CountOpenInvoices(req);
+
+            return new PagingResponse<BankFeedOpenInvoice>(count, req.Pageno, req.Pagesize)
+            {
+                RowData = list
+            };
+        }
+
         /// <summary>
         /// Courtesy checks only, like CreateVendorPayment: BankFeed_CreateDeposit re-checks
         /// everything and is the authority.
@@ -233,6 +247,37 @@ namespace KLS.Services
             var paymentIdsJson = Newtonsoft.Json.JsonConvert.SerializeObject(req.CustomerPaymentIds);
 
             return Uow.BankFeedTransactions.CreateDeposit(req, paymentIdsJson, UserContext.EmpId);
+        }
+
+        /// <summary>
+        /// Courtesy checks only: BankFeed_CreateCustomerPaymentDeposit re-checks everything
+        /// and is the authority.
+        /// </summary>
+        public int CreateInvoiceDeposit(BankFeedCreateInvoiceDepositReq req)
+        {
+            if (req.PayeeId <= 0)
+                throw new Exception("Please select a customer.");
+
+            if (req.Lines == null || !req.Lines.Any())
+                throw new Exception("Please select at least one invoice.");
+
+            if (req.Lines.Select(l => l.SalesId).Distinct().Count() != req.Lines.Count)
+                throw new Exception("The same invoice was selected more than once.");
+
+            var kinds = new[] { "None", "BankFee", "Rounding", "Account" };
+            if (!kinds.Contains(req.DifferenceKind))
+                throw new Exception("Unsupported difference kind.");
+
+            if (req.DifferenceKind == "Account" && !req.DifferenceAccountId.HasValue)
+                throw new Exception("Please choose the account for the difference.");
+
+            if (req.DifferenceKind != "None" && string.IsNullOrWhiteSpace(req.DifferenceMemo))
+                throw new Exception("A memo is required when a difference is allocated.");
+
+            var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+                req.Lines.Select(l => new { l.SalesId, l.ApplyAmount, l.ShortDiscount }));
+
+            return Uow.BankFeedTransactions.CreateInvoiceDeposit(req, linesJson, UserContext.EmpId);
         }
 
         public void Match(List<BankFeedMatchReq> reqs)

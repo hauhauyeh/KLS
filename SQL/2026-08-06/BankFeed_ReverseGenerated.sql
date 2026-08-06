@@ -26,10 +26,19 @@ GO
 --   (previously they ran unscoped - correct when nothing else could exist, wrong once a
 --   Deposit row can). No VendorPayment behaviour changes.
 --
---   The generated payments INSIDE a 2a deposit are not deleted - they existed before Bank
---   Feed touched them and return to the undeposited pool. (2b will delete its generated
---   payments AFTER the TransferFund delete, so the cascade clears TransferFundDetail before
---   TRG_Delete_CustomerPaymentTx runs; that lands with 2b, not here.)
+--   The payments INSIDE a 2a deposit (Mode 'DepositPayments') are not deleted - they existed
+--   before Bank Feed touched them and return to the undeposited pool.
+--
+-- 2026-08-06 Phase 2b (same plan, Slice 9): a 'ReceiveOpenInvoice' deposit ALSO deletes the
+--   CustomerPayment Bank Feed generated - it did not exist before, and leaving it would
+--   strand the amount in @UF forever. Mode is the dispatch: 'DepositPayments' keeps its
+--   payments, 'ReceiveOpenInvoice' deletes them. ORDER: the payment ids are captured from
+--   TransferFundDetail during validation (the FK cascade wipes that link when the
+--   TransferFund goes), and the payments are deleted AFTER the TransferFund, so no detail
+--   row ever points at a dead payment. TRG_Delete_CustomerPaymentTx then restores the Sales
+--   balances and deletes the payment journal (verified multi-row safe - it loops a table
+--   variable, like the other two triggers). Its source-credit refusal is a raw RAISERROR +
+--   ROLLBACK, so 50315 pre-checks the same condition for a clean fail-whole error instead.
 --
 -- What changed in 4b and why:
 --   Phase 1 created exactly one VendorPayment per bank row, so the old procedure refused when
@@ -51,7 +60,8 @@ GO
 --     and for a Deposit the journal delete happens INSIDE TRG_Delete_TFTx, so the match rows
 --     must already be gone when the TransferFund delete fires.
 --
--- Error numbers 50301-50314 (50311-50314 added 2026-08-06 for the Deposit branch).
+-- Error numbers 50301-50316 (50311-50314 added 2026-08-06 for the Deposit branch;
+-- 50315-50316 added 2026-08-06 for the 2b generated-payment delete).
 -- =============================================================================================
 
 CREATE OR ALTER PROCEDURE [dbo].[BankFeed_ReverseGenerated]
@@ -166,6 +176,31 @@ BEGIN
         --    THROW 50313, 'The deposit journal is locked or reconciled and cannot be reversed.', 1;
 
         -----------------------------------------------------------------------------------
+        -- 2b. Capture the payments a 'ReceiveOpenInvoice' deposit generated, BEFORE the
+        --     TransferFund delete cascades TransferFundDetail away (2026-08-06). 2a
+        --     'DepositPayments' deposits are deliberately absent - their payments stay.
+        -----------------------------------------------------------------------------------
+        CREATE TABLE #GeneratedPayments (CustomerPaymentId INT PRIMARY KEY);
+
+        INSERT INTO #GeneratedPayments (CustomerPaymentId)
+        SELECT DISTINCT tfd.CustomerPaymentId
+        FROM #Sources AS s
+        JOIN dbo.TransferFundDetail AS tfd ON tfd.TFId = s.SourceDocId
+        WHERE s.SourceDocType = 'Deposit'
+          AND s.[Mode] = 'ReceiveOpenInvoice';
+
+        -- Pre-check TRG_Delete_CustomerPaymentTx's refusal condition: another payment used
+        -- this one as source credit. The trigger would RAISERROR + ROLLBACK mid-delete;
+        -- failing here keeps the fail-whole contract and gives a message naming the cause.
+        IF EXISTS (SELECT 1
+                   FROM dbo.CustomerPaymentDetail AS pd
+                   JOIN #GeneratedPayments AS gp
+                        ON gp.CustomerPaymentId = pd.SourceCustomerPaymentId
+                   WHERE NOT EXISTS (SELECT 1 FROM #GeneratedPayments AS gp2
+                                     WHERE gp2.CustomerPaymentId = pd.CustomerPaymentId))
+            THROW 50315, 'The generated customer payment has been used as credit by another payment and cannot be reversed.', 1;
+
+        -----------------------------------------------------------------------------------
         -- 3. Drop the match rows FIRST (all of them, once) - see the FK note in the header.
         -----------------------------------------------------------------------------------
         DELETE FROM dbo.BankFeedMatch
@@ -201,6 +236,16 @@ BEGIN
                    WHERE s.SourceDocType = 'Deposit')
             THROW 50314, 'The generated deposit could not be removed.', 1;
 
+        -- 2026-08-06 (2b): now that the TransferFund is gone and the cascade has cleared
+        -- TransferFundDetail, delete the generated payment(s). TRG_Delete_CustomerPaymentTx
+        -- restores the Sales balances and removes the payment journal.
+        DELETE FROM dbo.CustomerPayment
+        WHERE CustomerPaymentId IN (SELECT CustomerPaymentId FROM #GeneratedPayments);
+
+        IF EXISTS (SELECT 1 FROM dbo.CustomerPayment AS cp
+                   JOIN #GeneratedPayments AS gp ON gp.CustomerPaymentId = cp.CustomerPaymentId)
+            THROW 50316, 'The generated customer payment could not be removed.', 1;
+
         -----------------------------------------------------------------------------------
         -- 5. Discard staging drafts belonging to the documents just deleted.
         --
@@ -232,6 +277,13 @@ BEGIN
         DELETE FROM dbo.TempTransferFund
         WHERE TFId IN (SELECT SourceDocId FROM #Sources
                        WHERE SourceDocType = 'Deposit');
+
+        -- 2026-08-06 (2b): and the payment analogue. Opening a payment on the Customer
+        -- Payment screen stamps TempCustomerPayment rows with its CustomerPaymentId; once
+        -- the generated payment is gone those drafts describe nothing. CustomerPaymentId is
+        -- IDENTITY and never reused, and genuine new-payment staging carries 0.
+        DELETE FROM dbo.TempCustomerPayment
+        WHERE CustomerPaymentId IN (SELECT CustomerPaymentId FROM #GeneratedPayments);
 
         -----------------------------------------------------------------------------------
         -- 6. Keep the rows as reversed history rather than deleting them. This is the only
