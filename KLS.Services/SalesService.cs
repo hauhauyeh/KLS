@@ -377,7 +377,7 @@ namespace KLS.Services
             Uow.Sales.SingleAllocation(salesId);
         }
 
-        public SalesEmailInvoiceResult EmailPdf(int salesId)
+        public SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null)
         {
             EnsureVisible(salesId);
 
@@ -400,7 +400,7 @@ namespace KLS.Services
             {
                 var attachments = BuildInvoiceEmailAttachments(tempFolder, salesDisplayNumber, cleanInvoiceFile, signedBolFile);
                 var company = Uow.Companies.GetAll().FirstOrDefault();
-                var subject = BuildInvoiceEmailSubject(salesDisplayNumber, company, sales.AmountDue);
+                var subject = BuildInvoiceEmailSubject(salesDisplayNumber, company, sales.AmountDue, req);
                 var mailbody = BuildInvoiceEmailBody(recipient.Payee.PayeeName, salesDisplayNumber, sales, company);
 
                 var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
@@ -503,8 +503,15 @@ namespace KLS.Services
             return attachments.ToArray();
         }
 
-        private string BuildInvoiceEmailSubject(string salesDisplayNumber, Company? company, decimal? amountDue)
+        private string BuildInvoiceEmailSubject(string salesDisplayNumber, Company? company, decimal? amountDue, SalesEmailInvoiceReq? req = null)
         {
+            var requestedSubject = CleanEmailSubject(req?.Subject);
+            if (!string.IsNullOrEmpty(requestedSubject))
+                return requestedSubject;
+
+            if (req?.IsRevised == true)
+                return $"Invoice {salesDisplayNumber} - Revised";
+
             var companyName = CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS";
             var subject = $"Invoice {salesDisplayNumber} from {companyName}";
 
@@ -653,6 +660,15 @@ namespace KLS.Services
         {
             var clean = value?.Trim();
             return string.IsNullOrEmpty(clean) ? null : clean;
+        }
+
+        private static string? CleanEmailSubject(string? value)
+        {
+            var clean = CleanEmailText(value);
+            if (string.IsNullOrEmpty(clean))
+                return null;
+
+            return Regex.Replace(clean, @"[\r\n]+", " ").Trim();
         }
 
         private static string BuildCompanyPhoneLine(string companyPhone)

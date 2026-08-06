@@ -58,7 +58,7 @@ namespace KLS.Contract.Services
 
         void SingleAllocation(int salesId);
 
-        SalesEmailInvoiceResult EmailPdf(int salesId);
+        SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null);
 
         int MergeOrder(SalesMergeReq mergeReq);
 
