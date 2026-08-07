@@ -200,6 +200,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_salesService.EmailPdf(salesId, req));
         }
 
+        [HttpGet("EmailPdfRecipient/{salesId}")]
+        [DisplayName("Email Invoice")]
+        [PermissionKey("Customer.Sale.EmailPdf")]
+        public IActionResult EmailPdfRecipient(int salesId)
+        {
+            return Ok(_salesService.GetEmailInvoiceRecipient(salesId));
+        }
+
 
         [HttpPost("Inject/{salesId}")]
         public IActionResult Inject(int salesId)

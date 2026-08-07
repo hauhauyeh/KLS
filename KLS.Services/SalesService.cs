@@ -478,8 +478,9 @@ namespace KLS.Services
 
             var salesDisplayNumber = SalesDisplayNumber(sales);
             var recipient = GetInvoiceEmailRecipient(sales);
+            var toEmail = FirstEmail(req?.RecipientEmail, recipient.Email);
 
-            if (recipient.Payee == null || string.IsNullOrEmpty(recipient.Email))
+            if (recipient.Payee == null || string.IsNullOrEmpty(toEmail))
                 throw new InvalidOperationException("Customer does not have an invoice email address.");
 
             var cleanInvoiceFile = _documentService.Invoice(new DocumentReq { SalesId = salesId, SalesNumber = sales.SalesNumber });
@@ -495,7 +496,7 @@ namespace KLS.Services
 
                 var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
                 {
-                    To = recipient.Email,
+                    To = toEmail,
                     Subject = subject,
                     HtmlBody = mailbody,
                     Attachments = attachments,
@@ -522,7 +523,7 @@ namespace KLS.Services
                     Message = sent
                         ? "Invoice email sent."
                         : "Invoice email failed.",
-                    To = recipient.Email,
+                    To = toEmail,
                     DocumentNumber = salesDisplayNumber,
                     SignedBolAttached = !string.IsNullOrEmpty(signedBolFile),
                     AttachmentCount = attachments.Length,
@@ -535,7 +536,27 @@ namespace KLS.Services
             }
         }
 
-        private (Payee? Payee, string? Email) GetInvoiceEmailRecipient(Sales sales)
+        public SalesEmailInvoiceRecipientResult GetEmailInvoiceRecipient(int salesId)
+        {
+            EnsureVisible(salesId);
+
+            var sales = GetById(salesId);
+
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
+
+            var recipient = GetInvoiceEmailRecipient(sales);
+
+            return new SalesEmailInvoiceRecipientResult
+            {
+                RecipientEmail = recipient.Email,
+                PayeeId = recipient.Payee?.PayeeId,
+                PayeeName = recipient.Payee?.PayeeName,
+                Source = recipient.Source
+            };
+        }
+
+        private InvoiceEmailRecipient GetInvoiceEmailRecipient(Sales sales)
         {
             Payee? billTo = sales.BillId.HasValue
                 ? Uow.Payees.GetById(sales.BillId.Value)
@@ -543,7 +564,7 @@ namespace KLS.Services
             var billToEmail = FirstEmail(billTo?.EmailInvoice, billTo?.Email);
 
             if (billTo != null && !string.IsNullOrEmpty(billToEmail))
-                return (billTo, billToEmail);
+                return new InvoiceEmailRecipient(billTo, billToEmail, "BillTo");
 
             Payee? shipTo = sales.ShipId.HasValue
                 ? Uow.Payees.GetById(sales.ShipId.Value)
@@ -551,10 +572,12 @@ namespace KLS.Services
             var shipToEmail = FirstEmail(shipTo?.EmailInvoice, shipTo?.Email);
 
             if (shipTo != null && !string.IsNullOrEmpty(shipToEmail))
-                return (shipTo, shipToEmail);
+                return new InvoiceEmailRecipient(shipTo, shipToEmail, "ShipTo");
 
-            return (billTo ?? shipTo, null);
+            return new InvoiceEmailRecipient(billTo ?? shipTo, null, billTo != null ? "BillTo" : shipTo != null ? "ShipTo" : "");
         }
+
+        private sealed record InvoiceEmailRecipient(Payee? Payee, string? Email, string Source);
 
         private string? GetSignedBolPath(int salesNumber)
         {

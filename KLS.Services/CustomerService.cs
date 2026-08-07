@@ -496,11 +496,11 @@ namespace KLS.Services
             });
         }
 
-        public CustomerStatementEmailResult EmailStatement(int payeeId)
+        public CustomerStatementEmailResult EmailStatement(int payeeId, CustomerStatementEmailReq? req = null)
         {
             var customer = GetById(payeeId);
 
-            string? toEmails = FirstEmail(customer?.EmailStmt, customer?.EmailInvoice, customer?.Email);
+            string? toEmails = FirstEmail(req?.RecipientEmail, customer?.EmailStmt, customer?.EmailInvoice, customer?.Email);
 
             if (string.IsNullOrEmpty(toEmails))
             {
