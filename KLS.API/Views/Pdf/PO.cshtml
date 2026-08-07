@@ -372,7 +372,7 @@
                             }
                         </div>
                     </td>
-                    <td class="text-right">@string.Format("{0:c}", itm.BillPrice)</td>
+                    <td class="text-right">@Utilities.FormatPrice(itm.BillPrice, Model.PriceDecimals)</td>
                     <td class="text-right">
                         @string.Format("{0:c}", itm.BillTotal)
                     </td>

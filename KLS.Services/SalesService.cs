@@ -33,6 +33,7 @@ namespace KLS.Services
         private readonly ISystemSettingService _systemSettingService;
         private readonly ISalesOrderDocumentStageEffectService _salesOrderDocumentStageEffectService;
         private readonly IArEmailPaymentInstructionRenderer _arEmailPaymentInstructionRenderer;
+        private const long MaxUploadPdfBytes = 100 * 1024 * 1024;
 
         public SalesService(IUnitOfWork uow,
             IWebHostEnvironment env,
@@ -369,6 +370,88 @@ namespace KLS.Services
             return File.Exists(pdfFile);
         }
 
+        public void UploadPdf(SalesPDFUploadReq uploadReq)
+        {
+            if (uploadReq == null)
+                throw new ArgumentException("Upload request is required.", nameof(uploadReq));
+
+            var file = uploadReq.PDFFile;
+
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("Please upload a PDF file.");
+
+            if (file.Length > MaxUploadPdfBytes)
+                throw new ArgumentException("PDF file is too large.");
+
+            var extension = Path.GetExtension(file.FileName);
+            if (!string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Please upload a PDF file only.");
+
+            if (!string.IsNullOrWhiteSpace(file.ContentType)
+                && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(file.ContentType, "application/x-pdf", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(file.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Please upload a PDF file only.");
+            }
+
+            var sales = GetById(uploadReq.SalesId);
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {uploadReq.SalesId} not found.");
+
+            var invoicePdfFolder = Path.Combine(_env.WebRootPath, "InvoicePdf");
+            Directory.CreateDirectory(invoicePdfFolder);
+
+            var targetPath = Path.Combine(invoicePdfFolder, sales.SalesNumber + ".pdf");
+            var unique = Guid.NewGuid().ToString("N");
+            var uploadTempPath = Path.Combine(invoicePdfFolder, $"TempUpload-{sales.SalesNumber}-{unique}.pdf");
+            var mergedTempPath = Path.Combine(invoicePdfFolder, $"TempMerged-{sales.SalesNumber}-{unique}.pdf");
+            var backupPath = Path.Combine(invoicePdfFolder, $"TempBackup-{sales.SalesNumber}-{unique}.pdf");
+
+            try
+            {
+                using (var stream = new FileStream(uploadTempPath, FileMode.CreateNew, FileAccess.Write))
+                {
+                    file.CopyTo(stream);
+                }
+
+                if (!File.Exists(targetPath))
+                {
+                    File.Move(uploadTempPath, targetPath);
+                    return;
+                }
+
+                using var existingPdf = PdfDocument.FromFile(targetPath);
+                using var uploadedPdf = PdfDocument.FromFile(uploadTempPath);
+                using var mergedPdf = PdfDocument.Merge(new List<PdfDocument> { existingPdf, uploadedPdf });
+
+                if (mergedPdf.PageCount <= 0)
+                    throw new InvalidOperationException("Merged PDF has no pages.");
+
+                mergedPdf.SaveAs(mergedTempPath);
+                File.Replace(mergedTempPath, targetPath, backupPath, true);
+            }
+            finally
+            {
+                DeleteIfExists(uploadTempPath);
+                DeleteIfExists(mergedTempPath);
+                DeleteIfExists(backupPath);
+            }
+        }
+
+        private static void DeleteIfExists(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
+                // Cleanup should not hide the upload/merge failure that caused it.
+            }
+        }
+
         public IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq)
         {
             return Uow.Sales.GetByDateRoute(dateRouteReq.ShipDate, dateRouteReq.ShipRoute);
@@ -395,8 +478,9 @@ namespace KLS.Services
 
             var salesDisplayNumber = SalesDisplayNumber(sales);
             var recipient = GetInvoiceEmailRecipient(sales);
+            var toEmail = FirstEmail(req?.RecipientEmail, recipient.Email);
 
-            if (recipient.Payee == null || string.IsNullOrEmpty(recipient.Email))
+            if (recipient.Payee == null || string.IsNullOrEmpty(toEmail))
                 throw new InvalidOperationException("Customer does not have an invoice email address.");
 
             var cleanInvoiceFile = _documentService.Invoice(new DocumentReq { SalesId = salesId, SalesNumber = sales.SalesNumber });
@@ -412,7 +496,7 @@ namespace KLS.Services
 
                 var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
                 {
-                    To = recipient.Email,
+                    To = toEmail,
                     Subject = subject,
                     HtmlBody = mailbody,
                     Attachments = attachments,
@@ -439,7 +523,7 @@ namespace KLS.Services
                     Message = sent
                         ? "Invoice email sent."
                         : "Invoice email failed.",
-                    To = recipient.Email,
+                    To = toEmail,
                     DocumentNumber = salesDisplayNumber,
                     SignedBolAttached = !string.IsNullOrEmpty(signedBolFile),
                     AttachmentCount = attachments.Length,
@@ -452,7 +536,27 @@ namespace KLS.Services
             }
         }
 
-        private (Payee? Payee, string? Email) GetInvoiceEmailRecipient(Sales sales)
+        public SalesEmailInvoiceRecipientResult GetEmailInvoiceRecipient(int salesId)
+        {
+            EnsureVisible(salesId);
+
+            var sales = GetById(salesId);
+
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
+
+            var recipient = GetInvoiceEmailRecipient(sales);
+
+            return new SalesEmailInvoiceRecipientResult
+            {
+                RecipientEmail = recipient.Email,
+                PayeeId = recipient.Payee?.PayeeId,
+                PayeeName = recipient.Payee?.PayeeName,
+                Source = recipient.Source
+            };
+        }
+
+        private InvoiceEmailRecipient GetInvoiceEmailRecipient(Sales sales)
         {
             Payee? billTo = sales.BillId.HasValue
                 ? Uow.Payees.GetById(sales.BillId.Value)
@@ -460,7 +564,7 @@ namespace KLS.Services
             var billToEmail = FirstEmail(billTo?.EmailInvoice, billTo?.Email);
 
             if (billTo != null && !string.IsNullOrEmpty(billToEmail))
-                return (billTo, billToEmail);
+                return new InvoiceEmailRecipient(billTo, billToEmail, "BillTo");
 
             Payee? shipTo = sales.ShipId.HasValue
                 ? Uow.Payees.GetById(sales.ShipId.Value)
@@ -468,10 +572,12 @@ namespace KLS.Services
             var shipToEmail = FirstEmail(shipTo?.EmailInvoice, shipTo?.Email);
 
             if (shipTo != null && !string.IsNullOrEmpty(shipToEmail))
-                return (shipTo, shipToEmail);
+                return new InvoiceEmailRecipient(shipTo, shipToEmail, "ShipTo");
 
-            return (billTo ?? shipTo, null);
+            return new InvoiceEmailRecipient(billTo ?? shipTo, null, billTo != null ? "BillTo" : shipTo != null ? "ShipTo" : "");
         }
+
+        private sealed record InvoiceEmailRecipient(Payee? Payee, string? Email, string Source);
 
         private string? GetSignedBolPath(int salesNumber)
         {
@@ -527,13 +633,9 @@ namespace KLS.Services
 
         private string BuildInvoiceEmailBody(string? payeeName, string salesDisplayNumber, Sales sales, Company? company)
         {
-            var customerName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(payeeName) ? "Customer" : payeeName);
             var invoiceNumber = WebUtility.HtmlEncode(salesDisplayNumber);
             var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
             var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
-            var dueDate = sales.DueDate.HasValue
-                ? WebUtility.HtmlEncode(sales.DueDate.Value.ToString("MM/dd/yyyy"))
-                : "";
             var amountDue = sales.AmountDue ?? 0m;
             var formattedAmountDue = WebUtility.HtmlEncode(FormatCurrency(amountDue));
             var signedBolText = "If available, the signed Bill of Lading is attached for your records.";
@@ -546,85 +648,77 @@ namespace KLS.Services
                     : $"""<p style="margin:0 0 18px 0;"><strong>Payment:</strong> {paymentSummary}</p>""";
 
                 return $"""
-                    <table role="presentation" cellpadding="0" cellspacing="0" width="660" style="width:660px;max-width:100%;border-collapse:collapse;border:1px solid #cfd7e6;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;background:#eef2f6;">
                       <tr>
-                        <td style="padding:12px 28px;background:#7f8fad;color:#ffffff;font-size:20px;line-height:1.3;">{companyName}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:24px 28px;background:#eef2f8;border-bottom:1px solid #dbe2ef;">
-                          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                        <td align="center">
+                          <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="width:640px;max-width:100%;border-collapse:collapse;background:#ffffff;border:1px solid #d7e3f3;">
                             <tr>
-                              <td style="vertical-align:top;">
-                                <div style="font-size:22px;font-weight:bold;line-height:1.2;color:#222222;">Invoice</div>
-                                <div style="font-size:15px;font-weight:bold;font-style:italic;line-height:1.4;color:#222222;">{invoiceNumber}</div>
+                              <td style="padding:22px 24px;background:#12355b;color:#ffffff;">
+                                <div style="font-size:18px;font-weight:bold;line-height:1.3;">Invoice {invoiceNumber}</div>
+                                <div style="font-size:13px;line-height:1.4;color:#dbeafe;margin-top:3px;">For your records.</div>
                               </td>
-                              <td align="right" style="vertical-align:top;white-space:nowrap;">
-                                <span style="display:inline-block;padding:7px 16px;background:#168a4a;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:1px;border-radius:4px;">PAID</span>
+                            </tr>
+                            <tr>
+                              <td style="padding:24px;font-size:15px;line-height:1.5;color:#1f2937;">
+                                <p style="margin:0 0 14px 0;">Dear Customer:</p>
+                                <p style="margin:0 0 14px 0;">Please find attached invoice <strong>{invoiceNumber}</strong> for your records.</p>
+
+                                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 16px 0;background:#eefaf3;border-left:4px solid #168a4a;">
+                                  <tr>
+                                    <td style="padding:10px 12px;font-size:15px;line-height:1.5;color:#14532d;">
+                                      <span style="display:inline-block;margin-right:10px;padding:5px 12px;background:#168a4a;color:#ffffff;font-size:15px;font-weight:bold;letter-spacing:1px;border-radius:4px;">PAID</span>
+                                      This invoice has been paid. No balance is currently due.
+                                    </td>
+                                  </tr>
+                                </table>
+
+                                {paymentLine}
+                                <p style="margin:0 0 16px 0;">{signedBolText}</p>
+                                <p style="margin:20px 0 0 0;">Thank you for your business. We appreciate it very much.</p>
+                                <p style="margin:16px 0 0 0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
                               </td>
                             </tr>
                           </table>
                         </td>
-                      </tr>
-                      <tr>
-                        <td style="padding:24px 28px 20px 28px;background:#ffffff;font-size:16px;line-height:1.45;">
-                          <p style="margin:0 0 18px 0;">Dear {customerName}:</p>
-                          <p style="margin:0 0 18px 0;">Your invoice <strong>{invoiceNumber}</strong> is attached for your records.</p>
-                          <p style="margin:0 0 18px 0;">
-                            <span style="display:inline-block;padding:4px 10px;background:#168a4a;color:#ffffff;font-size:14px;font-weight:bold;letter-spacing:1px;border-radius:4px;">PAID</span>
-                            <span style="margin-left:8px;">This invoice has been paid. No balance is currently due.</span>
-                          </p>
-                          {paymentLine}
-                          <p style="margin:0 0 18px 0;">{signedBolText}</p>
-                          <p style="margin:0 0 18px 0;">Thank you for your business. We appreciate it very much.</p>
-                          <p style="margin:0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="height:30px;background:#1f2940;font-size:1px;line-height:1px;">&nbsp;</td>
                       </tr>
                     </table>
                     """;
             }
 
             var paymentBlock = _arEmailPaymentInstructionRenderer.Render(company);
-            var dueDateLine = string.IsNullOrEmpty(dueDate)
-                ? ""
-                : $"""<div style="font-size:14px;font-style:italic;line-height:1.5;color:#b7791f;margin-top:2px;">Due: {dueDate}</div>""";
 
             return $"""
-                <table role="presentation" cellpadding="0" cellspacing="0" width="660" style="width:660px;max-width:100%;border-collapse:collapse;border:1px solid #cfd7e6;">
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;background:#eef2f6;">
                   <tr>
-                    <td style="padding:12px 28px;background:#7f8fad;color:#ffffff;font-size:20px;line-height:1.3;">{companyName}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:24px 28px;background:#eef2f8;border-bottom:1px solid #dbe2ef;">
-                      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                    <td align="center">
+                      <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="width:640px;max-width:100%;border-collapse:collapse;background:#ffffff;border:1px solid #d7e3f3;">
                         <tr>
-                          <td style="vertical-align:top;">
-                            <div style="font-size:22px;font-weight:bold;line-height:1.2;color:#222222;">Invoice</div>
-                            {dueDateLine}
-                            <div style="font-size:15px;font-weight:bold;font-style:italic;line-height:1.4;color:#222222;">{invoiceNumber}</div>
+                          <td style="padding:22px 24px;background:#12355b;color:#ffffff;">
+                            <div style="font-size:18px;font-weight:bold;line-height:1.3;">Invoice {invoiceNumber}</div>
+                            <div style="font-size:13px;line-height:1.4;color:#dbeafe;margin-top:3px;">Please find attached your invoice.</div>
                           </td>
-                          <td align="right" style="vertical-align:top;white-space:nowrap;">
-                            <span style="font-size:14px;color:#333333;">Amount Due:</span>
-                            <span style="font-size:36px;line-height:1.1;color:#222222;">{formattedAmountDue}</span>
+                        </tr>
+                        <tr>
+                          <td style="padding:24px;font-size:15px;line-height:1.5;color:#1f2937;">
+                            <p style="margin:0 0 14px 0;">Dear Customer:</p>
+                            <p style="margin:0 0 14px 0;">Please find attached invoice <strong>{invoiceNumber}</strong>.</p>
+
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 16px 0;background:#fff4f4;border-left:4px solid #d64045;">
+                              <tr>
+                                <td style="padding:10px 12px;font-size:15px;line-height:1.5;color:#7f1d1d;">
+                                  <strong>Balance due:</strong> {formattedAmountDue}
+                                </td>
+                              </tr>
+                            </table>
+
+                            <p style="margin:0 0 16px 0;">{signedBolText}</p>
+                            {paymentBlock}
+                            <p style="margin:20px 0 0 0;">Thank you for your business. We appreciate it very much.</p>
+                            <p style="margin:16px 0 0 0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
                           </td>
                         </tr>
                       </table>
                     </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:24px 28px 20px 28px;background:#ffffff;font-size:16px;line-height:1.45;">
-                      <p style="margin:0 0 18px 0;">Dear {customerName}:</p>
-                      <p style="margin:0 0 18px 0;">Your invoice <strong>{invoiceNumber}</strong> for <strong>{formattedAmountDue}</strong> is attached. Please remit payment at your earliest convenience.</p>
-                      <p style="margin:0 0 18px 0;">{signedBolText}</p>
-                      {paymentBlock}
-                      <p style="margin:0 0 18px 0;">Thank you for your business. We appreciate it very much.</p>
-                      <p style="margin:0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="height:30px;background:#1f2940;font-size:1px;line-height:1px;">&nbsp;</td>
                   </tr>
                 </table>
                 """;

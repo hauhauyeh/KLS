@@ -124,9 +124,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("EmailStatement/{payeeId}")]
         [DisplayName("Email Statement")]
         [PermissionKey("Customer.Customer.EmailStatement")]
-        public IActionResult EmailStatement(int payeeId)
+        public IActionResult EmailStatement(int payeeId, [FromBody] CustomerStatementEmailReq? req)
         {
-            return Ok(_customerService.EmailStatement(payeeId));
+            return Ok(_customerService.EmailStatement(payeeId, req));
         }
 
 

@@ -117,7 +117,8 @@ namespace KLS.Services
             {
                 Company = compnayInfo,
                 RptPO = po,
-                RptPODetail = poDetail
+                RptPODetail = poDetail,
+                PriceDecimals = _systemSettingService.GetPriceDecimals()
             };
 
             var documentFormat = _systemSettingService.GetByKey<int>(GlobalKey.DOCUMENT_FORMAT);

@@ -181,6 +181,16 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("UploadPdf")]
+        [DisplayName("Upload Pdf Image")]
+        [PermissionKey("Customer.Sale.UploadPdf")]
+        public IActionResult UploadPdf([FromForm] SalesPDFUploadReq uploadReq)
+        {
+            _salesService.UploadPdf(uploadReq);
+
+            return Ok();
+        }
+
 
         [HttpPost("EmailPdf/{salesId}")]
         [DisplayName("Email Invoice")]
@@ -188,6 +198,14 @@ namespace KLS.API.Controllers.Admin
         public IActionResult EmailPdf(int salesId, [FromBody] SalesEmailInvoiceReq? req)
         {
             return Ok(_salesService.EmailPdf(salesId, req));
+        }
+
+        [HttpGet("EmailPdfRecipient/{salesId}")]
+        [DisplayName("Email Invoice")]
+        [PermissionKey("Customer.Sale.EmailPdf")]
+        public IActionResult EmailPdfRecipient(int salesId)
+        {
+            return Ok(_salesService.GetEmailInvoiceRecipient(salesId));
         }
 
 

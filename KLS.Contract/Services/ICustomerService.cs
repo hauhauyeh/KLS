@@ -27,7 +27,7 @@ namespace KLS.Contract.Services
 
         void EmailPricesheet(int payeeId);
 
-        CustomerStatementEmailResult EmailStatement(int payeeId);
+        CustomerStatementEmailResult EmailStatement(int payeeId, CustomerStatementEmailReq? req = null);
 
         byte[] Export();
 

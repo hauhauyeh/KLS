@@ -54,11 +54,15 @@ namespace KLS.Contract.Services
 
         bool IsInvoicePdfExist(int salesNumber);
 
+        void UploadPdf(SalesPDFUploadReq uploadReq);
+
         IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq);
 
         void BatchAllocation(DateOnly shipDate);
 
         void SingleAllocation(int salesId);
+
+        SalesEmailInvoiceRecipientResult GetEmailInvoiceRecipient(int salesId);
 
         SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null);
 

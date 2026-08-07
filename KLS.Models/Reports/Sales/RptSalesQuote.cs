@@ -7,6 +7,7 @@ namespace KLS.Models.Reports
         public Payee? Customer { get; set; }
         public List<InvoiceDetail>? Details { get; set; }
         public string? SalesRepName { get; set; }
+        public int PriceDecimals { get; set; } = 2;
 
         public int? TotalItems => Details?
             .Where(d => d.ItemCode != null)
