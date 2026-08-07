@@ -9,7 +9,7 @@ namespace KLS.Services
     {
         private static readonly IReadOnlyDictionary<string, int> AllowedStageEffects = new Dictionary<string, int>
         {
-            [SalesOrderDocumentActionKeys.EmailInvoice] = 3,
+            [SalesOrderDocumentActionKeys.EmailInvoice] = 4,
             [SalesOrderDocumentActionKeys.GenPickTicket] = 2
         };
 
@@ -33,6 +33,12 @@ namespace KLS.Services
             var configuredStageId = GetConfiguredStageId(actionKey);
             if (configuredStageId != allowedStageId)
                 return;
+
+            if (allowedStageId == 4)
+            {
+                Uow.Sales.UpdateStage(salesId, 4);
+                return;
+            }
 
             if (allowedStageId == 3)
             {
