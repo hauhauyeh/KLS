@@ -33,6 +33,7 @@ namespace KLS.Services
         private readonly ISystemSettingService _systemSettingService;
         private readonly ISalesOrderDocumentStageEffectService _salesOrderDocumentStageEffectService;
         private readonly IArEmailPaymentInstructionRenderer _arEmailPaymentInstructionRenderer;
+        private const long MaxUploadPdfBytes = 100 * 1024 * 1024;
 
         public SalesService(IUnitOfWork uow,
             IWebHostEnvironment env,
@@ -367,6 +368,88 @@ namespace KLS.Services
             var pdfFile = Path.Combine(_env.WebRootPath, "InvoicePdf", salesNumber + ".pdf");
 
             return File.Exists(pdfFile);
+        }
+
+        public void UploadPdf(SalesPDFUploadReq uploadReq)
+        {
+            if (uploadReq == null)
+                throw new ArgumentException("Upload request is required.", nameof(uploadReq));
+
+            var file = uploadReq.PDFFile;
+
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("Please upload a PDF file.");
+
+            if (file.Length > MaxUploadPdfBytes)
+                throw new ArgumentException("PDF file is too large.");
+
+            var extension = Path.GetExtension(file.FileName);
+            if (!string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Please upload a PDF file only.");
+
+            if (!string.IsNullOrWhiteSpace(file.ContentType)
+                && !string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(file.ContentType, "application/x-pdf", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(file.ContentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Please upload a PDF file only.");
+            }
+
+            var sales = GetById(uploadReq.SalesId);
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {uploadReq.SalesId} not found.");
+
+            var invoicePdfFolder = Path.Combine(_env.WebRootPath, "InvoicePdf");
+            Directory.CreateDirectory(invoicePdfFolder);
+
+            var targetPath = Path.Combine(invoicePdfFolder, sales.SalesNumber + ".pdf");
+            var unique = Guid.NewGuid().ToString("N");
+            var uploadTempPath = Path.Combine(invoicePdfFolder, $"TempUpload-{sales.SalesNumber}-{unique}.pdf");
+            var mergedTempPath = Path.Combine(invoicePdfFolder, $"TempMerged-{sales.SalesNumber}-{unique}.pdf");
+            var backupPath = Path.Combine(invoicePdfFolder, $"TempBackup-{sales.SalesNumber}-{unique}.pdf");
+
+            try
+            {
+                using (var stream = new FileStream(uploadTempPath, FileMode.CreateNew, FileAccess.Write))
+                {
+                    file.CopyTo(stream);
+                }
+
+                if (!File.Exists(targetPath))
+                {
+                    File.Move(uploadTempPath, targetPath);
+                    return;
+                }
+
+                using var existingPdf = PdfDocument.FromFile(targetPath);
+                using var uploadedPdf = PdfDocument.FromFile(uploadTempPath);
+                using var mergedPdf = PdfDocument.Merge(new List<PdfDocument> { existingPdf, uploadedPdf });
+
+                if (mergedPdf.PageCount <= 0)
+                    throw new InvalidOperationException("Merged PDF has no pages.");
+
+                mergedPdf.SaveAs(mergedTempPath);
+                File.Replace(mergedTempPath, targetPath, backupPath, true);
+            }
+            finally
+            {
+                DeleteIfExists(uploadTempPath);
+                DeleteIfExists(mergedTempPath);
+                DeleteIfExists(backupPath);
+            }
+        }
+
+        private static void DeleteIfExists(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
+                // Cleanup should not hide the upload/merge failure that caused it.
+            }
         }
 
         public IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq)

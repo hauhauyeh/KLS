@@ -181,6 +181,16 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("UploadPdf")]
+        [DisplayName("Upload Pdf Image")]
+        [PermissionKey("Customer.Sale.UploadPdf")]
+        public IActionResult UploadPdf([FromForm] SalesPDFUploadReq uploadReq)
+        {
+            _salesService.UploadPdf(uploadReq);
+
+            return Ok();
+        }
+
 
         [HttpPost("EmailPdf/{salesId}")]
         [DisplayName("Email Invoice")]
