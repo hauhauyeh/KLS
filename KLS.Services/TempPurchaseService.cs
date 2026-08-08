@@ -275,8 +275,8 @@ namespace KLS.Services
                 tempPurchase.TariffPercent = itemTariff.TariffRate;
             }
 
-            // Default = pure vendor cost (RecentBaseCost); landed RecentCost only as fallback for units not yet backfilled.
-            var defaultCost = unit.RecentBaseCost ?? unit.RecentCost ?? 0m;
+            // Default = pure vendor cost (RecentBaseCost); do not fall back to landed RecentCost.
+            var defaultCost = unit.RecentBaseCost ?? 0m;
 
             var billPrice = (dto.BillPrice.HasValue && dto.BillPrice.Value != 0) ? dto.BillPrice : defaultCost;
 
