@@ -90,6 +90,8 @@ namespace KLS.Models
         public int? DropShipPurchaseStageId { get; set; }
         public int? DropShipPurchasePayeeId { get; set; }
         public bool HasBackorderDropShip { get; set; }
+        public bool HasDSBackorderQty { get; set; }
+        public bool IsLatestDSChain { get; set; }
 
         [NotMapped]
         public bool IsPdfExist { get; set; }
