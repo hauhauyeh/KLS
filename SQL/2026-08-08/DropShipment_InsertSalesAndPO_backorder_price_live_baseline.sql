@@ -1,7 +1,3 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 -- DropShipment_InsertSalesAndPO
 -- Creates or updates a drop-ship sales order (StageId=0) and its linked
@@ -23,7 +19,7 @@ GO
 -- 2026-07-21 DROPSHIP-CPO: optional Customer PO is captured on the Sales side while Factory PO stays on Purchase.
 -- 2026-07-22 BACKORDER-DROPSHIP-SOURCE-LINK: optional SourceSalesId stores the new backorder SO's ParentSalesNumber.
 -- EXEC dbo.DropShipment_InsertSalesAndPO @SalesId=0, @PayeeId=1, @VendorPayeeId=2, @ShipDate='2026-07-21', @ShipRoute=NULL, @Instruction='Web', @EmpId=1, @PurchaseDate=NULL, @NewSalesId=0, @NewPurchaseId=0, @FactorPO='FPO-1', @CustPONumber='CPO-1', @SourceSalesId=NULL;
-CREATE OR ALTER PROCEDURE [dbo].[DropShipment_InsertSalesAndPO]
+CREATE   PROCEDURE [dbo].[DropShipment_InsertSalesAndPO]
     @SalesId INT,
     @PayeeId INT,
     @VendorPayeeId INT,
@@ -384,8 +380,7 @@ BEGIN
         -- PURCHASE SIDE (linked PO)
         -- ============================================================
 
-        -- Populate TempPurchase from SalesDetail (plan section 4 mapping).
-        -- Backorder children inherit source PO line price when the 1-to-1 line match exists.
+        -- Populate TempPurchase from SalesDetail (plan section 4 mapping)
         DELETE FROM TempPurchase WHERE EmpId = @EmpId AND PayeeId = @VendorPayeeId;
 
         INSERT INTO [TempPurchase]
@@ -419,13 +414,13 @@ BEGIN
             @EmpId
             ,@VendorPayeeId
             ,CASE WHEN @IsEdit = 1 THEN @PurchaseId ELSE 0 END
-            ,sd.[LineId]
-            ,sd.[LineType]
+            ,[LineId]
+            ,[LineType]
             ,sd.[ItemId]
-            ,sd.[AccountId]
+            ,[AccountId]
             ,sd.[ItemUnitId]
             ,sd.[Unit]
-            ,sd.[Notes]
+            ,[Notes]
             ,CASE WHEN (sd.BillQty = 0 AND sd.ShipQty != 0) THEN 1 ELSE 0 END
             ,CASE WHEN (sd.BillQty = 0 AND sd.ShipQty = 0) THEN 1 ELSE 0 END
             ,CASE WHEN (sd.BillQty != 0 AND sd.ShipQty = 0) THEN 1 ELSE 0 END
@@ -435,30 +430,15 @@ BEGIN
             ,sd.[OrdQty]
             ,NULL
             ,NULL
-            ,COALESCE(srcPd.BillPrice, i.RecentBaseCost, 0)
+            ,ISNULL(i.RecentBaseCost, 0)
             ,NULL
-            ,COALESCE(srcPd.FinalPrice, i.RecentBaseCost, 0)
+            ,ISNULL(i.RecentBaseCost, 0)
             ,NULL
             ,NULL
             ,sd.[FactorToBase]
             ,NULL
         FROM SalesDetail sd
         LEFT JOIN ItemUnit i ON i.ItemUnitId = sd.ItemUnitId
-        LEFT JOIN Sales srcS
-               ON @SourceSalesId IS NOT NULL
-              AND srcS.SalesId = @SourceSalesId
-        LEFT JOIN SalesDetail srcSd
-               ON @SourceSalesId IS NOT NULL
-              AND srcSd.SalesId = @SourceSalesId
-              AND srcSd.LineId = sd.DisplaySort
-              AND srcSd.ItemId = sd.ItemId
-              AND srcSd.ItemUnitId = sd.ItemUnitId
-        LEFT JOIN PurchaseDetail srcPd
-               ON @SourceSalesId IS NOT NULL
-              AND srcPd.PurchaseId = srcS.DropShipPurchaseId
-              AND srcPd.LineId = srcSd.LineId
-              AND srcPd.ItemId = srcSd.ItemId
-              AND srcPd.ItemUnitId = srcSd.ItemUnitId
         WHERE sd.SalesId = @SalesId
         -- 2026-07-13 DROPSHIP-ITEMONLY: item lines only; exclude account lines (LineType='A': customer shipping charge / GL). See plan-dropship-3-exclude-non-item.md
         AND sd.LineType = 'I'
