@@ -74,6 +74,7 @@ namespace KLS.Models
         public int? DropShipSalesId { get; set; }
 
         public int? DropShipSalesNumber { get; set; }
+        public string? DropShipChainLabel { get; set; }
         public string? DropShipSalesCustPONumber { get; set; }
         public string? DropShipSalesCustomerName { get; set; }
 
