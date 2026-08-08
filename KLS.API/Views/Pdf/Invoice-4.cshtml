@@ -16,7 +16,7 @@
     {
         dropShipVendorDoc = $"{dropShipVendorDoc} / {dropShipChainLabel}";
     }
-    var routeInfoDriverLabel = isDropShipInvoice ? "Vendor Doc #" : "Driver";
+    var routeInfoDriverLabel = isDropShipInvoice ? "V-Doc #" : "Driver";
     var routeInfoDriverValue = isDropShipInvoice ? dropShipVendorDoc : Model.Invoice?.DriverName;
 
     var colSpan = 6;
@@ -651,7 +651,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="invoice-info-label">PO</td>
+                    <td class="invoice-info-label">PO#</td>
                     @if (string.IsNullOrEmpty(Model.Invoice.CustPONumber))
                     {
                         <td class="invoice-info">&nbsp;</td>
