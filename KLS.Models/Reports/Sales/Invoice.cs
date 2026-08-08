@@ -17,6 +17,8 @@ namespace KLS.Models.Reports
         public string? DocType { get; set; }
         public int? ParentSalesNumber { get; set; }
 
+        public bool IsDropShip { get; set; }
+
         public int ShipId { get; set; }
 
         public DateOnly? ShipDate { get; set; }
@@ -60,6 +62,14 @@ namespace KLS.Models.Reports
         public string? TermName { get; set; }
 
         public string? CustPONumber { get; set; }
+
+        public string? DropShipPurchaseFactorPO { get; set; }
+
+        public string? DropShipPurchaseVendorDocNumber { get; set; }
+
+        public string? DropShipPurchaseContainerNumber { get; set; }
+
+        public string? DropShipChainLabel { get; set; }
 
         public bool IsPastDue { get; set; }
 

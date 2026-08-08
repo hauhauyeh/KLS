@@ -84,6 +84,9 @@ namespace KLS.Models
         public int? DropShipPurchaseId { get; set; }
         public int? DropShipPurchaseNumber { get; set; }
         public string? DropShipPurchaseFactorPO { get; set; }
+        public string? DropShipPurchaseVendorDocNumber { get; set; }
+        public string? DropShipPurchaseContainerNumber { get; set; }
+        public string? DropShipChainLabel { get; set; }
         public int? DropShipPurchaseStageId { get; set; }
         public int? DropShipPurchasePayeeId { get; set; }
         public bool HasBackorderDropShip { get; set; }

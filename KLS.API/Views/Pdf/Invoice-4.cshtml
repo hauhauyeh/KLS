@@ -7,6 +7,17 @@
     var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Invoice #";
     var docDateLabel = isCreditMemo ? "Date" : "Invoice Date";
     var companyName = Model.Company.CompanyName;
+    var isDropShipInvoice = Model.Invoice?.IsDropShip == true;
+    var routeInfoTruckLabel = isDropShipInvoice ? "Container #" : "Truck #";
+    var routeInfoTruckValue = isDropShipInvoice ? Model.Invoice?.DropShipPurchaseContainerNumber : Model.Invoice?.TruckNumber;
+    var dropShipVendorDoc = Model.Invoice?.DropShipPurchaseVendorDocNumber;
+    var dropShipChainLabel = Model.Invoice?.DropShipChainLabel;
+    if (!string.IsNullOrWhiteSpace(dropShipVendorDoc) && !string.IsNullOrWhiteSpace(dropShipChainLabel))
+    {
+        dropShipVendorDoc = $"{dropShipVendorDoc} / {dropShipChainLabel}";
+    }
+    var routeInfoDriverLabel = isDropShipInvoice ? "Vendor Doc #" : "Driver";
+    var routeInfoDriverValue = isDropShipInvoice ? dropShipVendorDoc : Model.Invoice?.DriverName;
 
     var colSpan = 6;
 }
@@ -684,25 +695,25 @@
                     <td class="route-info">@Model.Invoice.SalesRepName</td>
                 </tr>
                 <tr>
-                    <td class="route-info-label">Truck #</td>
-                    @if (string.IsNullOrEmpty(Model.Invoice.TruckNumber))
+                    <td class="route-info-label">@routeInfoTruckLabel</td>
+                    @if (string.IsNullOrWhiteSpace(routeInfoTruckValue))
                     {
                         <td class="route-info">&nbsp;</td>
                     }
                     else
                     {
-                        <td class="route-info">@Model.Invoice.TruckNumber</td>
+                        <td class="route-info">@routeInfoTruckValue</td>
                     }
                 </tr>
                 <tr>
-                    <td class="route-info-label">Driver</td>
-                    @if (string.IsNullOrEmpty(Model.Invoice.DriverName))
+                    <td class="route-info-label">@routeInfoDriverLabel</td>
+                    @if (string.IsNullOrWhiteSpace(routeInfoDriverValue))
                     {
                         <td class="route-info">&nbsp;</td>
                     }
                     else
                     {
-                        <td class="route-info">@Model.Invoice.DriverName</td>
+                        <td class="route-info">@routeInfoDriverValue</td>
                     }
                 </tr>
             </table>
