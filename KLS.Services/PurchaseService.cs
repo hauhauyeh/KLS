@@ -68,7 +68,9 @@ namespace KLS.Services
 
         public bool DocNumberExists(int purchaseId, int payeeId, string? docNumber)
         {
-            if (string.IsNullOrEmpty(docNumber))
+            docNumber = NormalizeUpperRef(docNumber);
+
+            if (docNumber == null)
                 return false;
 
             return Uow.Purchases.Exists(c => c.VendorDocNumber == docNumber && c.PayeeId == payeeId && c.PurchaseId != purchaseId);
@@ -76,6 +78,8 @@ namespace KLS.Services
 
         public void UpdateDocNumber(int purchaseId, string? docNumber)
         {
+            docNumber = NormalizeUpperRef(docNumber);
+
             var purchase = GetById(purchaseId);
 
             if (purchase != null)
@@ -118,6 +122,9 @@ namespace KLS.Services
 
         public PurchaseList? Checkout(PurchaseCheckoutReq checkoutReq)
         {
+            checkoutReq.VendorDocNumber = NormalizeUpperRef(checkoutReq.VendorDocNumber);
+            checkoutReq.ContainerNumber = NormalizeUpperRef(checkoutReq.ContainerNumber);
+
             var purchaseId = Uow.Purchases.Checkout(checkoutReq);
 
             Uow.Shipments.AllocateVendorDirectInvcIfNeeded(purchaseId);
@@ -132,6 +139,8 @@ namespace KLS.Services
 
         public PurchaseList? UpdateContainerNumber(int purchaseId, string? containerNumber)
         {
+            containerNumber = NormalizeUpperRef(containerNumber);
+
             Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.ContainerNumber, x => containerNumber)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
@@ -139,6 +148,12 @@ namespace KLS.Services
             Uow.Purchases.FreightBillLink(purchaseId);
 
             return GetListById(purchaseId);
+        }
+
+        private static string? NormalizeUpperRef(string? value)
+        {
+            var normalized = value?.Trim().ToUpperInvariant();
+            return string.IsNullOrEmpty(normalized) ? null : normalized;
         }
 
         public PurchaseList? UpdateFactorPO(int purchaseId, string? factorPO)
