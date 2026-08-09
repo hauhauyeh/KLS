@@ -15,5 +15,9 @@ namespace KLS.Models
         public string? ShipmentIds { get; set; }
 
         public string? OrderMode { get; set; }
+
+        public string? VendorDocNumber { get; set; }
+
+        public string? ContainerNumber { get; set; }
     }
 }

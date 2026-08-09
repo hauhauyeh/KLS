@@ -103,9 +103,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPut("UpdateToBillStage/{purchaseId}")]
         [DisplayName("Convert To Bill")]
         [PermissionKey("Vendor.PurchaseOrder.ConvertToBill")]
-        public IActionResult UpdateToBillStage(int purchaseId)
+        public IActionResult UpdateToBillStage(int purchaseId, [FromBody] PurchaseOrderConvertToBillReq? req)
         {
-            return Ok(_purchaseOrderService.UpdateToBillStage(purchaseId));
+            return Ok(_purchaseOrderService.UpdateToBillStage(purchaseId, req));
         }
 
 
