@@ -78,9 +78,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("ConvertPOToBill/{purchaseId}")]
         [DisplayName("Convert PO to Bill")]
         [PermissionKey("Vendor.DropShipment.ConvertToBill")]
-        public IActionResult ConvertPOToBill(int purchaseId)
+        public IActionResult ConvertPOToBill(int purchaseId, [FromBody] DropShipmentConvertReq? req)
         {
-            _dropShipmentService.ConvertPOToBill(purchaseId);
+            _dropShipmentService.ConvertPOToBill(purchaseId, req);
             return Ok();
         }
 

@@ -51,9 +51,28 @@ namespace KLS.Services
             Uow.DropShipments.UpdateReceiptQty(purchaseId, req);
         }
 
-        public void ConvertPOToBill(int purchaseId)
+        public void ConvertPOToBill(int purchaseId, DropShipmentConvertReq? req)
         {
-            Uow.DropShipments.ConvertPOToBill(purchaseId);
+            var purchase = Uow.Purchases.GetById(purchaseId)
+                ?? throw new KeyNotFoundException($"Drop-ship purchase with Id {purchaseId} not found.");
+
+            var convertReq = new DropShipmentConvertReq
+            {
+                PurchaseId = purchaseId,
+                VendorDocNumber = NormalizeUpperRef(req?.VendorDocNumber) ?? NormalizeUpperRef(purchase.VendorDocNumber),
+                ContainerNumber = NormalizeUpperRef(req?.ContainerNumber) ?? NormalizeUpperRef(purchase.ContainerNumber)
+            };
+
+            if (purchase.IsDropShip && purchase.DropShipSalesId != null)
+            {
+                if (string.IsNullOrWhiteSpace(convertReq.VendorDocNumber))
+                    throw new ArgumentException("V-Doc# is required before converting drop-ship PO to Bill.");
+
+                if (string.IsNullOrWhiteSpace(convertReq.ContainerNumber))
+                    throw new ArgumentException("CONT# is required before converting drop-ship PO to Bill.");
+            }
+
+            Uow.DropShipments.ConvertPOToBill(purchaseId, convertReq);
         }
 
         public void ReverseBill(int salesId)
@@ -84,6 +103,12 @@ namespace KLS.Services
 
             if (!result.CanPost)
                 throw new InvalidOperationException(result.Message ?? "Backorder drop-ship checkout cannot be posted.");
+        }
+
+        private static string? NormalizeUpperRef(string? value)
+        {
+            var normalized = value?.Trim().ToUpperInvariant();
+            return string.IsNullOrEmpty(normalized) ? null : normalized;
         }
     }
 }
