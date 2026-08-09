@@ -69,6 +69,28 @@ namespace KLS.Services
             return filePath;
         }
 
+        public string ProformaInvoice(DocumentReq req)
+        {
+            if (req?.SalesId is null)
+                throw new ArgumentException("SalesId is required.", nameof(req));
+
+            var invoice = _reportService.Invoice(req.SalesId.Value);
+            var template = "~/Views/Pdf/ProformaInvoice-4.cshtml";
+            var html = _pdfService.RenderTemplate(template, invoice);
+
+            var fileName = $"ProformaInvoice-{invoice.Invoice.SalesNumber}.pdf";
+            string filePath = Path.Combine(_env.WebRootPath, "Pdf", fileName);
+
+            using (var pdf = _pdfService.HtmlToPDF(html))
+            {
+                _pdfService.AddPageFooter(pdf);
+
+                pdf.SaveAs(filePath);
+            }
+
+            return filePath;
+        }
+
         public string PickTicket(DocumentReq req)
         {
             PdfGenerationResult? pdfResult = null;

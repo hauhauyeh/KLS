@@ -47,6 +47,20 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("ProformaInvoice")]
+        [DisplayName("Gen Proforma Invoice")]
+        [PermissionKey("Customer.Sale.SalesOrder")]
+        public IActionResult ProformaInvoice([FromBody] DocumentReq documentReq)
+        {
+            var filePath = _documentService.ProformaInvoice(documentReq);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
 
         [HttpPost("PickTicket")]
         [DisplayName("Gen Pick Ticket")]
