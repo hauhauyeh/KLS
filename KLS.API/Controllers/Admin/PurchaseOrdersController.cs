@@ -16,6 +16,8 @@ namespace KLS.API.Controllers.Admin
 
         private readonly IPurchaseOrderService _purchaseOrderService;
         private readonly IVendorPaymentService _vendorPaymentService;
+        private const string CreatePermission = "Vendor.PurchaseOrder.Create";
+        private const string UpdatePermission = "Vendor.PurchaseOrder.Update";
 
         #endregion
 
@@ -42,9 +44,12 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("Checkout")]
         [DisplayName("Create/Update PO")]
-        [PermissionKey("Vendor.PurchaseOrder.Create")]
         public IActionResult Checkout([FromBody] POCheckoutReq checkoutReq)
         {
+            var requiredPermission = checkoutReq.PurchaseId > 0 ? UpdatePermission : CreatePermission;
+            if (!HasPermission(requiredPermission))
+                return Forbid();
+
             return Ok(_purchaseOrderService.Checkout(checkoutReq));
         }
 
@@ -135,6 +140,15 @@ namespace KLS.API.Controllers.Admin
         {
             _vendorPaymentService.Delete(paymentId);
             return Ok();
+        }
+
+        private bool HasPermission(string permissionKey)
+        {
+            if (IsCurrentUserAdmin())
+                return true;
+
+            return HttpContext.Items["PermissionKeys"] is HashSet<string> permissionKeys
+                && permissionKeys.Contains(permissionKey);
         }
 
         #endregion
