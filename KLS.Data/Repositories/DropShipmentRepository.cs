@@ -184,14 +184,25 @@ namespace KLS.Data.Repositories
                 purchaseIdParam, empIdParam, receiptDateParam, itemsJsonParam);
         }
 
-        public void ConvertPOToBill(int purchaseId)
+        public void ConvertPOToBill(int purchaseId, DropShipmentConvertReq req)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
             var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
 
+            using var tx = DbContext.Database.BeginTransaction();
+
+            DbContext.Purchases
+                .Where(p => p.PurchaseId == purchaseId)
+                .ExecuteUpdate(setters => setters
+                    .SetProperty(p => p.VendorDocNumber, req.VendorDocNumber)
+                    .SetProperty(p => p.ContainerNumber, req.ContainerNumber)
+                    .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
+
             DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_ConvertPOToBill] @PurchaseId,@EmpId",
-                purchaseIdParam, empIdParam);
+                    "[DropShipment_ConvertPOToBill] @PurchaseId,@EmpId",
+                    purchaseIdParam, empIdParam);
+
+            tx.Commit();
         }
 
         public void ReverseBill(int salesId)

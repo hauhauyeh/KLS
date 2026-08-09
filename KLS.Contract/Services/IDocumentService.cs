@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         string SalesOrder(DocumentReq documentReq);
 
+        string ProformaInvoice(DocumentReq documentReq);
+
         string PickTicket(DocumentReq documentReq);
 
         string Invoice(DocumentReq documentReq);

@@ -14,7 +14,7 @@ namespace KLS.Contract.Services
 
         void UpdateReceiptQty(int purchaseId, DropShipmentUpdateReceiptQtyReq req);
 
-        void ConvertPOToBill(int purchaseId);
+        void ConvertPOToBill(int purchaseId, DropShipmentConvertReq? req);
 
         void ReverseBill(int salesId);
     }

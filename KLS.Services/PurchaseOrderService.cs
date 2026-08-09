@@ -101,6 +101,16 @@ namespace KLS.Services
 
         public POList? CopyToBill(POCopyToBillReq copyToBillReq)
         {
+            var purchase = RequireNormalPurchaseForBill(copyToBillReq.PurchaseId);
+            var refs = ResolveBillReferences(
+                copyToBillReq.VendorDocNumber,
+                copyToBillReq.ContainerNumber,
+                purchase);
+
+            copyToBillReq.VendorDocNumber = refs.VendorDocNumber;
+            copyToBillReq.ContainerNumber = refs.ContainerNumber;
+            PersistBillReferences(copyToBillReq.PurchaseId, refs);
+
             Uow.PurchaseOrders.CopyToBill(copyToBillReq);
 
             return GetListById(copyToBillReq.PurchaseId);
@@ -200,10 +210,15 @@ namespace KLS.Services
             }
         }
 
-        public POList? UpdateToBillStage(int purchaseId)
+        public POList? UpdateToBillStage(int purchaseId, PurchaseOrderConvertToBillReq? req)
         {
+            var purchase = RequireNormalPurchaseForBill(purchaseId);
+            var refs = ResolveBillReferences(req?.VendorDocNumber, req?.ContainerNumber, purchase);
+
             Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.StageId, x => 6)
+            .SetProperty(x => x.VendorDocNumber, x => refs.VendorDocNumber)
+            .SetProperty(x => x.ContainerNumber, x => refs.ContainerNumber)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
 
             Uow.Shipments.Allocation(purchaseId);
@@ -211,6 +226,62 @@ namespace KLS.Services
             Uow.VendorPayments.ApplyAdvance(purchaseId);
 
             return GetListById(purchaseId);
+        }
+
+        private Purchase RequireNormalPurchaseForBill(int purchaseId)
+        {
+            var purchase = Uow.Purchases.GetById(purchaseId)
+                ?? throw new KeyNotFoundException($"Purchase order with Id {purchaseId} not found.");
+
+            if (purchase.IsDropShip || purchase.DropShipSalesId != null)
+                throw new ArgumentException("Drop-ship PO must be converted from Order Manager.");
+
+            return purchase;
+        }
+
+        private static PurchaseOrderConvertToBillReq ResolveBillReferences(string? vendorDocNumber, string? containerNumber, Purchase purchase)
+        {
+            var refs = new PurchaseOrderConvertToBillReq
+            {
+                VendorDocNumber = NormalizeUpperRef(vendorDocNumber) ?? NormalizeUpperRef(purchase.VendorDocNumber),
+                ContainerNumber = NormalizeContainerNumber(containerNumber) ?? NormalizeContainerNumber(purchase.ContainerNumber)
+            };
+
+            if (string.IsNullOrWhiteSpace(refs.VendorDocNumber))
+                throw new ArgumentException("V-Doc# is required before converting PO to Bill.");
+
+            if (string.IsNullOrWhiteSpace(refs.ContainerNumber))
+                throw new ArgumentException("CONT# is required before converting PO to Bill.");
+
+            return refs;
+        }
+
+        private void PersistBillReferences(int purchaseId, PurchaseOrderConvertToBillReq refs)
+        {
+            Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
+            .SetProperty(x => x.VendorDocNumber, x => refs.VendorDocNumber)
+            .SetProperty(x => x.ContainerNumber, x => refs.ContainerNumber)
+            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+        }
+
+        private static string? NormalizeUpperRef(string? value)
+        {
+            var normalized = value?.Trim().ToUpperInvariant();
+            return string.IsNullOrEmpty(normalized) ? null : normalized;
+        }
+
+        private static string? NormalizeContainerNumber(string? value)
+        {
+            var normalized = NormalizeUpperRef(value);
+            if (normalized == null)
+                return null;
+
+            var compact = Regex.Replace(normalized, "[^A-Z0-9]", "");
+            var match = Regex.Match(compact, "^([A-Z]{4})(\\d{7})$");
+
+            return match.Success
+                ? $"{match.Groups[1].Value}-{match.Groups[2].Value}"
+                : normalized;
         }
 
         private string CreateEmailAttachmentFolder()

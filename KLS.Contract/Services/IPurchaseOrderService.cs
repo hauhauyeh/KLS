@@ -23,7 +23,7 @@ namespace KLS.Contract.Services
 
         PurchaseOrderEmailPdfResult EmailPdf(int purchaseId);
 
-        POList? UpdateToBillStage(int purchaseId);
+        POList? UpdateToBillStage(int purchaseId, PurchaseOrderConvertToBillReq? req);
 
     }
 }
