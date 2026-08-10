@@ -3,7 +3,6 @@
 @model RptInvoice
 @{
     var isCreditMemo = Model.Invoice?.DocType == "CM";
-    var docLabel = "PROFORMA INVOICE";
     var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Sales Order #";
     var docDateLabel = isCreditMemo ? "Credit Memo Date" : "Order Date";
 
@@ -185,6 +184,14 @@
         font-size: 26px;
         font-weight: bold;
         margin-bottom: 5px;
+    }
+
+    .proforma-label {
+        display: inline-block;
+        width: 170px;
+        font-size: 26px !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
     }
 
     .invoice-info-label {
@@ -526,13 +533,7 @@
                     </div>
                 </div>
                 <div class="inv-info-grid">
-                    <div class="d-flex justify-content-between">
-                        <div class="invoice-label">@docLabel</div>
-                        <div class="invoice-barcode">
-                            @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
-                            *@Model.Invoice.SalesNumber*
-                        </div>
-                    </div>
+                    <div class="invoice-label proforma-label">PROFORMA&nbsp;INVOICE</div>
                     <table>
                         <colgroup>
                         <col style="width: 40%;">
