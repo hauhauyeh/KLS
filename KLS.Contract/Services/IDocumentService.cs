@@ -43,5 +43,7 @@ namespace KLS.Contract.Services
         string Check(int vendorPaymentId);
 
         string SalesQuote(int salesQuoteId);
+
+        string SalesQuoteProformaInvoice(SalesQuoteDocumentReq req);
     }
 }

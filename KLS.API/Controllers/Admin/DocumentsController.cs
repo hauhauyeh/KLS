@@ -240,6 +240,20 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("SalesQuoteProformaInvoice")]
+        [DisplayName("Gen Sales Quote Proforma Invoice")]
+        [PermissionKey("Customer.SalesQuote.SeePdf")]
+        public IActionResult SalesQuoteProformaInvoice([FromBody] SalesQuoteDocumentReq documentReq)
+        {
+            var filePath = _documentService.SalesQuoteProformaInvoice(documentReq);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
         #endregion
     }
 }

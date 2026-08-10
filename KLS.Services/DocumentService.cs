@@ -1126,5 +1126,117 @@ namespace KLS.Services
 
             return filePath;
         }
+
+        public string SalesQuoteProformaInvoice(SalesQuoteDocumentReq req)
+        {
+            if (req is null || req.SalesQuoteId <= 0)
+                throw new ArgumentException("SalesQuoteId is required.", nameof(req));
+
+            var report = BuildSalesQuoteProformaReport(_reportService.SalesQuote(req.SalesQuoteId));
+            var lineCustomerPONumber = NormalizeCustomerPONumber(req.LineCustomerPONumber);
+
+            if (!string.IsNullOrWhiteSpace(lineCustomerPONumber))
+            {
+                ApplySalesQuoteProformaLineFilter(report, lineCustomerPONumber);
+                report.LineCustomerPONumber = lineCustomerPONumber;
+            }
+
+            var template = "~/Views/Pdf/SalesQuoteProformaInvoice-4.cshtml";
+            var html = _pdfService.RenderTemplate(template, report);
+
+            var quoteNumber = report.Quote?.QuoteNumber.ToString() ?? req.SalesQuoteId.ToString();
+            var fileName = string.IsNullOrWhiteSpace(lineCustomerPONumber)
+                ? $"ProformaInvoice-Quote{quoteNumber}.pdf"
+                : $"ProformaInvoice-Quote{quoteNumber}-CPO{SanitizeFileNameToken(lineCustomerPONumber)}.pdf";
+            string filePath = Path.Combine(_env.WebRootPath, "Pdf", fileName);
+
+            using (var pdf = _pdfService.HtmlToPDF(html))
+            {
+                _pdfService.AddPageFooter(pdf);
+                pdf.SaveAs(filePath);
+            }
+
+            return filePath;
+        }
+
+        private static RptSalesQuoteProformaInvoice BuildSalesQuoteProformaReport(RptSalesQuote source)
+        {
+            return new RptSalesQuoteProformaInvoice
+            {
+                Company = source.Company,
+                Quote = source.Quote,
+                Customer = source.Customer,
+                Details = source.Details,
+                SalesRepName = source.SalesRepName,
+                PriceDecimals = source.PriceDecimals
+            };
+        }
+
+        private static void ApplySalesQuoteProformaLineFilter(RptSalesQuote report, string lineCustomerPONumber)
+        {
+            if (report.Quote is null)
+                throw new ArgumentException("Sales quote was not found.");
+
+            var allDetails = report.Details ?? new List<InvoiceDetail>();
+            var filteredDetails = allDetails
+                .Where(d => NormalizeCustomerPONumber(ParseLineCustomerPONumber(d.Notes)) == lineCustomerPONumber)
+                .ToList();
+
+            if (!filteredDetails.Any())
+                throw new ArgumentException($"No Proforma Invoice lines found for CPO#{lineCustomerPONumber}.");
+
+            var originalTaxableTotal = allDetails
+                .Where(d => d.IsTaxable)
+                .Sum(d => d.ExtTotal ?? 0m);
+            var taxRate = originalTaxableTotal != 0m
+                ? (report.Quote.TaxTotal ?? 0m) / originalTaxableTotal
+                : 0m;
+            var subtotal = filteredDetails.Sum(d => d.ExtTotal ?? 0m);
+            var taxableTotal = filteredDetails
+                .Where(d => d.IsTaxable)
+                .Sum(d => d.ExtTotal ?? 0m);
+            var taxTotal = Utilities.Rounding(taxableTotal * taxRate, 2) ?? 0m;
+
+            report.Details = filteredDetails;
+            report.Quote.SubTotal = Utilities.Rounding(subtotal, 2);
+            report.Quote.TaxableTotal = Utilities.Rounding(taxableTotal, 2);
+            report.Quote.TaxTotal = taxTotal;
+            report.Quote.QuoteTotal = Utilities.Rounding(subtotal + taxTotal, 2);
+        }
+
+        private static string? ParseLineCustomerPONumber(string? notes)
+        {
+            const string prefix = "CPO#";
+
+            if (string.IsNullOrWhiteSpace(notes))
+                return null;
+
+            var trimmed = notes.TrimStart();
+
+            if (!trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            var value = trimmed[prefix.Length..].TrimStart();
+
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            var endIndex = value.IndexOfAny(new[] { ' ', '\t', '\r', '\n' });
+            return endIndex >= 0 ? value[..endIndex] : value;
+        }
+
+        private static string? NormalizeCustomerPONumber(string? customerPONumber)
+        {
+            return string.IsNullOrWhiteSpace(customerPONumber)
+                ? null
+                : customerPONumber.Trim().ToUpperInvariant();
+        }
+
+        private static string SanitizeFileNameToken(string token)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var chars = token.Select(c => invalidChars.Contains(c) ? '-' : c).ToArray();
+            return new string(chars);
+        }
     }
 }
