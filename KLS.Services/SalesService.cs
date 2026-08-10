@@ -536,6 +536,72 @@ namespace KLS.Services
             }
         }
 
+        public SalesEmailInvoiceResult EmailDocument(int salesId, SalesEmailDocumentReq req)
+        {
+            EnsureVisible(salesId);
+
+            if (!string.Equals(req?.DocumentType, EmailAudit.DocumentType.SalesOrder, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Unsupported sales email document type.");
+
+            var sales = GetById(salesId);
+
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
+
+            var salesDisplayNumber = SalesDisplayNumber(sales);
+            var recipient = GetInvoiceEmailRecipient(sales);
+            var toEmail = FirstEmail(req?.RecipientEmail, recipient.Email);
+
+            if (recipient.Payee == null || string.IsNullOrEmpty(toEmail))
+                throw new InvalidOperationException("Customer does not have an email address.");
+
+            var salesOrderFile = _documentService.SalesOrder(new DocumentReq { SalesId = salesId, SalesNumber = sales.SalesNumber });
+            var tempFolder = CreateEmailAttachmentFolder();
+
+            try
+            {
+                var attachments = BuildSalesOrderEmailAttachments(tempFolder, salesDisplayNumber, salesOrderFile);
+                var company = Uow.Companies.GetAll().FirstOrDefault();
+                var subject = BuildSalesOrderEmailSubject(salesDisplayNumber, company);
+                var mailbody = BuildSalesOrderEmailBody(recipient.Payee.PayeeName, salesDisplayNumber, company);
+
+                var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
+                {
+                    To = toEmail,
+                    Subject = subject,
+                    HtmlBody = mailbody,
+                    Attachments = attachments,
+                    EmailCategory = EmailAudit.Category.Document,
+                    EmailType = EmailAudit.EmailType.SalesOrder,
+                    PayeeId = recipient.Payee.PayeeId,
+                    DocumentType = EmailAudit.DocumentType.SalesOrder,
+                    DocumentId = salesId,
+                    DocumentNumber = salesDisplayNumber,
+                    Source = EmailAudit.Source.Manual,
+                    RequestedBy = UserContext.SystemUserId
+                });
+
+                var sent = string.IsNullOrEmpty(error);
+
+                return new SalesEmailInvoiceResult
+                {
+                    DeliveryStatus = sent ? EmailAudit.DeliveryStatus.Sent : EmailAudit.DeliveryStatus.Failed,
+                    Message = sent
+                        ? "Sales order email sent."
+                        : "Sales order email failed.",
+                    To = toEmail,
+                    DocumentNumber = salesDisplayNumber,
+                    SignedBolAttached = false,
+                    AttachmentCount = attachments.Length,
+                    ErrorMessage = sent ? null : error
+                };
+            }
+            finally
+            {
+                DeleteEmailAttachmentFolder(tempFolder);
+            }
+        }
+
         public SalesEmailInvoiceRecipientResult GetEmailInvoiceRecipient(int salesId)
         {
             EnsureVisible(salesId);
@@ -616,6 +682,19 @@ namespace KLS.Services
             return attachments.ToArray();
         }
 
+        private static string[] BuildSalesOrderEmailAttachments(string tempFolder, string salesDisplayNumber, string salesOrderFile)
+        {
+            if (string.IsNullOrWhiteSpace(salesOrderFile) || !File.Exists(salesOrderFile))
+                throw new FileNotFoundException("Generated sales order PDF was not found.", salesOrderFile);
+
+            var safeNumber = SafeFilePart(salesDisplayNumber);
+            var salesOrderAttachment = Path.Combine(tempFolder, $"SalesOrder-{safeNumber}.pdf");
+
+            File.Copy(salesOrderFile, salesOrderAttachment, true);
+
+            return new[] { salesOrderAttachment };
+        }
+
         private string BuildInvoiceEmailSubject(string salesDisplayNumber, Company? company, decimal? amountDue, SalesEmailInvoiceReq? req = null)
         {
             var requestedSubject = CleanEmailSubject(req?.Subject);
@@ -629,6 +708,46 @@ namespace KLS.Services
             var subject = $"Invoice {salesDisplayNumber} from {companyName}";
 
             return IsNoBalanceDue(amountDue) ? subject + " - PAID" : subject;
+        }
+
+        private static string BuildSalesOrderEmailSubject(string salesDisplayNumber, Company? company)
+        {
+            var companyName = CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS";
+
+            return $"Sales Order {salesDisplayNumber} from {companyName}";
+        }
+
+        private string BuildSalesOrderEmailBody(string? payeeName, string salesDisplayNumber, Company? company)
+        {
+            var customerName = WebUtility.HtmlEncode(CleanEmailText(payeeName) ?? "Customer");
+            var documentNumber = WebUtility.HtmlEncode(salesDisplayNumber);
+            var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
+            var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
+
+            return $"""
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;background:#eef2f6;">
+                  <tr>
+                    <td align="center">
+                      <table role="presentation" cellpadding="0" cellspacing="0" width="640" style="width:640px;max-width:100%;border-collapse:collapse;background:#ffffff;border:1px solid #d7e3f3;">
+                        <tr>
+                          <td style="padding:22px 24px;background:#12355b;color:#ffffff;">
+                            <div style="font-size:18px;font-weight:bold;line-height:1.3;">Sales Order {documentNumber}</div>
+                            <div style="font-size:13px;line-height:1.4;color:#dbeafe;margin-top:3px;">Please review the attached sales order.</div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:24px;font-size:15px;line-height:1.5;color:#1f2937;">
+                            <p style="margin:0 0 14px 0;">Dear {customerName}:</p>
+                            <p style="margin:0 0 14px 0;">Please find attached sales order <strong>{documentNumber}</strong>.</p>
+                            <p style="margin:0 0 14px 0;">Thank you for your business.</p>
+                            <p style="margin:0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                """;
         }
 
         private string BuildInvoiceEmailBody(string? payeeName, string salesDisplayNumber, Sales sales, Company? company)
