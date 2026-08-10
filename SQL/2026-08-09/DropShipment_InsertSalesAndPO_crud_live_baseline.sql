@@ -1,7 +1,3 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 -- DropShipment_InsertSalesAndPO
 -- Creates or updates a drop-ship sales order (StageId=0) and its linked
@@ -24,7 +20,7 @@ GO
 -- 2026-07-22 BACKORDER-DROPSHIP-SOURCE-LINK: optional SourceSalesId stores the new backorder SO's ParentSalesNumber.
 -- 2026-08-09 BACKORDER-DROPSHIP-ROOT-CHAIN: when SourceSalesId is already a child, store the true root SalesNumber.
 -- EXEC dbo.DropShipment_InsertSalesAndPO @SalesId=0, @PayeeId=1, @VendorPayeeId=2, @ShipDate='2026-07-21', @ShipRoute=NULL, @Instruction='Web', @EmpId=1, @PurchaseDate=NULL, @NewSalesId=0, @NewPurchaseId=0, @FactorPO='FPO-1', @CustPONumber='CPO-1', @SourceSalesId=NULL;
-CREATE OR ALTER PROCEDURE [dbo].[DropShipment_InsertSalesAndPO]
+CREATE   PROCEDURE [dbo].[DropShipment_InsertSalesAndPO]
     @SalesId INT,
     @PayeeId INT,
     @VendorPayeeId INT,
@@ -203,28 +199,9 @@ BEGIN
         WHERE EmpId = @EmpId AND PayeeId = @PayeeId
           AND SalesId = CASE WHEN @IsEdit = 1 THEN @SalesId ELSE 0 END
           AND IsStrike = 0
-          AND ISNULL(ChangeStatus, '') <> 'D'
     )
     BEGIN
         RAISERROR('No rows found for this checkout group.', 16, 1);
-        RETURN;
-    END
-
-    -- Drop-ship does not support promo/child cart lines.
-    IF EXISTS (
-        SELECT 1 FROM TempSales
-        WHERE EmpId = @EmpId AND PayeeId = @PayeeId
-          AND SalesId = CASE WHEN @IsEdit = 1 THEN @SalesId ELSE 0 END
-          AND IsStrike = 0
-          AND ISNULL(ChangeStatus, '') <> 'D'
-          AND (
-              ISNULL(CartLineType, 'MAIN') <> 'MAIN'
-              OR ParentTempSalesId IS NOT NULL
-              OR RootTempSalesId IS NOT NULL
-          )
-    )
-    BEGIN
-        RAISERROR('Drop-ship orders do not support promotion or child lines.', 16, 1);
         RETURN;
     END
 
@@ -381,7 +358,6 @@ BEGIN
           AND PayeeId = @PayeeId
           AND SalesId = CASE WHEN @IsEdit = 1 THEN @SalesId ELSE 0 END
           AND IsStrike = 0
-          AND ISNULL(ChangeStatus, '') <> 'D'
         ORDER BY LineId;
 
         -- Calculate sales totals inline (same as Sales_Insert)
@@ -637,21 +613,6 @@ BEGIN
             DropShipPurchaseId = @PurchaseId
         WHERE SalesId = @SalesId;
 
-        -- Clean up temp promo links before deleting TempSales rows.
-        DELETE tsp
-        FROM TempSalesPromo tsp
-        WHERE EXISTS (
-            SELECT 1
-            FROM TempSales ts
-            WHERE ts.PayeeId = @PayeeId
-              AND ts.EmpId = @EmpId
-              AND ts.SalesId = CASE WHEN @IsEdit = 1 THEN @SalesId ELSE 0 END
-              AND (
-                    ts.TempSalesId = tsp.OwnerTempSalesId
-                 OR ts.TempSalesId = tsp.PromoTempSalesId
-              )
-        );
-
         -- Clean up temp rows
         DELETE FROM TempSales
         WHERE EmpId = @EmpId AND PayeeId = @PayeeId
@@ -675,4 +636,3 @@ BEGIN
 
     EXEC [Purchase_CalcTotalAndPercent] @PurchaseId,@FinalTotal OUTPUT
 END
-
