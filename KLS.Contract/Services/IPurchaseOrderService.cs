@@ -1,4 +1,5 @@
 ﻿using KLS.Models;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace KLS.Contract.Services
 
         string PrintPO(int purchaseId);
 
-        PurchaseOrderEmailPdfResult EmailPdf(int purchaseId);
+        PurchaseOrderEmailPdfResult EmailPdf(int purchaseId, List<IFormFile>? files = null);
 
         POList? UpdateToBillStage(int purchaseId, PurchaseOrderConvertToBillReq? req);
 

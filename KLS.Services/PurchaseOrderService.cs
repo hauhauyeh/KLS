@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using KLS.Models.Reports;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,6 +18,8 @@ namespace KLS.Services
 {
     public class PurchaseOrderService : BaseService, IPurchaseOrderService
     {
+        private const long MaxExtraAttachmentBytes = 25L * 1024L * 1024L;
+
         private readonly IDeleteLogService _deleteLogService;
         private readonly ICompanyService _companyService;
         private readonly IPDFService _pdfService;
@@ -148,7 +151,7 @@ namespace KLS.Services
             return poFile;
         }
 
-        public PurchaseOrderEmailPdfResult EmailPdf(int purchaseId)
+        public PurchaseOrderEmailPdfResult EmailPdf(int purchaseId, List<IFormFile>? files = null)
         {
             var po = GetListById(purchaseId);
 
@@ -170,7 +173,7 @@ namespace KLS.Services
 
             try
             {
-                var attachments = BuildPurchaseOrderEmailAttachments(tempFolder, poNumber, poFile);
+                var attachments = BuildPurchaseOrderEmailAttachments(tempFolder, poNumber, poFile, files);
                 var subject = $"Purchase Order #{poNumber}";
                 var mailbody = BuildPurchaseOrderEmailBody(vendor.PayeeName, poNumber);
 
@@ -292,17 +295,81 @@ namespace KLS.Services
             return folder;
         }
 
-        private static string[] BuildPurchaseOrderEmailAttachments(string tempFolder, string poNumber, string poFile)
+        private static string[] BuildPurchaseOrderEmailAttachments(string tempFolder, string poNumber, string poFile, List<IFormFile>? files)
         {
             if (string.IsNullOrWhiteSpace(poFile) || !File.Exists(poFile))
                 throw new FileNotFoundException("Generated PO PDF was not found.", poFile);
 
             var safeNumber = SafeFilePart(poNumber);
             var attachment = Path.Combine(tempFolder, $"PO-{safeNumber}.pdf");
+            var attachments = new List<string> { attachment };
 
             File.Copy(poFile, attachment, true);
 
-            return new[] { attachment };
+            CopyExtraEmailAttachments(tempFolder, files, attachments);
+
+            return attachments.ToArray();
+        }
+
+        private static void CopyExtraEmailAttachments(string tempFolder, List<IFormFile>? files, List<string> attachments)
+        {
+            var selectedFiles = files?.Where(f => f != null).ToList();
+            if (selectedFiles == null || selectedFiles.Count == 0)
+                return;
+
+            long totalBytes = 0;
+            var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var file in selectedFiles)
+            {
+                if (file.Length <= 0)
+                    throw new ArgumentException($"Attachment '{file.FileName}' is empty.");
+
+                totalBytes += file.Length;
+                if (totalBytes > MaxExtraAttachmentBytes)
+                    throw new ArgumentException("PO email extra attachments exceed the 25 MB total size limit.");
+
+                var safeName = SafeAttachmentFileName(file.FileName);
+                var uniqueName = UniqueAttachmentFileName(safeName, usedNames);
+                var targetPath = Path.Combine(tempFolder, uniqueName);
+
+                using (var stream = new FileStream(targetPath, FileMode.CreateNew))
+                {
+                    file.CopyTo(stream);
+                }
+
+                attachments.Add(targetPath);
+            }
+        }
+
+        private static string SafeAttachmentFileName(string? fileName)
+        {
+            var name = Path.GetFileName(fileName ?? "");
+            if (string.IsNullOrWhiteSpace(name))
+                name = "attachment";
+
+            var extension = Path.GetExtension(name);
+            var baseName = Path.GetFileNameWithoutExtension(name);
+            var safeBase = SafeFilePart(baseName);
+            var safeExt = Regex.Replace(extension ?? "", @"[^\w.]+", "");
+
+            return safeBase + safeExt;
+        }
+
+        private static string UniqueAttachmentFileName(string fileName, HashSet<string> usedNames)
+        {
+            var name = fileName;
+            var extension = Path.GetExtension(fileName);
+            var baseName = Path.GetFileNameWithoutExtension(fileName);
+            var index = 1;
+
+            while (!usedNames.Add(name))
+            {
+                index++;
+                name = $"{baseName}-{index}{extension}";
+            }
+
+            return name;
         }
 
         private string BuildPurchaseOrderEmailBody(string? vendorName, string poNumber)
