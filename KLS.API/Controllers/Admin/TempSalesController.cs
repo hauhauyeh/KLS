@@ -57,6 +57,12 @@ namespace KLS.API.Controllers.Admin
             return Ok(result);
         }
 
+        [HttpPut("UpdatePriceCommentOnly")]
+        public IActionResult UpdatePriceCommentOnly([FromBody] TempSalesItem tempItem)
+        {
+            return Ok(_tempSalesService.UpdatePriceCommentOnly(tempItem));
+        }
+
 
         [HttpPut("UpdateParentSalesNumber")]
         public IActionResult UpdateParentSalesNumber([FromBody] TempSalesParentUpdateReq req)
