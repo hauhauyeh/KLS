@@ -57,7 +57,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.SalesQuote.Create")]
         public IActionResult Insert([FromBody] SalesQuoteSaveReq req)
         {
-            return Ok(_service.Insert(0, req.PayeeId, req.ExpiryDate, req.Notes, req.StatusId));
+            return Ok(_service.Insert(0, req.PayeeId, req.ExpiryDate, req.Notes, req.StatusId, req.SalesQuoteType));
         }
 
         [HttpPut("Update/{id}")]
@@ -65,7 +65,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.SalesQuote.Update")]
         public IActionResult Update(int id, [FromBody] SalesQuoteSaveReq req)
         {
-            _service.Update(id, req.PayeeId, req.ExpiryDate, req.Notes);
+            _service.Update(id, req.PayeeId, req.ExpiryDate, req.Notes, req.SalesQuoteType);
             return Ok();
         }
 

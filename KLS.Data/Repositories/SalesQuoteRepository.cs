@@ -30,7 +30,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output!.Value);
         }
 
-        public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId)
+        public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId, string? salesQuoteType)
         {
             var newIdParam = new SqlParameter("@NewSalesQuoteId", System.Data.SqlDbType.Int)
             {
@@ -38,28 +38,30 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "EXEC [SalesQuote_Insert] @SalesQuoteId,@PayeeId,@EmpId,@ExpiryDate,@Notes,@StatusId,@NewSalesQuoteId OUTPUT",
+                "EXEC [SalesQuote_Insert] @SalesQuoteId,@PayeeId,@EmpId,@ExpiryDate,@Notes,@StatusId,@NewSalesQuoteId OUTPUT,@SalesQuoteType",
                 new SqlParameter("@SalesQuoteId", salesQuoteId),
                 new SqlParameter("@PayeeId", payeeId),
                 new SqlParameter("@EmpId", UserContext.EmpId),
                 expiryDate.HasValue ? new SqlParameter("@ExpiryDate", expiryDate.Value) : new SqlParameter("@ExpiryDate", DBNull.Value),
                 string.IsNullOrEmpty(notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", notes),
                 new SqlParameter("@StatusId", statusId),
-                newIdParam
+                newIdParam,
+                string.IsNullOrEmpty(salesQuoteType) ? new SqlParameter("@SalesQuoteType", DBNull.Value) : new SqlParameter("@SalesQuoteType", salesQuoteType)
             );
 
             return Convert.ToInt32(newIdParam.Value);
         }
 
-        public int Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes)
+        public int Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, string? salesQuoteType)
         {
             DbContext.Database.ExecuteSqlRaw(
-                "EXEC [SalesQuote_Update] @SalesQuoteId,@EmpId,@PayeeId,@ExpiryDate,@Notes",
+                "EXEC [SalesQuote_Update] @SalesQuoteId,@EmpId,@PayeeId,@ExpiryDate,@Notes,@SalesQuoteType",
                 new SqlParameter("@SalesQuoteId", salesQuoteId),
                 new SqlParameter("@EmpId", UserContext.EmpId),
                 new SqlParameter("@PayeeId", payeeId),
                 expiryDate.HasValue ? new SqlParameter("@ExpiryDate", expiryDate.Value) : new SqlParameter("@ExpiryDate", DBNull.Value),
-                string.IsNullOrEmpty(notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", notes)
+                string.IsNullOrEmpty(notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", notes),
+                string.IsNullOrEmpty(salesQuoteType) ? new SqlParameter("@SalesQuoteType", DBNull.Value) : new SqlParameter("@SalesQuoteType", salesQuoteType)
             );
 
             return salesQuoteId;

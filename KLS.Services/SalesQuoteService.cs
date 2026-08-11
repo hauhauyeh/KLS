@@ -12,6 +12,9 @@ namespace KLS.Services
         private const int QuoteStatusDraft = 0;
         private const int QuoteStatusSent = 1;
         private const string CustomerUpdatePermission = "Customer.Customer.Update";
+        private const string DefaultSalesQuoteType = "NormalSalesQuote";
+        private const string DropShipSalesQuoteType = "DropShipSalesQuote";
+        private const string PriceProposalType = "PriceProposal";
 
         private readonly IDocumentService _documentService;
         private readonly IEmailAuditService _emailAuditService;
@@ -83,14 +86,14 @@ namespace KLS.Services
             };
         }
 
-        public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId)
+        public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId, string? salesQuoteType)
         {
-            return Uow.SalesQuotes.Insert(salesQuoteId, payeeId, expiryDate, notes, statusId);
+            return Uow.SalesQuotes.Insert(salesQuoteId, payeeId, expiryDate, notes, statusId, NormalizeSalesQuoteType(salesQuoteType));
         }
 
-        public void Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes)
+        public void Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, string? salesQuoteType)
         {
-            Uow.SalesQuotes.Update(salesQuoteId, payeeId, expiryDate, notes);
+            Uow.SalesQuotes.Update(salesQuoteId, payeeId, expiryDate, notes, NormalizeSalesQuoteType(salesQuoteType));
         }
 
         public void Inject(int salesQuoteId)
@@ -176,6 +179,24 @@ namespace KLS.Services
             }
 
             return null;
+        }
+
+        private static string NormalizeSalesQuoteType(string? salesQuoteType)
+        {
+            var normalized = string.IsNullOrWhiteSpace(salesQuoteType)
+                ? DefaultSalesQuoteType
+                : salesQuoteType.Trim();
+
+            if (string.Equals(normalized, DefaultSalesQuoteType, StringComparison.OrdinalIgnoreCase))
+                return DefaultSalesQuoteType;
+
+            if (string.Equals(normalized, DropShipSalesQuoteType, StringComparison.OrdinalIgnoreCase))
+                return DropShipSalesQuoteType;
+
+            if (string.Equals(normalized, PriceProposalType, StringComparison.OrdinalIgnoreCase))
+                return PriceProposalType;
+
+            throw new ArgumentException("Invalid SalesQuoteType.");
         }
 
         private bool HasPermission(string permissionKey)

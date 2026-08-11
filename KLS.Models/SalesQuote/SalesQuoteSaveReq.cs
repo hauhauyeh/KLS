@@ -6,5 +6,6 @@ namespace KLS.Models
         public DateOnly? ExpiryDate { get; set; }
         public string? Notes { get; set; }
         public int StatusId { get; set; }
+        public string? SalesQuoteType { get; set; }
     }
 }
