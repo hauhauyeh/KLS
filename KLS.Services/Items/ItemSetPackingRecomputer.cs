@@ -28,11 +28,12 @@ namespace KLS.Services.Items
                 .Find(u => u.ItemId == itemId)
                 .ToList();
 
-            var canonical = SetPackingFormatter.Format(units);
-            item.SetPacking = canonical;
+            var packing = SetPackingFormatter.Format(units);
+            item.SetPacking = packing.SetPacking;
+            item.PackSize = packing.PackSize;
             uow.Items.Update(item);
             uow.Commit();
-            return canonical;
+            return packing.SetPacking ?? string.Empty;
         }
     }
 }

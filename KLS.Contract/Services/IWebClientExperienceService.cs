@@ -7,5 +7,13 @@ namespace KLS.Contract.Services
         WebClientHomeContentDto GetHomeContent();
 
         WebClientHomeContentDto UpdateHomeContent(WebClientHomeContentUpdateReq req);
+
+        WebClientExperienceTemplateListDto GetTemplates();
+
+        WebClientExperienceTemplateActionDto ResetHomeContentFromDefaultTemplate();
+
+        WebClientExperienceTemplateActionDto LoadHomeContentFromTemplate(string templateKey);
+
+        WebClientExperienceTemplateActionDto SaveCurrentProfileToTemplate(string templateKey);
     }
 }
