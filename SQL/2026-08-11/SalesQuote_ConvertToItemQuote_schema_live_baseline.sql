@@ -1,0 +1,71 @@
+TableName	column_id	ColumnName	TypeName	max_length	precision	scale	is_nullable
+ItemQuote	1	ItemQuoteId	int	4	10	0	False
+ItemQuote	2	PayeeId	int	4	10	0	False
+ItemQuote	3	ItemId	int	4	10	0	False
+ItemQuote	4	ItemUnitId	int	4	10	0	False
+ItemQuote	5	MarkupPercent	decimal	9	18	4	True
+ItemQuote	6	TargetPrice	decimal	9	18	4	True
+ItemQuote	7	NewPrice	decimal	9	18	4	True
+ItemQuote	8	OldPrice	decimal	9	18	4	True
+ItemQuote	9	IsFixed	bit	1	1	0	False
+ItemQuote	10	Inactive	bit	1	1	0	False
+ItemQuote	11	CreatedAt	datetime	8	23	3	False
+ItemQuote	12	UpdatedAt	datetime	8	23	3	True
+ItemUnit	1	ItemUnitId	int	4	10	0	False
+ItemUnit	2	ItemId	int	4	10	0	False
+ItemUnit	3	Unit	nvarchar	100	0	0	False
+ItemUnit	4	FactorToBase	decimal	9	18	6	False
+ItemUnit	5	PricePercentToBase	decimal	9	18	4	True
+ItemUnit	6	IsBaseUnit	bit	1	1	0	False
+ItemUnit	7	IsDefaultSalesUnit	bit	1	1	0	False
+ItemUnit	8	Barcode	nvarchar	100	0	0	True
+ItemUnit	9	RecentCost	decimal	9	18	4	True
+ItemUnit	10	FreightCost	decimal	9	18	4	True
+ItemUnit	11	P1	decimal	9	18	4	True
+ItemUnit	12	MSRP	decimal	9	18	4	True
+ItemUnit	13	MarketPrice	decimal	9	18	4	True
+ItemUnit	14	Inactive	bit	1	1	0	False
+ItemUnit	15	MultipleToBase	int	4	10	0	False
+ItemUnit	16	RecentBaseCost	decimal	9	18	4	True
+SalesQuote	1	SalesQuoteId	int	4	10	0	False
+SalesQuote	2	QuoteNumber	int	4	10	0	False
+SalesQuote	3	QuoteDate	datetime	8	23	3	True
+SalesQuote	4	ExpiryDate	date	3	10	0	True
+SalesQuote	5	PayeeId	int	4	10	0	False
+SalesQuote	6	SalesRepId	int	4	10	0	True
+SalesQuote	7	TermId	int	4	10	0	True
+SalesQuote	8	SubTotal	decimal	9	18	2	True
+SalesQuote	9	TaxableTotal	decimal	9	18	2	True
+SalesQuote	10	TaxPercent	decimal	9	18	4	True
+SalesQuote	11	TaxTotal	decimal	9	18	2	True
+SalesQuote	12	QuoteTotal	decimal	9	18	2	True
+SalesQuote	13	StatusId	int	4	10	0	False
+SalesQuote	14	Notes	nvarchar	1000	0	0	True
+SalesQuote	15	SalesId	int	4	10	0	True
+SalesQuote	16	Enterby	int	4	10	0	True
+SalesQuote	17	Updateby	int	4	10	0	True
+SalesQuote	18	CreatedAt	datetime2	8	27	7	False
+SalesQuote	19	UpdatedAt	datetime2	8	27	7	True
+SalesQuote	20	SalesQuoteType	nvarchar	60	0	0	False
+SalesQuoteDetail	1	SalesQuoteDetailId	int	4	10	0	False
+SalesQuoteDetail	2	SalesQuoteId	int	4	10	0	False
+SalesQuoteDetail	3	LineId	int	4	10	0	False
+SalesQuoteDetail	4	LineType	nvarchar	2	0	0	False
+SalesQuoteDetail	5	ItemId	int	4	10	0	True
+SalesQuoteDetail	6	AccountId	int	4	10	0	True
+SalesQuoteDetail	7	ItemUnitId	int	4	10	0	True
+SalesQuoteDetail	8	Unit	nvarchar	100	0	0	True
+SalesQuoteDetail	9	OrdQty	decimal	9	18	2	True
+SalesQuoteDetail	10	UnitPrice	decimal	9	18	4	True
+SalesQuoteDetail	11	ExtTotal	decimal	9	18	2	True
+SalesQuoteDetail	12	FactorToBase	decimal	9	18	6	True
+SalesQuoteDetail	13	BaseOrdQty	decimal	9	18	6	True
+SalesQuoteDetail	14	DiscountPercent	decimal	9	18	4	True
+SalesQuoteDetail	15	Notes	nvarchar	600	0	0	True
+SalesQuoteDetail	16	IsTaxable	bit	1	1	0	False
+
+IndexName	is_unique	KeyColumns
+IX_ItemQuote_PayeeId_ItemId	False	PayeeId, ItemId
+PK_ItemQuote	True	ItemQuoteId
+UX_ItemQuote_PayeeId_ItemUnitId	True	PayeeId, ItemUnitId
+

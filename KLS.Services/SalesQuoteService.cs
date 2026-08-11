@@ -130,6 +130,11 @@ namespace KLS.Services
             return Uow.SalesQuotes.ConvertToDropShip(salesQuoteId, req);
         }
 
+        public SalesQuoteConvertToItemQuoteResult ConvertToItemQuote(int salesQuoteId)
+        {
+            return Uow.SalesQuotes.ConvertToItemQuote(salesQuoteId);
+        }
+
         public void EmailPdf(int salesQuoteId, SalesQuoteEmailPdfReq? req)
         {
             var quote = GetById(salesQuoteId);

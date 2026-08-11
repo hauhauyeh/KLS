@@ -172,6 +172,32 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public SalesQuoteConvertToItemQuoteResult ConvertToItemQuote(int salesQuoteId)
+        {
+            var insertedCountParam = new SqlParameter("@InsertedCount", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var updatedCountParam = new SqlParameter("@UpdatedCount", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "EXEC [SalesQuote_ConvertToItemQuote] @SalesQuoteId,@EmpId,@InsertedCount OUTPUT,@UpdatedCount OUTPUT",
+                new SqlParameter("@SalesQuoteId", salesQuoteId),
+                new SqlParameter("@EmpId", UserContext.EmpId),
+                insertedCountParam,
+                updatedCountParam
+            );
+
+            return new SalesQuoteConvertToItemQuoteResult
+            {
+                InsertedCount = insertedCountParam.Value == DBNull.Value ? 0 : Convert.ToInt32(insertedCountParam.Value),
+                UpdatedCount = updatedCountParam.Value == DBNull.Value ? 0 : Convert.ToInt32(updatedCountParam.Value)
+            };
+        }
+
         private static object[] BuildPagedListParam(SalesQuoteListReq req)
         {
             object[] param = {

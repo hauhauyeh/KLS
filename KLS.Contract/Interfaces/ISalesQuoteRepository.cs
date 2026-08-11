@@ -14,5 +14,6 @@ namespace KLS.Contract.Interfaces
         void UpdateStatus(int salesQuoteId, int statusId);
         SalesQuoteConvertResult ConvertToSales(int salesQuoteId);
         SalesQuoteConvertToDropShipResult ConvertToDropShip(int salesQuoteId, SalesQuoteConvertToDropShipReq req);
+        SalesQuoteConvertToItemQuoteResult ConvertToItemQuote(int salesQuoteId);
     }
 }
