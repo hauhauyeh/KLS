@@ -8,12 +8,14 @@ namespace KLS.Contract.Services
         SalesQuote GetById(int salesQuoteId);
         SalesQuoteDetailDto? GetDetail(int salesQuoteId);
         SalesQuoteEmailContextDto? GetEmailContext(int salesQuoteId);
-        int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId);
-        void Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes);
+        int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId, string? salesQuoteType);
+        void Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, string? salesQuoteType);
         void Inject(int salesQuoteId);
         void Delete(int salesQuoteId);
         void UpdateStatus(int salesQuoteId, int statusId);
         SalesQuoteConvertResult ConvertToSales(int salesQuoteId);
+        SalesQuoteConvertToDropShipResult ConvertToDropShip(int salesQuoteId, SalesQuoteConvertToDropShipReq req);
+        SalesQuoteConvertToItemQuoteResult ConvertToItemQuote(int salesQuoteId);
         void EmailPdf(int salesQuoteId, SalesQuoteEmailPdfReq? req);
     }
 }

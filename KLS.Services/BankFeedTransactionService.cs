@@ -139,9 +139,6 @@ namespace KLS.Services
 
         public PagingResponse<BankFeedOpenBill> GetOpenBills(BankFeedOpenBillsReq req)
         {
-            if (req.PayeeId <= 0)
-                throw new Exception("Please select a vendor.");
-
             var list = Uow.BankFeedTransactions.GetOpenBills(req).ToList();
             var count = Uow.BankFeedTransactions.CountOpenBills(req);
 
@@ -169,9 +166,6 @@ namespace KLS.Services
         /// </summary>
         public int CreateVendorPayment(BankFeedCreateVendorPaymentReq req)
         {
-            if (req.PayeeId <= 0)
-                throw new Exception("Please select a vendor.");
-
             if (req.Lines == null || !req.Lines.Any())
                 throw new Exception("Please select at least one bill to pay.");
 

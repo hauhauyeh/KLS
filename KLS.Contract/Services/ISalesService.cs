@@ -66,6 +66,8 @@ namespace KLS.Contract.Services
 
         SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null);
 
+        SalesEmailInvoiceResult EmailDocument(int salesId, SalesEmailDocumentReq req);
+
         int MergeOrder(SalesMergeReq mergeReq);
 
         string MergePdf(string salesNumbers);

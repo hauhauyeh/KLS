@@ -2,6 +2,8 @@ using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models.WebClientExperience;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -18,6 +20,8 @@ namespace KLS.Services
         private const int MaxBodyLength = 2000;
         private const int MaxUrlLength = 1000;
         private const int MaxItems = 24;
+        private const string TemplateFileName = "web-client-experience.json";
+        private const string DefaultTemplateKey = "default";
 
         private static readonly JsonSerializerOptions ProfileJsonOptions = new()
         {
@@ -107,16 +111,22 @@ namespace KLS.Services
         private readonly ISystemSettingService _systemSettingService;
         private readonly IPortalModeService _portalModeService;
         private readonly ICompanyService _companyService;
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _env;
 
         public WebClientExperienceService(
             IUnitOfWork uow,
             ISystemSettingService systemSettingService,
             IPortalModeService portalModeService,
-            ICompanyService companyService) : base(uow)
+            ICompanyService companyService,
+            IConfiguration configuration,
+            IWebHostEnvironment env) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _portalModeService = portalModeService;
             _companyService = companyService;
+            _configuration = configuration;
+            _env = env;
         }
 
         public WebClientHomeContentDto GetHomeContent()
@@ -129,6 +139,82 @@ namespace KLS.Services
                 Home = MergeHome(GetDefaultHome(), ReadObject<WebClientHomeDto>(profile["Home"])),
                 HomeLayout = MergeHomeLayout(WebClientHomeLayoutDto.Default(), ReadObject<WebClientHomeLayoutDto>(GetLayoutObject(profile)?["home"])),
                 HasProfile = !string.IsNullOrWhiteSpace(json)
+            };
+        }
+
+        public WebClientExperienceTemplateListDto GetTemplates()
+        {
+            var root = GetTemplateRoot();
+            var templates = Directory.GetDirectories(root)
+                .Select(path => new
+                {
+                    Path = path,
+                    TemplateKey = Path.GetFileName(path)
+                })
+                .Where(x => !string.IsNullOrWhiteSpace(x.TemplateKey))
+                .Where(x => File.Exists(Path.Combine(x.Path, TemplateFileName)))
+                .Select(x => new WebClientExperienceTemplateDto
+                {
+                    TemplateKey = x.TemplateKey!,
+                    DisplayName = FormatTemplateName(x.TemplateKey!),
+                    IsDefault = string.Equals(x.TemplateKey, DefaultTemplateKey, StringComparison.OrdinalIgnoreCase)
+                })
+                .OrderBy(x => x.IsDefault ? 0 : 1)
+                .ThenBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return new WebClientExperienceTemplateListDto
+            {
+                Templates = templates,
+                HasDefault = templates.Any(x => x.IsDefault)
+            };
+        }
+
+        public WebClientExperienceTemplateActionDto ResetHomeContentFromDefaultTemplate()
+        {
+            var json = ReadTemplateJson(DefaultTemplateKey);
+            ReplaceProfileJson(json);
+
+            return new WebClientExperienceTemplateActionDto
+            {
+                TemplateKey = DefaultTemplateKey,
+                Message = "Default template loaded.",
+                HomeContent = GetHomeContent()
+            };
+        }
+
+        public WebClientExperienceTemplateActionDto LoadHomeContentFromTemplate(string templateKey)
+        {
+            var normalizedKey = NormalizeTemplateKey(templateKey, allowDefault: false);
+            var json = ReadTemplateJson(normalizedKey);
+            ReplaceProfileJson(json);
+
+            return new WebClientExperienceTemplateActionDto
+            {
+                TemplateKey = normalizedKey,
+                Message = $"{FormatTemplateName(normalizedKey)} template loaded.",
+                HomeContent = GetHomeContent()
+            };
+        }
+
+        public WebClientExperienceTemplateActionDto SaveCurrentProfileToTemplate(string templateKey)
+        {
+            var normalizedKey = NormalizeTemplateKey(templateKey, allowDefault: false);
+            var json = _systemSettingService.GetByKey<string>(GlobalKey.WEB_CLIENT_EXPERIENCE_JSON);
+
+            if (string.IsNullOrWhiteSpace(json))
+                throw new ArgumentException("WEB_CLIENT_EXPERIENCE_JSON is missing.");
+
+            ValidateProfileJson(json);
+
+            var path = GetTemplateFilePath(normalizedKey, mustExist: false);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, NormalizeJson(json));
+
+            return new WebClientExperienceTemplateActionDto
+            {
+                TemplateKey = normalizedKey,
+                Message = $"{FormatTemplateName(normalizedKey)} template saved."
             };
         }
 
@@ -177,6 +263,130 @@ namespace KLS.Services
                 HomeLayout = homeLayout,
                 HasProfile = true
             };
+        }
+
+        private string ReadTemplateJson(string templateKey)
+        {
+            var path = GetTemplateFilePath(templateKey, mustExist: true);
+            var json = File.ReadAllText(path);
+            ValidateProfileJson(json);
+            return NormalizeJson(json);
+        }
+
+        private void ReplaceProfileJson(string nextJson)
+        {
+            ValidateProfileJson(nextJson);
+
+            var currentJson = _systemSettingService.GetByKey<string>(GlobalKey.WEB_CLIENT_EXPERIENCE_JSON);
+
+            Uow.ExecuteInTransaction(() =>
+            {
+                if (!string.IsNullOrWhiteSpace(currentJson))
+                {
+                    _systemSettingService.SetByKey(
+                        GlobalKey.WEB_CLIENT_EXPERIENCE_JSON_PREVIOUS,
+                        currentJson,
+                        "json",
+                        "Previous web client experience profile JSON",
+                        commit: false);
+                }
+
+                _systemSettingService.SetByKey(
+                    GlobalKey.WEB_CLIENT_EXPERIENCE_JSON,
+                    nextJson,
+                    "json",
+                    "Web client experience profile JSON",
+                    commit: false);
+
+                Uow.Commit();
+            });
+        }
+
+        private string GetTemplateFilePath(string templateKey, bool mustExist)
+        {
+            var normalizedKey = NormalizeTemplateKey(templateKey, allowDefault: true);
+            var root = GetTemplateRoot();
+            var path = Path.GetFullPath(Path.Combine(root, normalizedKey, TemplateFileName));
+            var expectedRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+
+            if (!path.StartsWith(expectedRoot, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Template path is invalid.");
+
+            if (mustExist && !File.Exists(path))
+                throw new ArgumentException($"Template '{normalizedKey}' does not exist.");
+
+            return path;
+        }
+
+        private string GetTemplateRoot()
+        {
+            var configured = _configuration["WebClientExperience:TemplateRootPath"];
+            var root = string.IsNullOrWhiteSpace(configured)
+                ? FindLocalTemplateRoot()
+                : configured.Trim();
+
+            if (string.IsNullOrWhiteSpace(root))
+                throw new InvalidOperationException("Web client experience template root is not configured.");
+
+            var fullRoot = Path.GetFullPath(root);
+            if (!Directory.Exists(fullRoot))
+                throw new InvalidOperationException($"Web client experience template root does not exist: {fullRoot}");
+
+            return fullRoot;
+        }
+
+        private string? FindLocalTemplateRoot()
+        {
+            var dir = new DirectoryInfo(_env.ContentRootPath);
+
+            while (dir != null)
+            {
+                var candidate = Path.Combine(dir.FullName, "KLS-Web-21", "client-configs");
+                if (Directory.Exists(candidate))
+                    return candidate;
+
+                dir = dir.Parent;
+            }
+
+            return null;
+        }
+
+        private static string NormalizeTemplateKey(string templateKey, bool allowDefault)
+        {
+            var key = templateKey?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("Template is required.");
+
+            if (!allowDefault && string.Equals(key, DefaultTemplateKey, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Default template must be used through Reset To Default.");
+
+            if (!Regex.IsMatch(key, "^[a-z0-9-]+$", RegexOptions.CultureInvariant))
+                throw new ArgumentException("Template name is invalid.");
+
+            return key;
+        }
+
+        private static void ValidateProfileJson(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                throw new ArgumentException("Web client experience profile JSON is required.");
+
+            ParseProfile(json);
+        }
+
+        private static string NormalizeJson(string json)
+        {
+            return ParseProfile(json).ToJsonString(ProfileJsonOptions);
+        }
+
+        private static string FormatTemplateName(string templateKey)
+        {
+            return string.Join(" ", templateKey
+                .Split('-', StringSplitOptions.RemoveEmptyEntries)
+                .Select(part => part.Length == 0
+                    ? part
+                    : char.ToUpperInvariant(part[0]) + part[1..]));
         }
 
         private static JsonObject ParseProfile(string? json)

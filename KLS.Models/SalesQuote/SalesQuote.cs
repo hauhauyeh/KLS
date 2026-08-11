@@ -22,6 +22,7 @@ namespace KLS.Models
         public decimal? TaxTotal { get; set; }
         public decimal? QuoteTotal { get; set; }
         public int StatusId { get; set; }
+        public string SalesQuoteType { get; set; } = "NormalSalesQuote";
         public string? Notes { get; set; }
         public int? SalesId { get; set; }
         public int? Enterby { get; set; }

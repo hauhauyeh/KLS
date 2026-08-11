@@ -99,9 +99,9 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("EmailPdf/{purchaseId}")]
         [DisplayName("Email PO")]
         [PermissionKey("Vendor.PurchaseOrder.EmailPdf")]
-        public IActionResult EmailPdf(int purchaseId)
+        public IActionResult EmailPdf(int purchaseId, [FromForm] List<IFormFile>? files)
         {
-            return Ok(_purchaseOrderService.EmailPdf(purchaseId));
+            return Ok(_purchaseOrderService.EmailPdf(purchaseId, files));
         }
 
 
