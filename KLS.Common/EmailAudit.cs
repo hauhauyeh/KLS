@@ -20,6 +20,7 @@ namespace KLS.Common
         public static class EmailType
         {
             public const string SalesQuote = "SalesQuote";
+            public const string SalesOrder = "SalesOrder";
             public const string Invoice = "Invoice";
             public const string PurchaseOrder = "PurchaseOrder";
             public const string PriceSheet = "PriceSheet";
@@ -37,6 +38,7 @@ namespace KLS.Common
         public static class DocumentType
         {
             public const string SalesQuote = "SalesQuote";
+            public const string SalesOrder = "SalesOrder";
             public const string Invoice = "Invoice";
             public const string PurchaseOrder = "PurchaseOrder";
             public const string Statement = "Statement";

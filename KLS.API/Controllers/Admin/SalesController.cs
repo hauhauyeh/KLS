@@ -200,6 +200,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_salesService.EmailPdf(salesId, req));
         }
 
+        [HttpPost("EmailDocument/{salesId}")]
+        [DisplayName("Email Sales Document")]
+        [PermissionKey("Customer.Sale.EmailPdf")]
+        public IActionResult EmailDocument(int salesId, [FromBody] SalesEmailDocumentReq req)
+        {
+            return Ok(_salesService.EmailDocument(salesId, req));
+        }
+
         [HttpGet("EmailPdfRecipient/{salesId}")]
         [DisplayName("Email Invoice")]
         [PermissionKey("Customer.Sale.EmailPdf")]
