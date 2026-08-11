@@ -57,7 +57,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.SalesQuote.Create")]
         public IActionResult Insert([FromBody] SalesQuoteSaveReq req)
         {
-            return Ok(_service.Insert(0, req.PayeeId, req.ExpiryDate, req.Notes, req.StatusId));
+            return Ok(_service.Insert(0, req.PayeeId, req.ExpiryDate, req.Notes, req.StatusId, req.SalesQuoteType));
         }
 
         [HttpPut("Update/{id}")]
@@ -65,7 +65,7 @@ namespace KLS.API.Controllers.Admin
         [PermissionKey("Customer.SalesQuote.Update")]
         public IActionResult Update(int id, [FromBody] SalesQuoteSaveReq req)
         {
-            _service.Update(id, req.PayeeId, req.ExpiryDate, req.Notes);
+            _service.Update(id, req.PayeeId, req.ExpiryDate, req.Notes, req.SalesQuoteType);
             return Ok();
         }
 
@@ -102,6 +102,22 @@ namespace KLS.API.Controllers.Admin
         public IActionResult ConvertToSales(int id)
         {
             return Ok(_service.ConvertToSales(id));
+        }
+
+        [HttpPost("ConvertToDropShip/{id}")]
+        [DisplayName("Convert to Drop-Ship Sales/PO")]
+        [PermissionKey("Customer.SalesQuote.ConvertToSales")]
+        public IActionResult ConvertToDropShip(int id, [FromBody] SalesQuoteConvertToDropShipReq req)
+        {
+            return Ok(_service.ConvertToDropShip(id, req));
+        }
+
+        [HttpPost("ConvertToItemQuote/{id}")]
+        [DisplayName("Convert to Item Quote")]
+        [PermissionKey("Customer.SalesQuote.ConvertToSales")]
+        public IActionResult ConvertToItemQuote(int id)
+        {
+            return Ok(_service.ConvertToItemQuote(id));
         }
 
         [HttpPost("EmailPdf/{id}")]

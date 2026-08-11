@@ -30,7 +30,7 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output!.Value);
         }
 
-        public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId)
+        public int Insert(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, int statusId, string? salesQuoteType)
         {
             var newIdParam = new SqlParameter("@NewSalesQuoteId", System.Data.SqlDbType.Int)
             {
@@ -38,28 +38,30 @@ namespace KLS.Data.Repositories
             };
 
             DbContext.Database.ExecuteSqlRaw(
-                "EXEC [SalesQuote_Insert] @SalesQuoteId,@PayeeId,@EmpId,@ExpiryDate,@Notes,@StatusId,@NewSalesQuoteId OUTPUT",
+                "EXEC [SalesQuote_Insert] @SalesQuoteId,@PayeeId,@EmpId,@ExpiryDate,@Notes,@StatusId,@NewSalesQuoteId OUTPUT,@SalesQuoteType",
                 new SqlParameter("@SalesQuoteId", salesQuoteId),
                 new SqlParameter("@PayeeId", payeeId),
                 new SqlParameter("@EmpId", UserContext.EmpId),
                 expiryDate.HasValue ? new SqlParameter("@ExpiryDate", expiryDate.Value) : new SqlParameter("@ExpiryDate", DBNull.Value),
                 string.IsNullOrEmpty(notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", notes),
                 new SqlParameter("@StatusId", statusId),
-                newIdParam
+                newIdParam,
+                string.IsNullOrEmpty(salesQuoteType) ? new SqlParameter("@SalesQuoteType", DBNull.Value) : new SqlParameter("@SalesQuoteType", salesQuoteType)
             );
 
             return Convert.ToInt32(newIdParam.Value);
         }
 
-        public int Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes)
+        public int Update(int salesQuoteId, int payeeId, DateOnly? expiryDate, string? notes, string? salesQuoteType)
         {
             DbContext.Database.ExecuteSqlRaw(
-                "EXEC [SalesQuote_Update] @SalesQuoteId,@EmpId,@PayeeId,@ExpiryDate,@Notes",
+                "EXEC [SalesQuote_Update] @SalesQuoteId,@EmpId,@PayeeId,@ExpiryDate,@Notes,@SalesQuoteType",
                 new SqlParameter("@SalesQuoteId", salesQuoteId),
                 new SqlParameter("@EmpId", UserContext.EmpId),
                 new SqlParameter("@PayeeId", payeeId),
                 expiryDate.HasValue ? new SqlParameter("@ExpiryDate", expiryDate.Value) : new SqlParameter("@ExpiryDate", DBNull.Value),
-                string.IsNullOrEmpty(notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", notes)
+                string.IsNullOrEmpty(notes) ? new SqlParameter("@Notes", DBNull.Value) : new SqlParameter("@Notes", notes),
+                string.IsNullOrEmpty(salesQuoteType) ? new SqlParameter("@SalesQuoteType", DBNull.Value) : new SqlParameter("@SalesQuoteType", salesQuoteType)
             );
 
             return salesQuoteId;
@@ -125,6 +127,74 @@ namespace KLS.Data.Repositories
             {
                 SalesId = newSalesIdParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesIdParam.Value),
                 SalesNumber = newSalesNumberParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesNumberParam.Value)
+            };
+        }
+
+        public SalesQuoteConvertToDropShipResult ConvertToDropShip(int salesQuoteId, SalesQuoteConvertToDropShipReq req)
+        {
+            var newSalesIdParam = new SqlParameter("@NewSalesId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var newSalesNumberParam = new SqlParameter("@NewSalesNumber", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var newPurchaseIdParam = new SqlParameter("@NewPurchaseId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var newPurchaseNumberParam = new SqlParameter("@NewPurchaseNumber", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "EXEC [SalesQuote_ConvertToDropShipSalesAndPO] @SalesQuoteId,@EmpId,@VendorPayeeId,@ShipDate,@FactorPO,@CustPONumber,@NewSalesId OUTPUT,@NewSalesNumber OUTPUT,@NewPurchaseId OUTPUT,@NewPurchaseNumber OUTPUT",
+                new SqlParameter("@SalesQuoteId", salesQuoteId),
+                new SqlParameter("@EmpId", UserContext.EmpId),
+                new SqlParameter("@VendorPayeeId", req.VendorPayeeId),
+                req.ShipDate.HasValue ? new SqlParameter("@ShipDate", req.ShipDate.Value) : new SqlParameter("@ShipDate", DBNull.Value),
+                string.IsNullOrWhiteSpace(req.FactorPO) ? new SqlParameter("@FactorPO", DBNull.Value) : new SqlParameter("@FactorPO", req.FactorPO.Trim().ToUpperInvariant()),
+                string.IsNullOrWhiteSpace(req.CustPONumber) ? new SqlParameter("@CustPONumber", DBNull.Value) : new SqlParameter("@CustPONumber", req.CustPONumber.Trim().ToUpperInvariant()),
+                newSalesIdParam,
+                newSalesNumberParam,
+                newPurchaseIdParam,
+                newPurchaseNumberParam
+            );
+
+            return new SalesQuoteConvertToDropShipResult
+            {
+                SalesId = newSalesIdParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesIdParam.Value),
+                SalesNumber = newSalesNumberParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesNumberParam.Value),
+                PurchaseId = newPurchaseIdParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newPurchaseIdParam.Value),
+                PurchaseNumber = newPurchaseNumberParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newPurchaseNumberParam.Value)
+            };
+        }
+
+        public SalesQuoteConvertToItemQuoteResult ConvertToItemQuote(int salesQuoteId)
+        {
+            var insertedCountParam = new SqlParameter("@InsertedCount", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var updatedCountParam = new SqlParameter("@UpdatedCount", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "EXEC [SalesQuote_ConvertToItemQuote] @SalesQuoteId,@EmpId,@InsertedCount OUTPUT,@UpdatedCount OUTPUT",
+                new SqlParameter("@SalesQuoteId", salesQuoteId),
+                new SqlParameter("@EmpId", UserContext.EmpId),
+                insertedCountParam,
+                updatedCountParam
+            );
+
+            return new SalesQuoteConvertToItemQuoteResult
+            {
+                InsertedCount = insertedCountParam.Value == DBNull.Value ? 0 : Convert.ToInt32(insertedCountParam.Value),
+                UpdatedCount = updatedCountParam.Value == DBNull.Value ? 0 : Convert.ToInt32(updatedCountParam.Value)
             };
         }
 
