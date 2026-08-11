@@ -13,5 +13,6 @@ namespace KLS.Contract.Interfaces
         IEnumerable<SalesQuoteDetailList> GetDetails(int salesQuoteId);
         void UpdateStatus(int salesQuoteId, int statusId);
         SalesQuoteConvertResult ConvertToSales(int salesQuoteId);
+        SalesQuoteConvertToDropShipResult ConvertToDropShip(int salesQuoteId, SalesQuoteConvertToDropShipReq req);
     }
 }

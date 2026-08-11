@@ -8,6 +8,7 @@ CREATE PROCEDURE [dbo].[SalesQuote_UpdateStatus]
     @EmpId          INT
 AS
 BEGIN
+
     SET NOCOUNT ON;
 
     UPDATE SalesQuote SET

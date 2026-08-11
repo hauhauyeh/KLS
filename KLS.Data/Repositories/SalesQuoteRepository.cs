@@ -130,6 +130,48 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public SalesQuoteConvertToDropShipResult ConvertToDropShip(int salesQuoteId, SalesQuoteConvertToDropShipReq req)
+        {
+            var newSalesIdParam = new SqlParameter("@NewSalesId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var newSalesNumberParam = new SqlParameter("@NewSalesNumber", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var newPurchaseIdParam = new SqlParameter("@NewPurchaseId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+            var newPurchaseNumberParam = new SqlParameter("@NewPurchaseNumber", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "EXEC [SalesQuote_ConvertToDropShipSalesAndPO] @SalesQuoteId,@EmpId,@VendorPayeeId,@ShipDate,@FactorPO,@CustPONumber,@NewSalesId OUTPUT,@NewSalesNumber OUTPUT,@NewPurchaseId OUTPUT,@NewPurchaseNumber OUTPUT",
+                new SqlParameter("@SalesQuoteId", salesQuoteId),
+                new SqlParameter("@EmpId", UserContext.EmpId),
+                new SqlParameter("@VendorPayeeId", req.VendorPayeeId),
+                req.ShipDate.HasValue ? new SqlParameter("@ShipDate", req.ShipDate.Value) : new SqlParameter("@ShipDate", DBNull.Value),
+                string.IsNullOrWhiteSpace(req.FactorPO) ? new SqlParameter("@FactorPO", DBNull.Value) : new SqlParameter("@FactorPO", req.FactorPO.Trim().ToUpperInvariant()),
+                string.IsNullOrWhiteSpace(req.CustPONumber) ? new SqlParameter("@CustPONumber", DBNull.Value) : new SqlParameter("@CustPONumber", req.CustPONumber.Trim().ToUpperInvariant()),
+                newSalesIdParam,
+                newSalesNumberParam,
+                newPurchaseIdParam,
+                newPurchaseNumberParam
+            );
+
+            return new SalesQuoteConvertToDropShipResult
+            {
+                SalesId = newSalesIdParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesIdParam.Value),
+                SalesNumber = newSalesNumberParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newSalesNumberParam.Value),
+                PurchaseId = newPurchaseIdParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newPurchaseIdParam.Value),
+                PurchaseNumber = newPurchaseNumberParam.Value == DBNull.Value ? 0 : Convert.ToInt32(newPurchaseNumberParam.Value)
+            };
+        }
+
         private static object[] BuildPagedListParam(SalesQuoteListReq req)
         {
             object[] param = {

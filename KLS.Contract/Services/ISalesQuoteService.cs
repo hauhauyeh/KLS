@@ -14,6 +14,7 @@ namespace KLS.Contract.Services
         void Delete(int salesQuoteId);
         void UpdateStatus(int salesQuoteId, int statusId);
         SalesQuoteConvertResult ConvertToSales(int salesQuoteId);
+        SalesQuoteConvertToDropShipResult ConvertToDropShip(int salesQuoteId, SalesQuoteConvertToDropShipReq req);
         void EmailPdf(int salesQuoteId, SalesQuoteEmailPdfReq? req);
     }
 }

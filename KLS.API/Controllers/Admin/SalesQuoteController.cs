@@ -104,6 +104,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_service.ConvertToSales(id));
         }
 
+        [HttpPost("ConvertToDropShip/{id}")]
+        [DisplayName("Convert to Drop-Ship Sales/PO")]
+        [PermissionKey("Customer.SalesQuote.ConvertToSales")]
+        public IActionResult ConvertToDropShip(int id, [FromBody] SalesQuoteConvertToDropShipReq req)
+        {
+            return Ok(_service.ConvertToDropShip(id, req));
+        }
+
         [HttpPost("EmailPdf/{id}")]
         [DisplayName("Email Quote PDF")]
         [PermissionKey("Customer.SalesQuote.EmailPdf")]

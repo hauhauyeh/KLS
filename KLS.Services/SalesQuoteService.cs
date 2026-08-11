@@ -12,6 +12,7 @@ namespace KLS.Services
         private const int QuoteStatusDraft = 0;
         private const int QuoteStatusSent = 1;
         private const string CustomerUpdatePermission = "Customer.Customer.Update";
+        private const string DropShipmentCreatePermission = "Vendor.DropShipment.Create";
         private const string DefaultSalesQuoteType = "NormalSalesQuote";
         private const string DropShipSalesQuoteType = "DropShipSalesQuote";
         private const string PriceProposalType = "PriceProposal";
@@ -114,6 +115,19 @@ namespace KLS.Services
         public SalesQuoteConvertResult ConvertToSales(int salesQuoteId)
         {
             return Uow.SalesQuotes.ConvertToSales(salesQuoteId);
+        }
+
+        public SalesQuoteConvertToDropShipResult ConvertToDropShip(int salesQuoteId, SalesQuoteConvertToDropShipReq req)
+        {
+            if (req == null)
+                throw new ArgumentException("Drop-ship conversion request is required.");
+
+            if (req.VendorPayeeId <= 0)
+                throw new ArgumentException("Vendor is required for drop-ship conversion.");
+
+            RequirePermission(DropShipmentCreatePermission, "Drop-ship create permission is required.");
+
+            return Uow.SalesQuotes.ConvertToDropShip(salesQuoteId, req);
         }
 
         public void EmailPdf(int salesQuoteId, SalesQuoteEmailPdfReq? req)
