@@ -9,12 +9,12 @@ namespace KLS.Models
     ///   DifferenceResolution - derived from the amounts
     ///   Notes                - built from the bank description
     ///   DifferenceAccountId  - discounts always post to '@IDR'
+    ///   PayeeId              - the vendor set is derived from the selected bills; the
+    ///                          procedure creates one VendorPayment per vendor
     /// </remarks>
     public class BankFeedCreateVendorPaymentReq
     {
         public long BankFeedTransactionId { get; set; }
-
-        public int PayeeId { get; set; }
 
         /// <summary>ACH, E-CHECK, CASH, HANDWRITE CHECK or CREDIT CARD. CHECK is not supported.</summary>
         public string? PaymentMethod { get; set; }

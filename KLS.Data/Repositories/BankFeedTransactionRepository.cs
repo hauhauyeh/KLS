@@ -99,7 +99,6 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw(
                 "[dbo].[BankFeed_CreateVendorPayment] " +
                 "@BankFeedTransactionId = @BankFeedTransactionId, " +
-                "@PayeeId = @PayeeId, " +
                 "@PaymentMethod = @PaymentMethod, " +
                 "@ReferenceId = @ReferenceId, " +
                 "@LinesJson = @LinesJson, " +
@@ -109,7 +108,6 @@ namespace KLS.Data.Repositories
                 "@EmpId = @EmpId, " +
                 "@NewVendorPaymentId = @NewVendorPaymentId OUTPUT",
                 new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
-                new SqlParameter("@PayeeId", req.PayeeId),
                 new SqlParameter("@PaymentMethod", (object?)req.PaymentMethod ?? DBNull.Value),
                 new SqlParameter("@ReferenceId", (object?)req.ReferenceId ?? DBNull.Value),
                 new SqlParameter("@LinesJson", linesJson),
@@ -276,7 +274,7 @@ namespace KLS.Data.Repositories
         {
             object[] param = {
                 new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
-                new SqlParameter("@PayeeId", req.PayeeId),
+                req.PayeeId.HasValue ? new SqlParameter("@PayeeId", req.PayeeId.Value) : new SqlParameter("@PayeeId", DBNull.Value),
                 !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value),
                 new SqlParameter("@Pageno", req.Pageno),
                 new SqlParameter("@Pagesize", req.Pagesize),
