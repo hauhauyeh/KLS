@@ -1,14 +1,9 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- 2026-07-21 DROPSHIP-RECEIPT-STAGE: expose linked SO receipt stage for PO Manager bill conversion guard.
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for PO Manager badge.
 -- 2026-07-13 PO-TOTALS: show order total and bill total in PO Manager.
 -- 2026-08-09 PO-DS-SEQ: return drop-ship chain label for PO Manager badge.
 -- 2026-08-12 PO-DS-CUSTOMER: return linked drop-ship customer name for PO Manager badge.
--- 2026-08-12 PO-SEARCH: expand PO Manager search refs with parameterized search values.
-CREATE OR ALTER PROCEDURE [dbo].[PurchaseOrder_GetAllList] -- EXEC dbo.PurchaseOrder_GetAllList @Pageno=1,@Pagesize=50,@Search=NULL,@StartDate=NULL,@EndDate=NULL,@VendorId=NULL,@EmpId=NULL,@Filterby=NULL,@Id=NULL,@SortField=NULL,@SortOrder=NULL,@IsCount=0,@TotalCount=NULL
+CREATE   PROCEDURE [dbo].[PurchaseOrder_GetAllList] -- EXEC dbo.PurchaseOrder_GetAllList @Pageno=1,@Pagesize=50,@Search=NULL,@StartDate=NULL,@EndDate=NULL,@VendorId=NULL,@EmpId=NULL,@Filterby=NULL,@Id=NULL,@SortField=NULL,@SortOrder=NULL,@IsCount=0,@TotalCount=NULL
 	
 	@Pageno int,
 	@Pagesize int,
@@ -31,8 +26,6 @@ BEGIN
 
 	DECLARE @Qry NVARCHAR(MAX);
 	DECLARE @IsAdmin BIT
-	DECLARE @S NVARCHAR(50) = NULLIF(LTRIM(RTRIM(@Search)), N'');
-	DECLARE @SearchNumber INT = TRY_CONVERT(INT, @S);
 
 	SELECT @IsAdmin=r.IsAdmin FROM SystemUser as s inner join SystemRole as r on s.SystemRoleId=r.SystemRoleId
 	WHERE PayeeId=@EmpId
@@ -179,15 +172,13 @@ BEGIN
 	IF @VendorId is not null
 		SET @Qry += ' AND p.PayeeId='+convert(varchar,@VendorId)+''
 
-	IF @S IS NOT NULL
-		SET @Qry += ' AND (
-			p.VendorDocNumber LIKE ''%'' + @S + ''%''
-			OR p.ContainerNumber LIKE ''%'' + @S + ''%''
-			OR p.FactorPO LIKE ''%'' + @S + ''%''
-			OR dss.CustPONumber LIKE ''%'' + @S + ''%''
-			OR (@SearchNumber IS NOT NULL AND p.PurchaseNumber = @SearchNumber)
-			OR (@SearchNumber IS NOT NULL AND dss.SalesNumber = @SearchNumber)
-		)'
+	IF @Search is not null
+	BEGIN
+		IF ISNUMERIC(@Search)=1
+			SET @Qry += ' AND (p.PurchaseNumber='+@Search+' OR p.VendorDocNumber='''+@Search+''' OR p.ContainerNumber='''+@Search+''')'
+		ELSE
+			SET @Qry += ' AND (p.VendorDocNumber='''+@Search+''' OR p.ContainerNumber='''+@Search+''')'
+	END
 
 	IF @StartDate is not null
 		SET @Qry += ' AND p.ArrivalDate>='''+CONVERT(VARCHAR,@StartDate)+''''
@@ -211,12 +202,7 @@ BEGIN
 	
 	IF @IsCount=1
 	BEGIN
-		EXEC sp_executesql
-			@Qry,
-			N'@S NVARCHAR(50), @SearchNumber INT, @RCount int OUTPUT',
-			@S = @S,
-			@SearchNumber = @SearchNumber,
-			@RCount = @TotalCount OUTPUT
+		EXEC sp_executesql @Qry,N'@RCount int OUTPUT',@RCount=@TotalCount OUTPUT
 		RETURN
 	END
 
@@ -228,13 +214,10 @@ BEGIN
 	SET @Qry += ' OFFSET '+ CONVERT(VARCHAR(100),(@PageSize * (@Pageno - 1))) +' ROWS 
 	FETCH NEXT '+ CONVERT(VARCHAR(100),@Pagesize) +' ROWS ONLY '
 
-	EXEC sp_executesql
-		@Qry,
-		N'@S NVARCHAR(50), @SearchNumber INT',
-		@S = @S,
-		@SearchNumber = @SearchNumber
+	EXEC (@Qry)
 
 END
+
 
 
 
