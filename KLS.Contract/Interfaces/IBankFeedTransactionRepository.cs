@@ -24,7 +24,7 @@ namespace KLS.Contract.Interfaces
 
         int CountOpenInvoices(BankFeedOpenInvoicesReq req);
 
-        int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string linesJson,
+        int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string? linesJson,
                                 string? resolvingLinesJson, int empId);
 
         int CreateDeposit(BankFeedCreateDepositReq req, string paymentIdsJson, int empId);

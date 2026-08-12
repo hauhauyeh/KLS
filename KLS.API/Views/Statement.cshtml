@@ -1,5 +1,14 @@
 @model KLS.Models.Reports.RptCustStmt
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@functions {
+    private string DisplaySalesNumber(KLS.Models.Sales sales)
+    {
+        if (Model.UseSalesDocNumber && !string.IsNullOrWhiteSpace(sales.SalesDocNumber))
+            return sales.SalesDocNumber;
+
+        return sales.SalesNumber.ToString();
+    }
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -139,7 +148,7 @@
 
             <div class="content">
                 <div class="greeting-box">
-                    <p class="customer">Dear @Model.Payee.PayeeName,</p>
+                    <p class="customer">Dear Customer,</p>
                     <p class="greeting-text">
                         Please find below the latest statement of your account. This summary includes outstanding sales grouped by shipping month for your convenience.
                     </p>
@@ -176,7 +185,7 @@
                                                 <span class="route-chip">@item.ShipRoute</span>
                                             </td>
                                             <td>@string.Format("{0:MMM dd yyyy}", item.ShipDate)</td>
-                                            <td class="sales-no">@item.SalesNumber</td>
+                                            <td class="sales-no">@DisplaySalesNumber(item)</td>
                                             <td style="text-align:right;" class="amount">
                                                 @string.Format("{0:c}", item.AmountDue)
                                             </td>

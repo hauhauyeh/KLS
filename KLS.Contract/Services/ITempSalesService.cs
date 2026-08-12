@@ -18,6 +18,8 @@ namespace KLS.Contract.Services
 
         TempSalesItem Update(TempSalesItem tempItem);
 
+        TempSalesItem UpdatePriceCommentOnly(TempSalesItem tempItem);
+
         TempSalesItem? UpdateParentSalesNumber(TempSalesParentUpdateReq req);
 
         TempSalesItem UpdateUnit(TempSalesItem tempItem);

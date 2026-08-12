@@ -39,16 +39,24 @@ namespace KLS.Data.Repositories
         /// it per user would make the picker open empty once for each of them instead of once
         /// overall.
         /// </remarks>
-        public Payee? GetLastChargePayee()
+        public BankFeedChargePayee? GetLastChargePayee()
         {
             // SourceDocId is long (it is polymorphic) while VendorPaymentId is int, so the join
             // needs an explicit widening - C# will not infer it inside an equals clause.
+            // 2026-08-12 per-line vendor: projected to the lookup DTO and joined to Vendor for
+            // AccountId1, which pre-fills the seeded resolving line's account.
             return (from bfs in DbContext.BankFeedSources
                     join vp in DbContext.VendorPayments on bfs.SourceDocId equals (long)vp.VendorPaymentId
                     join p in DbContext.Payees on vp.PayeeId equals p.PayeeId
+                    join v in DbContext.Vendors on p.PayeeId equals v.PayeeId
                     where bfs.Mode == "ResolveDifference"
                     orderby bfs.BankFeedSourceId descending
-                    select p).FirstOrDefault();
+                    select new BankFeedChargePayee
+                    {
+                        PayeeId = p.PayeeId,
+                        PayeeName = p.PayeeName,
+                        AccountId1 = v.AccountId1
+                    }).FirstOrDefault();
         }
 
         public void ReverseGenerated(long bankFeedTransactionId, string? reverseReason, int empId)

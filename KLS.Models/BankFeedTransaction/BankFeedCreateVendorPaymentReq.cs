@@ -27,19 +27,27 @@ namespace KLS.Models
         public string? DifferenceMemo { get; set; }
 
         /// <summary>
+        /// True (default): the bank description is written into the generated notes - document
+        /// headers as 'Bank feed: ...' and charge detail lines as 'user note - description'.
+        /// False: notes stay exactly what the user typed.
+        /// </summary>
+        public bool AppendBankDescription { get; set; } = true;
+
+        /// <summary>
         /// Costs that rode along with the bank transaction but belong to no bill - a wire fee,
         /// a bank charge. Empty for the ordinary case, where the payment alone accounts for the
         /// whole bank amount.
         /// </summary>
         public List<BankFeedResolvingLineReq> ResolvingLines { get; set; } = new();
-
-        /// <summary>Who the charge document is billed to. Required only with resolving lines.</summary>
-        public int? ChargePayeeId { get; set; }
     }
 
     /// <summary>One cost absorbed from the bank amount, posted to an account of the user's choice.</summary>
     public class BankFeedResolvingLineReq
     {
+        /// <summary>Who this line's charge document is billed to. One PayNow is created per
+        /// distinct vendor across the lines.</summary>
+        public int PayeeId { get; set; }
+
         public int AccountId { get; set; }
 
         /// <summary>Always positive: the bank moved MORE than the bills, never less.</summary>

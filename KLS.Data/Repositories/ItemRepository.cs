@@ -105,8 +105,9 @@ namespace KLS.Data.Repositories
             //   var ShowDeletedParam = new SqlParameter("@ShowDeleted", searchReq.ShowDeleted);
             //   return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@ShowInactive,@ShowDeleted", TermParam, ShowInactiveParam, ShowDeletedParam);
             var ShowInactiveParam = new SqlParameter("@ShowInactive", searchReq.ShowInactive);
+            var ShowNonInventoryParam = new SqlParameter("@ShowNonInventory", searchReq.ShowNonInventory);
 
-            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@ShowInactive", TermParam, ShowInactiveParam);
+            return DbContext.ItemSearch.FromSqlRaw("[dbo].[Item_SearchByTerm] @SearchTerm,@ShowInactive,@ShowNonInventory", TermParam, ShowInactiveParam, ShowNonInventoryParam);
         }
 
         public IQueryable<ItemSearch>? PublicWebInventorySearch(string? searchTerm)

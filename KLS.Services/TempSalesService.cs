@@ -135,6 +135,33 @@ namespace KLS.Services
             return tempItem;
         }
 
+        public TempSalesItem UpdatePriceCommentOnly(TempSalesItem tempItem)
+        {
+            var existing = GetById(tempItem.TempSalesId)
+                ?? throw new KeyNotFoundException("Temp sales line not found.");
+
+            if (existing.EmpId != UserContext.EmpId)
+                throw new UnauthorizedAccessException("Temp sales line does not belong to the current user.");
+
+            if (!existing.SalesDetailId.HasValue)
+                throw new ArgumentException("Only existing sales detail lines can use price/comment update.");
+
+            var sales = Uow.Sales.GetById(existing.SalesId)
+                ?? throw new KeyNotFoundException("Sales order not found.");
+
+            if (sales.IsLocked || !sales.IsDropShip || sales.StageId != 3)
+                throw new ArgumentException("Only stage-3 drop-ship sales detail lines can use price/comment update.");
+
+            existing.UnitPrice = tempItem.UnitPrice;
+            existing.Notes = tempItem.Notes;
+            existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();
+
+            Uow.TempSales.Update(existing);
+            Uow.Commit();
+
+            return GetListById(existing);
+        }
+
         public TempSalesItem? UpdateParentSalesNumber(TempSalesParentUpdateReq req)
         {
             var existing = GetById(req.TempSalesId);

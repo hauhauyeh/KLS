@@ -13,5 +13,9 @@ namespace KLS.Models
         public int PayeeId { get; set; }
 
         public string? PayeeName { get; set; }
+
+        /// <summary>The vendor's default expense account (Vendor.AccountId1), used to pre-fill
+        /// the seeded resolving line's account.</summary>
+        public int? AccountId1 { get; set; }
     }
 }

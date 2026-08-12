@@ -166,8 +166,12 @@ namespace KLS.Services
         /// </summary>
         public int CreateVendorPayment(BankFeedCreateVendorPaymentReq req)
         {
-            if (req.Lines == null || !req.Lines.Any())
-                throw new Exception("Please select at least one bill to pay.");
+            // 2026-08-12 resolve-only: a row may be entirely resolving lines (no bills).
+            if ((req.Lines == null || !req.Lines.Any())
+                && (req.ResolvingLines == null || !req.ResolvingLines.Any()))
+                throw new Exception("Select at least one bill or enter a resolving line.");
+
+            req.Lines ??= new List<BankFeedOpenBillLineReq>();
 
             if (req.Lines.Any(l => l.ApplyAmount <= 0))
                 throw new Exception("Each selected bill needs an apply amount greater than zero.");
@@ -183,20 +187,24 @@ namespace KLS.Services
             if (resolving.Any(l => l.Amount <= 0))
                 throw new Exception("Each resolving line needs an amount greater than zero.");
 
-            if (resolving.Any() && !req.ChargePayeeId.HasValue)
-                throw new Exception("Please choose who the bank charge is billed to.");
+            if (resolving.Any(l => l.PayeeId <= 0))
+                throw new Exception("Each resolving line needs a vendor.");
 
             if (resolving.Count > 5)
                 throw new Exception("A bank feed row can carry at most 5 resolving lines.");
 
-            var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(
-                req.Lines.Select(l => new { l.PurchaseId, l.ApplyAmount, l.DiscountAmount }));
+            // Null rather than "[]" when no bills were selected (resolve-only row), mirroring
+            // the resolving-lines contract below.
+            var linesJson = req.Lines.Any()
+                ? Newtonsoft.Json.JsonConvert.SerializeObject(
+                    req.Lines.Select(l => new { l.PurchaseId, l.ApplyAmount, l.DiscountAmount }))
+                : null;
 
             // Null rather than "[]" when there is nothing to resolve, so the procedure takes its
             // untouched pre-4B path rather than parsing an empty array.
             var resolvingJson = resolving.Any()
                 ? Newtonsoft.Json.JsonConvert.SerializeObject(
-                    resolving.Select(l => new { l.AccountId, l.Amount, l.Notes }))
+                    resolving.Select(l => new { l.PayeeId, l.AccountId, l.Amount, l.Notes }))
                 : null;
 
             return Uow.BankFeedTransactions.CreateVendorPayment(req, linesJson, resolvingJson, UserContext.EmpId);
@@ -298,16 +306,13 @@ namespace KLS.Services
         /// balances and journal, and returns the bank row to Pending.
         /// </summary>
         /// <summary>
-        /// Projected to id + name only: the picker needs nothing else, and returning the whole
-        /// Payee entity would drag 64 columns of unrelated master data into a lookup.
+        /// Projected to id + name + default account only: the picker needs nothing else, and
+        /// returning the whole Payee entity would drag 64 columns of unrelated master data
+        /// into a lookup.
         /// </summary>
         public BankFeedChargePayee? GetLastChargePayee()
         {
-            var payee = Uow.BankFeedSources.GetLastChargePayee();
-
-            return payee == null
-                ? null
-                : new BankFeedChargePayee { PayeeId = payee.PayeeId, PayeeName = payee.PayeeName };
+            return Uow.BankFeedSources.GetLastChargePayee();
         }
 
         public void ReverseGenerated(BankFeedReverseReq req)

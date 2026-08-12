@@ -13,6 +13,8 @@ namespace KLS.Models.Reports
 
         public bool IsPromotionEnabled { get; set; }
 
+        public bool UseSalesDocNumber { get; set; }
+
         public List<RptCustStmtDetail>? Details { get; set; }
 
         public string? EmailNotes { get; set; }
