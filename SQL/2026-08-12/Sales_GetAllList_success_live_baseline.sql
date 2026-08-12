@@ -1,16 +1,11 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- 2026-08-12 Re-apply 2026-08-10 fix lost in today's overwrite: hide opening-balance rows (DocType 'OB').
 -- 2026-08-12 Order Manager expanded search: SalesDocNumber, CPO, FPO, VDOC, CONT.
--- 2026-08-12 Order Manager stage filter: add normal Success filter.
 -- 2026-08-08 DropShip backorder badge: expose remaining-qty and latest-chain flags.
 -- Baseline: KLS/SQL/2026-08-08/Sales_GetAllList_GUS_2026_live_baseline.sql
 -- 2026-08-07 DropShip refs Slice 2: expose linked purchase refs and chain sequence label.
 -- 2026-07-27 SalesDocNumber Slice 6: expose SalesDocNumber for backend read model.
 -- Baseline: KLS/SQL/2026-07-27/Sales_GetAllList_live_baseline.sql
-CREATE OR ALTER PROCEDURE [dbo].[Sales_GetAllList] -- EXEC [Sales_GetAllList] 1,50,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,0,NULL
+CREATE   PROCEDURE [dbo].[Sales_GetAllList] -- EXEC [Sales_GetAllList] 1,50,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,0,NULL
 (
     @Pageno INT,
     @Pagesize INT,
@@ -261,8 +256,6 @@ BEGIN
             SET @Qry += ' AND s.StageId = 2';
         ELSE IF @Filterby = 'transit'
             SET @Qry += ' AND s.StageId = 3';
-        ELSE IF @Filterby = 'success'
-            SET @Qry += ' AND s.StageId = 4';
         ELSE IF @Filterby = 'cmorder'
             SET @Qry += ' AND s.StageId = 0 AND (s.DocType = ''CM'' OR (s.DocType = ''SO'' AND s.SalesTotal < 0))';
         ELSE IF @Filterby = 'cmsuccess'
@@ -307,5 +300,3 @@ BEGIN
         @SearchInt = @SearchInt,
         @SearchMoney = @SearchMoney;
 END
-
-GO
