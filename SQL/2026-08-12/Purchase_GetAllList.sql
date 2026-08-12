@@ -5,6 +5,7 @@ GO
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for Bill Manager badge.
 -- 2026-08-12 BILL-SEARCH: expand Bill Manager fallback search refs with parameterized search values.
 -- 2026-08-12 BILL-DS-CUSTOMER-FILTER: filter Bill Manager by exact linked drop-ship customer id.
+-- 2026-08-12 BILL-DS-CHAIN: return drop-ship chain label required by PurchaseList mapping.
 CREATE OR ALTER PROCEDURE [dbo].[Purchase_GetAllList]
     @Pageno INT,
     @Pagesize INT,
@@ -131,6 +132,7 @@ BEGIN
         p.IsDropShip,
         p.DropShipSalesId,
         dss.SalesNumber AS DropShipSalesNumber,
+        dsseq.DropShipChainLabel,
         dss.CustPONumber AS DropShipSalesCustPONumber,
         dss.ShipId AS DropShipSalesCustomerId,
         dsp.PayeeName AS DropShipSalesCustomerName,
@@ -288,6 +290,45 @@ BEGIN
                   AND sa.AllocationMethod LIKE ''%FALLBACK''
             ) sa
         ) fallback
+        OUTER APPLY (
+            SELECT RootSalesNumber = COALESCE(dss.ParentSalesNumber, dss.SalesNumber)
+        ) dsroot
+        OUTER APPLY (
+            SELECT DropShipChainLabel =
+                CASE
+                    WHEN ISNULL(p.IsDropShip, 0) = 1
+                     AND p.DropShipSalesId IS NOT NULL
+                     AND dss.SalesId IS NOT NULL
+                     AND seq.ChainIndex > 0
+                    THEN CONCAT(
+                        seq.ChainIndex,
+                        CASE
+                            WHEN seq.ChainIndex % 100 BETWEEN 11 AND 13 THEN ''th''
+                            WHEN seq.ChainIndex % 10 = 1 THEN ''st''
+                            WHEN seq.ChainIndex % 10 = 2 THEN ''nd''
+                            WHEN seq.ChainIndex % 10 = 3 THEN ''rd''
+                            ELSE ''th''
+                        END
+                    )
+                    ELSE NULL
+                END
+            FROM (
+                SELECT ChainIndex = COUNT(1)
+                FROM dbo.Sales AS chainRow
+                WHERE dsroot.RootSalesNumber IS NOT NULL
+                  AND (chainRow.SalesNumber = dsroot.RootSalesNumber
+                       OR chainRow.ParentSalesNumber = dsroot.RootSalesNumber)
+                  AND (
+                        CASE WHEN chainRow.SalesNumber = dsroot.RootSalesNumber THEN 0 ELSE 1 END
+                        < CASE WHEN dss.SalesNumber = dsroot.RootSalesNumber THEN 0 ELSE 1 END
+                        OR (
+                            CASE WHEN chainRow.SalesNumber = dsroot.RootSalesNumber THEN 0 ELSE 1 END
+                            = CASE WHEN dss.SalesNumber = dsroot.RootSalesNumber THEN 0 ELSE 1 END
+                            AND chainRow.SalesNumber <= dss.SalesNumber
+                        )
+                  )
+            ) seq
+        ) dsseq
         WHERE p.StageId=6';
 
     IF @Id IS NOT NULL
