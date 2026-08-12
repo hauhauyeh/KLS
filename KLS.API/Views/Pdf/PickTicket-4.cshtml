@@ -3,6 +3,11 @@
 @model RptInvoice
 @{
     var colSpan = 4;
+    var isDropShipPickTicket = Model.Invoice?.IsDropShip == true;
+    var routeInfoTruckLabel = isDropShipPickTicket ? "Container #" : "Truck #";
+    var routeInfoTruckValue = isDropShipPickTicket ? Model.Invoice?.DropShipPurchaseContainerNumber : Model.Invoice?.TruckNumber;
+    var routeInfoDriverLabel = isDropShipPickTicket ? "" : "Driver";
+    var routeInfoDriverValue = isDropShipPickTicket ? "" : Model.Invoice?.DriverName;
 }
 
 <style>
@@ -571,25 +576,25 @@
                         <td class="route-info">@Model.Invoice.SalesRepName</td>
                     </tr>
                     <tr>
-                        <td class="route-info-label">Truck #</td>
-                        @if (string.IsNullOrEmpty(Model.Invoice.TruckNumber))
+                        <td class="route-info-label">@routeInfoTruckLabel</td>
+                        @if (string.IsNullOrWhiteSpace(routeInfoTruckValue))
                         {
                             <td class="route-info">&nbsp;</td>
                         }
                         else
                         {
-                            <td class="route-info">@Model.Invoice.TruckNumber</td>
+                            <td class="route-info">@routeInfoTruckValue</td>
                         }
                     </tr>
                     <tr>
-                        <td class="route-info-label">Driver</td>
-                        @if (string.IsNullOrEmpty(Model.Invoice.DriverName))
+                        <td class="route-info-label">@routeInfoDriverLabel</td>
+                        @if (string.IsNullOrWhiteSpace(routeInfoDriverValue))
                         {
                             <td class="route-info">&nbsp;</td>
                         }
                         else
                         {
-                            <td class="route-info">@Model.Invoice.DriverName</td>
+                            <td class="route-info">@routeInfoDriverValue</td>
                         }
                     </tr>
                 </table>
