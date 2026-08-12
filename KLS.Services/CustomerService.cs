@@ -516,6 +516,7 @@ namespace KLS.Services
             }
 
             var statement = Uow.Reports.CustStmt(payeeId);
+            statement.UseSalesDocNumber = _systemSettingService.GetByKey<bool>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED);
             var company = _companyService.GetDefault();
             var totalDue = CalculateStatementTotalDue(statement);
             var tempFolder = CreateEmailAttachmentFolder();
@@ -524,7 +525,7 @@ namespace KLS.Services
             {
                 var attachments = BuildStatementEmailAttachments(tempFolder, statement, customer, payeeId);
                 var subject = BuildStatementEmailSubject(company);
-                var mailBody = BuildStatementEmailBody(customer?.PayeeName, totalDue, company);
+                var mailBody = BuildStatementEmailBody(totalDue, company);
 
                 var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
                 {
@@ -591,9 +592,8 @@ namespace KLS.Services
             return $"Statement from {companyName}";
         }
 
-        private string BuildStatementEmailBody(string? payeeName, decimal totalDue, Company? company)
+        private string BuildStatementEmailBody(decimal totalDue, Company? company)
         {
-            var customerName = WebUtility.HtmlEncode(CleanEmailText(payeeName) ?? "Customer");
             var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
             var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
             var amountDue = WebUtility.HtmlEncode(FormatCurrency(totalDue));
@@ -624,7 +624,7 @@ namespace KLS.Services
                     </tr>
                     <tr>
                         <td style="padding:22px 28px;font-size:16px;line-height:1.45;">
-                            <p style="margin:0 0 18px 0;">Dear {customerName}:</p>
+                            <p style="margin:0 0 18px 0;">Dear Customer:</p>
                             <p style="margin:0 0 16px 0;">{bodyMessage}</p>
                             <p style="margin:0 0 16px 0;">Please review the attached statement PDF for account details.</p>
                             {paymentBlock}
