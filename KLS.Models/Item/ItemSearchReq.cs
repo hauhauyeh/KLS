@@ -11,11 +11,15 @@ namespace KLS.Models
         public string? Term { get; set; }
 
         // Old IsActiveOnly bool was a single "show all vs active-only" switch.
-        // Replaced 2026-05-07 (Phase 2) with two independent ambient bits that
-        // mirror the I and D toggles on the product list page. Same truth table
-        // as Item_GetAllList. See future-product-list-improve.md.
+        // Replaced 2026-05-07 (Phase 2) with ambient bits that mirror product
+        // list scope flags. Same truth table as Item_GetAllList. See
+        // future-product-list-improve.md.
         // public bool IsActiveOnly { get; set; }
         public bool ShowInactive { get; set; }
+
+        // 2026-08-12: mirrors Product List's NonInventory scope flag for the
+        // shared ItemSearchbox preview path.
+        public bool ShowNonInventory { get; set; } = true;
 
         // ShowDeleted removed 2026-05-08 (forward-removal of D toggle). The
         // autocomplete dropdown now always hides deleted items via an

@@ -75,6 +75,8 @@ namespace KLS.Models
         public string? DropShipChainLabel { get; set; }
         public int? DropShipSalesStageId { get; set; }
         public string? DropShipSalesCustPONumber { get; set; }
+        public int? DropShipSalesCustomerId { get; set; }
+        public string? DropShipSalesCustomerName { get; set; }
 
         public bool IsBillStage => StageId == 6;
 

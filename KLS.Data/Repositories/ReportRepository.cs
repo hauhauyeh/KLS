@@ -590,6 +590,16 @@ namespace KLS.Data.Repositories
                 StartDateParam, EndDateParam, SalesRepParam, SortByParam);
         }
 
+        public IQueryable<RptARRollforward> ARRollforward(ReportRequest reportReq)
+        {
+            var StartDateParam = reportReq.StartDate.HasValue ? new SqlParameter("@StartDate", reportReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var EndDateParam = reportReq.EndDate.HasValue ? new SqlParameter("@EndDate", reportReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+
+            return DbContext.RptARRollforward.FromSqlRaw("[dbo].[Report_ARRollforward] @StartDate,@EndDate,@PayeeId",
+                StartDateParam, EndDateParam, PayeeIdParam);
+        }
+
         public IQueryable<RptDescDollar>? DescDollar(ReportRequest reportReq)
         {
             var PayeeIdParam = reportReq.PayeeId.HasValue ? new SqlParameter("@PayeeId", reportReq.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
