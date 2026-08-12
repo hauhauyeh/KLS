@@ -1,15 +1,10 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- 2026-07-21 DROPSHIP-RECEIPT-STAGE: expose linked SO receipt stage for PO Manager bill conversion guard.
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for PO Manager badge.
 -- 2026-07-13 PO-TOTALS: show order total and bill total in PO Manager.
 -- 2026-08-09 PO-DS-SEQ: return drop-ship chain label for PO Manager badge.
 -- 2026-08-12 PO-DS-CUSTOMER: return linked drop-ship customer name for PO Manager badge.
 -- 2026-08-12 PO-SEARCH: expand PO Manager search refs with parameterized search values.
--- 2026-08-12 PO-DS-CUSTOMER-FILTER: filter PO Manager by exact linked drop-ship customer id.
-CREATE OR ALTER PROCEDURE [dbo].[PurchaseOrder_GetAllList] -- EXEC dbo.PurchaseOrder_GetAllList @Pageno=1,@Pagesize=50,@Search=NULL,@StartDate=NULL,@EndDate=NULL,@VendorId=NULL,@EmpId=NULL,@Filterby=NULL,@Id=NULL,@SortField=NULL,@SortOrder=NULL,@IsCount=0,@DropShipSalesCustomerId=NULL,@TotalCount=NULL
+CREATE   PROCEDURE [dbo].[PurchaseOrder_GetAllList] -- EXEC dbo.PurchaseOrder_GetAllList @Pageno=1,@Pagesize=50,@Search=NULL,@StartDate=NULL,@EndDate=NULL,@VendorId=NULL,@EmpId=NULL,@Filterby=NULL,@Id=NULL,@SortField=NULL,@SortOrder=NULL,@IsCount=0,@TotalCount=NULL
 	
 	@Pageno int,
 	@Pagesize int,
@@ -23,7 +18,6 @@ CREATE OR ALTER PROCEDURE [dbo].[PurchaseOrder_GetAllList] -- EXEC dbo.PurchaseO
 	@SortField NVARCHAR(50),
 	@SortOrder NVARCHAR(50),
 	@IsCount bit,	
-	@DropShipSalesCustomerId INT,
 	@TotalCount INT OUTPUT
 AS
 BEGIN
@@ -79,7 +73,6 @@ BEGIN
 		dsseq.DropShipChainLabel,
 		dss.StageId AS DropShipSalesStageId,
 		dss.CustPONumber AS DropShipSalesCustPONumber,
-		dss.ShipId AS DropShipSalesCustomerId,
 		dsp.PayeeName AS DropShipSalesCustomerName,
 
 		CASE 
@@ -182,9 +175,6 @@ BEGIN
 	IF @VendorId is not null
 		SET @Qry += ' AND p.PayeeId='+convert(varchar,@VendorId)+''
 
-	IF @DropShipSalesCustomerId IS NOT NULL
-		SET @Qry += ' AND dss.ShipId = @DropShipSalesCustomerId'
-
 	IF @S IS NOT NULL
 		SET @Qry += ' AND (
 			p.VendorDocNumber LIKE ''%'' + @S + ''%''
@@ -219,10 +209,9 @@ BEGIN
 	BEGIN
 		EXEC sp_executesql
 			@Qry,
-			N'@S NVARCHAR(50), @SearchNumber INT, @DropShipSalesCustomerId INT, @RCount int OUTPUT',
+			N'@S NVARCHAR(50), @SearchNumber INT, @RCount int OUTPUT',
 			@S = @S,
 			@SearchNumber = @SearchNumber,
-			@DropShipSalesCustomerId = @DropShipSalesCustomerId,
 			@RCount = @TotalCount OUTPUT
 		RETURN
 	END
@@ -237,13 +226,11 @@ BEGIN
 
 	EXEC sp_executesql
 		@Qry,
-		N'@S NVARCHAR(50), @SearchNumber INT, @DropShipSalesCustomerId INT',
+		N'@S NVARCHAR(50), @SearchNumber INT',
 		@S = @S,
-		@SearchNumber = @SearchNumber,
-		@DropShipSalesCustomerId = @DropShipSalesCustomerId
+		@SearchNumber = @SearchNumber
 
 END
-
 
 
 

@@ -1,11 +1,6 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for Bill Manager badge.
 -- 2026-08-12 BILL-SEARCH: expand Bill Manager fallback search refs with parameterized search values.
--- 2026-08-12 BILL-DS-CUSTOMER-FILTER: filter Bill Manager by exact linked drop-ship customer id.
-CREATE OR ALTER PROCEDURE [dbo].[Purchase_GetAllList]
+CREATE   PROCEDURE [dbo].[Purchase_GetAllList]
     @Pageno INT,
     @Pagesize INT,
     @Search NVARCHAR(50),
@@ -18,7 +13,6 @@ CREATE OR ALTER PROCEDURE [dbo].[Purchase_GetAllList]
     @SortField NVARCHAR(50),
     @SortOrder NVARCHAR(50),
     @IsCount BIT,
-    @DropShipSalesCustomerId INT,
     @TotalCount INT OUTPUT
 AS
 BEGIN
@@ -132,7 +126,6 @@ BEGIN
         p.DropShipSalesId,
         dss.SalesNumber AS DropShipSalesNumber,
         dss.CustPONumber AS DropShipSalesCustPONumber,
-        dss.ShipId AS DropShipSalesCustomerId,
         dsp.PayeeName AS DropShipSalesCustomerName,
         spx.ShipmentLinkCount,
         shipinfo.ShipmentContainerNos,
@@ -299,9 +292,6 @@ BEGIN
     IF @VendorId IS NOT NULL
         SET @Qry += ' AND p.PayeeId=' + CONVERT(VARCHAR, @VendorId) + '';
 
-    IF @DropShipSalesCustomerId IS NOT NULL
-        SET @Qry += ' AND dss.ShipId = @DropShipSalesCustomerId';
-
     IF @PackageShipmentId IS NOT NULL
         SET @Qry += ' AND (
             EXISTS (
@@ -358,10 +348,9 @@ BEGIN
     BEGIN
         EXEC sp_executesql
             @Qry,
-            N'@S NVARCHAR(50), @SearchNumber INT, @DropShipSalesCustomerId INT, @RCount int OUTPUT',
+            N'@S NVARCHAR(50), @SearchNumber INT, @RCount int OUTPUT',
             @S = @S,
             @SearchNumber = @SearchNumber,
-            @DropShipSalesCustomerId = @DropShipSalesCustomerId,
             @RCount = @TotalCount OUTPUT;
         RETURN;
     END
@@ -387,10 +376,8 @@ BEGIN
 
     EXEC sp_executesql
         @Qry,
-        N'@S NVARCHAR(50), @SearchNumber INT, @DropShipSalesCustomerId INT',
+        N'@S NVARCHAR(50), @SearchNumber INT',
         @S = @S,
-        @SearchNumber = @SearchNumber,
-        @DropShipSalesCustomerId = @DropShipSalesCustomerId;
+        @SearchNumber = @SearchNumber;
 END
-
 

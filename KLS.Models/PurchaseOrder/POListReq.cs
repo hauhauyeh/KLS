@@ -9,5 +9,6 @@ namespace KLS.Models
     public class POListReq : PagingRequest
     {
         public int? PayeeId { get; set; }
+        public int? DropShipSalesCustomerId { get; set; }
     }
 }

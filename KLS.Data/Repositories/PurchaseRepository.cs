@@ -23,7 +23,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildParam(purchaseListReq);
 
-            return DbContext.PurchaseList.FromSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.PurchaseList.FromSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@DropShipSalesCustomerId,@TotalCount OUTPUT", param);
         }
 
         public int Count(PurchaseListReq purchaseListReq)
@@ -31,9 +31,9 @@ namespace KLS.Data.Repositories
             purchaseListReq.IsCount = true;
             var param = BuildParam(purchaseListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Purchase_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@VendorId,@EmpId,@Filterby,@Id,@SortField,@SortOrder,@IsCount,@DropShipSalesCustomerId,@TotalCount OUTPUT", param);
 
-            var output = param[12] as SqlParameter;
+            var output = param[13] as SqlParameter;
             return Convert.ToInt32(output.Value);
         }
 
@@ -201,6 +201,8 @@ namespace KLS.Data.Repositories
                 string.IsNullOrEmpty(purchaseListReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", purchaseListReq.SortOrder),
 
                 new SqlParameter("@IsCount", purchaseListReq.IsCount),
+
+                purchaseListReq.DropShipSalesCustomerId.HasValue ? new SqlParameter("@DropShipSalesCustomerId", purchaseListReq.DropShipSalesCustomerId) : new SqlParameter("@DropShipSalesCustomerId", DBNull.Value),
 
                 new SqlParameter()
                 {
