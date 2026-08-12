@@ -492,6 +492,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.ARMonth(reportReq));
         }
 
+        [HttpGet("ARRollforward")]
+        [DisplayName("AR -> AR Rollforward")]
+        [PermissionKey("Report.AR.ARRollforward")]
+        public IActionResult ARRollforward([FromQuery] ReportRequest reportReq)
+        {
+            return Ok(_reportService.ARRollforward(reportReq));
+        }
+
         [HttpGet("ARAging")]
         [DisplayName("AR -> AR Aging")]
         [PermissionKey("Report.AR.Aging")]

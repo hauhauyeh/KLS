@@ -642,6 +642,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptARMonthRow> RptARMonthRow { get; set; }
 
+        public virtual DbSet<RptARRollforward> RptARRollforward { get; set; }
+
         public virtual DbSet<RptSalesCommissionRow> RptSalesCommissionRow { get; set; }
 
         public virtual DbSet<RptSalesCommission2Row> RptSalesCommission2Row { get; set; }

@@ -104,6 +104,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptARMonthRow> ARMonth(ReportRequest reportReq);
 
+        IQueryable<RptARRollforward> ARRollforward(ReportRequest reportReq);
+
         IQueryable<RptSalesCommissionRow> SalesCommission(ReportRequest reportReq);
 
         IQueryable<RptSalesCommission2Row> SalesCommission2(ReportRequest reportReq);

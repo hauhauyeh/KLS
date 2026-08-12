@@ -1158,6 +1158,11 @@ namespace KLS.Services
             };
         }
 
+        public IEnumerable<RptARRollforward> ARRollforward(ReportRequest reportReq)
+        {
+            return Uow.Reports.ARRollforward(reportReq).AsEnumerable().ToList();
+        }
+
         public IEnumerable<RptSalesDaily>? SalesDaily(ReportRequest reportReq)
         {
             if (UserContext.IsSalesRole)

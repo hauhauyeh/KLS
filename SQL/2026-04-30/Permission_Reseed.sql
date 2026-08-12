@@ -217,6 +217,8 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (6100, 'Report.AR', 'Accounts Receivable', 'Report', 'AR', '', 'resource', 6000, 6100, NULL),
 (6101, 'Report.AR.ARInvoice', 'Accounts Receivable From Invoice', 'Report', 'AR', 'ARInvoice', 'page', 6100, 6101, 'Reports-ARInvoice'),
 (6102, 'Report.AR.ARMonth', 'Accounts Receivable by Month', 'Report', 'AR', 'ARMonth', 'page', 6100, 6102, 'Reports-ARMonth'),
+(6103, 'Report.AR.Aging', 'AR Aging', 'Report', 'AR', 'Aging', 'page', 6100, 6103, NULL),
+(6104, 'Report.AR.ARRollforward', 'AR Rollforward', 'Report', 'AR', 'ARRollforward', 'page', 6100, 6104, NULL),
 (6150, 'Report.Banking', 'Banking Report', 'Report', 'Banking', '', 'resource', 6000, 6150, NULL),
 (6151, 'Report.Banking.BankRecon', 'Bank Reconciliation', 'Report', 'Banking', 'BankRecon', 'page', 6150, 6151, 'Reports-BankRecon'),
 (6152, 'Report.Banking.PmtReceipt', 'Payment Receipt', 'Report', 'Banking', 'PmtReceipt', 'page', 6150, 6152, 'Reports-PmtReceipt'),

@@ -124,6 +124,8 @@ namespace KLS.Contract.Services
 
         RptARMonth ARMonth(ReportRequest reportReq);
 
+        IEnumerable<RptARRollforward> ARRollforward(ReportRequest reportReq);
+
         IEnumerable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req);
 
         IEnumerable<RptReorderRow> Reorder(InventoryReportRequest req);
