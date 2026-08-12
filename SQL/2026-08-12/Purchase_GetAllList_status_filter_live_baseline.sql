@@ -1,13 +1,8 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for Bill Manager badge.
 -- 2026-08-12 BILL-SEARCH: expand Bill Manager fallback search refs with parameterized search values.
 -- 2026-08-12 BILL-DS-CUSTOMER-FILTER: filter Bill Manager by exact linked drop-ship customer id.
 -- 2026-08-12 BILL-DS-CHAIN: return drop-ship chain label required by PurchaseList mapping.
--- 2026-08-12 BILL-STATUS-FILTER: use exact payment status filters and bill-level past due.
-CREATE OR ALTER PROCEDURE [dbo].[Purchase_GetAllList]
+CREATE   PROCEDURE [dbo].[Purchase_GetAllList]
     @Pageno INT,
     @Pagesize INT,
     @Search NVARCHAR(50),
@@ -376,21 +371,11 @@ BEGIN
     IF @Filterby IS NOT NULL
     BEGIN
         IF @Filterby = 'unpaid'
-            SET @Qry += ' AND psCalc.PaymentStatusId = 5';
-        ELSE IF @Filterby = 'partialpaid'
-            SET @Qry += ' AND psCalc.PaymentStatusId = 6';
+            SET @Qry += ' AND p.AmountDue!=0';
         ELSE IF @Filterby = 'paid'
-            SET @Qry += ' AND psCalc.PaymentStatusId = 7';
-        ELSE IF @Filterby = 'overpaid'
-            SET @Qry += ' AND psCalc.PaymentStatusId = 8';
-        ELSE IF @Filterby = 'credit'
-            SET @Qry += ' AND psCalc.PaymentStatusId = 9';
-        ELSE IF @Filterby = 'creditpartial'
-            SET @Qry += ' AND psCalc.PaymentStatusId = 10';
-        ELSE IF @Filterby = 'creditsettled'
-            SET @Qry += ' AND psCalc.PaymentStatusId = 11';
-        ELSE IF @Filterby IN ('pastdue', 'overdue')
-            SET @Qry += ' AND p.AmountDue <> 0 AND p.DueDate IS NOT NULL AND p.DueDate < CONVERT(date, GETDATE())';
+            SET @Qry += ' AND p.AmountDue=0';
+        ELSE IF @Filterby = 'overdue'
+            SET @Qry += ' AND v.PayeePastDue!=0';
         ELSE IF @Filterby = 'notlink'
             SET @Qry += ' AND IsFreightOnly=1 AND p.PurchaseId NOT IN (SELECT FreightBillId FROM FreightBillLink)';
         -- Phase 2D: new filters
@@ -444,5 +429,7 @@ BEGIN
         @SearchNumber = @SearchNumber,
         @DropShipSalesCustomerId = @DropShipSalesCustomerId;
 END
+
+
 
 
