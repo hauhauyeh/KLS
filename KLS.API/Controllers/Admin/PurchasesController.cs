@@ -76,9 +76,7 @@ namespace KLS.API.Controllers.Admin
             if (_purchaseService.DocNumberExists(updateReq.PurchaseId, updateReq.PayeeId ?? 0, updateReq.VendorDocNumber))
                 return Conflict("Doc# already exists");
 
-            _purchaseService.UpdateDocNumber(updateReq.PurchaseId, updateReq.VendorDocNumber);
-
-            return Ok();
+            return Ok(_purchaseService.UpdateDocNumber(updateReq.PurchaseId, updateReq.VendorDocNumber));
         }
 
 

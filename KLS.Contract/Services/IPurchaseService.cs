@@ -18,7 +18,7 @@ namespace KLS.Contract.Services
 
         bool DocNumberExists(int purchaseId, int payeeId, string? docNumber);
 
-        void UpdateDocNumber(int purchaseId, string? docNumber);
+        PurchaseList? UpdateDocNumber(int purchaseId, string? docNumber);
 
         void UpdateInvoiceDate(int purchaseId, DateOnly? invoiceDate);
 

@@ -76,20 +76,24 @@ namespace KLS.Services
             return Uow.Purchases.Exists(c => c.VendorDocNumber == docNumber && c.PayeeId == payeeId && c.PurchaseId != purchaseId);
         }
 
-        public void UpdateDocNumber(int purchaseId, string? docNumber)
+        public PurchaseList? UpdateDocNumber(int purchaseId, string? docNumber)
         {
             docNumber = NormalizeUpperRef(docNumber);
 
             var purchase = GetById(purchaseId);
 
-            if (purchase != null)
-            {
-                purchase.VendorDocNumber = docNumber;
-                purchase.UpdatedAt = DateTime.UtcNow;
+            if (purchase == null)
+                return null;
 
-                Uow.Purchases.Update(purchase);
-                Uow.Commit();
-            }
+            purchase.VendorDocNumber = docNumber;
+            purchase.UpdatedAt = DateTime.UtcNow;
+
+            Uow.Purchases.Update(purchase);
+            Uow.Commit();
+
+            Uow.Purchases.SyncDropShipSalesTransitFromPO(purchaseId);
+
+            return GetListById(purchaseId);
         }
 
         public void UpdateInvoiceDate(int purchaseId, DateOnly? invoiceDate)
