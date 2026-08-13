@@ -567,7 +567,7 @@ namespace KLS.Services
         {
             var statementHtml = _pdfService.RenderTemplate("~/Views/Statement.cshtml", statement);
             var customerFilePart = SafeFilePart(customer?.PayeeName ?? payeeId.ToString());
-            var statementPrefix = IsBillToStatement(statement) ? "Bill-To_Statement" : "Statement";
+            var statementPrefix = IsBillToStatement(statement) ? "Corperate_Statement" : "Statement";
             var statementFile = Path.Combine(tempFolder, $"{statementPrefix}_{customerFilePart}_{DateTime.Today:yyyyMMdd}.pdf");
 
             using (var pdf = _pdfService.HtmlToPDF(statementHtml))
@@ -591,7 +591,7 @@ namespace KLS.Services
         private static string BuildStatementEmailSubject(Company? company, RptCustStmt statement)
         {
             var companyName = CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS";
-            var statementLabel = IsBillToStatement(statement) ? "Bill-To Statement" : "Statement";
+            var statementLabel = IsBillToStatement(statement) ? "Corperate Statement" : "Statement";
 
             return $"{statementLabel} from {companyName}";
         }
@@ -600,8 +600,8 @@ namespace KLS.Services
         {
             var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
             var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
-            var statementTitle = IsBillToStatement(statement) ? "Bill-To Statement" : "Statement";
-            var statementLabel = IsBillToStatement(statement) ? "bill-to statement" : "statement";
+            var statementTitle = IsBillToStatement(statement) ? "Corperate Statement" : "Statement";
+            var statementLabel = IsBillToStatement(statement) ? "corperate statement" : "statement";
             var amountDue = WebUtility.HtmlEncode(FormatCurrency(totalDue));
             var paymentBlock = totalDue > 0m ? _arEmailPaymentInstructionRenderer.Render(company) : "";
             var dueSummary = totalDue > 0m
