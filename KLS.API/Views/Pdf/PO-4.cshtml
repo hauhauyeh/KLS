@@ -443,6 +443,13 @@
                     <td class="invoice-info-label">Estimate Arrival Date</td>
                     <td class="invoice-info">@string.Format("{0:d}", Model.RptPO.ArrivalDate)</td>
                 </tr>
+                @if (!string.IsNullOrWhiteSpace(Model.RptPO.CustomerPONumber))
+                {
+                    <tr>
+                        <td class="invoice-info-label">CPO #</td>
+                        <td class="invoice-info">@Model.RptPO.CustomerPONumber</td>
+                    </tr>
+                }
             </table>
         </div>
 
