@@ -108,7 +108,22 @@ namespace KLS.Services
         {
             EnsureVisible(salesId);
 
-            return Uow.Sales.GetById(salesId);
+            var sales = Uow.Sales.GetById(salesId);
+
+            PopulateDropShipPurchaseStage(sales);
+
+            return sales;
+        }
+
+        private void PopulateDropShipPurchaseStage(Sales? sales)
+        {
+            if (sales?.IsDropShip != true || !sales.DropShipPurchaseId.HasValue)
+                return;
+
+            sales.DropShipPurchaseStageId = Uow.Purchases
+                .Find(p => p.PurchaseId == sales.DropShipPurchaseId.Value)
+                .Select(p => p.StageId)
+                .FirstOrDefault();
         }
 
         public Sales? GetBySalesNumber(int salesNumber)

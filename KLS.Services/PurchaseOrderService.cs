@@ -68,9 +68,23 @@ namespace KLS.Services
 
         public POList? Checkout(POCheckoutReq checkoutReq)
         {
+            if (checkoutReq.PurchaseId > 0)
+            {
+                var purchase = Uow.Purchases.GetById(checkoutReq.PurchaseId)
+                    ?? throw new ArgumentException("Purchase order not found.");
+
+                EnsureDropShipReceivedStageEditable(purchase);
+            }
+
             var poId = Uow.PurchaseOrders.Checkout(checkoutReq);
 
             return GetListById(poId);
+        }
+
+        private static void EnsureDropShipReceivedStageEditable(Purchase purchase)
+        {
+            if (purchase.IsDropShip && (purchase.StageId == 4 || purchase.StageId == 5))
+                throw new ArgumentException("Read only. Drop-ship receipt is already confirmed. Use Backorder DS for remaining quantities.");
         }
 
         public void Delete(int PurchaseId)
