@@ -2,6 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+-- 2026-08-12 Re-apply 2026-08-10 fix lost in today's overwrite: hide opening-balance rows (DocType 'OB').
 -- 2026-08-12 Order Manager expanded search: SalesDocNumber, CPO, FPO, VDOC, CONT.
 -- 2026-08-08 DropShip backorder badge: expose remaining-qty and latest-chain flags.
 -- Baseline: KLS/SQL/2026-08-08/Sales_GetAllList_GUS_2026_live_baseline.sql
@@ -209,7 +210,9 @@ BEGIN
         ) AS psCalc
         LEFT JOIN PaymentStatus ps ON ps.PaymentStatusId = psCalc.PaymentStatusId
 
-        WHERE p.PayeeType = ''c''';
+        WHERE p.PayeeType = ''c''
+          -- 2026-08-10 (re-applied 2026-08-12): opening-balance headers are not orders
+          AND ISNULL(s.DocType, '''') <> ''OB''';
 
     IF @IsSalesRole = 1
         SET @Qry += ' AND c.SalesRepId = ' + CONVERT(VARCHAR, @EmpId);
