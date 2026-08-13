@@ -14,7 +14,7 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<InvoiceDetail>? InvoiceDetail(int salesId);
 
-        RptCustStmt CustStmt(int payeeId);
+        RptCustStmt CustStmt(int payeeId, StatementScope scope = StatementScope.ShipTo);
 
         RptVendStmt VendStmt(int payeeId);
 

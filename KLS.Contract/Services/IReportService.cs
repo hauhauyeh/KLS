@@ -14,7 +14,7 @@ namespace KLS.Contract.Services
 
         RptSalesQuote SalesQuote(int salesQuoteId);
 
-        RptCustStmt CustStmt(int payeeId);
+        RptCustStmt CustStmt(int payeeId, StatementScope scope = StatementScope.ShipTo);
 
         RptVendStmt VendStmt(int payeeId);
 

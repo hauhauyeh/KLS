@@ -75,9 +75,9 @@ namespace KLS.Services
             return Uow.Reports.VendStmt(payeeId);
         }
 
-        public RptCustStmt CustStmt(int payeeId)
+        public RptCustStmt CustStmt(int payeeId, StatementScope scope = StatementScope.ShipTo)
         {
-            return Uow.Reports.CustStmt(payeeId);
+            return Uow.Reports.CustStmt(payeeId, scope);
 
             //var details = Uow.Sales.Find(s => s.ShipId == payeeId && s.AmountDue != 0)
             //    .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })

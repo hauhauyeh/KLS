@@ -196,9 +196,9 @@ namespace KLS.API.Controllers.Admin
         [HttpGet("CustStmt/{PayeeId}")]
         [DisplayName("Customer -> Statement")]
         [PermissionKey("Report.Customer.Statement")]
-        public IActionResult CustStmt(int PayeeId)
+        public IActionResult CustStmt(int PayeeId, [FromQuery] StatementScope Scope = StatementScope.ShipTo)
         {
-            return Ok(_reportService.CustStmt(PayeeId));
+            return Ok(_reportService.CustStmt(PayeeId, Scope));
         }
 
         [HttpGet("AccountHistory/{PayeeId}")]

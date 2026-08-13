@@ -58,14 +58,29 @@ namespace KLS.Data.Repositories
             };
         }
 
-        public RptCustStmt CustStmt(int payeeId)
+        public RptCustStmt CustStmt(int payeeId, StatementScope scope = StatementScope.ShipTo)
         {
+            var selectedCustomer = DbContext.Customers.Find(payeeId);
+            var selectedCustomerBillId = selectedCustomer?.BillId;
+            var isBillToChild = selectedCustomerBillId.HasValue && selectedCustomerBillId.Value != payeeId;
+            var isBillToParent = DbContext.Customers.Any(c => c.BillId == payeeId && c.PayeeId != payeeId);
+            var canUseBillToStatement = isBillToChild || isBillToParent;
+            var effectivePayeeId = scope == StatementScope.BillTo
+                ? (isBillToChild ? selectedCustomerBillId!.Value : payeeId)
+                : payeeId;
+
             // Recalculate aging on demand before reading Payee
-            var payeeIdParam = new SqlParameter("@PayeeId", payeeId);
+            var payeeIdParam = new SqlParameter("@PayeeId", effectivePayeeId);
             var isSalesParam = new SqlParameter("@IsSales", true);
             DbContext.Database.ExecuteSqlRaw("EXEC [dbo].[Payee_UpdateAging] @PayeeId, @IsSales", payeeIdParam, isSalesParam);
 
-            var details = DbContext.Sales.Where(s => s.ShipId == payeeId && s.AmountDue != 0)
+            var sales = scope == StatementScope.BillTo
+                ? DbContext.Sales.Where(s => s.BillId == effectivePayeeId && s.AmountDue != 0)
+                : DbContext.Sales.Where(s => s.ShipId == payeeId && s.AmountDue != 0);
+
+            var salesList = sales.ToList();
+
+            var details = salesList
                 .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })
                 .Select(g => new RptCustStmtDetail
                 {
@@ -73,15 +88,84 @@ namespace KLS.Data.Repositories
                     Sales = g.OrderBy(s => s.ShipDate).ToList()
                 }).ToList();
 
-            var customer = DbContext.Customers.Find(payeeId);
+            var customer = DbContext.Customers.Find(effectivePayeeId) ?? selectedCustomer;
+            var payee = DbContext.Payees.Find(effectivePayeeId);
+            var availableCredit = DbContext.CustomerPayments
+                .Where(c => c.PayeeId == effectivePayeeId && c.UnappliedAmount != 0 && c.IsReturned == false)
+                .ToList();
+
+            var statementCurrent = scope == StatementScope.BillTo ? SumByDueAge(salesList, age => age <= 0) : payee?.PayeeCurrent;
+            var statement30 = scope == StatementScope.BillTo ? SumByDueAge(salesList, age => age >= 1 && age <= 30) : payee?.Payee30;
+            var statement60 = scope == StatementScope.BillTo ? SumByDueAge(salesList, age => age >= 31 && age <= 60) : payee?.Payee60;
+            var statement90 = scope == StatementScope.BillTo ? SumByDueAge(salesList, age => age >= 61 && age <= 90) : payee?.Payee90;
+            var statementOver90 = scope == StatementScope.BillTo ? SumByDueAge(salesList, age => age > 90) : payee?.PayeeOver90;
+            var statementTotalDue = scope == StatementScope.BillTo
+                ? salesList.Sum(s => s.AmountDue ?? 0)
+                : payee?.PayeeTotalDue ?? 0;
+            var availableCreditTotal = availableCredit.Sum(c => c.UnappliedAmount ?? 0);
 
             return new RptCustStmt
             {
+                StatementScope = scope.ToString(),
+                SelectedPayeeId = payeeId,
+                EffectiveBillToId = effectivePayeeId,
+                EffectiveBillToName = payee?.PayeeName,
+                CanUseBillToStatement = canUseBillToStatement,
+                StatementCurrent = statementCurrent,
+                Statement30 = statement30,
+                Statement60 = statement60,
+                Statement90 = statement90,
+                StatementOver90 = statementOver90,
+                StatementTotalDue = statementTotalDue,
+                AccountBalance = statementTotalDue - availableCreditTotal,
                 Details = details,
-                Payee = DbContext.Payees.Find(payeeId),
-                IsPromotionEnabled = customer.IsPromotionEnabled,
-                AvailableCredit = DbContext.CustomerPayments.Where(c => c.PayeeId == payeeId && c.UnappliedAmount != 0 && c.IsReturned == false).ToList()
+                BillToGroups = scope == StatementScope.BillTo ? BuildBillToGroups(salesList) : null,
+                Payee = payee,
+                IsPromotionEnabled = customer?.IsPromotionEnabled ?? false,
+                AvailableCredit = availableCredit
             };
+        }
+
+        private static decimal SumByDueAge(IEnumerable<Sales> sales, Func<int, bool> predicate)
+        {
+            return sales
+                .Where(s => predicate(DueAge(s)))
+                .Sum(s => s.AmountDue ?? 0);
+        }
+
+        private static int DueAge(Sales sales)
+        {
+            if (!sales.DueDate.HasValue)
+                return 0;
+
+            var age = DateOnly.FromDateTime(DateTime.Now).DayNumber - sales.DueDate.Value.DayNumber;
+            return age < 0 ? 0 : age;
+        }
+
+        private List<RptCustStmtBillToGroup> BuildBillToGroups(List<Sales> sales)
+        {
+            var shipIds = sales
+                .Where(s => s.ShipId.HasValue)
+                .Select(s => s.ShipId!.Value)
+                .Distinct()
+                .ToList();
+
+            var shipToNames = DbContext.Payees
+                .Where(p => shipIds.Contains(p.PayeeId))
+                .Select(p => new { p.PayeeId, p.PayeeName })
+                .ToDictionary(p => p.PayeeId, p => p.PayeeName);
+
+            return sales
+                .GroupBy(s => s.ShipId)
+                .Select(g => new RptCustStmtBillToGroup
+                {
+                    ShipId = g.Key,
+                    ShipToName = g.Key.HasValue && shipToNames.TryGetValue(g.Key.Value, out var name) ? name : null,
+                    Sales = g.OrderBy(s => s.ShipDate).ThenBy(s => s.SalesNumber).ToList()
+                })
+                .OrderBy(g => g.ShipToName)
+                .ThenBy(g => g.ShipId)
+                .ToList();
         }
 
         public RptPO ReportPO(int purchaseId)
