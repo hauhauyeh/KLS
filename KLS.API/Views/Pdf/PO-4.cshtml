@@ -432,8 +432,8 @@
                     <col class="col-60" />
                 </colgroup>
                 <tr>
-                    <td class="invoice-info-label">Doc #</td>
-                    <td class="invoice-info">@Model.RptPO.VendorDocNumber</td>
+                    <td class="invoice-info-label">FPO #</td>
+                    <td class="invoice-info">@(string.IsNullOrWhiteSpace(Model.RptPO.FactorPO) ? Model.RptPO.PurchaseNumber : Model.RptPO.FactorPO)</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">Order Date</td>

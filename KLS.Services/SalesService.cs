@@ -256,7 +256,34 @@ namespace KLS.Services
         {
             EnsureVisible(salesId);
 
+            var sales = Uow.Sales.GetById(salesId);
+
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
+
+            var currentStageId = sales.StageId ?? 0;
+
+            if (currentStageId == stageId)
+                return Uow.SalesStages.GetById(stageId);
+
+            if (!IsAllowedManualStageTransition(sales.IsDropShip, currentStageId, stageId))
+                throw new InvalidOperationException("Manual stage change is not allowed.");
+
             return Uow.Sales.UpdateStage(salesId, stageId);
+        }
+
+        private static bool IsAllowedManualStageTransition(bool isDropShip, int currentStageId, int targetStageId)
+        {
+            if (isDropShip)
+                return (currentStageId == 3 && targetStageId == 4)
+                    || (currentStageId == 4 && targetStageId == 3);
+
+            return (currentStageId == 0 && targetStageId == 2)
+                || (currentStageId == 2 && targetStageId == 0)
+                || (currentStageId == 2 && targetStageId == 3)
+                || (currentStageId == 3 && targetStageId == 2)
+                || (currentStageId == 3 && targetStageId == 4)
+                || (currentStageId == 4 && targetStageId == 3);
         }
 
         public SalesStage EnterEditMode(int salesId)

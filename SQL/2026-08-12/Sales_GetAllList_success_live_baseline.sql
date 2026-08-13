@@ -1,7 +1,5 @@
--- 2026-08-10 Hide opening-balance rows: Order Manager must not list DocType 'OB'
---            headers created by OpenBalance_Import. AR aging / statements /
---            payment application read other SPs and still see them.
--- Baseline: KLS/SQL/2026-08-10/Sales_GetAllList_GUS_2026_live_baseline.sql
+-- 2026-08-12 Re-apply 2026-08-10 fix lost in today's overwrite: hide opening-balance rows (DocType 'OB').
+-- 2026-08-12 Order Manager expanded search: SalesDocNumber, CPO, FPO, VDOC, CONT.
 -- 2026-08-08 DropShip backorder badge: expose remaining-qty and latest-chain flags.
 -- Baseline: KLS/SQL/2026-08-08/Sales_GetAllList_GUS_2026_live_baseline.sql
 -- 2026-08-07 DropShip refs Slice 2: expose linked purchase refs and chain sequence label.
@@ -31,6 +29,9 @@ BEGIN
     DECLARE @Qry NVARCHAR(MAX);
     DECLARE @Today DATE = GETDATE();
     DECLARE @IsSalesRole BIT = 0;
+    DECLARE @S NVARCHAR(50) = NULLIF(LTRIM(RTRIM(@Search)), N'');
+    DECLARE @SearchInt INT = TRY_CONVERT(INT, @S);
+    DECLARE @SearchMoney DECIMAL(18,2) = TRY_CONVERT(DECIMAL(18,2), @S);
 
     SELECT @IsSalesRole = r.IsSalesRole
     FROM SystemUser u
@@ -206,7 +207,7 @@ BEGIN
         LEFT JOIN PaymentStatus ps ON ps.PaymentStatusId = psCalc.PaymentStatusId
 
         WHERE p.PayeeType = ''c''
-          -- 2026-08-10: opening-balance headers are not orders
+          -- 2026-08-10 (re-applied 2026-08-12): opening-balance headers are not orders
           AND ISNULL(s.DocType, '''') <> ''OB''';
 
     IF @IsSalesRole = 1
@@ -215,8 +216,18 @@ BEGIN
     IF @Id IS NOT NULL
         SET @Qry += ' AND s.SalesId = ' + CONVERT(VARCHAR, @Id);
 
-    IF @Search IS NOT NULL
-        SET @Qry += ' AND (s.SalesNumber = ' + @Search + ' OR s.SalesTotal = ' + @Search + ')';
+    IF @S IS NOT NULL
+        SET @Qry += ' AND (
+            s.SalesDocNumber LIKE ''%'' + @S + ''%''
+            OR s.CustPONumber LIKE ''%'' + @S + ''%''
+            OR dsp.FactorPO LIKE ''%'' + @S + ''%''
+            OR dsp.VendorDocNumber LIKE ''%'' + @S + ''%''
+            OR dsp.ContainerNumber LIKE ''%'' + @S + ''%''
+            OR (@SearchInt IS NOT NULL AND s.SalesNumber = @SearchInt)
+            OR (@SearchInt IS NOT NULL AND s.ParentSalesNumber = @SearchInt)
+            OR (@SearchInt IS NOT NULL AND dsp.PurchaseNumber = @SearchInt)
+            OR (@SearchMoney IS NOT NULL AND s.SalesTotal = @SearchMoney)
+        )';
 
     IF @PayeeId IS NOT NULL
         SET @Qry += ' AND s.ShipId = ' + CONVERT(VARCHAR, @PayeeId);
@@ -263,7 +274,10 @@ BEGIN
     BEGIN
         EXEC sp_executesql
             @Qry,
-            N'@RCount INT OUTPUT',
+            N'@S NVARCHAR(50), @SearchInt INT, @SearchMoney DECIMAL(18,2), @RCount INT OUTPUT',
+            @S = @S,
+            @SearchInt = @SearchInt,
+            @SearchMoney = @SearchMoney,
             @RCount = @TotalCount OUTPUT;
         RETURN;
     END
@@ -279,5 +293,10 @@ BEGIN
         OFFSET ' + CONVERT(VARCHAR(100), (@PageSize * (@Pageno - 1))) + ' ROWS
         FETCH NEXT ' + CONVERT(VARCHAR(100), @Pagesize) + ' ROWS ONLY';
 
-    EXEC (@Qry);
+    EXEC sp_executesql
+        @Qry,
+        N'@S NVARCHAR(50), @SearchInt INT, @SearchMoney DECIMAL(18,2)',
+        @S = @S,
+        @SearchInt = @SearchInt,
+        @SearchMoney = @SearchMoney;
 END
