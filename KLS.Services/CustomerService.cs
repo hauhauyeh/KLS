@@ -567,7 +567,7 @@ namespace KLS.Services
         {
             var statementHtml = _pdfService.RenderTemplate("~/Views/Statement.cshtml", statement);
             var customerFilePart = SafeFilePart(customer?.PayeeName ?? payeeId.ToString());
-            var statementPrefix = IsBillToStatement(statement) ? "BillToStatement" : "Statement";
+            var statementPrefix = IsBillToStatement(statement) ? "Bill-To_Statement" : "Statement";
             var statementFile = Path.Combine(tempFolder, $"{statementPrefix}_{customerFilePart}_{DateTime.Today:yyyyMMdd}.pdf");
 
             using (var pdf = _pdfService.HtmlToPDF(statementHtml))
@@ -600,6 +600,7 @@ namespace KLS.Services
         {
             var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
             var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
+            var statementTitle = IsBillToStatement(statement) ? "Bill-To Statement" : "Statement";
             var statementLabel = IsBillToStatement(statement) ? "bill-to statement" : "statement";
             var amountDue = WebUtility.HtmlEncode(FormatCurrency(totalDue));
             var paymentBlock = totalDue > 0m ? _arEmailPaymentInstructionRenderer.Render(company) : "";
@@ -621,7 +622,7 @@ namespace KLS.Services
                         <td style="background:#eef2fa;padding:24px 28px;border-bottom:1px solid #d9deea;">
                             <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
                                 <tr>
-                                    <td style="font-size:24px;font-weight:700;color:#333333;">Statement</td>
+                                    <td style="font-size:24px;font-weight:700;color:#333333;">{statementTitle}</td>
                                     <td style="text-align:right;">{dueSummary}</td>
                                 </tr>
                             </table>
@@ -631,7 +632,7 @@ namespace KLS.Services
                         <td style="padding:22px 28px;font-size:16px;line-height:1.45;">
                             <p style="margin:0 0 18px 0;">Dear Customer:</p>
                             <p style="margin:0 0 16px 0;">{bodyMessage}</p>
-                            <p style="margin:0 0 16px 0;">Please review the attached statement PDF for account details.</p>
+                            <p style="margin:0 0 16px 0;">Please review the attached {statementLabel} PDF for account details.</p>
                             {paymentBlock}
                             <p style="margin:18px 0 16px 0;">Thank you for your business. We appreciate it very much.</p>
                             <p style="margin:0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
