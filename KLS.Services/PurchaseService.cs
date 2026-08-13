@@ -85,6 +85,8 @@ namespace KLS.Services
             if (purchase == null)
                 return null;
 
+            EnsureDropShipReceivedStageEditable(purchase);
+
             purchase.VendorDocNumber = docNumber;
             purchase.UpdatedAt = DateTime.UtcNow;
 
@@ -145,6 +147,13 @@ namespace KLS.Services
         {
             containerNumber = NormalizeUpperRef(containerNumber);
 
+            var purchase = GetById(purchaseId);
+
+            if (purchase == null)
+                return null;
+
+            EnsureDropShipReceivedStageEditable(purchase);
+
             Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteUpdate(setters => setters
             .SetProperty(x => x.ContainerNumber, x => containerNumber)
             .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
@@ -162,9 +171,22 @@ namespace KLS.Services
             return string.IsNullOrEmpty(normalized) ? null : normalized;
         }
 
+        private static void EnsureDropShipReceivedStageEditable(Purchase purchase)
+        {
+            if (purchase.IsDropShip && (purchase.StageId == 4 || purchase.StageId == 5))
+                throw new ArgumentException("Read only. Drop-ship receipt is already confirmed. Use Backorder DS for remaining quantities.");
+        }
+
         public PurchaseList? UpdateFactorPO(int purchaseId, string? factorPO)
         {
             factorPO = string.IsNullOrWhiteSpace(factorPO) ? null : factorPO.Trim();
+
+            var purchase = GetById(purchaseId);
+
+            if (purchase == null)
+                return null;
+
+            EnsureDropShipReceivedStageEditable(purchase);
 
             var updated = Uow.Purchases.Find(c => c.PurchaseId == purchaseId && !c.IsLocked).ExecuteUpdate(setters => setters
             .SetProperty(x => x.FactorPO, x => factorPO)
