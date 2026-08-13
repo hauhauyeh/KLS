@@ -72,6 +72,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPut("UpdateStage")]
         [DisplayName("Update Stage")]
         [PermissionKey("Customer.Sale.UpdateStage")]
+        [SuperAdminOnly]
         public IActionResult UpdateStage([FromBody] SalesUpdateReq updateReq)
         {
             if (!updateReq.StageId.HasValue)

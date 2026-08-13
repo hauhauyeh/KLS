@@ -88,6 +88,7 @@ namespace KLS.API.Controllers.Admin
         [HttpPost("ReverseBill/{salesId}")]
         [DisplayName("Reverse Drop Ship Bill")]
         [PermissionKey("Vendor.DropShipment.ReverseBill")]
+        [SuperAdminOnly]
         public IActionResult ReverseBill(int salesId)
         {
             _dropShipmentService.ReverseBill(salesId);

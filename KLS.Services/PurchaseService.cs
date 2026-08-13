@@ -147,6 +147,8 @@ namespace KLS.Services
 
             Uow.Purchases.FreightBillLink(purchaseId);
 
+            Uow.Purchases.SyncDropShipSalesTransitFromPO(purchaseId);
+
             return GetListById(purchaseId);
         }
 

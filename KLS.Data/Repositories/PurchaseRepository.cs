@@ -152,6 +152,13 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Purchase_FreightBillLink] @PurchaseId", PurchaseIdParam);
         }
 
+        public void SyncDropShipSalesTransitFromPO(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[DropShipment_SyncSalesTransitFromPO] @PurchaseId", PurchaseIdParam);
+        }
+
         public IQueryable<AssignedShipmentRow> AssignedShipments(int purchaseId, bool isShipment)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);

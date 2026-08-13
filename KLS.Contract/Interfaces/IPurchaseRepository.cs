@@ -23,6 +23,8 @@ namespace KLS.Contract.Interfaces
 
         void FreightBillLink(int purchaseId);
 
+        void SyncDropShipSalesTransitFromPO(int purchaseId);
+
         IQueryable<AssignedShipmentRow> AssignedShipments(int purchaseId, bool isShipment);
 
         IQueryable<PurchaseDetailList> GetPurchaseDetails(int purchaseId);

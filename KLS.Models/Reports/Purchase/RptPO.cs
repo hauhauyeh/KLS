@@ -18,6 +18,8 @@ namespace KLS.Models.Reports
 
         public string? VendorDocNumber { get; set; }
 
+        public string? FactorPO { get; set; }
+
         public DateOnly? PurchaseDate { get; set; }
 
         public DateOnly? ArrivalDate { get; set; }

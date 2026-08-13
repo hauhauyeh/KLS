@@ -1,14 +1,9 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- 2026-07-13 DROPSHIP-SOREF: project linked SO reference for Bill Manager badge.
 -- 2026-08-12 BILL-SEARCH: expand Bill Manager fallback search refs with parameterized search values.
 -- 2026-08-12 BILL-DS-CUSTOMER-FILTER: filter Bill Manager by exact linked drop-ship customer id.
 -- 2026-08-12 BILL-DS-CHAIN: return drop-ship chain label required by PurchaseList mapping.
 -- 2026-08-12 BILL-STATUS-FILTER: use exact payment status filters and bill-level past due.
--- 2026-08-12 BILL-SHIPMENT-BADGE: return effective shipment id for freight and assigned AP bills.
-CREATE OR ALTER PROCEDURE [dbo].[Purchase_GetAllList]
+CREATE   PROCEDURE [dbo].[Purchase_GetAllList]
     @Pageno INT,
     @Pagesize INT,
     @Search NVARCHAR(50),
@@ -129,7 +124,7 @@ BEGIN
         ps.PaymentStatusName,
         p.IsStartFromPO,
         p.IsShipment,
-        COALESCE(p.SourceShipmentId, shipinfo.ShipmentId) AS SourceShipmentId,
+        p.SourceShipmentId,
         vp.IsShippingCarrier,
         p.IsDropShip,
         p.DropShipSalesId,
@@ -250,7 +245,6 @@ BEGIN
             -- Previous aggregate kept for reference:
             -- SELECT STRING_AGG(s.ContainerNo, '', '') AS ShipmentContainerNos
             SELECT TOP (1)
-                sp.ShipmentId,
                 NULLIF(LTRIM(RTRIM(s.ContainerNo)), '''') AS ShipmentContainerNos,
                 carrier.PayeeName AS ShipmentCarrierName
             FROM dbo.ShipmentPurchase sp
@@ -446,5 +440,6 @@ BEGIN
         @SearchNumber = @SearchNumber,
         @DropShipSalesCustomerId = @DropShipSalesCustomerId;
 END
+
 
 
