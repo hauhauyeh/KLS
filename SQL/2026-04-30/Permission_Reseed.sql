@@ -269,9 +269,15 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (6450, 'Report.Timesheet', 'Timesheet Report', 'Report', 'Timesheet', '', 'resource', 6000, 6450, NULL),
 (6451, 'Report.Timesheet.Timesheet', 'Timesheet', 'Report', 'Timesheet', 'Timesheet', 'page', 6450, 6451, 'Reports-Timesheet'),
 (6452, 'Report.Timesheet.JobSummary', 'Job Summary', 'Report', 'Timesheet', 'JobSummary', 'page', 6450, 6452, 'Reports-JobSummary'),
--- 2026-05-10: added Report.Purchase namespace + Vendor Purchase Summary page.
-(6500, 'Report.Purchase', 'Purchase Report', 'Report', 'Purchase', '', 'resource', 6000, 6500, NULL),
-(6501, 'Report.Purchase.VendorPurchaseSummary', 'Vendor Purchase Summary', 'Report', 'Purchase', 'VendorPurchaseSummary', 'page', 6500, 6501, NULL),
+-- 2026-08-14: reconciled Item/Purchase report IDs to live GUS_2026; added Basic Item.
+(6500, 'Report.Item', 'Item Reports', 'Report', 'Item', '', 'resource', 6000, 6500, NULL),
+(6501, 'Report.Item.ItemCustomerAnalysis', 'Item -> Item Customer Analysis', 'Report', 'Item', 'ItemCustomerAnalysis', 'page', 6500, 6501, NULL),
+(6502, 'Report.Item.ItemVendorAnalysis', 'Item -> Item Vendor Analysis', 'Report', 'Item', 'ItemVendorAnalysis', 'page', 6500, 6502, NULL),
+(6503, 'Report.Item.ItemAnalysis', 'Item -> Item Analysis', 'Report', 'Item', 'ItemAnalysis', 'page', 6500, 6503, NULL),
+(6504, 'Report.Item.ItemAvgCostReview', 'Item -> Item AvgCost Review', 'Report', 'Item', 'ItemAvgCostReview', 'page', 6500, 6504, NULL),
+(6505, 'Report.Item.BasicItem', 'Item -> Basic Item', 'Report', 'Item', 'BasicItem', 'page', 6500, 6505, NULL),
+(6550, 'Report.Purchase', 'Purchase Reports', 'Report', 'Purchase', '', 'resource', 6000, 6550, NULL),
+(6551, 'Report.Purchase.VendorPurchaseSummary', 'Purchase -> Vendor Purchase Summary', 'Report', 'Purchase', 'VendorPurchaseSummary', 'page', 6550, 6551, NULL),
 (7000, 'Vendor', 'Vendor', 'Vendor', '', '', 'menu', NULL, 7000, NULL),
 (7050, 'Vendor.Vendor', 'Vendor', 'Vendor', 'Vendor', '', 'resource', 7000, 7050, NULL),
 (7051, 'Vendor.Vendor.List', 'View Vendors', 'Vendor', 'Vendor', 'List', 'page', 7050, 7051, 'Vendors-List'),
