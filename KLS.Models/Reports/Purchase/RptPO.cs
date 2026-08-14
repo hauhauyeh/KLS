@@ -20,6 +20,8 @@ namespace KLS.Models.Reports
 
         public string? FactorPO { get; set; }
 
+        public string? CustomerPONumber { get; set; }
+
         public DateOnly? PurchaseDate { get; set; }
 
         public DateOnly? ArrivalDate { get; set; }

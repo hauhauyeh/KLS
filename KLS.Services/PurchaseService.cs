@@ -16,6 +16,8 @@ namespace KLS.Services
 {
     public class PurchaseService : BaseService, IPurchaseService
     {
+        private const string DsBilledValidationError = "DS billed bill can only edit price, comment, and account lines.";
+
         private readonly IWebHostEnvironment _env;
         private readonly IDeleteLogService _deleteLogService;
         private readonly ITwilioService _twilioService;
@@ -200,9 +202,140 @@ namespace KLS.Services
 
         public PurchaseList? UpdatePartially(int purchaseId)
         {
+            var purchase = GetById(purchaseId);
+
+            if (purchase?.IsDropShip == true && purchase.StageId == 6)
+            {
+                ValidateDropShipBilledPartialUpdate(purchase);
+            }
+
             Uow.Purchases.UpdatePartially(purchaseId);
 
             return GetListById(purchaseId);
+        }
+
+        private void ValidateDropShipBilledPartialUpdate(Purchase purchase)
+        {
+            if (!purchase.PayeeId.HasValue)
+                throw new ArgumentException(DsBilledValidationError);
+
+            var savedRows = Uow.Purchases.GetPurchaseDetailValidationRows(purchase.PurchaseId).ToList();
+            var tempRows = Uow.TempPurchases.Find(c => c.EmpId == UserContext.EmpId
+                && c.PayeeId == purchase.PayeeId.Value
+                && c.PurchaseId == purchase.PurchaseId)
+                .ToList();
+
+            if (savedRows.Count == 0 || tempRows.Count == 0)
+                throw new ArgumentException(DsBilledValidationError);
+
+            var duplicateExistingRows = tempRows
+                .Where(c => c.PurchaseDetailId.HasValue)
+                .GroupBy(c => c.PurchaseDetailId!.Value)
+                .Any(c => c.Count() > 1);
+
+            if (duplicateExistingRows)
+                throw new ArgumentException(DsBilledValidationError);
+
+            var savedById = savedRows.ToDictionary(c => c.PurchaseDetailId);
+            var tempByDetailId = tempRows
+                .Where(c => c.PurchaseDetailId.HasValue)
+                .ToDictionary(c => c.PurchaseDetailId!.Value);
+
+            foreach (var saved in savedRows)
+            {
+                if (!tempByDetailId.TryGetValue(saved.PurchaseDetailId, out var temp))
+                    throw new ArgumentException(DsBilledValidationError);
+
+                if (IsDeleted(temp))
+                    throw new ArgumentException(DsBilledValidationError);
+
+                if (IsItemLine(saved.LineType))
+                {
+                    if (!IsItemLine(temp.LineType) || HasProtectedExistingRowChange(saved, temp))
+                        throw new ArgumentException(DsBilledValidationError);
+                }
+                else if (IsAccountLine(saved.LineType))
+                {
+                    if (!IsAccountLine(temp.LineType) || HasProtectedExistingRowChange(saved, temp))
+                        throw new ArgumentException(DsBilledValidationError);
+                }
+                else
+                {
+                    throw new ArgumentException(DsBilledValidationError);
+                }
+            }
+
+            foreach (var temp in tempRows)
+            {
+                if (temp.PurchaseDetailId.HasValue)
+                {
+                    if (!savedById.ContainsKey(temp.PurchaseDetailId.Value))
+                        throw new ArgumentException(DsBilledValidationError);
+
+                    continue;
+                }
+
+                if (!IsAccountLine(temp.LineType))
+                    throw new ArgumentException(DsBilledValidationError);
+            }
+        }
+
+        private static bool HasProtectedExistingRowChange(PurchaseDetailValidationRow saved, TempPurchase temp)
+        {
+            return saved.PurchaseDetailId != temp.PurchaseDetailId
+                || saved.PurchaseId != temp.PurchaseId
+                || saved.LineId != temp.LineId
+                || !SameText(saved.LineType, temp.LineType)
+                || saved.ItemId != temp.ItemId
+                || saved.AccountId != temp.AccountId
+                || saved.ItemUnitId != temp.ItemUnitId
+                || !SameText(saved.Unit, temp.Unit)
+                || saved.IsFree != temp.IsFree
+                || saved.IsOut != temp.IsOut
+                || saved.IsCRCG != temp.IsCRCG
+                || !SameDecimal(saved.OrdQty0, temp.OrdQty0)
+                || !SameDecimal(saved.ShipQty, temp.ShipQty)
+                || !SameDecimal(saved.BillQty, temp.BillQty)
+                || !SameDecimal(saved.OrdQty1, temp.OrdQty1)
+                || !SameDecimal(saved.ReceiveQty, temp.ReceiveQty)
+                || !SameDecimal(saved.FinalQty, temp.FinalQty)
+                || !SameDecimal(saved.FactorToBase, temp.FactorToBase)
+                || saved.ExpiryDate != temp.ExpiryDate
+                || !SameDecimal(saved.CustomDutyRate, temp.CustomDutyRate)
+                || !SameDecimal(saved.TariffPercent, temp.TariffPercent)
+                || !SameDecimal(saved.ImportCommission, temp.ImportCommission)
+                || !SameDecimal(saved.ItemVolume, temp.ItemVolume);
+        }
+
+        private static bool IsItemLine(string? lineType)
+        {
+            return SameText(lineType, EnumHelper.LineType.I.ToString());
+        }
+
+        private static bool IsAccountLine(string? lineType)
+        {
+            return SameText(lineType, EnumHelper.LineType.A.ToString());
+        }
+
+        private static bool IsDeleted(TempPurchase temp)
+        {
+            return SameText(temp.ChangeStatus, EnumHelper.ChangeStatus.D.ToString());
+        }
+
+        private static bool SameText(string? left, string? right)
+        {
+            return string.Equals(NormalizeCompareText(left), NormalizeCompareText(right), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string? NormalizeCompareText(string? value)
+        {
+            var normalized = value?.Trim();
+            return string.IsNullOrEmpty(normalized) ? null : normalized;
+        }
+
+        private static bool SameDecimal(decimal? left, decimal? right)
+        {
+            return Nullable.Equals(left, right);
         }
 
         public void Inject(PurchaseInjectReq injectReq)

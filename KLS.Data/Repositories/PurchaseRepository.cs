@@ -175,6 +175,42 @@ namespace KLS.Data.Repositories
             return DbContext.PurchaseDetailList.FromSqlRaw("[dbo].[Purchase_GetDetail] @PurchaseId", PurchaseIdParam);
         }
 
+        public IQueryable<PurchaseDetailValidationRow> GetPurchaseDetailValidationRows(int purchaseId)
+        {
+            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+
+            return DbContext.PurchaseDetailValidationRow.FromSqlRaw(@"
+                SELECT
+                    PurchaseDetailId,
+                    PurchaseId,
+                    LineId,
+                    LineType,
+                    ItemId,
+                    AccountId,
+                    ItemUnitId,
+                    Unit,
+                    Notes,
+                    IsFree,
+                    IsOut,
+                    IsCRCG,
+                    OrdQty0,
+                    ShipQty,
+                    BillQty,
+                    OrdQty1,
+                    ReceiveQty,
+                    FinalQty,
+                    BillPrice,
+                    FinalPrice,
+                    ImportCommission,
+                    FactorToBase,
+                    ExpiryDate,
+                    CustomDutyRate,
+                    TariffPercent,
+                    ItemVolume
+                FROM dbo.PurchaseDetail
+                WHERE PurchaseId = @PurchaseId", PurchaseIdParam);
+        }
+
         public IQueryable<PurchaseItemCostList> GetItemCostChange(int purchaseId)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
