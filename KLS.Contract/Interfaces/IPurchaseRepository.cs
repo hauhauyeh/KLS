@@ -29,6 +29,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<PurchaseDetailList> GetPurchaseDetails(int purchaseId);
 
+        IQueryable<PurchaseDetailValidationRow> GetPurchaseDetailValidationRows(int purchaseId);
+
         IQueryable<PurchaseItemCostList> GetItemCostChange(int purchaseId);
     }
 }

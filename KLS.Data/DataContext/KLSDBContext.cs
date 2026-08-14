@@ -160,6 +160,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<PurchaseTariffRatePrecheckRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRateRefreshResult>().HasNoKey();
             modelBuilder.Entity<ItemQuoteManagerRow>().HasNoKey();
+            modelBuilder.Entity<PurchaseDetailValidationRow>().HasNoKey();
 
             // SalesQuote tables
             modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
@@ -479,6 +480,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<PODetail> PODetail { get; set; }
 
         public virtual DbSet<PurchaseDetailList> PurchaseDetailList { get; set; }
+
+        public virtual DbSet<PurchaseDetailValidationRow> PurchaseDetailValidationRow { get; set; }
 
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
 
