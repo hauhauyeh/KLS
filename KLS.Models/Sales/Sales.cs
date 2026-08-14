@@ -75,6 +75,9 @@ namespace KLS.Models
         public bool IsDropShip { get; set; }
         public int? DropShipPurchaseId { get; set; }
 
+        [NotMapped]
+        public int? DropShipPurchaseStageId { get; set; }
+
         public bool IsLocked { get; set; }
         public bool IsStatementAttached { get; set; }
 

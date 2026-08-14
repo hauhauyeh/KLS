@@ -515,7 +515,7 @@ namespace KLS.Services
                 };
             }
 
-            var statement = Uow.Reports.CustStmt(payeeId);
+            var statement = Uow.Reports.CustStmt(payeeId, req?.Scope ?? StatementScope.ShipTo);
             statement.UseSalesDocNumber = _systemSettingService.GetByKey<bool>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED);
             var company = _companyService.GetDefault();
             var totalDue = CalculateStatementTotalDue(statement);
@@ -524,8 +524,8 @@ namespace KLS.Services
             try
             {
                 var attachments = BuildStatementEmailAttachments(tempFolder, statement, customer, payeeId);
-                var subject = BuildStatementEmailSubject(company);
-                var mailBody = BuildStatementEmailBody(totalDue, company);
+                var subject = BuildStatementEmailSubject(company, statement);
+                var mailBody = BuildStatementEmailBody(totalDue, company, statement);
 
                 var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
                 {
@@ -567,7 +567,8 @@ namespace KLS.Services
         {
             var statementHtml = _pdfService.RenderTemplate("~/Views/Statement.cshtml", statement);
             var customerFilePart = SafeFilePart(customer?.PayeeName ?? payeeId.ToString());
-            var statementFile = Path.Combine(tempFolder, $"Statement_{customerFilePart}_{DateTime.Today:yyyyMMdd}.pdf");
+            var statementPrefix = IsBillToStatement(statement) ? "Corperate_Statement" : "Statement";
+            var statementFile = Path.Combine(tempFolder, $"{statementPrefix}_{customerFilePart}_{DateTime.Today:yyyyMMdd}.pdf");
 
             using (var pdf = _pdfService.HtmlToPDF(statementHtml))
             {
@@ -582,28 +583,33 @@ namespace KLS.Services
 
         private static decimal CalculateStatementTotalDue(RptCustStmt statement)
         {
-            return statement.Details?.Sum(g => g.Sales?.Sum(s => s.AmountDue) ?? 0m) ?? 0m;
+            return statement.StatementTotalDue
+                ?? statement.Details?.Sum(g => g.Sales?.Sum(s => s.AmountDue) ?? 0m)
+                ?? 0m;
         }
 
-        private static string BuildStatementEmailSubject(Company? company)
+        private static string BuildStatementEmailSubject(Company? company, RptCustStmt statement)
         {
             var companyName = CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS";
+            var statementLabel = IsBillToStatement(statement) ? "Corperate Statement" : "Statement";
 
-            return $"Statement from {companyName}";
+            return $"{statementLabel} from {companyName}";
         }
 
-        private string BuildStatementEmailBody(decimal totalDue, Company? company)
+        private string BuildStatementEmailBody(decimal totalDue, Company? company, RptCustStmt statement)
         {
             var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
             var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
+            var statementTitle = IsBillToStatement(statement) ? "Corperate Statement" : "Statement";
+            var statementLabel = IsBillToStatement(statement) ? "corperate statement" : "statement";
             var amountDue = WebUtility.HtmlEncode(FormatCurrency(totalDue));
             var paymentBlock = totalDue > 0m ? _arEmailPaymentInstructionRenderer.Render(company) : "";
             var dueSummary = totalDue > 0m
                 ? $"""<span style="font-size:14px;color:#333333;">Total Amount Due:</span><br><span style="font-size:30px;font-weight:700;color:#333333;">{amountDue}</span>"""
                 : """<span style="display:inline-block;padding:7px 16px;background:#168a4a;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:1px;border-radius:4px;">NO BALANCE</span>""";
             var bodyMessage = totalDue > 0m
-                ? $"Your statement with a total amount due of <strong>{amountDue}</strong> is attached."
-                : "Your statement is attached for your records. No balance is currently due.";
+                ? $"Your {statementLabel} with a total amount due of <strong>{amountDue}</strong> is attached."
+                : $"Your {statementLabel} is attached for your records. No balance is currently due.";
 
             return $"""
                 <table role="presentation" cellpadding="0" cellspacing="0" style="width:660px;max-width:100%;border-collapse:collapse;border:1px solid #d9deea;font-family:Arial,Helvetica,sans-serif;color:#222222;background:#ffffff;">
@@ -616,7 +622,7 @@ namespace KLS.Services
                         <td style="background:#eef2fa;padding:24px 28px;border-bottom:1px solid #d9deea;">
                             <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
                                 <tr>
-                                    <td style="font-size:24px;font-weight:700;color:#333333;">Statement</td>
+                                    <td style="font-size:24px;font-weight:700;color:#333333;">{statementTitle}</td>
                                     <td style="text-align:right;">{dueSummary}</td>
                                 </tr>
                             </table>
@@ -626,7 +632,7 @@ namespace KLS.Services
                         <td style="padding:22px 28px;font-size:16px;line-height:1.45;">
                             <p style="margin:0 0 18px 0;">Dear Customer:</p>
                             <p style="margin:0 0 16px 0;">{bodyMessage}</p>
-                            <p style="margin:0 0 16px 0;">Please review the attached statement PDF for account details.</p>
+                            <p style="margin:0 0 16px 0;">Please review the attached {statementLabel} PDF for account details.</p>
                             {paymentBlock}
                             <p style="margin:18px 0 16px 0;">Thank you for your business. We appreciate it very much.</p>
                             <p style="margin:0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
@@ -636,7 +642,12 @@ namespace KLS.Services
                         <td style="height:28px;background:#22283d;font-size:0;line-height:0;">&nbsp;</td>
                     </tr>
                 </table>
-                """;
+            """;
+        }
+
+        private static bool IsBillToStatement(RptCustStmt statement)
+        {
+            return string.Equals(statement.StatementScope, StatementScope.BillTo.ToString(), StringComparison.OrdinalIgnoreCase);
         }
 
         private string CreateEmailAttachmentFolder()

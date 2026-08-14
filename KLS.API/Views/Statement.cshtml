@@ -8,6 +8,18 @@
 
         return sales.SalesNumber.ToString();
     }
+
+    private bool IsBillToStatement()
+    {
+        return string.Equals(Model.StatementScope, "BillTo", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private decimal StatementTotalDue()
+    {
+        return Model.StatementTotalDue
+            ?? Model.Details?.Sum(g => g.Sales?.Sum(s => s.AmountDue ?? 0) ?? 0)
+            ?? 0;
+    }
 }
 
 <!DOCTYPE html>
@@ -59,6 +71,16 @@
             padding-bottom: 15px;
         }
 
+        .ship-to-row td {
+            background: #f6f7fb;
+            font-weight: 700;
+            color: #4b5563;
+            border-top: 1px solid #d7dce8;
+            border-bottom: 1px solid #d7dce8;
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
+
         .month-pill {
             display: inline-block;
             padding: 6px 12px;
@@ -67,6 +89,18 @@
             border: 1px solid #d6cef0;
             font-size: 13px;
             color: #6c47d6;
+        }
+
+        .scope-pill {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #1976d2;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 10px;
         }
 
         .amount {
@@ -129,6 +163,10 @@
 
                         <div class="eyebrow">Customer Statement</div>
                         <h2 class="title">Account Statement</h2>
+                        @if (IsBillToStatement())
+                        {
+                            <div class="scope-pill">Corperate Statement</div>
+                        }
                         <p class="subtitle">
                             A summary of outstanding sales transactions and balance due.
                         </p>
@@ -137,7 +175,7 @@
                     <div class="summary-box">
                         <div class="summary-label">Total Amount Due</div>
                         <p class="summary-total">
-                            @string.Format("{0:c}", Model.Details?.Sum(s => s.Sales.Sum(c => c.AmountDue)) ?? 0)
+                            @string.Format("{0:c}", StatementTotalDue())
                         </p>
                         <div class="summary-note">
                             Please review the statement details below.
@@ -150,7 +188,14 @@
                 <div class="greeting-box">
                     <p class="customer">Dear Customer,</p>
                     <p class="greeting-text">
-                        Please find below the latest statement of your account. This summary includes outstanding sales grouped by shipping month for your convenience.
+                        @if (IsBillToStatement())
+                        {
+                            <text>Please find below the latest corperate statement of your account. This summary includes outstanding sales grouped by ship-to customer.</text>
+                        }
+                        else
+                        {
+                            <text>Please find below the latest statement of your account. This summary includes outstanding sales grouped by shipping month for your convenience.</text>
+                        }
                     </p>
                 </div>
 
@@ -165,7 +210,42 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.Details != null && Model.Details.Any())
+                            @if (IsBillToStatement() && Model.BillToGroups != null && Model.BillToGroups.Any())
+                            {
+                                foreach (var shipTo in Model.BillToGroups)
+                                {
+                                    <tr class="ship-to-row">
+                                        <td colspan="4">
+                                            Ship-To: @(shipTo.ShipToName ?? $"Customer #{shipTo.ShipId}")
+                                        </td>
+                                    </tr>
+
+                                    if (shipTo.Sales != null)
+                                    {
+                                        foreach (var item in shipTo.Sales)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <span class="route-chip">@item.ShipRoute</span>
+                                                </td>
+                                                <td>@string.Format("{0:MMM dd yyyy}", item.ShipDate)</td>
+                                                <td class="sales-no">@DisplaySalesNumber(item)</td>
+                                                <td style="text-align:right;" class="amount">
+                                                    @string.Format("{0:c}", item.AmountDue)
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+
+                                    <tr>
+                                        <td colspan="3" class="grand-total-label">Ship-To Total</td>
+                                        <td class="grand-total-value" style="text-align:right;">
+                                            @string.Format("{0:c}", shipTo.ShipToTotal ?? 0)
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else if (Model.Details != null && Model.Details.Any())
                             {
                                 foreach (var grpMonth in Model.Details)
                                 {
@@ -206,7 +286,7 @@
                             <tr>
                                 <td colspan="3" class="grand-total-label">Total Amount Due</td>
                                 <td class="grand-total-value" style="text-align:right;">
-                                    @string.Format("{0:c}", Model.Details?.Sum(s => s.Sales.Sum(c => c.AmountDue)) ?? 0)
+                                    @string.Format("{0:c}", StatementTotalDue())
                                 </td>
                             </tr>
                         </tfoot>
