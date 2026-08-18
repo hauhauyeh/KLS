@@ -38,6 +38,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_shipmentService.GetPagedList(shipmentListReq));
         }
 
+        [HttpGet("ManagerList")]
+        [DisplayName("List Shipments")]
+        [PermissionKey("Vendor.Shipment.List")]
+        public IActionResult ManagerList([FromQuery] ShipmentListReq shipmentListReq)
+        {
+            return Ok(_shipmentService.GetManagerList(shipmentListReq));
+        }
+
 
         [HttpGet("Open")]
         public IActionResult Open()
@@ -81,6 +89,16 @@ namespace KLS.API.Controllers.Admin
         public IActionResult UpdateNotes([FromBody] Shipment shipment)
         {
             _shipmentService.UpdateNotes(shipment);
+
+            return Ok();
+        }
+
+        [HttpPatch("{shipmentId}/Tracking")]
+        [DisplayName("Update Shipment")]
+        [PermissionKey("Vendor.Shipment.Update")]
+        public IActionResult UpdateTracking(int shipmentId, [FromBody] ShipmentTrackingUpdateReq req)
+        {
+            _shipmentService.UpdateTracking(shipmentId, req);
 
             return Ok();
         }
