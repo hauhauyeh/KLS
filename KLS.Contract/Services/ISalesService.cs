@@ -56,6 +56,8 @@ namespace KLS.Contract.Services
 
         void UploadPdf(SalesPDFUploadReq uploadReq);
 
+        SalesPdfPageDeleteResult DeletePdfPages(SalesPdfPageDeleteReq deleteReq);
+
         IEnumerable<ShipRouteDetail>? GetByDateRoute(SalesDateRouteReq dateRouteReq);
 
         void BatchAllocation(DateOnly shipDate);

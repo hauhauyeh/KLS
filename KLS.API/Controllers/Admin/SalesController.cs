@@ -192,6 +192,14 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        [HttpPost("DeletePdfPages")]
+        [DisplayName("Manage Pdf Pages")]
+        [PermissionKey("Customer.Sale.ManagePdfPages")]
+        public IActionResult DeletePdfPages([FromBody] SalesPdfPageDeleteReq deleteReq)
+        {
+            return Ok(_salesService.DeletePdfPages(deleteReq));
+        }
+
 
         [HttpPost("EmailPdf/{salesId}")]
         [DisplayName("Email Invoice")]

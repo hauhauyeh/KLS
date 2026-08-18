@@ -13,6 +13,10 @@ namespace KLS.Contract.Interfaces
 
         int Count(ShipmentListReq shipmentListReq);
 
+        IQueryable<ShipmentManagerListRow> GetManagerList(ShipmentListReq shipmentListReq);
+
+        int CountManagerList(ShipmentListReq shipmentListReq);
+
         void Allocation(int purchaseId, bool refreshVolume = false);
 
         void AllocateVendorDirectInvcIfNeeded(int purchaseId);

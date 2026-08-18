@@ -29,6 +29,18 @@ namespace KLS.Services
             };
         }
 
+        public PagingResponse<ShipmentManagerListRow> GetManagerList(ShipmentListReq shipmentListReq)
+        {
+            var list = Uow.Shipments.GetManagerList(shipmentListReq);
+
+            var totalRecords = Uow.Shipments.CountManagerList(shipmentListReq);
+
+            return new PagingResponse<ShipmentManagerListRow>(totalRecords, shipmentListReq.Pageno, shipmentListReq.Pagesize)
+            {
+                RowData = list,
+            };
+        }
+
         public IEnumerable<ShipmentList> GetOpenShipments()
         {
             return Uow.Shipments.GetPagedList(new ShipmentListReq
@@ -129,8 +141,10 @@ namespace KLS.Services
             existing.DocumentNo = shipment.DocumentNo;
             existing.Origin = shipment.Origin;
             existing.Destination = shipment.Destination;
+            existing.ETD = shipment.ETD;
             existing.ETA = shipment.ETA;
             existing.Status = shipment.Status;
+            existing.DutyStatus = shipment.DutyStatus;
             existing.Notes = shipment.Notes;
             existing.UpdatedAt = DateTime.UtcNow;
 
@@ -272,6 +286,24 @@ namespace KLS.Services
             Uow.Shipments.Find(c => c.ShipmentId == shipment.ShipmentId).ExecuteUpdate(setters => setters
            .SetProperty(x => x.Notes, x => shipment.Notes)
            .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
+        }
+
+        public void UpdateTracking(int shipmentId, ShipmentTrackingUpdateReq req)
+        {
+            if (req == null) throw new ArgumentException("Request is required.");
+
+            var shipment = Uow.Shipments.Find(s => s.ShipmentId == shipmentId).FirstOrDefault();
+            if (shipment == null) throw new KeyNotFoundException("Shipment not found.");
+
+            if (shipment.Status == EnumHelper.ShipmentStatus.Closed.ToString())
+                throw new InvalidOperationException("Closed shipment can not be updated.");
+
+            Uow.Shipments.Find(c => c.ShipmentId == shipmentId).ExecuteUpdate(setters => setters
+                .SetProperty(x => x.ETD, x => req.ETD)
+                .SetProperty(x => x.ETA, x => req.ETA)
+                .SetProperty(x => x.DutyStatus, x => req.DutyStatus)
+                .SetProperty(x => x.Notes, x => req.Notes)
+                .SetProperty(x => x.UpdatedAt, x => DateTime.UtcNow));
         }
 
         public void Delete(int shipmentId)

@@ -36,6 +36,24 @@ namespace KLS.Data.Repositories
             return Convert.ToInt32(output.Value);
         }
 
+        public IQueryable<ShipmentManagerListRow> GetManagerList(ShipmentListReq shipmentListReq)
+        {
+            var param = BuildPagedList(shipmentListReq);
+
+            return DbContext.ShipmentManagerListRows.FromSqlRaw("[dbo].[Shipment_ManagerList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+        }
+
+        public int CountManagerList(ShipmentListReq shipmentListReq)
+        {
+            shipmentListReq.IsCount = true;
+            var param = BuildPagedList(shipmentListReq);
+
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Shipment_ManagerList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+
+            var output = param[10] as SqlParameter;
+            return Convert.ToInt32(output.Value);
+        }
+
         public void Allocation(int purchaseId, bool refreshVolume = false)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
