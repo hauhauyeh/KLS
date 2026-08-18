@@ -10,5 +10,7 @@ namespace KLS.Contract.Interfaces
     public interface ITempVendorPaymentRepository : IRepository<TempVendorPayment>
     {
         void Inject(TempPaymentReq tempPaymentReq);
+
+        void Clear(int payeeId);
     }
 }

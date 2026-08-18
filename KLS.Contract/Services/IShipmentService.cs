@@ -11,6 +11,8 @@ namespace KLS.Contract.Services
     {
         PagingResponse<ShipmentList> GetPagedList(ShipmentListReq shipmentListReq);
 
+        PagingResponse<ShipmentManagerListRow> GetManagerList(ShipmentListReq shipmentListReq);
+
         IEnumerable<ShipmentList> GetOpenShipments();
 
         Shipment? GetById(int shipmentId);
@@ -22,6 +24,8 @@ namespace KLS.Contract.Services
         Shipment Update(Shipment shipment);
 
         void UpdateNotes(Shipment shipment);
+
+        void UpdateTracking(int shipmentId, ShipmentTrackingUpdateReq req);
 
         void Delete(int shipmentId);
 

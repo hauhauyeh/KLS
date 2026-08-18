@@ -43,9 +43,14 @@ namespace KLS.Models
 
         public DateOnly? ETA { get; set; }
 
+        public DateOnly? ETD { get; set; }
+
         [Required]
         [MaxLength(20)]
         public string Status { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string? DutyStatus { get; set; }
 
         public string? Notes { get; set; }
 

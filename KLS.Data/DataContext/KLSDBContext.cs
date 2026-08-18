@@ -157,6 +157,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
+            modelBuilder.Entity<ShipmentManagerListRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRatePrecheckRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRateRefreshResult>().HasNoKey();
             modelBuilder.Entity<ItemQuoteManagerRow>().HasNoKey();
@@ -513,6 +514,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<ShipmentList> ShipmentList { get; set; }
 
+        public virtual DbSet<ShipmentManagerListRow> ShipmentManagerListRows { get; set; }
+
         public virtual DbSet<AssignedShipmentRow> AssignedShipmentRow { get; set; }
 
         public virtual DbSet<AssignedPurchase> AssignedPurchase { get; set; }
@@ -628,6 +631,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<RptItemVendorAnalysisRow> RptItemVendorAnalysisRow { get; set; }
 
         public virtual DbSet<RptItemAnalysis> RptItemAnalysis { get; set; }
+
+        public virtual DbSet<RptBasicItemRow> RptBasicItemRow { get; set; }
 
         public virtual DbSet<RptItemAvgCostReviewRow> RptItemAvgCostReviewRow { get; set; }
 

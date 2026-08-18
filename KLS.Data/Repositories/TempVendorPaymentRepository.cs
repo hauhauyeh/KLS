@@ -31,5 +31,15 @@ namespace KLS.Data.Repositories
 
             DbContext.Database.ExecuteSqlRaw("[dbo].[VendorPayment_Inject] @EmpId,@PayeeId,@VendorPaymentId,@PaymentType", EmpIdParam, PayeeIdParam, VendorPaymentIdParam, PaymentTypeParam);
         }
+
+        public void Clear(int payeeId)
+        {
+            // Rows are the caller's own session scratch; Inject reseeds the (EmpId, PayeeId)
+            // scope from scratch on every screen open, so deleting all of them is safe.
+            DbContext.Database.ExecuteSqlRaw(
+                "DELETE FROM TempVendorPayment WHERE EmpId = @EmpId AND PayeeId = @PayeeId",
+                new SqlParameter("@EmpId", UserContext.EmpId),
+                new SqlParameter("@PayeeId", payeeId));
+        }
     }
 }

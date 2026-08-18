@@ -47,5 +47,10 @@ namespace KLS.Services
                 Uow.Commit();
             }
         }
+
+        public void Clear(int payeeId)
+        {
+            Uow.TempVendorPayments.Clear(payeeId);
+        }
     }
 }

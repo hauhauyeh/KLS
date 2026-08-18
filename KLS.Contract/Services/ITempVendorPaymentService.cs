@@ -12,5 +12,7 @@ namespace KLS.Contract.Services
         IEnumerable<TempVendorPayment>? Inject(TempPaymentReq tempPaymentReq);
 
         void Update(TempVendorPayment tempVendorPayment);
+
+        void Clear(int payeeId);
     }
 }

@@ -11,11 +11,12 @@ namespace KLS.Contract.Items
     ///
     /// Format rules:
     ///   - "{BaseUnit}/{Factor}{AltUnit}" only when base unit is case/carton-like
-    ///     (cs, case, carton, ctn, crt) and an active split alt unit exists
-    ///   - null values when the unit structure does not express meaningful packing
+    ///     (cs, case, carton, ctn, crt) and an active smaller split alt unit exists
+    ///   - otherwise the base unit name is the canonical SetPacking
+    ///   - null only when no valid base unit exists
     ///   - Factor uses "0.######" so trailing zeros from decimal(18,6) are stripped
     ///     (e.g. 6.000000 -> "6", 5.500000 -> "5.5")
-    ///   - "Active alt" = first non-base, non-inactive unit ordered by ItemUnitId
+    ///   - "Split alt" = first active smaller non-base unit ordered by ItemUnitId
     ///     (creation order)
     /// </summary>
     public static class SetPackingFormatter
@@ -39,21 +40,23 @@ namespace KLS.Contract.Items
 
             var baseUnitName = baseUnit.Unit.Trim();
             if (!CaseUnits.Contains(baseUnitName.ToLowerInvariant()))
-                return SetPackingFormatResult.Empty;
+                return new SetPackingFormatResult(baseUnitName, null);
 
-            // First non-base, non-inactive alt in creation order.
+            // First active smaller split alt in creation order.
             var alt = list
-                .Where(u => !u.IsBaseUnit && !u.Inactive)
+                .Where(u => !u.IsBaseUnit
+                    && !u.Inactive
+                    && !string.IsNullOrWhiteSpace(u.Unit)
+                    && u.FactorToBase > 1
+                    && u.MultipleToBase == 1
+                    && !CaseUnits.Contains(u.Unit.Trim().ToLowerInvariant()))
                 .OrderBy(u => u.ItemUnitId)
                 .FirstOrDefault();
 
-            if (alt == null || string.IsNullOrWhiteSpace(alt.Unit) || alt.FactorToBase <= 1)
-                return SetPackingFormatResult.Empty;
+            if (alt == null)
+                return new SetPackingFormatResult(baseUnitName, null);
 
             var altUnitName = alt.Unit.Trim();
-            if (CaseUnits.Contains(altUnitName.ToLowerInvariant()))
-                return SetPackingFormatResult.Empty;
-
             var factorStr = alt.FactorToBase
                 .ToString("0.######", CultureInfo.InvariantCulture);
 

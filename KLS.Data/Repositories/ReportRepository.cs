@@ -283,6 +283,11 @@ namespace KLS.Data.Repositories
             return DbContext.RptSalesCallListRow.FromSqlRaw("[dbo].[Report_SalesCallList]");
         }
 
+        public IQueryable<RptBasicItemRow> BasicItem()
+        {
+            return DbContext.RptBasicItemRow.FromSqlRaw("[dbo].[Report_BasicItem]");
+        }
+
         public IQueryable<RptItemAvgCostReviewRow> ItemAvgCostReview()
         {
             return DbContext.RptItemAvgCostReviewRow.FromSqlRaw("[dbo].[Report_ItemAvgCostReview]");
