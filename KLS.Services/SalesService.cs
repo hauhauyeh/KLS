@@ -481,6 +481,87 @@ namespace KLS.Services
             }
         }
 
+        public SalesPdfPageDeleteResult DeletePdfPages(SalesPdfPageDeleteReq deleteReq)
+        {
+            if (deleteReq == null)
+                throw new ArgumentException("Delete request is required.", nameof(deleteReq));
+
+            if (deleteReq.SalesNumber <= 0)
+                throw new ArgumentException("Sales number is required.");
+
+            EnsureVisibleSalesNumber(deleteReq.SalesNumber);
+
+            var salesExists = Uow.Sales.Exists(s => s.SalesNumber == deleteReq.SalesNumber);
+            if (!salesExists)
+                throw new KeyNotFoundException($"Sales with number {deleteReq.SalesNumber} not found.");
+
+            var requestedPages = (deleteReq.PageNumbers ?? [])
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList();
+
+            if (requestedPages.Count == 0)
+                throw new ArgumentException("Select at least one PDF page to delete.");
+
+            var invoicePdfFolder = Path.Combine(_env.WebRootPath, "InvoicePdf");
+            var targetPath = Path.Combine(invoicePdfFolder, deleteReq.SalesNumber + ".pdf");
+
+            if (!File.Exists(targetPath))
+                throw new KeyNotFoundException("PDF file not found.");
+
+            var backupFolder = Path.Combine(invoicePdfFolder, "_backup");
+            Directory.CreateDirectory(backupFolder);
+
+            var unique = Guid.NewGuid().ToString("N");
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            var tempPath = Path.Combine(invoicePdfFolder, $"{deleteReq.SalesNumber}.{unique}.deletepages.tmp.pdf");
+            var backupPath = Path.Combine(backupFolder, $"{deleteReq.SalesNumber}-{timestamp}-{unique}.pdf");
+
+            try
+            {
+                using var pdf = PdfDocument.FromFile(targetPath);
+                var originalPageCount = pdf.PageCount;
+
+                if (originalPageCount <= 0)
+                    throw new InvalidOperationException("PDF has no pages.");
+
+                if (requestedPages.Any(p => p < 1 || p > originalPageCount))
+                    throw new ArgumentException("Selected page number is out of range.");
+
+                if (requestedPages.Count >= originalPageCount)
+                    throw new ArgumentException("Cannot delete all pages from the PDF.");
+
+                var zeroBasedIndexes = requestedPages.Select(p => p - 1).ToList();
+                pdf.RemovePages(zeroBasedIndexes);
+
+                if (pdf.PageCount != originalPageCount - requestedPages.Count)
+                    throw new InvalidOperationException("PDF page delete validation failed.");
+
+                pdf.SaveAs(tempPath);
+
+                using (var outputPdf = PdfDocument.FromFile(tempPath))
+                {
+                    if (outputPdf.PageCount != originalPageCount - requestedPages.Count)
+                        throw new InvalidOperationException("Rewritten PDF page count is invalid.");
+                }
+
+                File.Copy(targetPath, backupPath, false);
+                File.Replace(tempPath, targetPath, null, true);
+
+                return new SalesPdfPageDeleteResult
+                {
+                    SalesNumber = deleteReq.SalesNumber,
+                    OriginalPageCount = originalPageCount,
+                    DeletedPageCount = requestedPages.Count,
+                    FinalPageCount = originalPageCount - requestedPages.Count
+                };
+            }
+            finally
+            {
+                DeleteIfExists(tempPath);
+            }
+        }
+
         private static void DeleteIfExists(string path)
         {
             try
