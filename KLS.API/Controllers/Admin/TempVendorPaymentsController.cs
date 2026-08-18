@@ -42,6 +42,16 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        // Discards the caller's own draft rows for one vendor. Called when the Vendor
+        // Payment modal is cancelled, so abandoned drafts stop blocking bank-feed
+        // payment creation (THROW 50113 in BankFeed_CreateVendorPayment).
+        [HttpDelete("Clear/{payeeId:int}")]
+        public IActionResult Clear(int payeeId)
+        {
+            _tempVendorPaymentService.Clear(payeeId);
+            return Ok();
+        }
+
         #endregion
     }
 }
