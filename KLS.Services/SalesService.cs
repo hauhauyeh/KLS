@@ -541,7 +541,18 @@ namespace KLS.Services
                     throw new ArgumentException("Selected page number is out of range.");
 
                 if (requestedPages.Count >= originalPageCount)
-                    throw new ArgumentException("Cannot delete all pages from the PDF.");
+                {
+                    File.Copy(targetPath, backupPath, false);
+                    File.Delete(targetPath);
+
+                    return new SalesPdfPageDeleteResult
+                    {
+                        SalesNumber = deleteReq.SalesNumber,
+                        OriginalPageCount = originalPageCount,
+                        DeletedPageCount = originalPageCount,
+                        FinalPageCount = 0
+                    };
+                }
 
                 var zeroBasedIndexes = requestedPages.Select(p => p - 1).ToList();
                 pdf.RemovePages(zeroBasedIndexes);
