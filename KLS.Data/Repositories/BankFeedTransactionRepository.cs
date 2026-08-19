@@ -120,6 +120,45 @@ namespace KLS.Data.Repositories
             return newPaymentId.Value == DBNull.Value ? 0 : Convert.ToInt32(newPaymentId.Value);
         }
 
+        public int CreateLiabilityPayment(BankFeedCreateLiabilityPaymentReq req, int empId)
+        {
+            var newPaymentId = new SqlParameter
+            {
+                ParameterName = "@NewVendorPaymentId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            // Parameters passed BY NAME, the CreateVendorPayment precedent, so a future
+            // signature change cannot silently shift arguments.
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[BankFeed_CreateLiabilityPayment] " +
+                "@BankFeedTransactionId = @BankFeedTransactionId, " +
+                "@PayeeId = @PayeeId, " +
+                "@PaymentMethod = @PaymentMethod, " +
+                "@ReferenceId = @ReferenceId, " +
+                "@Notes = @Notes, " +
+                "@Principal = @Principal, " +
+                "@Interest = @Interest, " +
+                "@LateFee = @LateFee, " +
+                "@AppendBankDesc = @AppendBankDesc, " +
+                "@EmpId = @EmpId, " +
+                "@NewVendorPaymentId = @NewVendorPaymentId OUTPUT",
+                new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
+                new SqlParameter("@PayeeId", req.PayeeId),
+                new SqlParameter("@PaymentMethod", (object?)req.PaymentMethod ?? DBNull.Value),
+                new SqlParameter("@ReferenceId", (object?)req.ReferenceId ?? DBNull.Value),
+                new SqlParameter("@Notes", (object?)req.Notes ?? DBNull.Value),
+                new SqlParameter("@Principal", req.Principal),
+                new SqlParameter("@Interest", req.Interest),
+                new SqlParameter("@LateFee", req.LateFee),
+                new SqlParameter("@AppendBankDesc", req.AppendBankDescription),
+                new SqlParameter("@EmpId", empId),
+                newPaymentId);
+
+            return newPaymentId.Value == DBNull.Value ? 0 : Convert.ToInt32(newPaymentId.Value);
+        }
+
         public IQueryable<BankFeedOpenInvoice> GetOpenInvoices(BankFeedOpenInvoicesReq req)
         {
             var param = BuildOpenInvoicesParam(req);

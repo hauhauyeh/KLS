@@ -210,6 +210,40 @@ namespace KLS.Services
             return Uow.BankFeedTransactions.CreateVendorPayment(req, linesJson, resolvingJson, UserContext.EmpId);
         }
 
+        /// <summary>
+        /// Courtesy checks only, like CreateVendorPayment: BankFeed_CreateLiabilityPayment
+        /// re-checks everything (kind, split rules, amounts) and is the authority.
+        /// </summary>
+        public int CreateLiabilityPayment(BankFeedCreateLiabilityPaymentReq req)
+        {
+            if (req.PayeeId <= 0)
+                throw new Exception("Please select a liability payee.");
+
+            if (string.Equals(req.PaymentMethod, "CHECK", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Check payments cannot be created from a bank feed row. Use ACH, E-Check, Cash, Handwrite Check or Credit Card.");
+
+            if (req.Principal < 0 || req.Interest < 0 || req.LateFee < 0)
+                throw new Exception("Split amounts cannot be negative.");
+
+            return Uow.BankFeedTransactions.CreateLiabilityPayment(req, UserContext.EmpId);
+        }
+
+        /// <summary>
+        /// Tax + Loan manager payees for the liability-payment tab, tagged with the kind
+        /// (LiabilityList has no PayeeType). Same rows Liability_GetList serves the managers.
+        /// </summary>
+        public List<BankFeedLiabilityPayeeDto> GetLiabilityPayees()
+        {
+            var taxes = Uow.Liabilities.GetList(new PagingRequest { Filterby = "Tax" })?.ToList()
+                        ?? new List<LiabilityList>();
+            var loans = Uow.Liabilities.GetList(new PagingRequest { Filterby = "Loan" })?.ToList()
+                        ?? new List<LiabilityList>();
+
+            return taxes.Select(x => new BankFeedLiabilityPayeeDto(x.PayeeId, x.PayeeName, x.BalanceRemaining, "Tax"))
+                .Concat(loans.Select(x => new BankFeedLiabilityPayeeDto(x.PayeeId, x.PayeeName, x.BalanceRemaining, "Loan")))
+                .ToList();
+        }
+
         public PagingResponse<BankFeedOpenInvoice> GetOpenInvoices(BankFeedOpenInvoicesReq req)
         {
             if (req.PayeeId <= 0)
