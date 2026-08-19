@@ -85,6 +85,22 @@ namespace KLS.API.Controllers.Admin
             return Ok(_bankFeedTransactionService.CreateVendorPayment(req));
         }
 
+        [HttpPost("CreateLiabilityPayment")]
+        [DisplayName("Create Liability Payment From Bank Feed")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult CreateLiabilityPayment([FromBody] BankFeedCreateLiabilityPaymentReq req)
+        {
+            return Ok(_bankFeedTransactionService.CreateLiabilityPayment(req));
+        }
+
+        /// <summary>Tax + Loan manager payees for the liability-payment tab.</summary>
+        [HttpGet("LiabilityPayees")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult LiabilityPayees()
+        {
+            return Ok(_bankFeedTransactionService.GetLiabilityPayees());
+        }
+
         [HttpGet("OpenInvoices")]
         [DisplayName("Bank Feed Open Invoices")]
         [PermissionKey("Accounting.BankFeed.Match")]

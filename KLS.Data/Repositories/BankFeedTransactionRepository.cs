@@ -66,7 +66,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildUndepositedPaymentsParam(req);
             return DbContext.BankFeedUndepositedPayment.FromSqlRaw(
-                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@PaymentMethod,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
                 param);
         }
 
@@ -75,9 +75,9 @@ namespace KLS.Data.Repositories
             req.IsCount = true;
             var param = BuildUndepositedPaymentsParam(req);
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@PaymentMethod,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
                 param);
-            var output = param[7] as SqlParameter;
+            var output = param[8] as SqlParameter;
             return output!.Value == DBNull.Value ? 0 : Convert.ToInt32(output.Value);
         }
 
@@ -113,6 +113,45 @@ namespace KLS.Data.Repositories
                 new SqlParameter("@LinesJson", (object?)linesJson ?? DBNull.Value),
                 new SqlParameter("@DifferenceMemo", (object?)req.DifferenceMemo ?? DBNull.Value),
                 new SqlParameter("@ResolvingLinesJson", (object?)resolvingLinesJson ?? DBNull.Value),
+                new SqlParameter("@AppendBankDesc", req.AppendBankDescription),
+                new SqlParameter("@EmpId", empId),
+                newPaymentId);
+
+            return newPaymentId.Value == DBNull.Value ? 0 : Convert.ToInt32(newPaymentId.Value);
+        }
+
+        public int CreateLiabilityPayment(BankFeedCreateLiabilityPaymentReq req, int empId)
+        {
+            var newPaymentId = new SqlParameter
+            {
+                ParameterName = "@NewVendorPaymentId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            // Parameters passed BY NAME, the CreateVendorPayment precedent, so a future
+            // signature change cannot silently shift arguments.
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[BankFeed_CreateLiabilityPayment] " +
+                "@BankFeedTransactionId = @BankFeedTransactionId, " +
+                "@PayeeId = @PayeeId, " +
+                "@PaymentMethod = @PaymentMethod, " +
+                "@ReferenceId = @ReferenceId, " +
+                "@Notes = @Notes, " +
+                "@Principal = @Principal, " +
+                "@Interest = @Interest, " +
+                "@LateFee = @LateFee, " +
+                "@AppendBankDesc = @AppendBankDesc, " +
+                "@EmpId = @EmpId, " +
+                "@NewVendorPaymentId = @NewVendorPaymentId OUTPUT",
+                new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
+                new SqlParameter("@PayeeId", req.PayeeId),
+                new SqlParameter("@PaymentMethod", (object?)req.PaymentMethod ?? DBNull.Value),
+                new SqlParameter("@ReferenceId", (object?)req.ReferenceId ?? DBNull.Value),
+                new SqlParameter("@Notes", (object?)req.Notes ?? DBNull.Value),
+                new SqlParameter("@Principal", req.Principal),
+                new SqlParameter("@Interest", req.Interest),
+                new SqlParameter("@LateFee", req.LateFee),
                 new SqlParameter("@AppendBankDesc", req.AppendBankDescription),
                 new SqlParameter("@EmpId", empId),
                 newPaymentId);
@@ -257,6 +296,7 @@ namespace KLS.Data.Repositories
                 !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value),
                 new SqlParameter("@StartDate", ToDbDate(req.StartDate)),
                 new SqlParameter("@EndDate", ToDbDate(req.EndDate)),
+                !string.IsNullOrEmpty(req.PaymentMethod) ? new SqlParameter("@PaymentMethod", req.PaymentMethod) : new SqlParameter("@PaymentMethod", DBNull.Value),
                 new SqlParameter("@Pageno", req.Pageno),
                 new SqlParameter("@Pagesize", req.Pagesize),
                 new SqlParameter("@IsCount", req.IsCount),

@@ -20,6 +20,10 @@ namespace KLS.Contract.Services
 
         int CreateVendorPayment(BankFeedCreateVendorPaymentReq req);
 
+        int CreateLiabilityPayment(BankFeedCreateLiabilityPaymentReq req);
+
+        List<BankFeedLiabilityPayeeDto> GetLiabilityPayees();
+
         int CreateDeposit(BankFeedCreateDepositReq req);
 
         int CreateInvoiceDeposit(BankFeedCreateInvoiceDepositReq req);

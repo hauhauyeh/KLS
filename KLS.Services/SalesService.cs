@@ -310,10 +310,22 @@ namespace KLS.Services
             if (sales == null)
                 throw new KeyNotFoundException($"Sales with Id {salesId} not found.");
 
-            if ((sales.StageId ?? 0) >= 4)
+            if (!CanEnterManagerEditMode(sales.StageId ?? 0))
                 throw new InvalidOperationException("Cannot edit delivered orders.");
 
             return Uow.Sales.EnterEditMode(salesId);
+        }
+
+        private bool CanEnterManagerEditMode(int stageId)
+        {
+            if (stageId < 4)
+                return true;
+
+            if (stageId != 4)
+                return false;
+
+            var action = _systemSettingService.GetByKey<string>(GlobalKey.SALES_TRANSIT_UPDATE_DOCUMENT_ACTION);
+            return string.Equals(action?.Trim(), "Email", StringComparison.OrdinalIgnoreCase);
         }
 
         public SalesStage RestoreStage(int salesId, int stageId)

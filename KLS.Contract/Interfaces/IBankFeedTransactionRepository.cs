@@ -27,6 +27,8 @@ namespace KLS.Contract.Interfaces
         int CreateVendorPayment(BankFeedCreateVendorPaymentReq req, string? linesJson,
                                 string? resolvingLinesJson, int empId);
 
+        int CreateLiabilityPayment(BankFeedCreateLiabilityPaymentReq req, int empId);
+
         int CreateDeposit(BankFeedCreateDepositReq req, string paymentIdsJson, int empId);
 
         int CreateInvoiceDeposit(BankFeedCreateInvoiceDepositReq req, string linesJson, int empId);
