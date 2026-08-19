@@ -8,5 +8,8 @@ namespace KLS.Models
     public class BankFeedUndepositedPaymentsReq : PagingRequest
     {
         public long BankFeedTransactionId { get; set; }
+
+        /// <summary>Exact-match payment method filter; null/empty = all methods.</summary>
+        public string? PaymentMethod { get; set; }
     }
 }

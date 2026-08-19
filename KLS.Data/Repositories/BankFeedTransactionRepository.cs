@@ -66,7 +66,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildUndepositedPaymentsParam(req);
             return DbContext.BankFeedUndepositedPayment.FromSqlRaw(
-                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@PaymentMethod,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
                 param);
         }
 
@@ -75,9 +75,9 @@ namespace KLS.Data.Repositories
             req.IsCount = true;
             var param = BuildUndepositedPaymentsParam(req);
             DbContext.Database.ExecuteSqlRaw(
-                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
+                "[dbo].[BankFeed_GetUndepositedPayments] @BankFeedTransactionId,@Search,@StartDate,@EndDate,@PaymentMethod,@Pageno,@Pagesize,@IsCount,@TotalCount OUTPUT",
                 param);
-            var output = param[7] as SqlParameter;
+            var output = param[8] as SqlParameter;
             return output!.Value == DBNull.Value ? 0 : Convert.ToInt32(output.Value);
         }
 
@@ -257,6 +257,7 @@ namespace KLS.Data.Repositories
                 !string.IsNullOrEmpty(req.Search) ? new SqlParameter("@Search", req.Search) : new SqlParameter("@Search", DBNull.Value),
                 new SqlParameter("@StartDate", ToDbDate(req.StartDate)),
                 new SqlParameter("@EndDate", ToDbDate(req.EndDate)),
+                !string.IsNullOrEmpty(req.PaymentMethod) ? new SqlParameter("@PaymentMethod", req.PaymentMethod) : new SqlParameter("@PaymentMethod", DBNull.Value),
                 new SqlParameter("@Pageno", req.Pageno),
                 new SqlParameter("@Pagesize", req.Pagesize),
                 new SqlParameter("@IsCount", req.IsCount),
