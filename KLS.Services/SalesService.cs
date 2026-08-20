@@ -541,7 +541,18 @@ namespace KLS.Services
                     throw new ArgumentException("Selected page number is out of range.");
 
                 if (requestedPages.Count >= originalPageCount)
-                    throw new ArgumentException("Cannot delete all pages from the PDF.");
+                {
+                    File.Copy(targetPath, backupPath, false);
+                    File.Delete(targetPath);
+
+                    return new SalesPdfPageDeleteResult
+                    {
+                        SalesNumber = deleteReq.SalesNumber,
+                        OriginalPageCount = originalPageCount,
+                        DeletedPageCount = originalPageCount,
+                        FinalPageCount = 0
+                    };
+                }
 
                 var zeroBasedIndexes = requestedPages.Select(p => p - 1).ToList();
                 pdf.RemovePages(zeroBasedIndexes);
@@ -858,6 +869,7 @@ namespace KLS.Services
             var documentNumber = WebUtility.HtmlEncode(salesDisplayNumber);
             var companyName = WebUtility.HtmlEncode(CleanEmailText(company?.CompanyName ?? company?.DisplayName) ?? "KLS");
             var companyPhone = WebUtility.HtmlEncode(CleanEmailText(company?.Phone ?? company?.SupportPhone) ?? "");
+            var paymentBlock = _arEmailPaymentInstructionRenderer.Render(company);
 
             return $"""
                 <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;background:#eef2f6;">
@@ -874,6 +886,7 @@ namespace KLS.Services
                           <td style="padding:24px;font-size:15px;line-height:1.5;color:#1f2937;">
                             <p style="margin:0 0 14px 0;">Dear {customerName}:</p>
                             <p style="margin:0 0 14px 0;">Please find attached sales order <strong>{documentNumber}</strong>.</p>
+                            {paymentBlock}
                             <p style="margin:0 0 14px 0;">Thank you for your business.</p>
                             <p style="margin:0;">Sincerely,<br>{companyName}{BuildCompanyPhoneLine(companyPhone)}</p>
                           </td>

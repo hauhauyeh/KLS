@@ -130,6 +130,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<RptInventoryStatusRow> InventoryStatus(InventoryReportRequest req);
 
+        RptPOInventoryStatus POInventoryStatus();
+
         IEnumerable<RptReorderRow> Reorder(InventoryReportRequest req);
 
         IEnumerable<RptInventoryValuationRow> InventoryValuation(InventoryReportRequest req);
