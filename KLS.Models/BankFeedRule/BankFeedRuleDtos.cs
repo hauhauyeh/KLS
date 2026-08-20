@@ -80,6 +80,17 @@ namespace KLS.Models
         public int MissingSetupCount { get; set; }
     }
 
+    public class BankFeedRuleApplyRes
+    {
+        public long BankFeedTransactionId { get; set; }
+
+        public long BankFeedRuleSuggestionId { get; set; }
+
+        public string ActionType { get; set; } = string.Empty;
+
+        public string BankFeedStatus { get; set; } = string.Empty;
+    }
+
     public class BankFeedRuleConditionDto
     {
         public int BankFeedRuleConditionId { get; set; }

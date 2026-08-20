@@ -1,5 +1,6 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
+using KLS.Common;
 using KLS.Models;
 using System.Text.RegularExpressions;
 
@@ -297,9 +298,137 @@ namespace KLS.Services
             }).ToList();
         }
 
+        public BankFeedRuleApplyRes Apply(long bankFeedRuleSuggestionId)
+        {
+            BankFeedRuleApplyRes? result = null;
+
+            Uow.ExecuteInTransaction(() =>
+            {
+                var suggestion = Uow.BankFeedRuleSuggestions.Find(c => c.BankFeedRuleSuggestionId == bankFeedRuleSuggestionId)
+                    .SingleOrDefault()
+                    ?? throw new ArgumentException("Bank feed rule suggestion was not found.");
+
+                if (suggestion.SuggestionStatus != "Suggested")
+                    throw new ArgumentException("Only suggested rule actions can be applied.");
+
+                var rule = Uow.BankFeedRules.GetRuleWithChildren(suggestion.BankFeedRuleId)
+                    ?? throw new ArgumentException("Bank feed rule was not found.");
+
+                if (!rule.IsActive)
+                    throw new ArgumentException("Bank feed rule is inactive.");
+
+                if (rule.Action == null)
+                    throw new ArgumentException("Bank feed rule action is missing.");
+
+                var transaction = Uow.BankFeedTransactions.GetByLongId(suggestion.BankFeedTransactionId)
+                    ?? throw new ArgumentException("Bank feed transaction was not found.");
+
+                if (transaction.Status != "Pending")
+                    throw new ArgumentException("Only pending bank feed transactions can apply rule suggestions.");
+
+                if (!RuleMatches(rule, transaction))
+                    throw new ArgumentException("Bank feed rule no longer matches this transaction.");
+
+                if (rule.Action.ActionType == "Exclude")
+                {
+                    transaction.Status = "Excluded";
+                    transaction.ExcludeReason = $"Rule: {rule.RuleName}";
+                }
+                else if (rule.Action.ActionType == "CreateMoneyOutExpense")
+                {
+                    ApplyMoneyOutExpense(rule, transaction);
+                }
+                else
+                {
+                    throw new ArgumentException("This rule action is not supported yet.");
+                }
+
+                suggestion.SuggestionStatus = "Applied";
+                suggestion.AppliedAt = DateTime.UtcNow;
+                suggestion.AppliedBy = UserContext.EmpId;
+
+                ExpireOtherActiveSuggestions(transaction.BankFeedTransactionId, suggestion.BankFeedRuleSuggestionId);
+
+                Uow.Commit();
+
+                result = new BankFeedRuleApplyRes
+                {
+                    BankFeedTransactionId = transaction.BankFeedTransactionId,
+                    BankFeedRuleSuggestionId = suggestion.BankFeedRuleSuggestionId,
+                    ActionType = rule.Action.ActionType,
+                    BankFeedStatus = rule.Action.ActionType == "Exclude" ? "Excluded" : "Matched"
+                };
+            });
+
+            return result!;
+        }
+
+        private void ApplyMoneyOutExpense(BankFeedRule rule, BankFeedTransaction transaction)
+        {
+            var action = rule.Action!;
+            if (transaction.Amount >= 0)
+                throw new ArgumentException("Only money-out bank feed transactions can create an expense.");
+
+            if (!action.PayeeId.HasValue)
+                throw new ArgumentException("Rule action vendor is required for money-out expense apply.");
+
+            if (!action.AccountId.HasValue)
+                throw new ArgumentException("Rule action account is required for money-out expense apply.");
+
+            if (!Uow.Payees.Exists(c => c.PayeeId == action.PayeeId.Value && !c.IsClosed))
+                throw new ArgumentException("Rule action vendor is missing or inactive.");
+
+            var actionAccount = Uow.Accounts.Find(c => c.AccountId == action.AccountId.Value && !c.Inactive)
+                .SingleOrDefault()
+                ?? throw new ArgumentException("Rule action account is missing or inactive.");
+
+            if (actionAccount.AccountCode == "@AP")
+                throw new ArgumentException("Rule action account cannot be Accounts Payable.");
+
+            var bankFeedAccount = Uow.BankFeedAccounts.GetByLongId(transaction.BankFeedAccountId)
+                ?? throw new ArgumentException("Bank feed account was not found.");
+
+            if (bankFeedAccount.AccountId == action.AccountId.Value)
+                throw new ArgumentException("Rule action account cannot be the bank account.");
+
+            var resolvingLine = new BankFeedResolvingLineReq
+            {
+                PayeeId = action.PayeeId.Value,
+                AccountId = action.AccountId.Value,
+                Amount = Math.Abs(transaction.Amount),
+                Notes = string.IsNullOrWhiteSpace(action.MemoTemplate) ? rule.RuleName : action.MemoTemplate.Trim()
+            };
+
+            var req = new BankFeedCreateVendorPaymentReq
+            {
+                BankFeedTransactionId = transaction.BankFeedTransactionId,
+                PaymentMethod = "ACH",
+                ReferenceId = transaction.ReferenceNo ?? transaction.CheckNumber,
+                AppendBankDescription = action.AppendBankDescription,
+                ResolvingLines = new List<BankFeedResolvingLineReq> { resolvingLine }
+            };
+
+            var resolvingJson = Newtonsoft.Json.JsonConvert.SerializeObject(
+                req.ResolvingLines.Select(l => new { l.PayeeId, l.AccountId, l.Amount, l.Notes }));
+
+            Uow.BankFeedTransactions.CreateVendorPayment(req, null, resolvingJson, UserContext.EmpId);
+        }
+
         private void ExpireActiveSuggestions(List<long> bankFeedTransactionIds)
         {
             var suggestions = Uow.BankFeedRuleSuggestions.GetActiveSuggestions(bankFeedTransactionIds).ToList();
+            foreach (var suggestion in suggestions)
+            {
+                suggestion.SuggestionStatus = "Expired";
+            }
+        }
+
+        private void ExpireOtherActiveSuggestions(long bankFeedTransactionId, long appliedSuggestionId)
+        {
+            var suggestions = Uow.BankFeedRuleSuggestions.GetActiveSuggestions(new[] { bankFeedTransactionId })
+                .Where(c => c.BankFeedRuleSuggestionId != appliedSuggestionId)
+                .ToList();
+
             foreach (var suggestion in suggestions)
             {
                 suggestion.SuggestionStatus = "Expired";
@@ -400,6 +529,9 @@ namespace KLS.Services
             if (action.PayeeId.HasValue && !Uow.Payees.Exists(c => c.PayeeId == action.PayeeId.Value && !c.IsClosed))
                 return "MissingSetup";
 
+            if (action.ActionType == "CreateMoneyOutExpense" && !action.PayeeId.HasValue)
+                return "MissingSetup";
+
             if ((action.ActionType == "CreateMoneyOutExpense" || action.ActionType == "CreateMoneyInDeposit")
                 && !action.AccountId.HasValue)
                 return "MissingSetup";
@@ -483,6 +615,9 @@ namespace KLS.Services
                 && !req.Action.AccountId.HasValue)
                 throw new ArgumentException("Rule action account is required.");
 
+            if (actionType == "CreateMoneyOutExpense" && !req.Action.PayeeId.HasValue)
+                throw new ArgumentException("Rule action vendor is required.");
+
             if (actionType == "CreateTransfer" && !req.Action.TargetAccountId.HasValue)
                 throw new ArgumentException("Rule transfer target account is required.");
 
@@ -498,6 +633,20 @@ namespace KLS.Services
 
             if (req.Action.TargetAccountId.HasValue && !Uow.Accounts.Exists(c => c.AccountId == req.Action.TargetAccountId.Value))
                 throw new ArgumentException("Rule transfer target account was not found.");
+
+            if (actionType == "CreateMoneyOutExpense" && req.Action.AccountId.HasValue)
+            {
+                var actionAccount = Uow.Accounts.GetById(req.Action.AccountId.Value);
+                if (actionAccount.AccountCode == "@AP")
+                    throw new ArgumentException("Rule action account cannot be Accounts Payable.");
+
+                if (req.BankFeedAccountId.HasValue)
+                {
+                    var sourceAccountId = Uow.BankFeedAccounts.GetByLongId(req.BankFeedAccountId.Value)?.AccountId;
+                    if (sourceAccountId.HasValue && sourceAccountId == req.Action.AccountId)
+                        throw new ArgumentException("Rule action account cannot be the bank feed account.");
+                }
+            }
 
             if (actionType == "CreateTransfer" && req.BankFeedAccountId.HasValue)
             {
