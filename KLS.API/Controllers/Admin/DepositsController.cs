@@ -37,6 +37,16 @@ namespace KLS.API.Controllers.Admin
             return Ok(_transferFundService.GetPagedDeposits(depositReq));
         }
 
+        [HttpGet("Export")]
+        [DisplayName("Export Deposits")]
+        [PermissionKey("Customer.Deposit.List")]
+        public IActionResult Export([FromQuery] DepositReq depositReq)
+        {
+            var bytes = _transferFundService.ExportDeposits(depositReq);
+            var fileName = $"deposits-{DateTime.Today:yyyy-MM-dd}.csv";
+
+            return File(bytes, "text/csv; charset=utf-8", fileName);
+        }
 
         [HttpGet("{tfId}")]
         public IActionResult GetById(int tfId)

@@ -20,6 +20,8 @@ namespace KLS.Contract.Services
 
         PagingResponse<DepositList> GetPagedDeposits(DepositReq depositReq);
 
+        byte[] ExportDeposits(DepositReq depositReq);
+
         DepositList? SaveDeposit(TransferFund transferFund);
 
         IEnumerable<TempDepositList>? InjectDeposit(DepositInjectReq injectReq);

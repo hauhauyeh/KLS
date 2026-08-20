@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -85,6 +86,25 @@ namespace KLS.Services
             };
         }
 
+        public byte[] ExportDeposits(DepositReq depositReq)
+        {
+            var countReq = CloneDepositReq(depositReq);
+            var totalRecords = Uow.TransferFunds.CountDeposits(countReq);
+
+            var rows = Enumerable.Empty<DepositList>();
+            if (totalRecords > 0)
+            {
+                var exportReq = CloneDepositReq(depositReq);
+                exportReq.Pageno = 1;
+                exportReq.Pagesize = totalRecords;
+                exportReq.IsCount = false;
+
+                rows = Uow.TransferFunds.GetPagedDeposits(exportReq).AsEnumerable();
+            }
+
+            return Encoding.UTF8.GetBytes(BuildDepositCsv(rows));
+        }
+
         public DepositList? GetDepositListById(int tfId)
         {
             var depositReq = new DepositReq
@@ -105,6 +125,62 @@ namespace KLS.Services
         public IEnumerable<TempDepositList>? InjectDeposit(DepositInjectReq injectReq)
         {
             return Uow.TransferFunds.InjectDeposit(injectReq);
+        }
+
+        private static DepositReq CloneDepositReq(DepositReq req)
+        {
+            return new DepositReq
+            {
+                Pageno = req.Pageno,
+                Pagesize = req.Pagesize,
+                Search = req.Search,
+                IsCount = req.IsCount,
+                StartDate = req.StartDate,
+                EndDate = req.EndDate,
+                Id = req.Id,
+                Filterby = req.Filterby,
+                SortField = req.SortField,
+                SortOrder = req.SortOrder,
+                ToAccountId = req.ToAccountId,
+                Uncleared = req.Uncleared
+            };
+        }
+
+        private static string BuildDepositCsv(IEnumerable<DepositList> rows)
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("Deposit#,Date,To Account,Amount,Cash Back Account,Cash Back Amount,CC Fee,Locked");
+
+            foreach (var row in rows)
+            {
+                csv.AppendLine(string.Join(",", new[]
+                {
+                    CsvCell(row.TFNumber),
+                    CsvCell(row.TFDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+                    CsvCell(row.ToAccount),
+                    CsvCell(FormatMoney(row.TransferAmount)),
+                    CsvCell(row.CashBackAccount),
+                    CsvCell(FormatMoney(row.CashBackAmount)),
+                    CsvCell(FormatMoney(row.CCFeeAmount)),
+                    CsvCell(row.IsLocked ? "Yes" : "No")
+                }));
+            }
+
+            return csv.ToString();
+        }
+
+        private static string FormatMoney(decimal? value)
+        {
+            return value.HasValue ? value.Value.ToString("0.00", CultureInfo.InvariantCulture) : string.Empty;
+        }
+
+        private static string CsvCell(object? value)
+        {
+            var text = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+            if (!text.Contains(',') && !text.Contains('"') && !text.Contains('\r') && !text.Contains('\n'))
+                return text;
+
+            return $"\"{text.Replace("\"", "\"\"")}\"";
         }
     }
 }
