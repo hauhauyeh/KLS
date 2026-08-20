@@ -420,14 +420,15 @@ VALUES
 (192, 'Report.Payroll.Payroll',        'Payroll',              'Report', 'Payroll', 'Payroll',        'page', 'Report', 691, 'Reports-Payroll'),
 (193, 'Report.Payroll.EmpLoanLedger',  'Employee Loan Ledger', 'Report', 'Payroll', 'EmpLoanLedger',  'page', 'Report', 692, 'Reports-EmpLoanLedger');
 
--- Inventory Reports (5)
+-- Inventory Reports (6)
 INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Resource], [Action], PermissionType, ParentKey, SortOrder, OldKey)
 VALUES
 (194, 'Report.Inventory.InventoryStatus',    'Inventory Status',    'Report', 'Inventory', 'InventoryStatus',    'page', 'Report', 701, 'Reports-InventoryStatus'),
 (195, 'Report.Inventory.Reorder',            'Reorder',             'Report', 'Inventory', 'Reorder',            'page', 'Report', 702, 'Reports-Reorder'),
 (196, 'Report.Inventory.InventoryValuation', 'Inventory Valuation', 'Report', 'Inventory', 'InventoryValuation', 'page', 'Report', 703, 'Reports-InventoryValuation'),
 (197, 'Report.Inventory.InventoryMovement',  'Inventory Movement',  'Report', 'Inventory', 'InventoryMovement',  'page', 'Report', 704, 'Reports-InventoryMovement'),
-(198, 'Report.Inventory.InventoryIncoming',  'Incoming Purchases',  'Report', 'Inventory', 'InventoryIncoming',  'page', 'Report', 705, 'Reports-InventoryIncoming');
+(198, 'Report.Inventory.InventoryIncoming',  'Incoming Purchases',  'Report', 'Inventory', 'InventoryIncoming',  'page', 'Report', 705, 'Reports-InventoryIncoming'),
+(199, 'Report.Inventory.POInventoryStatus',  'PO Inventory Status', 'Report', 'Inventory', 'POInventoryStatus',  'page', 'Report', 706, NULL);
 
 -- ============================================================
 -- VENDOR MODULE (55 records)

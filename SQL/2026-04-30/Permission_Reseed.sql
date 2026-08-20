@@ -239,6 +239,7 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (6253, 'Report.Inventory.InventoryValuation', 'Inventory Valuation', 'Report', 'Inventory', 'InventoryValuation', 'page', 6250, 6253, 'Reports-InventoryValuation'),
 (6254, 'Report.Inventory.InventoryMovement', 'Inventory Movement', 'Report', 'Inventory', 'InventoryMovement', 'page', 6250, 6254, 'Reports-InventoryMovement'),
 (6255, 'Report.Inventory.InventoryIncoming', 'Incoming Purchases', 'Report', 'Inventory', 'InventoryIncoming', 'page', 6250, 6255, 'Reports-InventoryIncoming'),
+(6256, 'Report.Inventory.POInventoryStatus', 'PO Inventory Status', 'Report', 'Inventory', 'POInventoryStatus', 'page', 6250, 6256, NULL),
 (6300, 'Report.Payroll', 'Payroll Report', 'Report', 'Payroll', '', 'resource', 6000, 6300, NULL),
 (6301, 'Report.Payroll.Payroll', 'Payroll', 'Report', 'Payroll', 'Payroll', 'page', 6300, 6301, 'Reports-Payroll'),
 (6302, 'Report.Payroll.EmpLoanLedger', 'Employee Loan Ledger', 'Report', 'Payroll', 'EmpLoanLedger', 'page', 6300, 6302, 'Reports-EmpLoanLedger'),

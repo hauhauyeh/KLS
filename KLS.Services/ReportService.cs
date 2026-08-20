@@ -14,6 +14,19 @@ namespace KLS.Services
 {
     public class ReportService : BaseService, IReportService
     {
+        private static readonly HashSet<string> GusPOInventoryStatusCat0 = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Stretch Film",
+            "Tape",
+            "Label",
+            "To Go Box"
+        };
+
+        private static readonly HashSet<string> GusPOInventoryStatusExcludedCat1 = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Pre-Stretched Wrap"
+        };
+
         private readonly ICompanyService _companyService;
         private readonly ISystemSettingService _systemSettingService;
         private readonly ISalesRouteService _salesRouteService;
@@ -1223,6 +1236,33 @@ namespace KLS.Services
             return Uow.Reports.InventoryStatus(req).AsEnumerable();
         }
 
+        public RptPOInventoryStatus POInventoryStatus()
+        {
+            var companyCode = _companyService.GetDefault()?.CompanyCode?.Trim();
+            if (!string.Equals(companyCode, "GUS", StringComparison.OrdinalIgnoreCase))
+                throw new UnauthorizedAccessException("PO Inventory Status is only available for GUS.");
+
+            var status = Uow.Reports.InventoryStatus(new InventoryReportRequest())
+                .AsEnumerable()
+                .Where(IsInGusPOInventoryStatusScope)
+                .ToList();
+
+            var itemIds = status
+                .Select(r => r.ItemId)
+                .ToHashSet();
+
+            var incoming = Uow.Reports.InventoryIncoming()
+                .AsEnumerable()
+                .Where(r => itemIds.Contains(r.ItemId))
+                .ToList();
+
+            return new RptPOInventoryStatus
+            {
+                Status = status,
+                Incoming = incoming
+            };
+        }
+
         public IEnumerable<RptReorderRow> Reorder(InventoryReportRequest req)
         {
             return Uow.Reports.Reorder(req).AsEnumerable();
@@ -1259,6 +1299,16 @@ namespace KLS.Services
                 })
                 .OrderBy(g => g.Group)
                 .ToList();
+        }
+
+        private static bool IsInGusPOInventoryStatusScope(RptInventoryStatusRow row)
+        {
+            var cat0 = row.Cat0?.Trim();
+            var cat1 = row.Cat1?.Trim();
+
+            return !string.IsNullOrWhiteSpace(cat0)
+                && GusPOInventoryStatusCat0.Contains(cat0)
+                && !GusPOInventoryStatusExcludedCat1.Contains(cat1 ?? string.Empty);
         }
 
         #endregion

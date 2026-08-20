@@ -528,6 +528,13 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.InventoryStatus(req));
         }
 
+        [HttpGet("POInventoryStatus")]
+        [DisplayName("Inventory -> PO Inventory Status")]
+        [PermissionKey("Report.Inventory.POInventoryStatus")]
+        public IActionResult POInventoryStatus()
+        {
+            return Ok(_reportService.POInventoryStatus());
+        }
 
         [HttpGet("Reorder")]
         [DisplayName("Inventory -> Reorder")]
