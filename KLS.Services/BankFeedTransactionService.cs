@@ -498,7 +498,14 @@ namespace KLS.Services
 
             while (!parser.EndOfData)
             {
-                rows.Add(parser.ReadFields()?.ToList() ?? new List<string>());
+                var fields = parser.ReadFields()?.ToList() ?? new List<string>();
+
+                // Comma-only rows (",,,") parse as all-empty fields - Excel leaves these
+                // as trailing rows. Drop them so preview and import see the same rows.
+                if (fields.All(string.IsNullOrWhiteSpace))
+                    continue;
+
+                rows.Add(fields);
             }
 
             return rows;
