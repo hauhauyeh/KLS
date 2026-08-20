@@ -16,6 +16,8 @@ namespace KLS.Contract.Services
 
         BankFeedRuleRecalculateRes Recalculate(BankFeedRuleRecalculateReq req);
 
+        BankFeedRuleRecalculateRes RecalculatePending(BankFeedRuleRecalculatePendingReq req);
+
         List<BankFeedRuleSuggestionDto> GetSuggestions(long bankFeedTransactionId);
     }
 }

@@ -62,6 +62,11 @@ namespace KLS.Models
         public List<long> BankFeedTransactionIds { get; set; } = new();
     }
 
+    public class BankFeedRuleRecalculatePendingReq
+    {
+        public long? BankFeedAccountId { get; set; }
+    }
+
     public class BankFeedRuleRecalculateRes
     {
         public int EvaluatedCount { get; set; }

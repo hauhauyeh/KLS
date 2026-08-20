@@ -233,6 +233,32 @@ namespace KLS.Services
             return result;
         }
 
+        public BankFeedRuleRecalculateRes RecalculatePending(BankFeedRuleRecalculatePendingReq req)
+        {
+            req ??= new BankFeedRuleRecalculatePendingReq();
+
+            if (req.BankFeedAccountId.HasValue && !Uow.BankFeedAccounts.Exists(c => c.BankFeedAccountId == req.BankFeedAccountId.Value))
+                throw new ArgumentException("Bank feed account was not found.");
+
+            var query = Uow.BankFeedTransactions.Find(c => c.Status == "Pending");
+            if (req.BankFeedAccountId.HasValue)
+            {
+                query = query.Where(c => c.BankFeedAccountId == req.BankFeedAccountId.Value);
+            }
+
+            var transactionIds = query
+                .Select(c => c.BankFeedTransactionId)
+                .ToList();
+
+            if (!transactionIds.Any())
+                return new BankFeedRuleRecalculateRes();
+
+            return Recalculate(new BankFeedRuleRecalculateReq
+            {
+                BankFeedTransactionIds = transactionIds
+            });
+        }
+
         public List<BankFeedRuleSuggestionDto> GetSuggestions(long bankFeedTransactionId)
         {
             var suggestions = Uow.BankFeedRuleSuggestions.GetSuggestionsWithRule()

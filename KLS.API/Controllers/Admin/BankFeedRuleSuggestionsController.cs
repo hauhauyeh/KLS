@@ -34,5 +34,13 @@ namespace KLS.API.Controllers.Admin
         {
             return Ok(_bankFeedRuleService.Recalculate(req));
         }
+
+        [HttpPost("RecalculatePending")]
+        [DisplayName("Recalculate Pending Bank Feed Rule Suggestions")]
+        [PermissionKey("Accounting.BankFeed.Rule.Recalculate")]
+        public IActionResult RecalculatePending([FromBody] BankFeedRuleRecalculatePendingReq req)
+        {
+            return Ok(_bankFeedRuleService.RecalculatePending(req));
+        }
     }
 }
