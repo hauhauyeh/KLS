@@ -64,6 +64,22 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankFeedAccount>().ToTable("BankFeedAccount");
             modelBuilder.Entity<BankFeedTransaction>().ToTable("BankFeedTransaction");
             modelBuilder.Entity<BankFeedSource>().ToTable("BankFeedSource");
+            modelBuilder.Entity<BankFeedRule>().ToTable("BankFeedRule");
+            modelBuilder.Entity<BankFeedRuleCondition>().ToTable("BankFeedRuleCondition");
+            modelBuilder.Entity<BankFeedRuleAction>().ToTable("BankFeedRuleAction");
+            modelBuilder.Entity<BankFeedRuleSuggestion>().ToTable("BankFeedRuleSuggestion");
+            modelBuilder.Entity<BankFeedRule>()
+                .HasMany(c => c.Conditions)
+                .WithOne(c => c.Rule)
+                .HasForeignKey(c => c.BankFeedRuleId);
+            modelBuilder.Entity<BankFeedRule>()
+                .HasOne(c => c.Action)
+                .WithOne(c => c.Rule)
+                .HasForeignKey<BankFeedRuleAction>(c => c.BankFeedRuleId);
+            modelBuilder.Entity<BankFeedRuleSuggestion>()
+                .HasOne(c => c.Rule)
+                .WithMany()
+                .HasForeignKey(c => c.BankFeedRuleId);
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
             modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
             modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
@@ -249,6 +265,10 @@ namespace KLS.Data.DataContext
         public DbSet<BankFeedAccount> BankFeedAccounts { get; set; }
         public DbSet<BankFeedTransaction> BankFeedTransactions { get; set; }
         public DbSet<BankFeedSource> BankFeedSources { get; set; }
+        public DbSet<BankFeedRule> BankFeedRules { get; set; }
+        public DbSet<BankFeedRuleCondition> BankFeedRuleConditions { get; set; }
+        public DbSet<BankFeedRuleAction> BankFeedRuleActions { get; set; }
+        public DbSet<BankFeedRuleSuggestion> BankFeedRuleSuggestions { get; set; }
 
         public DbSet<BankReconBalance> BankReconBalances { get; set; }
 

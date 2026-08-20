@@ -4,6 +4,7 @@ using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
 
 namespace KLS.Services
@@ -12,8 +13,16 @@ namespace KLS.Services
     {
         private static readonly string TempRoot = Path.Combine(Path.GetTempPath(), "KLS", "BankFeed");
 
-        public BankFeedTransactionService(IUnitOfWork uow) : base(uow)
+        private readonly IBankFeedRuleService _bankFeedRuleService;
+        private readonly ILogger<BankFeedTransactionService> _logger;
+
+        public BankFeedTransactionService(
+            IUnitOfWork uow,
+            IBankFeedRuleService bankFeedRuleService,
+            ILogger<BankFeedTransactionService> logger) : base(uow)
         {
+            _bankFeedRuleService = bankFeedRuleService;
+            _logger = logger;
         }
 
         public BankFeedUploadPreviewRes UploadPreview(BankFeedUploadPreviewReq req)
@@ -116,6 +125,7 @@ namespace KLS.Services
 
             Uow.BankFeedTransactions.AddRange(items);
             Uow.Commit();
+            RecalculateRuleSuggestions(items);
             TryDeleteTempFile(path);
 
             return items.Count;
@@ -135,6 +145,29 @@ namespace KLS.Services
         public List<BankFeedMatchCandidate> GetMatchCandidates(long bankFeedTransactionId)
         {
             return Uow.BankFeedTransactions.GetMatchCandidates(bankFeedTransactionId).ToList();
+        }
+
+        private void RecalculateRuleSuggestions(List<BankFeedTransaction> items)
+        {
+            var ids = items
+                .Select(c => c.BankFeedTransactionId)
+                .Where(c => c > 0)
+                .ToList();
+
+            if (!ids.Any())
+                return;
+
+            try
+            {
+                _bankFeedRuleService.Recalculate(new BankFeedRuleRecalculateReq
+                {
+                    BankFeedTransactionIds = ids
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Bank feed rule suggestion recalculation failed after importing {Count} rows.", ids.Count);
+            }
         }
 
         public PagingResponse<BankFeedOpenBill> GetOpenBills(BankFeedOpenBillsReq req)
