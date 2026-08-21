@@ -34,6 +34,8 @@ namespace KLS.Services
             "Exclude"
         };
 
+        private const int BulkApplyMaxRows = 100;
+
         public BankFeedRuleService(IUnitOfWork uow) : base(uow)
         {
         }
@@ -369,6 +371,132 @@ namespace KLS.Services
             });
 
             return result!;
+        }
+
+        public BankFeedRuleBulkApplyRes ApplyBulk(BankFeedBulkActionReq req)
+        {
+            if (req?.BankFeedTransactionIds == null || !req.BankFeedTransactionIds.Any())
+                throw new ArgumentException("Please select at least one transaction.");
+
+            var ids = req.BankFeedTransactionIds
+                .Where(c => c > 0)
+                .Distinct()
+                .ToList();
+
+            if (!ids.Any())
+                throw new ArgumentException("Please select at least one transaction.");
+
+            if (ids.Count > BulkApplyMaxRows)
+                throw new ArgumentException($"Rule bulk apply supports up to {BulkApplyMaxRows} selected transactions.");
+
+            var result = new BankFeedRuleBulkApplyRes
+            {
+                RequestedCount = ids.Count
+            };
+
+            var transactions = Uow.BankFeedTransactions
+                .Find(c => ids.Contains(c.BankFeedTransactionId))
+                .ToDictionary(c => c.BankFeedTransactionId);
+
+            var suggestions = Uow.BankFeedRuleSuggestions.GetSuggestionsWithRule()
+                .Where(c => ids.Contains(c.BankFeedTransactionId)
+                    && (c.SuggestionStatus == "Suggested"
+                        || c.SuggestionStatus == "Conflict"
+                        || c.SuggestionStatus == "MissingSetup"))
+                .ToList()
+                .GroupBy(c => c.BankFeedTransactionId)
+                .ToDictionary(c => c.Key, c => c.ToList());
+
+            foreach (var id in ids)
+            {
+                var detail = BuildBulkApplyCandidate(id, transactions, suggestions);
+                result.Details.Add(detail);
+
+                if (detail.ResultStatus == "Skipped")
+                {
+                    result.SkippedCount++;
+                    continue;
+                }
+
+                result.EligibleCount++;
+
+                try
+                {
+                    Apply(detail.BankFeedRuleSuggestionId!.Value);
+                    detail.ResultStatus = "Applied";
+                    detail.Reason = "Applied.";
+                    result.AppliedCount++;
+                }
+                catch (Exception ex)
+                {
+                    detail.ResultStatus = "Failed";
+                    detail.Reason = ex.Message;
+                    result.FailedCount++;
+                }
+            }
+
+            return result;
+        }
+
+        private static BankFeedRuleBulkApplyDetail BuildBulkApplyCandidate(
+            long bankFeedTransactionId,
+            Dictionary<long, BankFeedTransaction> transactions,
+            Dictionary<long, List<BankFeedRuleSuggestion>> suggestions)
+        {
+            var detail = new BankFeedRuleBulkApplyDetail
+            {
+                BankFeedTransactionId = bankFeedTransactionId
+            };
+
+            if (!transactions.TryGetValue(bankFeedTransactionId, out var transaction))
+                return Skip(detail, "Bank feed transaction was not found.");
+
+            if (transaction.Status != "Pending")
+                return Skip(detail, "Only pending bank feed transactions can apply rule suggestions.");
+
+            if (!suggestions.TryGetValue(bankFeedTransactionId, out var rowSuggestions) || !rowSuggestions.Any())
+                return Skip(detail, "No active rule suggestion found.");
+
+            var preferred = rowSuggestions
+                .Where(c => c.SuggestionStatus == "Suggested" && c.IsPreferred)
+                .ToList();
+
+            if (preferred.Count == 0)
+            {
+                if (rowSuggestions.Any(c => c.SuggestionStatus == "Conflict"))
+                    return Skip(detail, "Rule suggestion has a conflict.");
+
+                if (rowSuggestions.Any(c => c.SuggestionStatus == "MissingSetup"))
+                    return Skip(detail, "Rule suggestion setup is missing or inactive.");
+
+                if (rowSuggestions.Any(c => c.SuggestionStatus == "Suggested"))
+                    return Skip(detail, "No preferred rule suggestion found.");
+
+                return Skip(detail, "No applyable rule suggestion found.");
+            }
+
+            if (preferred.Count > 1)
+                return Skip(detail, "Multiple preferred rule suggestions found.");
+
+            var suggestion = preferred.Single();
+            var actionType = suggestion.Rule?.Action?.ActionType;
+            detail.BankFeedRuleSuggestionId = suggestion.BankFeedRuleSuggestionId;
+            detail.RuleName = suggestion.Rule?.RuleName;
+            detail.ActionType = actionType;
+
+            if (string.IsNullOrWhiteSpace(actionType) || !ActionTypes.Contains(actionType))
+                return Skip(detail, "Rule action is not supported.");
+
+            detail.ResultStatus = "Eligible";
+            detail.Reason = "Eligible.";
+            return detail;
+        }
+
+        private static BankFeedRuleBulkApplyDetail Skip(BankFeedRuleBulkApplyDetail detail, string reason)
+        {
+            detail.ResultStatus = "Skipped";
+            detail.Reason = reason;
+            return detail;
         }
 
         private void ApplyMoneyOutExpense(BankFeedRule rule, BankFeedTransaction transaction)

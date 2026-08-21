@@ -91,6 +91,36 @@ namespace KLS.Models
         public string BankFeedStatus { get; set; } = string.Empty;
     }
 
+    public class BankFeedRuleBulkApplyRes
+    {
+        public int RequestedCount { get; set; }
+
+        public int EligibleCount { get; set; }
+
+        public int AppliedCount { get; set; }
+
+        public int SkippedCount { get; set; }
+
+        public int FailedCount { get; set; }
+
+        public List<BankFeedRuleBulkApplyDetail> Details { get; set; } = new();
+    }
+
+    public class BankFeedRuleBulkApplyDetail
+    {
+        public long BankFeedTransactionId { get; set; }
+
+        public long? BankFeedRuleSuggestionId { get; set; }
+
+        public string? RuleName { get; set; }
+
+        public string? ActionType { get; set; }
+
+        public string ResultStatus { get; set; } = string.Empty;
+
+        public string Reason { get; set; } = string.Empty;
+    }
+
     public class BankFeedRuleConditionDto
     {
         public int BankFeedRuleConditionId { get; set; }

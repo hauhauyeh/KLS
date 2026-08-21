@@ -35,6 +35,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_bankFeedRuleService.Apply(bankFeedRuleSuggestionId));
         }
 
+        [HttpPost("ApplyBulk")]
+        [DisplayName("Apply Bank Feed Rule Suggestions In Bulk")]
+        [PermissionKey("Accounting.BankFeed.Match")]
+        public IActionResult ApplyBulk([FromBody] BankFeedBulkActionReq req)
+        {
+            return Ok(_bankFeedRuleService.ApplyBulk(req));
+        }
+
         [HttpPost("Recalculate")]
         [DisplayName("Recalculate Bank Feed Rule Suggestions")]
         [PermissionKey("Accounting.BankFeed.Rule.Recalculate")]

@@ -21,5 +21,7 @@ namespace KLS.Contract.Services
         List<BankFeedRuleSuggestionDto> GetSuggestions(long bankFeedTransactionId);
 
         BankFeedRuleApplyRes Apply(long bankFeedRuleSuggestionId);
+
+        BankFeedRuleBulkApplyRes ApplyBulk(BankFeedBulkActionReq req);
     }
 }
