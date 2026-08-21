@@ -78,6 +78,10 @@ namespace KLS.Contract.Interfaces
 
         IBankFeedSourceRepository BankFeedSources { get; }
 
+        IBankFeedRuleRepository BankFeedRules { get; }
+
+        IBankFeedRuleSuggestionRepository BankFeedRuleSuggestions { get; }
+
         IPaymentOptionRepository PaymentOptions { get; }
 
         IEmpAdvanceRepository EmpAdvances { get; }

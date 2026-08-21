@@ -96,9 +96,12 @@ namespace KLS.Services
             // convert-to-bill, otherwise Bill Manager still shows the orphaned row.
             if (purchase != null && !purchase.IsLocked)
             {
-                if (purchase.IsDropShip && purchase.DropShipSalesId != null)
+                if (purchase.IsDropShip)
                 {
-                    CancelLinkedDropShipPurchaseDelete(purchase, PurchaseId);
+                    if (purchase.StageId == 6)
+                        throw new ArgumentException("Drop-ship Bill must be deleted from Bill Manager.");
+
+                    CancelLinkedDropShipPODelete(purchase, PurchaseId);
                 }
                 else
                 {

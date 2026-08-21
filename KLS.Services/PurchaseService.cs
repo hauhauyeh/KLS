@@ -349,9 +349,16 @@ namespace KLS.Services
 
             if (purchase != null && !purchase.IsLocked)
             {
-                if (purchase.IsDropShip && purchase.DropShipSalesId != null)
+                if (purchase.IsDropShip)
                 {
-                    CancelLinkedDropShipPurchaseDelete(purchase, purchaseId);
+                    if (purchase.StageId == 6)
+                    {
+                        CancelLinkedDropShipBillDelete(purchase, purchaseId);
+                    }
+                    else
+                    {
+                        CancelLinkedDropShipPODelete(purchase, purchaseId);
+                    }
                 }
                 else
                 {

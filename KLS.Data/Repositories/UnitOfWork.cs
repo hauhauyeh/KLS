@@ -121,6 +121,10 @@ namespace KLS.Data.Repositories
 
         public IBankFeedSourceRepository BankFeedSources { get { return new BankFeedSourceRepository(DbContext); } }
 
+        public IBankFeedRuleRepository BankFeedRules { get { return new BankFeedRuleRepository(DbContext); } }
+
+        public IBankFeedRuleSuggestionRepository BankFeedRuleSuggestions { get { return new BankFeedRuleSuggestionRepository(DbContext); } }
+
         public IVendorPaymentRepository VendorPayments { get { return new VendorPaymentRepository(DbContext); } }
 
         public IPaymentOptionRepository PaymentOptions { get { return new PaymentOptionRepository(DbContext); } }

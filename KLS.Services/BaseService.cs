@@ -69,8 +69,51 @@ namespace KLS.Services
                 throw new UnauthorizedAccessException("Payment is outside the current user's sales scope.");
         }
 
-        protected void CancelLinkedDropShipPurchaseDelete(Purchase purchase, int purchaseId)
+        protected void CancelLinkedDropShipPODelete(Purchase purchase, int purchaseId)
         {
+            if (!purchase.IsDropShip || purchase.DropShipSalesId == null)
+                throw new ArgumentException("This is not a linked drop-ship PO.");
+
+            if (purchase.IsLocked)
+                throw new ArgumentException("Locked drop-ship PO cannot be deleted.");
+
+            if (purchase.StageId is null or < 1 or > 3)
+                throw new ArgumentException("Only pre-bill drop-ship POs can be deleted from PO Manager.");
+
+            Uow.ExecuteInTransaction(() =>
+            {
+                var linkedSales = Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
+                    .Select(s => new { s.SalesId, s.SalesNumber })
+                    .SingleOrDefault();
+
+                if (linkedSales == null)
+                    throw new ArgumentException("Linked drop-ship sales order was not found.");
+
+                var hasPostedJournal = Uow.Transactions.Find(t =>
+                        (t.SourceDocType == "Purchase" && t.SourceDocNumber == purchase.PurchaseNumber)
+                        || (t.SourceDocType == "Sales" && t.SourceDocNumber == linkedSales.SalesNumber))
+                    .Any();
+
+                if (hasPostedJournal)
+                    throw new ArgumentException("Drop-ship PO has posted journal rows. Delete from Bill Manager instead.");
+
+                RestoreSalesFromDeletedDropShipPurchase(purchase);
+
+                Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
+            });
+        }
+
+        protected void CancelLinkedDropShipBillDelete(Purchase purchase, int purchaseId)
+        {
+            if (!purchase.IsDropShip || purchase.DropShipSalesId == null)
+                throw new ArgumentException("This is not a linked drop-ship Bill.");
+
+            if (purchase.IsLocked)
+                throw new ArgumentException("Locked drop-ship Bill cannot be deleted.");
+
+            if (purchase.StageId != 6)
+                throw new ArgumentException("Only billed drop-ship Bills can be deleted from Bill Manager.");
+
             Uow.ExecuteInTransaction(() =>
             {
                 var linkedSales = Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
@@ -92,15 +135,32 @@ namespace KLS.Services
                     Uow.Transactions.Find(t => txIds.Contains(t.TxId)).ExecuteDelete();
                 }
 
-                Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
-                    .ExecuteUpdate(su => su
-                        .SetProperty(s => s.IsDropShip, false)
-                        .SetProperty(s => s.DropShipPurchaseId, (int?)null)
-                        .SetProperty(s => s.StageId, 0)
-                        .SetProperty(s => s.UpdatedAt, DateTime.UtcNow));
+                RestoreSalesFromDeletedDropShipPurchase(purchase);
 
                 Uow.Purchases.Find(c => c.PurchaseId == purchaseId).ExecuteDelete();
             });
+        }
+
+        protected void RestoreSalesFromDeletedDropShipPurchase(Purchase purchase)
+        {
+            if (purchase.DropShipSalesId == null)
+                throw new ArgumentException("Linked drop-ship sales order was not found.");
+
+            var linkedSales = Uow.Sales.Find(s => s.SalesId == purchase.DropShipSalesId)
+                .Select(s => new { s.SalesId })
+                .SingleOrDefault();
+
+            if (linkedSales == null)
+                throw new ArgumentException("Linked drop-ship sales order was not found.");
+
+            Uow.Sales.Find(s => s.SalesId == linkedSales.SalesId)
+                .ExecuteUpdate(su => su
+                    .SetProperty(s => s.IsDropShip, false)
+                    .SetProperty(s => s.DropShipPurchaseId, (int?)null)
+                    .SetProperty(s => s.StageId, 0)
+                    .SetProperty(s => s.UpdatedAt, DateTime.UtcNow));
+
+            Uow.Sales.ClearDropShipOrderDetailQuantities(linkedSales.SalesId);
         }
     }
 }

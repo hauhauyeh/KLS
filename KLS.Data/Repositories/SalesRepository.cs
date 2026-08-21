@@ -238,6 +238,22 @@ namespace KLS.Data.Repositories
             return UpdateStage(salesId, stageId);
         }
 
+        public void ClearDropShipOrderDetailQuantities(int salesId)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", salesId);
+
+            DbContext.Database.ExecuteSqlRaw(@"
+                UPDATE dbo.SalesDetail
+                SET
+                    ShipQty = NULL,
+                    BillQty = NULL,
+                    BaseShipQty = NULL,
+                    BaseBillQty = NULL
+                WHERE SalesId = @SalesId
+                  AND LineType = 'I'
+                  AND ItemId IS NOT NULL", salesIdParam);
+        }
+
         public void BatchAllocation(DateOnly shipDate)
         {
             var ShipDateParam = new SqlParameter("@ShipDate", shipDate);
