@@ -1,7 +1,3 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 
 -- =============================================================================================
@@ -61,10 +57,9 @@ GO
 --     and for a Deposit the journal delete happens INSIDE TRG_Delete_TFTx, so the match rows
 --     must already be gone when the TransferFund delete fires.
 --
--- Error numbers 50301-50321 (50311-50314 added 2026-08-06 for the Deposit branch;
+-- Error numbers 50301-50318 (50311-50314 added 2026-08-06 for the Deposit branch;
 -- 50315-50316 added 2026-08-06 for the 2b generated-payment delete; 50317-50318
--- added 2026-08-20 for RuleMoneyIn incoming-payment validation; 50319-50321 added
--- 2026-08-20 for RuleTransfer validation/delete).
+-- added 2026-08-20 for RuleMoneyIn incoming-payment validation).
 --
 -- 2026-08-20 RuleMoneyIn (plan-03b-bank-feed-rule-money-in-apply.md, Slice 2):
 --   Bank Feed rule-created money-in uses IncomingPayment_Insert, which creates a
@@ -73,15 +68,9 @@ GO
 --   Mode='RuleMoneyIn'. Reverse validates that exact pair, deletes BankFeedMatch first,
 --   then deletes the CustomerPayment so TRG_Delete_CustomerPaymentTx removes the
 --   'Other Incoming Payment' journal.
---
--- 2026-08-20 RuleTransfer (plan-03c-bank-feed-rule-transfer-apply.md, Slice 3):
---   Bank Feed rule-created transfers use TransferFund_Insert, which creates a TransferFund
---   row and a journal with SourceDocType='Transfer'. BankFeedSource tracks it as
---   SourceDocType='Transfer', Mode='RuleTransfer'. Reverse deletes BankFeedMatch first,
---   then deletes the TransferFund so TRG_Delete_TFTx removes the 'Transfer' journal.
 -- =============================================================================================
 
-CREATE OR ALTER PROCEDURE [dbo].[BankFeed_ReverseGenerated]
+CREATE   PROCEDURE [dbo].[BankFeed_ReverseGenerated]
     @BankFeedTransactionId BIGINT,
     @ReverseReason         NVARCHAR(500) = NULL,
     @EmpId                 INT
@@ -120,22 +109,16 @@ BEGIN
         -----------------------------------------------------------------------------------
 
         -- Everything this feature generates is a VendorPayment (bill payment or PayNow
-        -- charge), a Deposit, a rule-created CustomerPayment, or a rule-created Transfer.
-        -- Anything else means another feature wrote this table and this procedure does not
-        -- know how to undo it.
+        -- charge), a Deposit, or a rule-created CustomerPayment. Anything else means
+        -- another feature wrote this table and this procedure does not know how to undo it.
         -- 2026-08-06: was  WHERE SourceDocType <> 'VendorPayment'
-        IF EXISTS (SELECT 1 FROM #Sources WHERE SourceDocType NOT IN ('VendorPayment', 'Deposit', 'CustomerPayment', 'Transfer'))
+        IF EXISTS (SELECT 1 FROM #Sources WHERE SourceDocType NOT IN ('VendorPayment', 'Deposit', 'CustomerPayment'))
             THROW 50310, 'This bank feed row generated a document type that cannot be reversed here.', 1;
 
         IF EXISTS (SELECT 1 FROM #Sources
                    WHERE SourceDocType = 'CustomerPayment'
                      AND [Mode] <> 'RuleMoneyIn')
             THROW 50310, 'This bank feed row generated a customer payment type that cannot be reversed here.', 1;
-
-        IF EXISTS (SELECT 1 FROM #Sources
-                   WHERE SourceDocType = 'Transfer'
-                     AND [Mode] <> 'RuleTransfer')
-            THROW 50310, 'This bank feed row generated a transfer type that cannot be reversed here.', 1;
 
         -- 2026-08-06: scoped to VendorPayment sources; a Deposit's SourceDocId is a TFId and
         -- must not be looked up in VendorPayment.
@@ -224,25 +207,6 @@ BEGIN
             THROW 50318, 'The generated incoming payment is not an Other Incoming Payment and cannot be reversed here.', 1;
 
         -----------------------------------------------------------------------------------
-        -- 2a2. Rule-created transfer validation (2026-08-20). Only the exact TransferFund
-        --      shape created by BankFeed_CreateTransfer is reversible here.
-        -----------------------------------------------------------------------------------
-        IF EXISTS (SELECT 1 FROM #Sources AS s
-                   WHERE s.SourceDocType = 'Transfer'
-                     AND NOT EXISTS (SELECT 1 FROM dbo.TransferFund AS tf
-                                     WHERE tf.TFId = s.SourceDocId))
-            THROW 50319, 'The generated transfer no longer exists.', 1;
-
-        IF EXISTS (SELECT 1
-                   FROM #Sources AS s
-                   JOIN dbo.TransferFund AS tf
-                        ON tf.TFId = s.SourceDocId
-                   WHERE s.SourceDocType = 'Transfer'
-                     AND s.[Mode] = 'RuleTransfer'
-                     AND tf.TFType NOT IN ('BK2BK', 'BK2PC', 'PC2PC', 'PC2BK'))
-            THROW 50320, 'The generated transfer is not a Bank/Cash transfer and cannot be reversed here.', 1;
-
-        -----------------------------------------------------------------------------------
         -- 2b. Capture the payments a 'ReceiveOpenInvoice' deposit generated, BEFORE the
         --     TransferFund delete cascades TransferFundDetail away (2026-08-06). 2a
         --     'DepositPayments' deposits are deliberately absent - their payments stay.
@@ -310,15 +274,6 @@ BEGIN
                    JOIN dbo.TransferFund AS tf ON tf.TFId = s.SourceDocId
                    WHERE s.SourceDocType = 'Deposit')
             THROW 50314, 'The generated deposit could not be removed.', 1;
-
-        DELETE FROM dbo.TransferFund
-        WHERE TFId IN (SELECT SourceDocId FROM #Sources
-                       WHERE SourceDocType = 'Transfer');
-
-        IF EXISTS (SELECT 1 FROM #Sources AS s
-                   JOIN dbo.TransferFund AS tf ON tf.TFId = s.SourceDocId
-                   WHERE s.SourceDocType = 'Transfer')
-            THROW 50321, 'The generated transfer could not be removed.', 1;
 
         -- 2026-08-06 (2b): now that the TransferFund is gone and the cascade has cleared
         -- TransferFundDetail, delete the generated payment(s). TRG_Delete_CustomerPaymentTx
@@ -405,5 +360,3 @@ BEGIN
         THROW;
     END CATCH
 END
-
-GO

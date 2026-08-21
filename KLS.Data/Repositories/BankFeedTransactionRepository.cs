@@ -283,6 +283,35 @@ namespace KLS.Data.Repositories
             return newPaymentId.Value == DBNull.Value ? 0 : Convert.ToInt32(newPaymentId.Value);
         }
 
+        public int CreateTransfer(BankFeedCreateTransferReq req, int empId)
+        {
+            var newTFId = new SqlParameter
+            {
+                ParameterName = "@NewTFId",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Int
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[BankFeed_CreateTransfer] " +
+                "@BankFeedTransactionId = @BankFeedTransactionId, " +
+                "@TargetAccountId = @TargetAccountId, " +
+                "@ReferenceId = @ReferenceId, " +
+                "@Notes = @Notes, " +
+                "@AppendBankDesc = @AppendBankDesc, " +
+                "@EmpId = @EmpId, " +
+                "@NewTFId = @NewTFId OUTPUT",
+                new SqlParameter("@BankFeedTransactionId", req.BankFeedTransactionId),
+                new SqlParameter("@TargetAccountId", req.TargetAccountId),
+                new SqlParameter("@ReferenceId", (object?)req.ReferenceId ?? DBNull.Value),
+                new SqlParameter("@Notes", (object?)req.Notes ?? DBNull.Value),
+                new SqlParameter("@AppendBankDesc", req.AppendBankDescription),
+                new SqlParameter("@EmpId", empId),
+                newTFId);
+
+            return newTFId.Value == DBNull.Value ? 0 : Convert.ToInt32(newTFId.Value);
+        }
+
         public void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy)
         {
             DbContext.Database.ExecuteSqlRaw(

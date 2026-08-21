@@ -342,6 +342,10 @@ namespace KLS.Services
                 {
                     ApplyMoneyInDeposit(rule, transaction);
                 }
+                else if (rule.Action.ActionType == "CreateTransfer")
+                {
+                    ApplyTransfer(rule, transaction);
+                }
                 else
                 {
                     throw new ArgumentException("This rule action is not supported yet.");
@@ -461,6 +465,47 @@ namespace KLS.Services
             };
 
             Uow.BankFeedTransactions.CreateRuleMoneyIn(req, UserContext.EmpId);
+        }
+
+        private void ApplyTransfer(BankFeedRule rule, BankFeedTransaction transaction)
+        {
+            var action = rule.Action!;
+            if (transaction.Amount == 0)
+                throw new ArgumentException("Zero amount bank feed transactions cannot create a transfer.");
+
+            if (!action.TargetAccountId.HasValue)
+                throw new ArgumentException("Rule transfer target account is required.");
+
+            var bankFeedAccount = Uow.BankFeedAccounts.GetByLongId(transaction.BankFeedAccountId)
+                ?? throw new ArgumentException("Bank feed account was not found.");
+
+            var sourceAccount = Uow.Accounts.Find(c => c.AccountId == bankFeedAccount.AccountId && !c.Inactive)
+                .SingleOrDefault()
+                ?? throw new ArgumentException("Bank feed mapped account is missing or inactive.");
+
+            if (!IsTransferSourceAccount(sourceAccount))
+                throw new ArgumentException("Rule transfer only supports bank feed rows mapped to a bank account.");
+
+            var targetAccount = Uow.Accounts.Find(c => c.AccountId == action.TargetAccountId.Value && !c.Inactive)
+                .SingleOrDefault()
+                ?? throw new ArgumentException("Rule transfer target account is missing or inactive.");
+
+            if (!IsTransferTargetAccount(targetAccount))
+                throw new ArgumentException("Rule transfer target account must be Bank or Cash.");
+
+            if (sourceAccount.AccountId == targetAccount.AccountId)
+                throw new ArgumentException("Rule transfer target account cannot be the same as the bank feed account.");
+
+            var req = new BankFeedCreateTransferReq
+            {
+                BankFeedTransactionId = transaction.BankFeedTransactionId,
+                TargetAccountId = targetAccount.AccountId,
+                ReferenceId = transaction.ReferenceNo ?? transaction.CheckNumber,
+                Notes = string.IsNullOrWhiteSpace(action.MemoTemplate) ? rule.RuleName : action.MemoTemplate.Trim(),
+                AppendBankDescription = action.AppendBankDescription
+            };
+
+            Uow.BankFeedTransactions.CreateTransfer(req, UserContext.EmpId);
         }
 
         private void ExpireActiveSuggestions(List<long> bankFeedTransactionIds)
@@ -590,8 +635,20 @@ namespace KLS.Services
 
             if (action.ActionType == "CreateTransfer" && action.TargetAccountId.HasValue)
             {
-                var sourceAccountId = Uow.BankFeedAccounts.GetByLongId(transaction.BankFeedAccountId)?.AccountId;
-                if (sourceAccountId.HasValue && sourceAccountId == action.TargetAccountId)
+                var bankFeedAccount = Uow.BankFeedAccounts.GetByLongId(transaction.BankFeedAccountId);
+                var sourceAccount = bankFeedAccount == null
+                    ? null
+                    : Uow.Accounts.Find(c => c.AccountId == bankFeedAccount.AccountId && !c.Inactive).SingleOrDefault();
+                var targetAccount = Uow.Accounts.Find(c => c.AccountId == action.TargetAccountId.Value && !c.Inactive)
+                    .SingleOrDefault();
+
+                if (sourceAccount == null || targetAccount == null)
+                    return "MissingSetup";
+
+                if (!IsTransferSourceAccount(sourceAccount) || !IsTransferTargetAccount(targetAccount))
+                    return "MissingSetup";
+
+                if (sourceAccount.AccountId == targetAccount.AccountId)
                     return "MissingSetup";
             }
 
@@ -624,6 +681,17 @@ namespace KLS.Services
             return account.AccountCode == "@UF"
                 || account.AccountCode == "@AR"
                 || account.AccountCode == "@AP";
+        }
+
+        private static bool IsTransferSourceAccount(Account account)
+        {
+            return string.Equals(account.TypeName, "Bank", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsTransferTargetAccount(Account account)
+        {
+            return string.Equals(account.TypeName, "Bank", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(account.TypeName, "Cash", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string BuildReason(BankFeedRule rule, string status)
@@ -727,9 +795,23 @@ namespace KLS.Services
 
             if (actionType == "CreateTransfer" && req.BankFeedAccountId.HasValue)
             {
-                var sourceAccountId = Uow.BankFeedAccounts.GetByLongId(req.BankFeedAccountId.Value)?.AccountId;
-                if (sourceAccountId.HasValue && sourceAccountId == req.Action.TargetAccountId)
-                    throw new ArgumentException("Rule transfer target account cannot be the same as the bank feed account.");
+                var bankFeedAccount = Uow.BankFeedAccounts.GetByLongId(req.BankFeedAccountId.Value);
+                if (bankFeedAccount != null)
+                {
+                    var sourceAccount = Uow.Accounts.GetById(bankFeedAccount.AccountId);
+                    if (sourceAccount != null && !IsTransferSourceAccount(sourceAccount))
+                        throw new ArgumentException("Rule transfer only supports bank feed accounts mapped to a bank account.");
+
+                    if (sourceAccount != null && sourceAccount.AccountId == req.Action.TargetAccountId)
+                        throw new ArgumentException("Rule transfer target account cannot be the same as the bank feed account.");
+                }
+            }
+
+            if (actionType == "CreateTransfer" && req.Action.TargetAccountId.HasValue)
+            {
+                var targetAccount = Uow.Accounts.GetById(req.Action.TargetAccountId.Value);
+                if (targetAccount != null && !IsTransferTargetAccount(targetAccount))
+                    throw new ArgumentException("Rule transfer target account must be Bank or Cash.");
             }
 
             if (actionType == "CreateMoneyInDeposit" && req.Action.AccountId.HasValue)

@@ -7,8 +7,9 @@ GO
 -- 2026-08-20 bank-feed-rule-safe-apply: add nullable rule suggestion summary fields
 --   to the non-count list projection only. The count branch stays unchanged.
 --   Suggestion status is display-only here; apply is revalidated by the backend.
---   Applyable means one active Suggested row whose action is either Exclude, a money-out
---   expense with payee/account IDs, or a money-in deposit with an account ID.
+--   Applyable means one active Suggested row whose action is Exclude, a money-out
+--   expense with payee/account IDs, a money-in deposit with an account ID, or a
+--   transfer with a target account ID.
 -- ============================================================
 -- 2026-07-27 bank-feed-create-phase-1: add IsGenerated to the row projection.
 --   1 when an Active BankFeedSource exists for the row, i.e. Bank Feed created the
@@ -134,6 +135,8 @@ BEGIN
                      AND rs.AccountId IS NOT NULL)
                  OR (rs.ActionType = ''CreateMoneyInDeposit''
                      AND rs.AccountId IS NOT NULL)
+                 OR (rs.ActionType = ''CreateTransfer''
+                     AND rs.TargetAccountId IS NOT NULL)
              )
         THEN 1 ELSE 0
     END AS BIT) AS IsRuleSuggestionApplyable'
