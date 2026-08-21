@@ -338,6 +338,10 @@ namespace KLS.Services
                 {
                     ApplyMoneyOutExpense(rule, transaction);
                 }
+                else if (rule.Action.ActionType == "CreateMoneyInDeposit")
+                {
+                    ApplyMoneyInDeposit(rule, transaction);
+                }
                 else
                 {
                     throw new ArgumentException("This rule action is not supported yet.");
@@ -412,6 +416,51 @@ namespace KLS.Services
                 req.ResolvingLines.Select(l => new { l.PayeeId, l.AccountId, l.Amount, l.Notes }));
 
             Uow.BankFeedTransactions.CreateVendorPayment(req, null, resolvingJson, UserContext.EmpId);
+        }
+
+        private void ApplyMoneyInDeposit(BankFeedRule rule, BankFeedTransaction transaction)
+        {
+            var action = rule.Action!;
+            if (transaction.Amount <= 0)
+                throw new ArgumentException("Only money-in bank feed transactions can create a deposit.");
+
+            if (!action.AccountId.HasValue)
+                throw new ArgumentException("Rule action account is required for money-in deposit apply.");
+
+            if (action.PayeeId.HasValue && !Uow.Payees.Exists(c => c.PayeeId == action.PayeeId.Value && !c.IsClosed))
+                throw new ArgumentException("Rule action payee is missing or inactive.");
+
+            var actionAccount = Uow.Accounts.Find(c => c.AccountId == action.AccountId.Value && !c.Inactive)
+                .SingleOrDefault()
+                ?? throw new ArgumentException("Rule action account is missing or inactive.");
+
+            if (IsBlockedMoneyInAccount(actionAccount))
+                throw new ArgumentException("Rule action account cannot be Undeposited Funds, Accounts Receivable, or Accounts Payable.");
+
+            var bankFeedAccount = Uow.BankFeedAccounts.GetByLongId(transaction.BankFeedAccountId)
+                ?? throw new ArgumentException("Bank feed account was not found.");
+
+            var sourceAccount = Uow.Accounts.Find(c => c.AccountId == bankFeedAccount.AccountId && !c.Inactive)
+                .SingleOrDefault()
+                ?? throw new ArgumentException("Bank feed mapped account is missing or inactive.");
+
+            if (!sourceAccount.IsAccountDebit)
+                throw new ArgumentException("Rule money-in only supports debit-side bank or cash accounts.");
+
+            if (bankFeedAccount.AccountId == action.AccountId.Value)
+                throw new ArgumentException("Rule action account cannot be the bank account.");
+
+            var req = new BankFeedCreateRuleMoneyInReq
+            {
+                BankFeedTransactionId = transaction.BankFeedTransactionId,
+                PayeeId = action.PayeeId,
+                AccountId = action.AccountId.Value,
+                ReferenceId = transaction.ReferenceNo ?? transaction.CheckNumber,
+                Notes = string.IsNullOrWhiteSpace(action.MemoTemplate) ? rule.RuleName : action.MemoTemplate.Trim(),
+                AppendBankDescription = action.AppendBankDescription
+            };
+
+            Uow.BankFeedTransactions.CreateRuleMoneyIn(req, UserContext.EmpId);
         }
 
         private void ExpireActiveSuggestions(List<long> bankFeedTransactionIds)
@@ -546,7 +595,35 @@ namespace KLS.Services
                     return "MissingSetup";
             }
 
+            if (action.ActionType == "CreateMoneyInDeposit")
+            {
+                var bankFeedAccount = Uow.BankFeedAccounts.GetByLongId(transaction.BankFeedAccountId);
+                var sourceAccount = bankFeedAccount == null
+                    ? null
+                    : Uow.Accounts.Find(c => c.AccountId == bankFeedAccount.AccountId && !c.Inactive).SingleOrDefault();
+
+                if (sourceAccount == null || !sourceAccount.IsAccountDebit)
+                    return "MissingSetup";
+
+                if (action.AccountId.HasValue)
+                {
+                    var actionAccount = Uow.Accounts.GetById(action.AccountId.Value);
+                    if (actionAccount == null || actionAccount.Inactive || IsBlockedMoneyInAccount(actionAccount))
+                        return "MissingSetup";
+
+                    if (bankFeedAccount!.AccountId == action.AccountId.Value)
+                        return "MissingSetup";
+                }
+            }
+
             return "Suggested";
+        }
+
+        private static bool IsBlockedMoneyInAccount(Account account)
+        {
+            return account.AccountCode == "@UF"
+                || account.AccountCode == "@AR"
+                || account.AccountCode == "@AP";
         }
 
         private static string BuildReason(BankFeedRule rule, string status)
@@ -653,6 +730,27 @@ namespace KLS.Services
                 var sourceAccountId = Uow.BankFeedAccounts.GetByLongId(req.BankFeedAccountId.Value)?.AccountId;
                 if (sourceAccountId.HasValue && sourceAccountId == req.Action.TargetAccountId)
                     throw new ArgumentException("Rule transfer target account cannot be the same as the bank feed account.");
+            }
+
+            if (actionType == "CreateMoneyInDeposit" && req.Action.AccountId.HasValue)
+            {
+                var actionAccount = Uow.Accounts.GetById(req.Action.AccountId.Value);
+                if (IsBlockedMoneyInAccount(actionAccount))
+                    throw new ArgumentException("Rule action account cannot be Undeposited Funds, Accounts Receivable, or Accounts Payable.");
+
+                if (req.BankFeedAccountId.HasValue)
+                {
+                    var bankFeedAccount = Uow.BankFeedAccounts.GetByLongId(req.BankFeedAccountId.Value);
+                    if (bankFeedAccount != null)
+                    {
+                        var sourceAccount = Uow.Accounts.GetById(bankFeedAccount.AccountId);
+                        if (sourceAccount != null && !sourceAccount.IsAccountDebit)
+                            throw new ArgumentException("Rule money-in only supports debit-side bank or cash accounts.");
+
+                        if (bankFeedAccount.AccountId == req.Action.AccountId)
+                            throw new ArgumentException("Rule action account cannot be the bank feed account.");
+                    }
+                }
             }
         }
 
