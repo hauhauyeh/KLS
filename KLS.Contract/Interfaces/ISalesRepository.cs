@@ -37,6 +37,8 @@ namespace KLS.Contract.Interfaces
 
         SalesStage RestoreStage(int salesId, int stageId);
 
+        void ClearDropShipOrderDetailQuantities(int salesId);
+
         void BatchAllocation(DateOnly shipDate);
 
         void SingleAllocation(int salesId);
