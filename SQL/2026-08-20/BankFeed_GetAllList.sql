@@ -234,6 +234,7 @@ BEGIN
             a.ActionType,
             a.PayeeId,
             a.AccountId,
+            a.TargetAccountId,
             p.PayeeName,
             actionAcct.AccountName,
             targetAcct.AccountName AS TargetAccountName
