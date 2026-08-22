@@ -19,8 +19,6 @@ namespace KLS.Contract.Interfaces
 
         void UpdatePartially(int salesId);
 
-        SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId);
-
         SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId);
 
         void UpdateNameDate(SalesUpdateReq updateReq);

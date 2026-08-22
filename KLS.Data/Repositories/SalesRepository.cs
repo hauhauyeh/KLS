@@ -133,35 +133,6 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Sales_PartialUpdate] @SalesId,@EmpId", SalesIdParam, EmpIdParam);
         }
 
-        public SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId)
-        {
-            var SalesIdParam = new SqlParameter("@SalesId", salesId);
-
-            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
-
-            var NeedsReprintParam = new SqlParameter()
-            {
-                ParameterName = "@NeedsReprint",
-                Direction = System.Data.ParameterDirection.Output,
-                SqlDbType = System.Data.SqlDbType.Bit
-            };
-
-            var sales = DbContext.SalesList
-                .FromSqlRaw("[dbo].[Sales_DropShipStage3PriceNoteUpdate] @SalesId,@EmpId,@NeedsReprint OUTPUT", SalesIdParam, EmpIdParam, NeedsReprintParam)
-                .AsNoTracking()
-                .AsEnumerable()
-                .FirstOrDefault();
-
-            if (sales == null)
-                throw new KeyNotFoundException($"Sales with Id {salesId} not found after drop-ship price/comment update.");
-
-            return new SalesDropShipStage3PriceNoteUpdateResult
-            {
-                Sales = sales,
-                NeedsReprint = NeedsReprintParam.Value != DBNull.Value && Convert.ToBoolean(NeedsReprintParam.Value)
-            };
-        }
-
         public SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId)
         {
             var SalesIdParam = new SqlParameter("@SalesId", salesId);

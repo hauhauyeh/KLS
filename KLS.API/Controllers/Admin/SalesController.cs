@@ -251,14 +251,6 @@ namespace KLS.API.Controllers.Admin
             return Ok(_salesService.UpdatePartially(salesId));
         }
 
-        [HttpPut("DropShipStage3PriceNoteUpdate/{salesId}")]
-        [DisplayName("Update Drop Ship Price/Comment")]
-        [PermissionKey("Customer.Sale.Update")]
-        public IActionResult DropShipStage3PriceNoteUpdate(int salesId)
-        {
-            return Ok(_salesService.DropShipStage3PriceNoteUpdate(salesId));
-        }
-
         [HttpPut("DropShipRestrictedUpdate/{salesId}")]
         [DisplayName("Update Drop Ship Sales Details")]
         [PermissionKey("Customer.Sale.Update")]

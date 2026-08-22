@@ -46,8 +46,6 @@ namespace KLS.Contract.Services
 
         SalesList UpdatePartially(int salesId);
 
-        SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId);
-
         SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId);
 
         SalesList UpdateNameDate(SalesUpdateReq updateReq);
