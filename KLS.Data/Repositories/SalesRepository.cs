@@ -162,6 +162,47 @@ namespace KLS.Data.Repositories
             };
         }
 
+        public SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId)
+        {
+            var SalesIdParam = new SqlParameter("@SalesId", salesId);
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var NeedsReprintParam = new SqlParameter
+            {
+                ParameterName = "@NeedsReprint",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Bit
+            };
+            var NeedsRevisedInvoiceEmailParam = new SqlParameter
+            {
+                ParameterName = "@NeedsRevisedInvoiceEmail",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Bit
+            };
+
+            var sales = DbContext.SalesList
+                .FromSqlRaw(
+                    "[dbo].[Sales_DropShipRestrictedUpdate] @SalesId,@EmpId,@NeedsReprint OUTPUT,@NeedsRevisedInvoiceEmail OUTPUT",
+                    SalesIdParam, EmpIdParam, NeedsReprintParam, NeedsRevisedInvoiceEmailParam)
+                .AsNoTracking()
+                .AsEnumerable()
+                .FirstOrDefault();
+
+            if (sales == null)
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found after restricted drop-ship update.");
+
+            if (!sales.StageId.HasValue)
+                throw new InvalidOperationException($"Sales with Id {salesId} has no stage after restricted drop-ship update.");
+
+            return new SalesDropShipRestrictedUpdateResult
+            {
+                Sales = sales,
+                CurrentStageId = sales.StageId.Value,
+                NeedsReprint = NeedsReprintParam.Value != DBNull.Value && Convert.ToBoolean(NeedsReprintParam.Value),
+                NeedsRevisedInvoiceEmail = NeedsRevisedInvoiceEmailParam.Value != DBNull.Value
+                    && Convert.ToBoolean(NeedsRevisedInvoiceEmailParam.Value)
+            };
+        }
+
         public void UpdateNameDate(SalesUpdateReq updateReq)
         {
             var SalesIdParam = new SqlParameter("@SalesId", updateReq.SalesId);

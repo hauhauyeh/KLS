@@ -21,6 +21,8 @@ namespace KLS.Contract.Interfaces
 
         SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId);
 
+        SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId);
+
         void UpdateNameDate(SalesUpdateReq updateReq);
 
         void InsertShippingCharge(SalesUpdateReq updateReq);

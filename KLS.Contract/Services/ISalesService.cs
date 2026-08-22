@@ -48,6 +48,8 @@ namespace KLS.Contract.Services
 
         SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId);
 
+        SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId);
+
         SalesList UpdateNameDate(SalesUpdateReq updateReq);
 
         SalesList InsertShippingCharge(SalesUpdateReq updateReq);

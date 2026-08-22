@@ -395,6 +395,13 @@ namespace KLS.Services
             return Uow.Sales.DropShipStage3PriceNoteUpdate(salesId);
         }
 
+        public SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId)
+        {
+            EnsureVisible(salesId);
+
+            return Uow.Sales.DropShipRestrictedUpdate(salesId);
+        }
+
         public SalesList UpdateNameDate(SalesUpdateReq updateReq)
         {
             EnsureVisible(updateReq.SalesId);
