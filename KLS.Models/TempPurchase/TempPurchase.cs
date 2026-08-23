@@ -138,6 +138,12 @@ namespace KLS.Models
             ApplyFlagRules(docType: EnumHelper.PurchaseDocType.PO);
         }
 
+        public void ApplyShipQuantity(decimal? shipQty)
+        {
+            ShipQty = shipQty;
+            BillQty = shipQty;
+        }
+
         public void ApplyBillQuantities(decimal? ordQty0, decimal? ordQty1)
         {
             OrdQty0 = ordQty0;

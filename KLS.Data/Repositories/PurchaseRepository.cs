@@ -145,6 +145,27 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Purchase_PartialUpdate] @PurchaseId,@EmpId,@IsBill", PurchaseIdParam, EmpIdParam, IsBillParam);
         }
 
+        public void DropShipPORestrictedUpdate(int purchaseId, bool canUpdateShipQty)
+        {
+            var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+            var canUpdateShipQtyParam = new SqlParameter("@CanUpdateShipQty", canUpdateShipQty);
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[Purchase_DropShipPORestrictedUpdate] @PurchaseId,@EmpId,@CanUpdateShipQty",
+                purchaseIdParam, empIdParam, canUpdateShipQtyParam);
+        }
+
+        public void DropShipBillRestrictedUpdate(int purchaseId)
+        {
+            var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
+            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[Purchase_DropShipBillRestrictedUpdate] @PurchaseId,@EmpId",
+                purchaseIdParam, empIdParam);
+        }
+
         public void FreightBillLink(int purchaseId)
         {
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
@@ -173,42 +194,6 @@ namespace KLS.Data.Repositories
             var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
 
             return DbContext.PurchaseDetailList.FromSqlRaw("[dbo].[Purchase_GetDetail] @PurchaseId", PurchaseIdParam);
-        }
-
-        public IQueryable<PurchaseDetailValidationRow> GetPurchaseDetailValidationRows(int purchaseId)
-        {
-            var PurchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
-
-            return DbContext.PurchaseDetailValidationRow.FromSqlRaw(@"
-                SELECT
-                    PurchaseDetailId,
-                    PurchaseId,
-                    LineId,
-                    LineType,
-                    ItemId,
-                    AccountId,
-                    ItemUnitId,
-                    Unit,
-                    Notes,
-                    IsFree,
-                    IsOut,
-                    IsCRCG,
-                    OrdQty0,
-                    ShipQty,
-                    BillQty,
-                    OrdQty1,
-                    ReceiveQty,
-                    FinalQty,
-                    BillPrice,
-                    FinalPrice,
-                    ImportCommission,
-                    FactorToBase,
-                    ExpiryDate,
-                    CustomDutyRate,
-                    TariffPercent,
-                    ItemVolume
-                FROM dbo.PurchaseDetail
-                WHERE PurchaseId = @PurchaseId", PurchaseIdParam);
         }
 
         public IQueryable<PurchaseItemCostList> GetItemCostChange(int purchaseId)

@@ -158,16 +158,6 @@ namespace KLS.Data.Repositories
             return result;
         }
 
-        public void UpdateShipQty(int purchaseId)
-        {
-            var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);
-            var empIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
-
-            DbContext.Database.ExecuteSqlRaw(
-                "[DropShipment_UpdateShipQty] @PurchaseId,@EmpId",
-                purchaseIdParam, empIdParam);
-        }
-
         public void UpdateReceiptQty(int purchaseId, DropShipmentUpdateReceiptQtyReq req)
         {
             var purchaseIdParam = new SqlParameter("@PurchaseId", purchaseId);

@@ -21,6 +21,10 @@ namespace KLS.Contract.Interfaces
 
         void UpdatePartially(int purchaseId);
 
+        void DropShipPORestrictedUpdate(int purchaseId, bool canUpdateShipQty);
+
+        void DropShipBillRestrictedUpdate(int purchaseId);
+
         void FreightBillLink(int purchaseId);
 
         void SyncDropShipSalesTransitFromPO(int purchaseId);
@@ -28,8 +32,6 @@ namespace KLS.Contract.Interfaces
         IQueryable<AssignedShipmentRow> AssignedShipments(int purchaseId, bool isShipment);
 
         IQueryable<PurchaseDetailList> GetPurchaseDetails(int purchaseId);
-
-        IQueryable<PurchaseDetailValidationRow> GetPurchaseDetailValidationRows(int purchaseId);
 
         IQueryable<PurchaseItemCostList> GetItemCostChange(int purchaseId);
     }

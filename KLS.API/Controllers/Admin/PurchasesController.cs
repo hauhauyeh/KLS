@@ -156,6 +156,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPut("DropShipRestrictedUpdate/{purchaseId}")]
+        [DisplayName("Update Drop-Ship Bill Price And Comment")]
+        [PermissionKey("Vendor.Purchase.Update")]
+        public IActionResult DropShipRestrictedUpdate(int purchaseId)
+        {
+            return Ok(_purchaseService.DropShipRestrictedUpdate(purchaseId));
+        }
+
+
         [HttpDelete("{purchaseId}")]
         [DisplayName("Delete Bill")]
         [PermissionKey("Vendor.Purchase.Delete")]

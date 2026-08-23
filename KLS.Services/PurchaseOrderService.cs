@@ -74,11 +74,26 @@ namespace KLS.Services
                     ?? throw new ArgumentException("Purchase order not found.");
 
                 EnsureDropShipReceivedStageEditable(purchase);
+
+                if (purchase.IsDropShip && purchase.StageId is >= 1 and <= 3)
+                    throw new ArgumentException("Use the restricted drop-ship PO update.");
             }
 
             var poId = Uow.PurchaseOrders.Checkout(checkoutReq);
 
             return GetListById(poId);
+        }
+
+        public POList? DropShipRestrictedUpdate(int purchaseId, bool canUpdateShipQty)
+        {
+            var purchase = Uow.Purchases.GetById(purchaseId)
+                ?? throw new ArgumentException("Drop-ship purchase order not found.");
+
+            if (!purchase.IsDropShip || purchase.StageId is null or < 1 or > 3)
+                throw new ArgumentException("This operation supports drop-ship PO stages 1 through 3 only.");
+
+            Uow.Purchases.DropShipPORestrictedUpdate(purchaseId, canUpdateShipQty);
+            return GetListById(purchaseId);
         }
 
         private static void EnsureDropShipReceivedStageEditable(Purchase purchase)
