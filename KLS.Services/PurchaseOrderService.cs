@@ -200,13 +200,16 @@ namespace KLS.Services
                 throw new ArgumentException("Vendor email is missing.");
 
             var poNumber = po.PurchaseNumber.ToString();
+            var subjectNumber = string.IsNullOrWhiteSpace(po.FactorPO)
+                ? poNumber
+                : po.FactorPO.Trim();
             var poFile = PrintPO(purchaseId);
             var tempFolder = CreateEmailAttachmentFolder();
 
             try
             {
                 var attachments = BuildPurchaseOrderEmailAttachments(tempFolder, poNumber, poFile, files);
-                var subject = $"Purchase Order #{poNumber}";
+                var subject = $"Purchase Order #{subjectNumber}";
                 var mailbody = BuildPurchaseOrderEmailBody(vendor.PayeeName, poNumber);
 
                 var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
