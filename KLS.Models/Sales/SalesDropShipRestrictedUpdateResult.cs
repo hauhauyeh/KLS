@@ -4,8 +4,6 @@ namespace KLS.Models
     {
         public SalesList Sales { get; set; } = null!;
 
-        public int CurrentStageId { get; set; }
-
         public bool NeedsReprint { get; set; }
 
         public bool NeedsRevisedInvoiceEmail { get; set; }

@@ -167,7 +167,6 @@ namespace KLS.Data.Repositories
             return new SalesDropShipRestrictedUpdateResult
             {
                 Sales = sales,
-                CurrentStageId = sales.StageId.Value,
                 NeedsReprint = NeedsReprintParam.Value != DBNull.Value && Convert.ToBoolean(NeedsReprintParam.Value),
                 NeedsRevisedInvoiceEmail = NeedsRevisedInvoiceEmailParam.Value != DBNull.Value
                     && Convert.ToBoolean(NeedsRevisedInvoiceEmailParam.Value)
