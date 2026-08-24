@@ -13,7 +13,7 @@ namespace KLS.Contract.Services
 
         PagingResponse<ShipmentManagerListRow> GetManagerList(ShipmentListReq shipmentListReq);
 
-        IEnumerable<ShipmentList> GetOpenShipments();
+        IEnumerable<ShipmentList> GetOpenShipments(int? matchPurchaseId = null);
 
         Shipment? GetById(int shipmentId);
 

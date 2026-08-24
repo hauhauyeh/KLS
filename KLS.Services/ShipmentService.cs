@@ -41,12 +41,13 @@ namespace KLS.Services
             };
         }
 
-        public IEnumerable<ShipmentList> GetOpenShipments()
+        public IEnumerable<ShipmentList> GetOpenShipments(int? matchPurchaseId = null)
         {
             return Uow.Shipments.GetPagedList(new ShipmentListReq
             {
                 Pagesize = 500,
-                Filterby = "open"
+                Filterby = "open",
+                MatchPurchaseId = matchPurchaseId
             }).ToList();
         }
 

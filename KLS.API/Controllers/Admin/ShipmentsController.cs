@@ -48,9 +48,9 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("Open")]
-        public IActionResult Open()
+        public IActionResult Open([FromQuery] int? matchPurchaseId)
         {
-            return Ok(_shipmentService.GetOpenShipments());
+            return Ok(_shipmentService.GetOpenShipments(matchPurchaseId));
         }
 
 

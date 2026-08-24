@@ -22,7 +22,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildPagedList(shipmentListReq);
 
-            return DbContext.ShipmentList.FromSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ShipmentList.FromSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@MatchPurchaseId", param);
         }
 
         public int Count(ShipmentListReq shipmentListReq)
@@ -30,7 +30,7 @@ namespace KLS.Data.Repositories
             shipmentListReq.IsCount = true;
             var param = BuildPagedList(shipmentListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@MatchPurchaseId", param);
 
             var output = param[10] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -504,7 +504,9 @@ END", PurchaseIdParam);
                     ParameterName = "@TotalCount",
                     Direction = System.Data.ParameterDirection.Output,
                     SqlDbType = System.Data.SqlDbType.Int
-                }
+                },
+
+                shipmentListReq.MatchPurchaseId.HasValue ? new SqlParameter("@MatchPurchaseId", shipmentListReq.MatchPurchaseId) : new SqlParameter("@MatchPurchaseId", DBNull.Value)
             };
 
             return param;

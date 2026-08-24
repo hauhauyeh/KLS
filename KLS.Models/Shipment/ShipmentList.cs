@@ -38,5 +38,15 @@ namespace KLS.Models
         public bool IsLocked { get { return Status == EnumHelper.ShipmentStatus.Closed.ToString(); } }
 
         public decimal? TotalCharges { get; set; }
+
+        public bool AreChargesComplete { get; set; }
+
+        public DateTime? ChargesCompletedAt { get; set; }
+
+        public int? ChargesCompletedBy { get; set; }
+
+        public bool IsContainerMatch { get; set; }
+
+        public int ContainerMatchRank { get; set; }
     }
 }

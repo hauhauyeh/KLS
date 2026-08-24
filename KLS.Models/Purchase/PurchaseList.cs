@@ -81,9 +81,17 @@ namespace KLS.Models
 
         public int? ShipmentLinkCount { get; set; }
 
+        public int? AssignedShipmentCount { get; set; }
+
         public string? ShipmentContainerNos { get; set; }
 
         public string? ShipmentCarrierName { get; set; }
+
+        public bool? ShipmentAreChargesComplete { get; set; }
+
+        public DateTime? ShipmentChargesCompletedAt { get; set; }
+
+        public int? ShipmentChargesCompletedBy { get; set; }
 
         public int? ChargeBillCount { get; set; }
 

@@ -322,7 +322,11 @@ namespace KLS.Services
                 r.ContainerNo,
                 r.Status,
                 r.PayeeName,
-                r.IsLocked
+                r.AreChargesComplete,
+                r.ChargesCompletedAt,
+                r.ChargesCompletedBy,
+                r.IsLocked,
+                r.IsGeneratedApLockedOrPaid
             })
             .Select(g => new AssignedShipment
             {
@@ -333,7 +337,11 @@ namespace KLS.Services
                 ContainerNo = g.Key.ContainerNo,
                 Status = g.Key.Status,
                 PayeeName = g.Key.PayeeName,
+                AreChargesComplete = g.Key.AreChargesComplete,
+                ChargesCompletedAt = g.Key.ChargesCompletedAt,
+                ChargesCompletedBy = g.Key.ChargesCompletedBy,
                 IsShipmentPaid = g.Key.IsLocked,
+                IsGeneratedApLockedOrPaid = g.Key.IsGeneratedApLockedOrPaid,
 
                 Charges = g.Where(c => c.ChargeId != null)
                 .Select(x => new ShipmentCharge
