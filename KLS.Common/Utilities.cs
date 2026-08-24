@@ -165,6 +165,19 @@ namespace KLS.Common
             return string.Format("{0:C" + decimals + "}", price.Value);
         }
 
+        public static string FormatPriceCompact4(decimal? price, int priceDecimals)
+        {
+            if (!price.HasValue)
+                return string.Empty;
+
+            if (priceDecimals != 4)
+                return string.Format("{0:C2}", price.Value);
+
+            var roundedPrice = Math.Round(price.Value, 4);
+            var format = roundedPrice == Math.Round(roundedPrice, 2) ? "{0:C2}" : "{0:C4}";
+            return string.Format(format, roundedPrice);
+        }
+
         public static string GetIpAddress(HttpContext httpContext)
         {
             var ipadd = httpContext.Connection.RemoteIpAddress.ToString();

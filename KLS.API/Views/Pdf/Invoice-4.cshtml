@@ -21,15 +21,6 @@
 
     var colSpan = 6;
 
-    string FormatInvoicePrice(decimal? price)
-    {
-        if (!price.HasValue)
-        {
-            return string.Empty;
-        }
-
-        return string.Format("{0:C4}", price.Value).TrimEnd('0').TrimEnd('.');
-    }
 }
 
 <style>
@@ -587,7 +578,7 @@
                             <span class="upc-code">@itmdetail.EncodedBarcode</span>
                         </td>
                         <td class="text-center">
-                            <span>@FormatInvoicePrice(itmdetail.UnitPrice)</span>
+                            <span>@Utilities.FormatPriceCompact4(itmdetail.UnitPrice, Model.PriceDecimals)</span>
                         </td>
                         <td class="text-right">
                             <span>@string.Format("{0:c}", itmdetail.ExtTotal)</span>
