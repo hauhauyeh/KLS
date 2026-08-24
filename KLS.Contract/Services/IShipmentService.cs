@@ -33,7 +33,11 @@ namespace KLS.Contract.Services
 
         Shipment? GenerateBill(int shipmentId);
 
+        ShipmentConfirmChargesCompleteResult ConfirmChargesComplete(int shipmentId);
+
         void UnAllocation(int shipmentPurchaseId);
+
+        int UnassignPurchases(int shipmentId, ShipmentUnassignPurchasesReq req);
 
         IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId);
 

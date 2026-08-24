@@ -173,6 +173,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
+            modelBuilder.Entity<ShipmentConfirmChargesCompleteResult>().HasNoKey();
             modelBuilder.Entity<ShipmentManagerListRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRatePrecheckRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRateRefreshResult>().HasNoKey();
@@ -542,6 +543,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<EligibleBill> EligibleBill { get; set; }
 
         public virtual DbSet<ShipmentReallocationCandidate> ShipmentReallocationCandidate { get; set; }
+
+        public virtual DbSet<ShipmentConfirmChargesCompleteResult> ShipmentConfirmChargesCompleteResults { get; set; }
 
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
 

@@ -153,7 +153,7 @@ namespace KLS.Services
                     Uow.Commit();
                 }
 
-                Uow.Shipments.RebuildChargesFromChargeBills(req.ShipmentId);
+                Uow.Shipments.ResetCompletionAndReallocate(req.ShipmentId, rebuildChargeSummaries: true);
             });
 
             return GetById(bill!.ShipmentChargeBillId)!;
@@ -181,7 +181,7 @@ namespace KLS.Services
 
                 if (Uow.ShipmentChargeBills.Exists(b => b.ShipmentId == bill.ShipmentId))
                 {
-                    Uow.Shipments.RebuildChargesFromChargeBills(bill.ShipmentId);
+                    Uow.Shipments.ResetCompletionAndReallocate(bill.ShipmentId, rebuildChargeSummaries: true);
                 }
                 else
                 {
@@ -191,7 +191,7 @@ namespace KLS.Services
                                 && c.IsGeneratedFromChargeBills)
                         .ExecuteDelete();
 
-                    Uow.Shipments.RefreshSingleBillAllocation(bill.ShipmentId);
+                    Uow.Shipments.ResetCompletionAndReallocate(bill.ShipmentId);
                 }
             });
         }
