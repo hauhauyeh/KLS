@@ -27,6 +27,8 @@ namespace KLS.Models
 
         public int? PurchaseId { get; set; }
 
+        public int? SourceSharedShipmentChargeBillSplitId { get; set; }
+
         [MaxLength(500)]
         public string? Notes { get; set; }
 

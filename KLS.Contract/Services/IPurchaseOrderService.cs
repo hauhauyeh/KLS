@@ -14,6 +14,8 @@ namespace KLS.Contract.Services
 
         POList? Checkout(POCheckoutReq checkoutReq);
 
+        POList? DropShipRestrictedUpdate(int purchaseId, bool canUpdateShipQty);
+
         void Delete(int purchaseId);
 
         IEnumerable<PODetail> GetPODetail(int purchaseId);

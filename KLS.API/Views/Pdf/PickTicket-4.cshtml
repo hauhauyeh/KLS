@@ -103,6 +103,12 @@
         text-overflow: ellipsis;
     }
 
+    .item-code-cell {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
     /*INVOICE DETAIL*/
     .main-table tbody td {
         font-size: 14px;
@@ -453,7 +459,7 @@
                     else
                     {
                         <tr>
-                            <td><span>@itmdetail.ItemCode</span></td>
+                            <td class="item-code-cell"><span>@itmdetail.ItemCode</span></td>
                             <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
                             <td>
                                 <span style="line-height:1;">

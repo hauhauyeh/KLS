@@ -51,11 +51,21 @@ namespace KLS.Models
 
         public int? PurchaseNumber { get; set; }
 
+        public int? SourceSharedShipmentChargeBillSplitId { get; set; }
+
+        public int? SourceSharedShipmentChargeBillId { get; set; }
+
+        public string? SourceSharedVendorDocNumber { get; set; }
+
+        public bool IsSharedChargeBillGenerated { get; set; }
+
         public string State { get; set; } = "Draft";
 
         public decimal TotalAmount { get; set; }
 
         public bool IsReadOnly { get; set; }
+
+        public string? ReadOnlyReason { get; set; }
 
         public string? Notes { get; set; }
 

@@ -55,16 +55,6 @@ namespace KLS.API.Controllers.Admin
         }
 
 
-        [HttpPost("UpdateShipQty/{purchaseId}")]
-        [DisplayName("Update Ship Qty")]
-        [PermissionKey("Vendor.DropShipment.UpdateShipQty")]
-        public IActionResult UpdateShipQty(int purchaseId)
-        {
-            _dropShipmentService.UpdateShipQty(purchaseId);
-            return Ok();
-        }
-
-
         [HttpPost("UpdateReceiptQty/{purchaseId}")]
         [DisplayName("Update Receipt Qty")]
         [PermissionKey("Vendor.DropShipment.UpdateShipQty")]

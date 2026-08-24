@@ -9,5 +9,7 @@ namespace KLS.Models
     public class ShipmentListReq : PagingRequest
     {
         public int? PayeeId { get; set; }
+
+        public int? MatchPurchaseId { get; set; }
     }
 }

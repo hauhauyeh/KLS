@@ -129,6 +129,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ShipmentCharge>().ToTable("ShipmentCharge");
             modelBuilder.Entity<ShipmentChargeBill>().ToTable("ShipmentChargeBill");
             modelBuilder.Entity<ShipmentChargeBillLine>().ToTable("ShipmentChargeBillLine");
+            modelBuilder.Entity<SharedShipmentChargeBill>().ToTable("SharedShipmentChargeBill");
+            modelBuilder.Entity<SharedShipmentChargeBillLine>().ToTable("SharedShipmentChargeBillLine");
+            modelBuilder.Entity<SharedShipmentChargeBillSplit>().ToTable("SharedShipmentChargeBillSplit");
             modelBuilder.Entity<ShipmentPurchase>().ToTable("ShipmentPurchase");
             modelBuilder.Entity<ItemTariff>().ToTable("ItemTariff");
             modelBuilder.Entity<Promotion>().ToTable("Promotion");
@@ -173,11 +176,11 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
+            modelBuilder.Entity<ShipmentConfirmChargesCompleteResult>().HasNoKey();
             modelBuilder.Entity<ShipmentManagerListRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRatePrecheckRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRateRefreshResult>().HasNoKey();
             modelBuilder.Entity<ItemQuoteManagerRow>().HasNoKey();
-            modelBuilder.Entity<PurchaseDetailValidationRow>().HasNoKey();
 
             // SalesQuote tables
             modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
@@ -374,6 +377,12 @@ namespace KLS.Data.DataContext
 
         public DbSet<ShipmentChargeBillLine> ShipmentChargeBillLines { get; set; }
 
+        public DbSet<SharedShipmentChargeBill> SharedShipmentChargeBills { get; set; }
+
+        public DbSet<SharedShipmentChargeBillLine> SharedShipmentChargeBillLines { get; set; }
+
+        public DbSet<SharedShipmentChargeBillSplit> SharedShipmentChargeBillSplits { get; set; }
+
         public DbSet<ShipmentPurchase> ShipmentPurchases { get; set; }
 
         public DbSet<ItemTariff> ItemTariffs { get; set; }
@@ -502,8 +511,6 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PurchaseDetailList> PurchaseDetailList { get; set; }
 
-        public virtual DbSet<PurchaseDetailValidationRow> PurchaseDetailValidationRow { get; set; }
-
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
 
         public virtual DbSet<InventoryClosingDetail> InventoryClosingDetail { get; set; }
@@ -545,6 +552,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<EligibleBill> EligibleBill { get; set; }
 
         public virtual DbSet<ShipmentReallocationCandidate> ShipmentReallocationCandidate { get; set; }
+
+        public virtual DbSet<ShipmentConfirmChargesCompleteResult> ShipmentConfirmChargesCompleteResults { get; set; }
 
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
 

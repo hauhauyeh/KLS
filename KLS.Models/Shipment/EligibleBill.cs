@@ -32,5 +32,9 @@ namespace KLS.Models
 
         // 2026-07-13 (Slice B): reference-only shipment link; no landed cost.
         public bool IsDropShip { get; set; }
+
+        public bool IsContainerMatch { get; set; }
+
+        public int ContainerMatchRank { get; set; }
     }
 }

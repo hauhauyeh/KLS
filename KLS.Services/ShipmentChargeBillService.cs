@@ -75,6 +75,7 @@ namespace KLS.Services
                 if (bill.ShipmentId != req.ShipmentId)
                     throw new ArgumentException("Charge bill does not belong to this shipment.");
 
+                EnsureNotSharedGenerated(bill);
                 EnsureLinkedBillIsEditable(bill.PurchaseId, "Charge bill cannot be edited because its generated AP bill is paid or locked.");
             }
 
@@ -153,7 +154,7 @@ namespace KLS.Services
                     Uow.Commit();
                 }
 
-                Uow.Shipments.RebuildChargesFromChargeBills(req.ShipmentId);
+                Uow.Shipments.ResetCompletionAndReallocate(req.ShipmentId, rebuildChargeSummaries: true);
             });
 
             return GetById(bill!.ShipmentChargeBillId)!;
@@ -164,6 +165,8 @@ namespace KLS.Services
             var bill = Uow.ShipmentChargeBills
                 .Find(b => b.ShipmentChargeBillId == shipmentChargeBillId)
                 .FirstOrDefault() ?? throw new KeyNotFoundException("Charge bill not found.");
+
+            EnsureNotSharedGenerated(bill);
 
             if (bill.PurchaseId.HasValue)
                 throw new InvalidOperationException("Billed charge bills cannot be deleted.");
@@ -181,7 +184,7 @@ namespace KLS.Services
 
                 if (Uow.ShipmentChargeBills.Exists(b => b.ShipmentId == bill.ShipmentId))
                 {
-                    Uow.Shipments.RebuildChargesFromChargeBills(bill.ShipmentId);
+                    Uow.Shipments.ResetCompletionAndReallocate(bill.ShipmentId, rebuildChargeSummaries: true);
                 }
                 else
                 {
@@ -191,7 +194,7 @@ namespace KLS.Services
                                 && c.IsGeneratedFromChargeBills)
                         .ExecuteDelete();
 
-                    Uow.Shipments.RefreshSingleBillAllocation(bill.ShipmentId);
+                    Uow.Shipments.ResetCompletionAndReallocate(bill.ShipmentId);
                 }
             });
         }
@@ -358,6 +361,12 @@ namespace KLS.Services
                 throw new InvalidOperationException(message);
         }
 
+        private static void EnsureNotSharedGenerated(ShipmentChargeBill bill)
+        {
+            if (bill.SourceSharedShipmentChargeBillSplitId.HasValue)
+                throw new InvalidOperationException("Generated shared charge bill is read-only. Void or replace the shared bill.");
+        }
+
         private static List<ShipmentChargeBillLineReq> NormalizeLines(IEnumerable<ShipmentChargeBillLineReq>? lines)
         {
             var normalized = new List<ShipmentChargeBillLineReq>();
@@ -394,6 +403,11 @@ namespace KLS.Services
             var billIds = bills.Select(b => b.ShipmentChargeBillId).ToList();
             var vendorIds = bills.Select(b => b.VendorPayeeId).Distinct().ToList();
             var purchaseIds = bills.Where(b => b.PurchaseId.HasValue).Select(b => b.PurchaseId!.Value).Distinct().ToList();
+            var sourceSplitIds = bills
+                .Where(b => b.SourceSharedShipmentChargeBillSplitId.HasValue)
+                .Select(b => b.SourceSharedShipmentChargeBillSplitId!.Value)
+                .Distinct()
+                .ToList();
 
             var lines = Uow.ShipmentChargeBillLines
                 .Find(l => billIds.Contains(l.ShipmentChargeBillId))
@@ -407,6 +421,23 @@ namespace KLS.Services
                 .Find(p => purchaseIds.Contains(p.PurchaseId))
                 .ToDictionary(p => p.PurchaseId);
 
+            var sourceSplitById = sourceSplitIds.Count == 0
+                ? new Dictionary<int, SharedShipmentChargeBillSplit>()
+                : Uow.SharedShipmentChargeBillSplits
+                    .Find(s => sourceSplitIds.Contains(s.SharedShipmentChargeBillSplitId))
+                    .ToDictionary(s => s.SharedShipmentChargeBillSplitId);
+
+            var sourceBillIds = sourceSplitById.Values
+                .Select(s => s.SharedShipmentChargeBillId)
+                .Distinct()
+                .ToList();
+
+            var sourceBillById = sourceBillIds.Count == 0
+                ? new Dictionary<int, SharedShipmentChargeBill>()
+                : Uow.SharedShipmentChargeBills
+                    .Find(b => sourceBillIds.Contains(b.SharedShipmentChargeBillId))
+                    .ToDictionary(b => b.SharedShipmentChargeBillId);
+
             return bills.Select(b =>
             {
                 var billLines = lines
@@ -415,6 +446,11 @@ namespace KLS.Services
                     .ToList();
 
                 purchaseById.TryGetValue(b.PurchaseId ?? 0, out var purchase);
+                sourceSplitById.TryGetValue(b.SourceSharedShipmentChargeBillSplitId ?? 0, out var sourceSplit);
+                sourceBillById.TryGetValue(sourceSplit?.SharedShipmentChargeBillId ?? 0, out var sourceBill);
+
+                var isSharedGenerated = b.SourceSharedShipmentChargeBillSplitId.HasValue;
+                var isPaidOrLocked = purchase != null && (purchase.IsLocked || (purchase.PaymentApplied ?? 0m) > 0m);
 
                 return new ShipmentChargeBillDto
                 {
@@ -426,9 +462,18 @@ namespace KLS.Services
                     BillDate = b.BillDate,
                     PurchaseId = b.PurchaseId,
                     PurchaseNumber = purchase?.PurchaseNumber,
+                    SourceSharedShipmentChargeBillSplitId = b.SourceSharedShipmentChargeBillSplitId,
+                    SourceSharedShipmentChargeBillId = sourceSplit?.SharedShipmentChargeBillId,
+                    SourceSharedVendorDocNumber = sourceBill?.VendorDocNumber,
+                    IsSharedChargeBillGenerated = isSharedGenerated,
                     State = b.PurchaseId.HasValue ? "Billed" : "Draft",
                     TotalAmount = billLines.Sum(l => l.ChargeAmount),
-                    IsReadOnly = purchase != null && (purchase.IsLocked || (purchase.PaymentApplied ?? 0m) > 0m),
+                    IsReadOnly = isSharedGenerated || isPaidOrLocked,
+                    ReadOnlyReason = isSharedGenerated
+                        ? "Generated from shared charge bill. Void or replace the shared bill."
+                        : isPaidOrLocked
+                            ? "Charge bill cannot be edited because its generated AP bill is paid or locked."
+                            : null,
                     Notes = b.Notes,
                     CreatedAt = b.CreatedAt,
                     UpdatedAt = b.UpdatedAt,

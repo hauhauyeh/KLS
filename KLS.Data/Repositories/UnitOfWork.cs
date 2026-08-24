@@ -231,6 +231,12 @@ namespace KLS.Data.Repositories
 
         public IShipmentChargeBillLineRepository ShipmentChargeBillLines { get { return new ShipmentChargeBillLineRepository(DbContext); } }
 
+        public ISharedShipmentChargeBillRepository SharedShipmentChargeBills { get { return new SharedShipmentChargeBillRepository(DbContext); } }
+
+        public ISharedShipmentChargeBillLineRepository SharedShipmentChargeBillLines { get { return new SharedShipmentChargeBillLineRepository(DbContext); } }
+
+        public ISharedShipmentChargeBillSplitRepository SharedShipmentChargeBillSplits { get { return new SharedShipmentChargeBillSplitRepository(DbContext); } }
+
         public IShipmentPurchaseRepository ShipmentPurchases { get { return new ShipmentPurchaseRepository(DbContext); } }
 
         public IItemTariffRepository ItemTariffs { get { return new ItemTariffRepository(DbContext); } }

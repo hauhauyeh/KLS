@@ -22,7 +22,7 @@ namespace KLS.Data.Repositories
         {
             var param = BuildPagedList(shipmentListReq);
 
-            return DbContext.ShipmentList.FromSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            return DbContext.ShipmentList.FromSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@MatchPurchaseId", param);
         }
 
         public int Count(ShipmentListReq shipmentListReq)
@@ -30,7 +30,7 @@ namespace KLS.Data.Repositories
             shipmentListReq.IsCount = true;
             var param = BuildPagedList(shipmentListReq);
 
-            DbContext.Database.ExecuteSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT", param);
+            DbContext.Database.ExecuteSqlRaw("[dbo].[Shipment_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@PayeeId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@MatchPurchaseId", param);
 
             var output = param[10] as SqlParameter;
             return Convert.ToInt32(output.Value);
@@ -117,6 +117,14 @@ END", PurchaseIdParam);
             DbContext.Database.ExecuteSqlRaw("[Shipment_UnAllocation] @ShipmentPurchaseId", ShipmentPurchaseIdParam);
         }
 
+        public void UnassignPurchases(int shipmentId, string shipmentPurchaseIds)
+        {
+            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+            var ShipmentPurchaseIdsParam = new SqlParameter("@ShipmentPurchaseIds", shipmentPurchaseIds);
+
+            DbContext.Database.ExecuteSqlRaw("[Shipment_UnassignPurchases] @ShipmentId,@ShipmentPurchaseIds", ShipmentIdParam, ShipmentPurchaseIdsParam);
+        }
+
         public void Delete(int shipmentId)
         {
             var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
@@ -124,18 +132,16 @@ END", PurchaseIdParam);
             DbContext.Database.ExecuteSqlRaw("[Shipment_Delete] @ShipmentId", ShipmentIdParam);
         }
 
-        public void GenerateBill(int shipmentId)
+        public ShipmentConfirmChargesCompleteResult ConfirmChargesComplete(int shipmentId, int employeePayeeId)
         {
             var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+            var EmployeePayeeIdParam = new SqlParameter("@EmployeePayeeId", employeePayeeId);
 
-            DbContext.Database.ExecuteSqlRaw("[Shipment_GenerateBill] @ShipmentId", ShipmentIdParam);
-        }
-
-        public void GenerateChargeBills(int shipmentId)
-        {
-            var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
-
-            DbContext.Database.ExecuteSqlRaw("[Shipment_GenerateChargeBills] @ShipmentId", ShipmentIdParam);
+            return DbContext.ShipmentConfirmChargesCompleteResults
+                .FromSqlRaw("[Shipment_ConfirmChargesComplete] @ShipmentId,@EmployeePayeeId", ShipmentIdParam, EmployeePayeeIdParam)
+                .AsNoTracking()
+                .AsEnumerable()
+                .FirstOrDefault() ?? throw new InvalidOperationException("Confirmation did not return a result.");
         }
 
         public bool HasChargeBills(int shipmentId)
@@ -172,11 +178,26 @@ END", PurchaseIdParam);
             DbContext.Database.ExecuteSqlRaw("[ShipmentCharge_RefreshSingleBillAllocation] @ShipmentId", ShipmentIdParam);
         }
 
-        public void UpdateCharges(int shipmentId)
+        public void ResetCompletionAndReallocate(int shipmentId, bool rebuildChargeSummaries = false, bool deleteGeneratedApBills = true, string? extraPurchaseIds = null)
         {
             var ShipmentIdParam = new SqlParameter("@ShipmentId", shipmentId);
+            var RebuildChargeSummariesParam = new SqlParameter("@RebuildChargeSummaries", rebuildChargeSummaries);
+            var DeleteGeneratedApBillsParam = new SqlParameter("@DeleteGeneratedApBills", deleteGeneratedApBills);
+            var ExtraPurchaseIdsParam = string.IsNullOrWhiteSpace(extraPurchaseIds)
+                ? new SqlParameter("@ExtraPurchaseIds", DBNull.Value)
+                : new SqlParameter("@ExtraPurchaseIds", extraPurchaseIds);
 
-            DbContext.Database.ExecuteSqlRaw("[Shipment_Update] @ShipmentId", ShipmentIdParam);
+            DbContext.Database.ExecuteSqlRaw(
+                "[Shipment_ResetCompletionAndReallocate] @ShipmentId,@RebuildChargeSummaries,@DeleteGeneratedApBills,@ExtraPurchaseIds",
+                ShipmentIdParam,
+                RebuildChargeSummariesParam,
+                DeleteGeneratedApBillsParam,
+                ExtraPurchaseIdsParam);
+        }
+
+        public void UpdateCharges(int shipmentId)
+        {
+            ResetCompletionAndReallocate(shipmentId);
         }
 
         public void AssignShipment(POCopyToBillReq copyToBillReq)
@@ -483,7 +504,9 @@ END", PurchaseIdParam);
                     ParameterName = "@TotalCount",
                     Direction = System.Data.ParameterDirection.Output,
                     SqlDbType = System.Data.SqlDbType.Int
-                }
+                },
+
+                shipmentListReq.MatchPurchaseId.HasValue ? new SqlParameter("@MatchPurchaseId", shipmentListReq.MatchPurchaseId) : new SqlParameter("@MatchPurchaseId", DBNull.Value)
             };
 
             return param;

@@ -95,6 +95,12 @@
         text-overflow: ellipsis;
     }
 
+    .item-code-cell {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
     .main-table tbody td {
         font-size: 14px;
         padding-bottom: 4px !important;
@@ -321,7 +327,7 @@
                 @foreach (var item in Model.Details)
                 {
                     <tr>
-                        <td><span>@item.ItemCode</span></td>
+                        <td class="item-code-cell"><span>@item.ItemCode</span></td>
                         <td class="no-overflow"><strong>@string.Format("{0:0.##}", item.ShipQty)</strong> @item.Unit</td>
                         <td>
                             <span style="line-height:1;">
@@ -335,7 +341,7 @@
                             </span>
                         </td>
                         @* <td class="text-center"><span>@item.Barcode</span></td> *@
-                        <td class="text-center"><span>@Utilities.FormatPrice(item.UnitPrice, Model.PriceDecimals)</span></td>
+                        <td class="text-center"><span>@Utilities.FormatPriceCompact4(item.UnitPrice, Model.PriceDecimals)</span></td>
                         <td class="text-right"><span>@string.Format("{0:c}", item.ExtTotal)</span></td>
                     </tr>
                 }

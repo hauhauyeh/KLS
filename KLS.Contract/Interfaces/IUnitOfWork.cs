@@ -190,6 +190,12 @@ namespace KLS.Contract.Interfaces
 
         IShipmentChargeBillLineRepository ShipmentChargeBillLines { get; }
 
+        ISharedShipmentChargeBillRepository SharedShipmentChargeBills { get; }
+
+        ISharedShipmentChargeBillLineRepository SharedShipmentChargeBillLines { get; }
+
+        ISharedShipmentChargeBillSplitRepository SharedShipmentChargeBillSplits { get; }
+
         IShipmentPurchaseRepository ShipmentPurchases { get; }
 
         IItemTariffRepository ItemTariffs { get; }

@@ -48,9 +48,9 @@ namespace KLS.API.Controllers.Admin
 
 
         [HttpGet("Open")]
-        public IActionResult Open()
+        public IActionResult Open([FromQuery] int? matchPurchaseId)
         {
-            return Ok(_shipmentService.GetOpenShipments());
+            return Ok(_shipmentService.GetOpenShipments(matchPurchaseId));
         }
 
 
@@ -133,6 +133,15 @@ namespace KLS.API.Controllers.Admin
         }
 
 
+        [HttpPost("{shipmentId}/ConfirmChargesComplete")]
+        [DisplayName("Confirm Shipment Charges Complete")]
+        [PermissionKey("Vendor.Shipment.GenerateBill")]
+        public IActionResult ConfirmChargesComplete(int shipmentId)
+        {
+            return Ok(_shipmentService.ConfirmChargesComplete(shipmentId));
+        }
+
+
         [HttpPost("UnAllocation/{shipmentPurchaseId}")]
         [DisplayName("UnAllocation Shipment")]
         [PermissionKey("Vendor.Shipment.UnAllocation")]
@@ -141,6 +150,15 @@ namespace KLS.API.Controllers.Admin
             _shipmentService.UnAllocation(shipmentPurchaseId);
 
             return Ok();
+        }
+
+
+        [HttpPost("{shipmentId}/UnassignPurchases")]
+        [DisplayName("Unassign Shipment Source Bills")]
+        [PermissionKey("Vendor.Shipment.UnAllocation")]
+        public IActionResult UnassignPurchases(int shipmentId, [FromBody] ShipmentUnassignPurchasesReq req)
+        {
+            return Ok(_shipmentService.UnassignPurchases(shipmentId, req));
         }
 
 
