@@ -4,20 +4,17 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KLS.Models
 {
-    public class ShipmentChargeBill
+    public class SharedShipmentChargeBill
     {
-        public ShipmentChargeBill()
+        public SharedShipmentChargeBill()
         {
             CreatedAt = DateTime.UtcNow;
+            Status = "Draft";
         }
 
         [Key]
-        public int ShipmentChargeBillId { get; set; }
+        public int SharedShipmentChargeBillId { get; set; }
 
-        [Required]
-        public int ShipmentId { get; set; }
-
-        [Required]
         public int VendorPayeeId { get; set; }
 
         [MaxLength(100)]
@@ -25,9 +22,8 @@ namespace KLS.Models
 
         public DateOnly? BillDate { get; set; }
 
-        public int? PurchaseId { get; set; }
-
-        public int? SourceSharedShipmentChargeBillSplitId { get; set; }
+        [MaxLength(20)]
+        public string Status { get; set; }
 
         [MaxLength(500)]
         public string? Notes { get; set; }
@@ -36,6 +32,8 @@ namespace KLS.Models
 
         public DateTime? UpdatedAt { get; set; }
 
-        public virtual ICollection<ShipmentChargeBillLine>? Lines { get; set; }
+        public virtual ICollection<SharedShipmentChargeBillLine>? Lines { get; set; }
+
+        public virtual ICollection<SharedShipmentChargeBillSplit>? Splits { get; set; }
     }
 }

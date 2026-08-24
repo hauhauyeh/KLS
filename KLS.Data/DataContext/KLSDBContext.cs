@@ -129,6 +129,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ShipmentCharge>().ToTable("ShipmentCharge");
             modelBuilder.Entity<ShipmentChargeBill>().ToTable("ShipmentChargeBill");
             modelBuilder.Entity<ShipmentChargeBillLine>().ToTable("ShipmentChargeBillLine");
+            modelBuilder.Entity<SharedShipmentChargeBill>().ToTable("SharedShipmentChargeBill");
+            modelBuilder.Entity<SharedShipmentChargeBillLine>().ToTable("SharedShipmentChargeBillLine");
+            modelBuilder.Entity<SharedShipmentChargeBillSplit>().ToTable("SharedShipmentChargeBillSplit");
             modelBuilder.Entity<ShipmentPurchase>().ToTable("ShipmentPurchase");
             modelBuilder.Entity<ItemTariff>().ToTable("ItemTariff");
             modelBuilder.Entity<Promotion>().ToTable("Promotion");
@@ -373,6 +376,12 @@ namespace KLS.Data.DataContext
         public DbSet<ShipmentChargeBill> ShipmentChargeBills { get; set; }
 
         public DbSet<ShipmentChargeBillLine> ShipmentChargeBillLines { get; set; }
+
+        public DbSet<SharedShipmentChargeBill> SharedShipmentChargeBills { get; set; }
+
+        public DbSet<SharedShipmentChargeBillLine> SharedShipmentChargeBillLines { get; set; }
+
+        public DbSet<SharedShipmentChargeBillSplit> SharedShipmentChargeBillSplits { get; set; }
 
         public DbSet<ShipmentPurchase> ShipmentPurchases { get; set; }
 
