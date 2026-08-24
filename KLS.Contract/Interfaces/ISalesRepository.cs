@@ -19,7 +19,7 @@ namespace KLS.Contract.Interfaces
 
         void UpdatePartially(int salesId);
 
-        SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId);
+        SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId);
 
         void UpdateNameDate(SalesUpdateReq updateReq);
 
@@ -36,6 +36,8 @@ namespace KLS.Contract.Interfaces
         SalesStage EnterEditMode(int salesId);
 
         SalesStage RestoreStage(int salesId, int stageId);
+
+        void ClearDropShipOrderDetailQuantities(int salesId);
 
         void BatchAllocation(DateOnly shipDate);
 

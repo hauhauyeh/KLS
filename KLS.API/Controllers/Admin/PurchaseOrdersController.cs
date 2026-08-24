@@ -18,6 +18,7 @@ namespace KLS.API.Controllers.Admin
         private readonly IVendorPaymentService _vendorPaymentService;
         private const string CreatePermission = "Vendor.PurchaseOrder.Create";
         private const string UpdatePermission = "Vendor.PurchaseOrder.Update";
+        private const string UpdateDropShipQtyPermission = "Vendor.DropShipment.UpdateShipQty";
 
         #endregion
 
@@ -51,6 +52,17 @@ namespace KLS.API.Controllers.Admin
                 return Forbid();
 
             return Ok(_purchaseOrderService.Checkout(checkoutReq));
+        }
+
+
+        [HttpPut("DropShipRestrictedUpdate/{purchaseId}")]
+        [DisplayName("Update Drop-Ship PO Restricted Fields")]
+        [PermissionKey(UpdatePermission)]
+        public IActionResult DropShipRestrictedUpdate(int purchaseId)
+        {
+            return Ok(_purchaseOrderService.DropShipRestrictedUpdate(
+                purchaseId,
+                HasPermission(UpdateDropShipQtyPermission)));
         }
 
 

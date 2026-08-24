@@ -20,6 +20,7 @@
     var routeInfoDriverValue = isDropShipInvoice ? dropShipVendorDoc : Model.Invoice?.DriverName;
 
     var colSpan = 6;
+
 }
 
 <style>
@@ -124,6 +125,12 @@
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+
+    .item-code-cell {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     /* Flex utilities for layout alignment */
@@ -509,9 +516,9 @@
 <div>
     <table class="main-table">
         <colgroup>
-            <col style="width: 11%;">
+            <col style="width: 15%;">
             <col style="width: 10%;">
-            <col style="width: 45%;">
+            <col style="width: 41%;">
             <col style="width: 16%;">
             <col style="width: 8%;">
             <col style="width: 10%;">
@@ -542,7 +549,7 @@
                 else // Regular item row
                 {
                     <tr>
-                        <td><span>@itmdetail.ItemCode</span></td>
+                        <td class="item-code-cell"><span>@itmdetail.ItemCode</span></td>
                         <td class="no-overflow">
                             <strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit
                         </td>
@@ -571,7 +578,7 @@
                             <span class="upc-code">@itmdetail.EncodedBarcode</span>
                         </td>
                         <td class="text-center">
-                            <span>@Utilities.FormatPrice(itmdetail.UnitPrice, Model.PriceDecimals)</span>
+                            <span>@Utilities.FormatPriceCompact4(itmdetail.UnitPrice, Model.PriceDecimals)</span>
                         </td>
                         <td class="text-right">
                             <span>@string.Format("{0:c}", itmdetail.ExtTotal)</span>
@@ -741,9 +748,9 @@
         <div class="table-header-row">
             <table class="main-table">
                 <colgroup>
-                    <col style="width: 11%;" />
+                    <col style="width: 15%;" />
                     <col style="width: 10%;" />
-                    <col style="width: 45%;" />
+                    <col style="width: 41%;" />
                     <col style="width: 16%;" />
                     <col style="width: 8%;" />
                     <col style="width: 10%;" />

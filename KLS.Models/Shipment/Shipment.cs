@@ -58,6 +58,12 @@ namespace KLS.Models
 
         public DateTime? UpdatedAt { get; set; }
 
+        public bool AreChargesComplete { get; set; }
+
+        public DateTime? ChargesCompletedAt { get; set; }
+
+        public int? ChargesCompletedBy { get; set; }
+
         public bool IsLocked { get { return Status == EnumHelper.ShipmentStatus.Closed.ToString(); } }
 
         [NotMapped]

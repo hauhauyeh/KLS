@@ -23,17 +23,19 @@ namespace KLS.Contract.Interfaces
 
         void UnAllocation(int shipmentPurchaseId);
 
+        void UnassignPurchases(int shipmentId, string shipmentPurchaseIds);
+
         void Delete(int shipmentId);
 
-        void GenerateBill(int shipmentId);
-
-        void GenerateChargeBills(int shipmentId);
+        ShipmentConfirmChargesCompleteResult ConfirmChargesComplete(int shipmentId, int employeePayeeId);
 
         bool HasChargeBills(int shipmentId);
 
         void RebuildChargesFromChargeBills(int shipmentId);
 
         void RefreshSingleBillAllocation(int shipmentId);
+
+        void ResetCompletionAndReallocate(int shipmentId, bool rebuildChargeSummaries = false, bool deleteGeneratedApBills = true, string? extraPurchaseIds = null);
 
         void UpdateCharges(int shipmentId);
 

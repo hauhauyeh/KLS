@@ -149,8 +149,8 @@ namespace KLS.Services
             var sales = Uow.Sales.GetById(existing.SalesId)
                 ?? throw new KeyNotFoundException("Sales order not found.");
 
-            if (sales.IsLocked || !sales.IsDropShip || sales.StageId != 3)
-                throw new ArgumentException("Only stage-3 drop-ship sales detail lines can use price/comment update.");
+            if (sales.IsLocked || !sales.IsDropShip || sales.StageId < 2 || sales.StageId > 4)
+                throw new ArgumentException("Only Transit, Received, or Success drop-ship lines can use restricted price/comment update.");
 
             existing.UnitPrice = tempItem.UnitPrice;
             existing.Notes = tempItem.Notes;

@@ -35,11 +35,6 @@ namespace KLS.Services
             return Uow.DropShipments.CreateBackorderDropShip(salesId);
         }
 
-        public void UpdateShipQty(int purchaseId)
-        {
-            Uow.DropShipments.UpdateShipQty(purchaseId);
-        }
-
         public void UpdateReceiptQty(int purchaseId, DropShipmentUpdateReceiptQtyReq req)
         {
             if (req == null || string.IsNullOrWhiteSpace(req.ItemsJson))

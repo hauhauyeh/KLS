@@ -64,6 +64,22 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<BankFeedAccount>().ToTable("BankFeedAccount");
             modelBuilder.Entity<BankFeedTransaction>().ToTable("BankFeedTransaction");
             modelBuilder.Entity<BankFeedSource>().ToTable("BankFeedSource");
+            modelBuilder.Entity<BankFeedRule>().ToTable("BankFeedRule");
+            modelBuilder.Entity<BankFeedRuleCondition>().ToTable("BankFeedRuleCondition");
+            modelBuilder.Entity<BankFeedRuleAction>().ToTable("BankFeedRuleAction");
+            modelBuilder.Entity<BankFeedRuleSuggestion>().ToTable("BankFeedRuleSuggestion");
+            modelBuilder.Entity<BankFeedRule>()
+                .HasMany(c => c.Conditions)
+                .WithOne(c => c.Rule)
+                .HasForeignKey(c => c.BankFeedRuleId);
+            modelBuilder.Entity<BankFeedRule>()
+                .HasOne(c => c.Action)
+                .WithOne(c => c.Rule)
+                .HasForeignKey<BankFeedRuleAction>(c => c.BankFeedRuleId);
+            modelBuilder.Entity<BankFeedRuleSuggestion>()
+                .HasOne(c => c.Rule)
+                .WithMany()
+                .HasForeignKey(c => c.BankFeedRuleId);
             modelBuilder.Entity<VendorPayment>().ToTable("VendorPayment");
             modelBuilder.Entity<PaymentOption>().ToTable("PaymentOption");
             modelBuilder.Entity<Timesheet>().ToTable("Timesheet");
@@ -113,6 +129,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ShipmentCharge>().ToTable("ShipmentCharge");
             modelBuilder.Entity<ShipmentChargeBill>().ToTable("ShipmentChargeBill");
             modelBuilder.Entity<ShipmentChargeBillLine>().ToTable("ShipmentChargeBillLine");
+            modelBuilder.Entity<SharedShipmentChargeBill>().ToTable("SharedShipmentChargeBill");
+            modelBuilder.Entity<SharedShipmentChargeBillLine>().ToTable("SharedShipmentChargeBillLine");
+            modelBuilder.Entity<SharedShipmentChargeBillSplit>().ToTable("SharedShipmentChargeBillSplit");
             modelBuilder.Entity<ShipmentPurchase>().ToTable("ShipmentPurchase");
             modelBuilder.Entity<ItemTariff>().ToTable("ItemTariff");
             modelBuilder.Entity<Promotion>().ToTable("Promotion");
@@ -157,11 +176,11 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
+            modelBuilder.Entity<ShipmentConfirmChargesCompleteResult>().HasNoKey();
             modelBuilder.Entity<ShipmentManagerListRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRatePrecheckRow>().HasNoKey();
             modelBuilder.Entity<PurchaseTariffRateRefreshResult>().HasNoKey();
             modelBuilder.Entity<ItemQuoteManagerRow>().HasNoKey();
-            modelBuilder.Entity<PurchaseDetailValidationRow>().HasNoKey();
 
             // SalesQuote tables
             modelBuilder.Entity<SalesQuote>().ToTable("SalesQuote");
@@ -249,6 +268,10 @@ namespace KLS.Data.DataContext
         public DbSet<BankFeedAccount> BankFeedAccounts { get; set; }
         public DbSet<BankFeedTransaction> BankFeedTransactions { get; set; }
         public DbSet<BankFeedSource> BankFeedSources { get; set; }
+        public DbSet<BankFeedRule> BankFeedRules { get; set; }
+        public DbSet<BankFeedRuleCondition> BankFeedRuleConditions { get; set; }
+        public DbSet<BankFeedRuleAction> BankFeedRuleActions { get; set; }
+        public DbSet<BankFeedRuleSuggestion> BankFeedRuleSuggestions { get; set; }
 
         public DbSet<BankReconBalance> BankReconBalances { get; set; }
 
@@ -353,6 +376,12 @@ namespace KLS.Data.DataContext
         public DbSet<ShipmentChargeBill> ShipmentChargeBills { get; set; }
 
         public DbSet<ShipmentChargeBillLine> ShipmentChargeBillLines { get; set; }
+
+        public DbSet<SharedShipmentChargeBill> SharedShipmentChargeBills { get; set; }
+
+        public DbSet<SharedShipmentChargeBillLine> SharedShipmentChargeBillLines { get; set; }
+
+        public DbSet<SharedShipmentChargeBillSplit> SharedShipmentChargeBillSplits { get; set; }
 
         public DbSet<ShipmentPurchase> ShipmentPurchases { get; set; }
 
@@ -482,8 +511,6 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<PurchaseDetailList> PurchaseDetailList { get; set; }
 
-        public virtual DbSet<PurchaseDetailValidationRow> PurchaseDetailValidationRow { get; set; }
-
         public virtual DbSet<InventoryAdjList> InventoryAdjList { get; set; }
 
         public virtual DbSet<InventoryClosingDetail> InventoryClosingDetail { get; set; }
@@ -525,6 +552,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<EligibleBill> EligibleBill { get; set; }
 
         public virtual DbSet<ShipmentReallocationCandidate> ShipmentReallocationCandidate { get; set; }
+
+        public virtual DbSet<ShipmentConfirmChargesCompleteResult> ShipmentConfirmChargesCompleteResults { get; set; }
 
         public virtual DbSet<ItemTariffList> ItemTariffList { get; set; }
 

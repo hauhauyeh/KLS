@@ -26,7 +26,11 @@ namespace KLS.Models
         public decimal? ChargeAmount { get; set; }
         public string? Notes { get; set; }
         public string? UsedMethod { get; set; }
+        public bool AreChargesComplete { get; set; }
+        public DateTime? ChargesCompletedAt { get; set; }
+        public int? ChargesCompletedBy { get; set; }
         public bool IsLocked { get; set; }
+        public bool IsGeneratedApLockedOrPaid { get; set; }
     }
 
     public class AssignedShipment
@@ -42,6 +46,14 @@ namespace KLS.Models
         public bool IsShipmentPaid { get; set; }
 
         public string? Status { get; set; }
+
+        public bool AreChargesComplete { get; set; }
+
+        public DateTime? ChargesCompletedAt { get; set; }
+
+        public int? ChargesCompletedBy { get; set; }
+
+        public bool IsGeneratedApLockedOrPaid { get; set; }
 
         public decimal TotalCharges => Charges?.Sum(c => c.ChargeAmount ?? 0m) ?? 0m;
 

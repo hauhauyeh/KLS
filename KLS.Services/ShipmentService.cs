@@ -41,12 +41,13 @@ namespace KLS.Services
             };
         }
 
-        public IEnumerable<ShipmentList> GetOpenShipments()
+        public IEnumerable<ShipmentList> GetOpenShipments(int? matchPurchaseId = null)
         {
             return Uow.Shipments.GetPagedList(new ShipmentListReq
             {
                 Pagesize = 500,
-                Filterby = "open"
+                Filterby = "open",
+                MatchPurchaseId = matchPurchaseId
             }).ToList();
         }
 
@@ -225,7 +226,7 @@ namespace KLS.Services
 
             Uow.Commit();
 
-            Uow.Shipments.UpdateCharges(shipment.ShipmentId);
+            Uow.Shipments.ResetCompletionAndReallocate(shipment.ShipmentId);
 
             return existing;
         }
@@ -329,17 +330,44 @@ namespace KLS.Services
 
         public Shipment? GenerateBill(int shipmentId)
         {
-            if (Uow.Shipments.HasChargeBills(shipmentId))
-                Uow.Shipments.GenerateChargeBills(shipmentId);
-            else
-                Uow.Shipments.GenerateBill(shipmentId);
+            // Backward-compatible endpoint wrapper. Final AP charge-bill generation
+            // belongs to the explicit confirmation operation.
+            ConfirmChargesComplete(shipmentId);
 
             return GetById(shipmentId);
+        }
+
+        public ShipmentConfirmChargesCompleteResult ConfirmChargesComplete(int shipmentId)
+        {
+            if (!Uow.Shipments.Exists(s => s.ShipmentId == shipmentId))
+                throw new KeyNotFoundException("Shipment not found.");
+
+            if (UserContext.EmpId <= 0)
+                throw new UnauthorizedAccessException("Employee context is required.");
+
+            return Uow.Shipments.ConfirmChargesComplete(shipmentId, UserContext.EmpId);
         }
 
         public void UnAllocation(int shipmentPurchaseId)
         {
             Uow.Shipments.UnAllocation(shipmentPurchaseId);
+        }
+
+        public int UnassignPurchases(int shipmentId, ShipmentUnassignPurchasesReq req)
+        {
+            if (req?.ShipmentPurchaseIds == null || req.ShipmentPurchaseIds.Count == 0)
+                throw new ArgumentException("No source bills selected.");
+
+            if (req.ShipmentPurchaseIds.Any(id => id <= 0))
+                throw new ArgumentException("One or more selected source bill ids are invalid.");
+
+            var ids = req.ShipmentPurchaseIds
+                .Distinct()
+                .ToList();
+
+            Uow.Shipments.UnassignPurchases(shipmentId, string.Join(",", ids));
+
+            return ids.Count;
         }
 
         public IEnumerable<AssignedPurchase>? AssignedPurchases(int shipmentId)
@@ -425,76 +453,28 @@ namespace KLS.Services
             _ = Uow.Shipments.Find(s => s.ShipmentId == shipmentId).FirstOrDefault()
                 ?? throw new KeyNotFoundException("Shipment not found.");
 
-            var candidates = Uow.Shipments.ReallocationCandidates(shipmentId).ToList();
-            var go = candidates
-                .Where(c => c.Action == "GO")
-                .OrderBy(c => c.PurchaseNumber)
-                .ToList();
-            var skipped = candidates
-                .Where(c => c.Action.StartsWith("SKIP", StringComparison.OrdinalIgnoreCase))
-                .OrderBy(c => c.PurchaseNumber)
-                .Select(c => new ShipmentReallocationSkip
-                {
-                    PurchaseId = c.PurchaseId,
-                    PurchaseNumber = c.PurchaseNumber,
-                    Action = c.Action,
-                    Reason = c.Reason
-                })
+            var assigned = Uow.ShipmentPurchases
+                .Find(sp => sp.ShipmentId == shipmentId)
+                .Join(Uow.Purchases.GetAll(),
+                      sp => sp.PurchaseId,
+                      p => p.PurchaseId,
+                      (sp, p) => new { p.PurchaseId, p.PurchaseNumber })
+                .OrderBy(p => p.PurchaseNumber)
                 .ToList();
 
-            var res = new ShipmentReallocationCleanupRes
+            Uow.Shipments.ResetCompletionAndReallocate(shipmentId);
+
+            return new ShipmentReallocationCleanupRes
             {
                 ShipmentId = shipmentId,
-                Skipped = skipped,
-                SkippedCount = skipped.Count
+                Status = assigned.Count > 0 ? "GO_REALLOCATED" : "GO_NO_ACTION",
+                ReallocatedPurchaseIds = assigned.Select(p => p.PurchaseId).ToList(),
+                ReallocatedPurchaseNumbers = assigned.Select(p => p.PurchaseNumber).ToList(),
+                ReallocatedCount = assigned.Count,
+                Message = assigned.Count > 0
+                    ? $"GO: reallocated {assigned.Count} assigned bill(s)."
+                    : "GO: no assigned bills to reallocate."
             };
-
-            foreach (var candidate in go)
-            {
-                try
-                {
-                    Uow.Shipments.Allocation(candidate.PurchaseId, refreshVolume: true);
-                    res.ReallocatedPurchaseIds.Add(candidate.PurchaseId);
-                    res.ReallocatedPurchaseNumbers.Add(candidate.PurchaseNumber);
-                }
-                catch (Exception ex)
-                {
-                    res.Status = "ERROR";
-                    res.ReallocatedCount = res.ReallocatedPurchaseIds.Count;
-                    res.Message = $"ERROR: bill #{candidate.PurchaseNumber} failed: {ex.Message}";
-                    return res;
-                }
-            }
-
-            res.ReallocatedCount = res.ReallocatedPurchaseIds.Count;
-
-            if (res.ReallocatedCount > 0)
-            {
-                res.Status = "GO_REALLOCATED";
-                var goMessage = res.ReallocatedCount == 1
-                    ? $"GO: reallocated bill #{res.ReallocatedPurchaseNumbers[0]}."
-                    : $"GO: reallocated {res.ReallocatedCount} bills ({string.Join(", ", res.ReallocatedPurchaseNumbers.Select(n => $"#{n}"))}).";
-                var skipMessage = res.SkippedCount == 0
-                    ? ""
-                    : res.SkippedCount == 1
-                        ? $" SKIP: bill #{res.Skipped[0].PurchaseNumber}: {res.Skipped[0].Reason}"
-                        : $" SKIP: {res.SkippedCount} bills skipped.";
-                res.Message = $"{goMessage}{skipMessage}";
-                return res;
-            }
-
-            if (res.SkippedCount > 0)
-            {
-                res.Status = "SKIPPED_BLOCKED";
-                res.Message = res.SkippedCount == 1
-                    ? $"SKIP: bill #{res.Skipped[0].PurchaseNumber}: {res.Skipped[0].Reason}"
-                    : $"SKIP: {res.SkippedCount} bills skipped.";
-                return res;
-            }
-
-            res.Status = "GO_NO_ACTION";
-            res.Message = "GO: no reallocation needed.";
-            return res;
         }
 
         // Phase C: split-on-entry helper. Creates/updates per-bill charges (ShipmentPurchaseId NOT NULL)
@@ -770,12 +750,12 @@ namespace KLS.Services
                 Uow.Commit(); // SaveChanges assigns ChargeId to the added rows
             });
 
-            // Apply = atomic save, THEN allocation. Allocation is idempotent (Purchase_Allocation clears+rewrites),
-            // so if it errors the saved charges are recoverable by re-applying/re-allocating - it is deliberately
-            // NOT inside the save transaction (nested SP transactions + XACT_ABORT ON would make that fragile).
-            // Reallocate NEW and OLD bills so a bill dropped from the re-split has its LandedCost recomputed.
-            foreach (var pid in affectedPurchaseIds)
-                Uow.Shipments.Allocation(pid);
+            // Apply = atomic save, THEN shipment-scoped provisional reallocation. The reset SP clears
+            // completion, removes invalid generated AP bills, and reallocates current + old removed bills.
+            Uow.Shipments.ResetCompletionAndReallocate(
+                req.ShipmentId,
+                rebuildChargeSummaries: false,
+                extraPurchaseIds: string.Join(",", affectedPurchaseIds));
 
             // Build the response after commit - ChargeId is now populated on the added entities.
             var resultRows = toAdd

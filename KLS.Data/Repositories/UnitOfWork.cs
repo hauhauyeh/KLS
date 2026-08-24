@@ -121,6 +121,10 @@ namespace KLS.Data.Repositories
 
         public IBankFeedSourceRepository BankFeedSources { get { return new BankFeedSourceRepository(DbContext); } }
 
+        public IBankFeedRuleRepository BankFeedRules { get { return new BankFeedRuleRepository(DbContext); } }
+
+        public IBankFeedRuleSuggestionRepository BankFeedRuleSuggestions { get { return new BankFeedRuleSuggestionRepository(DbContext); } }
+
         public IVendorPaymentRepository VendorPayments { get { return new VendorPaymentRepository(DbContext); } }
 
         public IPaymentOptionRepository PaymentOptions { get { return new PaymentOptionRepository(DbContext); } }
@@ -226,6 +230,12 @@ namespace KLS.Data.Repositories
         public IShipmentChargeBillRepository ShipmentChargeBills { get { return new ShipmentChargeBillRepository(DbContext); } }
 
         public IShipmentChargeBillLineRepository ShipmentChargeBillLines { get { return new ShipmentChargeBillLineRepository(DbContext); } }
+
+        public ISharedShipmentChargeBillRepository SharedShipmentChargeBills { get { return new SharedShipmentChargeBillRepository(DbContext); } }
+
+        public ISharedShipmentChargeBillLineRepository SharedShipmentChargeBillLines { get { return new SharedShipmentChargeBillLineRepository(DbContext); } }
+
+        public ISharedShipmentChargeBillSplitRepository SharedShipmentChargeBillSplits { get { return new SharedShipmentChargeBillSplitRepository(DbContext); } }
 
         public IShipmentPurchaseRepository ShipmentPurchases { get { return new ShipmentPurchaseRepository(DbContext); } }
 

@@ -133,32 +133,43 @@ namespace KLS.Data.Repositories
             DbContext.Database.ExecuteSqlRaw("[Sales_PartialUpdate] @SalesId,@EmpId", SalesIdParam, EmpIdParam);
         }
 
-        public SalesDropShipStage3PriceNoteUpdateResult DropShipStage3PriceNoteUpdate(int salesId)
+        public SalesDropShipRestrictedUpdateResult DropShipRestrictedUpdate(int salesId)
         {
             var SalesIdParam = new SqlParameter("@SalesId", salesId);
-
             var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
-
-            var NeedsReprintParam = new SqlParameter()
+            var NeedsReprintParam = new SqlParameter
             {
                 ParameterName = "@NeedsReprint",
                 Direction = System.Data.ParameterDirection.Output,
                 SqlDbType = System.Data.SqlDbType.Bit
             };
+            var NeedsRevisedInvoiceEmailParam = new SqlParameter
+            {
+                ParameterName = "@NeedsRevisedInvoiceEmail",
+                Direction = System.Data.ParameterDirection.Output,
+                SqlDbType = System.Data.SqlDbType.Bit
+            };
 
             var sales = DbContext.SalesList
-                .FromSqlRaw("[dbo].[Sales_DropShipStage3PriceNoteUpdate] @SalesId,@EmpId,@NeedsReprint OUTPUT", SalesIdParam, EmpIdParam, NeedsReprintParam)
+                .FromSqlRaw(
+                    "[dbo].[Sales_DropShipRestrictedUpdate] @SalesId,@EmpId,@NeedsReprint OUTPUT,@NeedsRevisedInvoiceEmail OUTPUT",
+                    SalesIdParam, EmpIdParam, NeedsReprintParam, NeedsRevisedInvoiceEmailParam)
                 .AsNoTracking()
                 .AsEnumerable()
                 .FirstOrDefault();
 
             if (sales == null)
-                throw new KeyNotFoundException($"Sales with Id {salesId} not found after drop-ship price/comment update.");
+                throw new KeyNotFoundException($"Sales with Id {salesId} not found after restricted drop-ship update.");
 
-            return new SalesDropShipStage3PriceNoteUpdateResult
+            if (!sales.StageId.HasValue)
+                throw new InvalidOperationException($"Sales with Id {salesId} has no stage after restricted drop-ship update.");
+
+            return new SalesDropShipRestrictedUpdateResult
             {
                 Sales = sales,
-                NeedsReprint = NeedsReprintParam.Value != DBNull.Value && Convert.ToBoolean(NeedsReprintParam.Value)
+                NeedsReprint = NeedsReprintParam.Value != DBNull.Value && Convert.ToBoolean(NeedsReprintParam.Value),
+                NeedsRevisedInvoiceEmail = NeedsRevisedInvoiceEmailParam.Value != DBNull.Value
+                    && Convert.ToBoolean(NeedsRevisedInvoiceEmailParam.Value)
             };
         }
 
@@ -236,6 +247,22 @@ namespace KLS.Data.Repositories
         public SalesStage RestoreStage(int salesId, int stageId)
         {
             return UpdateStage(salesId, stageId);
+        }
+
+        public void ClearDropShipOrderDetailQuantities(int salesId)
+        {
+            var salesIdParam = new SqlParameter("@SalesId", salesId);
+
+            DbContext.Database.ExecuteSqlRaw(@"
+                UPDATE dbo.SalesDetail
+                SET
+                    ShipQty = NULL,
+                    BillQty = NULL,
+                    BaseShipQty = NULL,
+                    BaseBillQty = NULL
+                WHERE SalesId = @SalesId
+                  AND LineType = 'I'
+                  AND ItemId IS NOT NULL", salesIdParam);
         }
 
         public void BatchAllocation(DateOnly shipDate)

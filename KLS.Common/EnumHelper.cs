@@ -136,7 +136,8 @@ namespace KLS.Common
             Flag = 3,
             Unit = 4,
             Metadata = 5,
-            QuantityUnit = 6
+            QuantityUnit = 6,
+            ShipQuantity = 7
         }
 
         public enum EmailLogEvent

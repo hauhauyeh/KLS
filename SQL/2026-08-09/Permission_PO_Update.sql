@@ -12,6 +12,7 @@ BEGIN TRAN;
 DECLARE @ParentPermissionId INT;
 DECLARE @CreatePermissionId INT;
 DECLARE @UpdatePermissionId INT;
+DECLARE @InsertPermissionId INT = 7211;
 DECLARE @UpdatePermissionKey NVARCHAR(200) = N'Vendor.PurchaseOrder.Update';
 
 SELECT @ParentPermissionId = PermissionId
@@ -28,13 +29,14 @@ IF @ParentPermissionId IS NULL
 IF @CreatePermissionId IS NULL
     THROW 50002, 'Missing Vendor.PurchaseOrder.Create permission.', 1;
 
-IF EXISTS (
+IF NOT EXISTS (SELECT 1 FROM dbo.Permission WHERE PermissionKey = @UpdatePermissionKey)
+AND EXISTS (
     SELECT 1
     FROM dbo.Permission
-    WHERE PermissionId = 7210
+    WHERE PermissionId = @InsertPermissionId
       AND PermissionKey <> @UpdatePermissionKey
 )
-    THROW 50003, 'PermissionId 7210 is already used by another permission.', 1;
+    THROW 50003, 'PermissionId 7211 is already used by another permission.', 1;
 
 UPDATE dbo.Permission
 SET DisplayName = N'Create PO',
@@ -52,9 +54,9 @@ BEGIN
         (PermissionId, PermissionKey, DisplayName, Module, Resource, [Action],
          PermissionType, ParentPermissionId, SortOrder, OldKey, IsActive)
     VALUES
-        (7210, @UpdatePermissionKey, N'Edit PO',
+        (@InsertPermissionId, @UpdatePermissionKey, N'Edit PO',
          N'Vendor', N'PurchaseOrder', N'Update',
-         N'button', @ParentPermissionId, 7210, N'PurchaseOrders-Checkout', 1);
+         N'button', @ParentPermissionId, 7211, N'PurchaseOrders-Checkout', 1);
 
     SET IDENTITY_INSERT dbo.Permission OFF;
 END
@@ -67,7 +69,7 @@ BEGIN
         [Action] = N'Update',
         PermissionType = N'button',
         ParentPermissionId = @ParentPermissionId,
-        SortOrder = 7210,
+        SortOrder = 7211,
         OldKey = N'PurchaseOrders-Checkout',
         IsActive = 1
     WHERE PermissionKey = @UpdatePermissionKey;

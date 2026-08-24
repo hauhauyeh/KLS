@@ -33,6 +33,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IBankFeedAccountService, BankFeedAccountService>();
             services.AddScoped<IBankFeedTransactionService, BankFeedTransactionService>();
+            services.AddScoped<IBankFeedRuleService, BankFeedRuleService>();
             services.AddScoped<IAccountCategoryService, AccountCategoryService>();
             services.AddScoped<IEmailLogService, EmailLogService>();
             services.AddScoped<IEmailSettingService, EmailSettingService>();
@@ -98,6 +99,7 @@ namespace KLS.API.Helpers
             services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
             services.AddScoped<IShipmentService, ShipmentService>();
             services.AddScoped<IShipmentChargeBillService, ShipmentChargeBillService>();
+            services.AddScoped<ISharedShipmentChargeBillService, SharedShipmentChargeBillService>();
             services.AddScoped<IShipmentPurchaseService, ShipmentPurchaseService>();
             services.AddScoped<IItemTariffService, ItemTariffService>();
             services.AddScoped<IDropShipmentService, DropShipmentService>();

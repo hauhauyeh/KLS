@@ -36,6 +36,8 @@ namespace KLS.Contract.Services
 
         PurchaseList? UpdatePartially(int purchaseId);
 
+        PurchaseList? DropShipRestrictedUpdate(int purchaseId);
+
         void Inject(PurchaseInjectReq injectReq);
 
         void Delete(int purchaseId);

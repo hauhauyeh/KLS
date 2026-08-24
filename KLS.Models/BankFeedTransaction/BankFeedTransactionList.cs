@@ -54,5 +54,23 @@ namespace KLS.Models
         /// one. Such a row must be reversed, not unmatched.
         /// </summary>
         public bool IsGenerated { get; set; }
+
+        public long? BankFeedRuleSuggestionId { get; set; }
+
+        public string? RuleSuggestionStatus { get; set; }
+
+        public int RuleSuggestionCount { get; set; }
+
+        public string? RuleSuggestionName { get; set; }
+
+        public string? RuleSuggestionActionType { get; set; }
+
+        public string? RuleSuggestionPayeeName { get; set; }
+
+        public string? RuleSuggestionAccountName { get; set; }
+
+        public string? RuleSuggestionTargetAccountName { get; set; }
+
+        public bool IsRuleSuggestionApplyable { get; set; }
     }
 }

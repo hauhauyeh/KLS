@@ -44,6 +44,14 @@ namespace KLS.Models
 
         public string? CustomerName { get; set; }
 
+        public bool AreChargesComplete { get; set; }
+
+        public DateTime? ChargesCompletedAt { get; set; }
+
+        public int? ChargesCompletedBy { get; set; }
+
+        public int AssignedBillCount { get; set; }
+
         public bool IsLocked { get; set; }
     }
 }

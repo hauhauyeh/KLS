@@ -96,6 +96,10 @@ namespace KLS.Services
                             existing.ApplyPOQuantities(dto.OrdQty0, dto.OrdQty1, dto.ShipQty);
                         break;
 
+                    case EnumHelper.TempPurchaseUpdateKind.ShipQuantity:
+                        existing.ApplyShipQuantity(dto.ShipQty);
+                        break;
+
                     case EnumHelper.TempPurchaseUpdateKind.Flag:
                         existing.ApplyFlags(dto.IsFree, dto.IsOut, dto.IsCRCG);
                         existing.ApplyMetadata(dto.Notes, dto.ExpiryDate);

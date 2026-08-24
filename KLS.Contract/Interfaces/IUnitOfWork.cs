@@ -78,6 +78,10 @@ namespace KLS.Contract.Interfaces
 
         IBankFeedSourceRepository BankFeedSources { get; }
 
+        IBankFeedRuleRepository BankFeedRules { get; }
+
+        IBankFeedRuleSuggestionRepository BankFeedRuleSuggestions { get; }
+
         IPaymentOptionRepository PaymentOptions { get; }
 
         IEmpAdvanceRepository EmpAdvances { get; }
@@ -185,6 +189,12 @@ namespace KLS.Contract.Interfaces
         IShipmentChargeBillRepository ShipmentChargeBills { get; }
 
         IShipmentChargeBillLineRepository ShipmentChargeBillLines { get; }
+
+        ISharedShipmentChargeBillRepository SharedShipmentChargeBills { get; }
+
+        ISharedShipmentChargeBillLineRepository SharedShipmentChargeBillLines { get; }
+
+        ISharedShipmentChargeBillSplitRepository SharedShipmentChargeBillSplits { get; }
 
         IShipmentPurchaseRepository ShipmentPurchases { get; }
 

@@ -33,6 +33,10 @@ namespace KLS.Contract.Interfaces
 
         int CreateInvoiceDeposit(BankFeedCreateInvoiceDepositReq req, string linesJson, int empId);
 
+        int CreateRuleMoneyIn(BankFeedCreateRuleMoneyInReq req, int empId);
+
+        int CreateTransfer(BankFeedCreateTransferReq req, int empId);
+
         void MatchTx(long bankFeedTransactionId, string matchItemsJson, int matchedBy);
 
         void UnMatchTx(long bankFeedTransactionId);

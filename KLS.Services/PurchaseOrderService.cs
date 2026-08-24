@@ -74,11 +74,26 @@ namespace KLS.Services
                     ?? throw new ArgumentException("Purchase order not found.");
 
                 EnsureDropShipReceivedStageEditable(purchase);
+
+                if (purchase.IsDropShip && purchase.StageId is >= 1 and <= 3)
+                    throw new ArgumentException("Use the restricted drop-ship PO update.");
             }
 
             var poId = Uow.PurchaseOrders.Checkout(checkoutReq);
 
             return GetListById(poId);
+        }
+
+        public POList? DropShipRestrictedUpdate(int purchaseId, bool canUpdateShipQty)
+        {
+            var purchase = Uow.Purchases.GetById(purchaseId)
+                ?? throw new ArgumentException("Drop-ship purchase order not found.");
+
+            if (!purchase.IsDropShip || purchase.StageId is null or < 1 or > 3)
+                throw new ArgumentException("This operation supports drop-ship PO stages 1 through 3 only.");
+
+            Uow.Purchases.DropShipPORestrictedUpdate(purchaseId, canUpdateShipQty);
+            return GetListById(purchaseId);
         }
 
         private static void EnsureDropShipReceivedStageEditable(Purchase purchase)
@@ -96,9 +111,12 @@ namespace KLS.Services
             // convert-to-bill, otherwise Bill Manager still shows the orphaned row.
             if (purchase != null && !purchase.IsLocked)
             {
-                if (purchase.IsDropShip && purchase.DropShipSalesId != null)
+                if (purchase.IsDropShip)
                 {
-                    CancelLinkedDropShipPurchaseDelete(purchase, PurchaseId);
+                    if (purchase.StageId == 6)
+                        throw new ArgumentException("Drop-ship Bill must be deleted from Bill Manager.");
+
+                    CancelLinkedDropShipPODelete(purchase, PurchaseId);
                 }
                 else
                 {
@@ -182,13 +200,16 @@ namespace KLS.Services
                 throw new ArgumentException("Vendor email is missing.");
 
             var poNumber = po.PurchaseNumber.ToString();
+            var subjectNumber = string.IsNullOrWhiteSpace(po.FactorPO)
+                ? poNumber
+                : po.FactorPO.Trim();
             var poFile = PrintPO(purchaseId);
             var tempFolder = CreateEmailAttachmentFolder();
 
             try
             {
                 var attachments = BuildPurchaseOrderEmailAttachments(tempFolder, poNumber, poFile, files);
-                var subject = $"Purchase Order #{poNumber}";
+                var subject = $"Purchase Order #{subjectNumber}";
                 var mailbody = BuildPurchaseOrderEmailBody(vendor.PayeeName, poNumber);
 
                 var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
