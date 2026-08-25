@@ -97,7 +97,7 @@ namespace KLS.Services
                         break;
 
                     case EnumHelper.TempPurchaseUpdateKind.ShipQuantity:
-                        existing.ApplyShipQuantity(dto.ShipQty);
+                        existing.ApplyShipQuantity(dto.ShipQty, dto.Notes);
                         break;
 
                     case EnumHelper.TempPurchaseUpdateKind.Flag:

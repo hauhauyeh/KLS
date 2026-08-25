@@ -138,10 +138,12 @@ namespace KLS.Models
             ApplyFlagRules(docType: EnumHelper.PurchaseDocType.PO);
         }
 
-        public void ApplyShipQuantity(decimal? shipQty)
+        public void ApplyShipQuantity(decimal? shipQty, string? notes)
         {
             ShipQty = shipQty;
             BillQty = shipQty;
+            IsOut = false;
+            Notes = RemoveLeadingOutPrefix(notes);
         }
 
         public void ApplyBillQuantities(decimal? ordQty0, decimal? ordQty1)
@@ -204,6 +206,19 @@ namespace KLS.Models
             {
 
             }
+        }
+
+        private static string? RemoveLeadingOutPrefix(string? notes)
+        {
+            if (string.IsNullOrEmpty(notes))
+                return notes;
+
+            var trimmedStart = notes.TrimStart();
+
+            if (!trimmedStart.StartsWith("OUT.", StringComparison.OrdinalIgnoreCase))
+                return notes;
+
+            return trimmedStart.Substring(4).TrimStart();
         }
 
         //private void Validate(PurchaseDocType docType)
