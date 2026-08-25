@@ -131,6 +131,20 @@
             font-weight: 600;
         }
 
+        .section-title {
+            margin: 24px 0 10px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #312e40;
+        }
+
+        .credit-note {
+            color: #5b527a;
+            line-height: 1.35;
+            white-space: normal;
+            word-break: break-word;
+        }
+
         .grand-total-label {
             text-align: right;
             font-size: 16px;
@@ -292,6 +306,38 @@
                         </tfoot>
                     </table>
                 </div>
+
+                @if (Model.AvailableCredit != null && Model.AvailableCredit.Any())
+                {
+                    <div class="section-title">Unapplied Credits</div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 16%;">Date</th>
+                                    <th style="width: 16%;">Payment #</th>
+                                    <th style="width: 18%;">Reference</th>
+                                    <th style="width: 32%;">Note</th>
+                                    <th style="width: 18%; text-align:right;">Unapplied Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var credit in Model.AvailableCredit)
+                                {
+                                    <tr>
+                                        <td>@string.Format("{0:MMM dd yyyy}", credit.PaymentDate)</td>
+                                        <td class="sales-no">@credit.PaymentNumber</td>
+                                        <td>@credit.ReferenceId</td>
+                                        <td class="credit-note">@credit.Notes</td>
+                                        <td style="text-align:right;" class="amount">
+                                            @string.Format("{0:c}", credit.UnappliedAmount)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
 
                 <div class="footer">
                     <p>
