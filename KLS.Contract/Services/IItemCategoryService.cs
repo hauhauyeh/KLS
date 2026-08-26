@@ -28,7 +28,17 @@ namespace KLS.Contract.Services
 
         void SaveImage(ItemCategory category, HttpRequest request);
 
+        ItemCategory UploadImage(int categoryId, IFormFile file, HttpRequest request);
+
         void DeleteImage(int catId);
+
+        void ReprocessImageOriginal(int categoryId);
+
+        Task<CategoryImageProcessResult> ProcessImageBgLocal(int categoryId);
+
+        Task<CategoryImageProcessResult> ProcessImageBgApi(int categoryId);
+
+        Task FinalizeImage(CategoryImageFinalizeReq req);
 
         void ReorderNode(ItemCategoryReorderReq dto);
     }

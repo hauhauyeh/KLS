@@ -97,7 +97,12 @@ namespace KLS.Services
                     CategoryId = c.CategoryId,
                     CategoryName = c.CategoryName,
                     DisplayName = c.DisplayName,
-                    ImageUrl = ResolveImageUrl(c.ImageUrl, baseUrl) ?? fallbackImageMap.GetValueOrDefault(c.CategoryId),
+                    ImageUrl = ResolveCategoryWebImageUrl(c, baseUrl) ?? fallbackImageMap.GetValueOrDefault(c.CategoryId),
+                    ThumbnailUrl = ResolveCategoryThumbnailUrl(c, baseUrl),
+                    WebImageUrl = ResolveCategoryWebImageUrl(c, baseUrl),
+                    NoBgThumbnailUrl = ResolveCategoryNoBgThumbnailUrl(c, baseUrl),
+                    NoBgWebImageUrl = ResolveCategoryNoBgWebImageUrl(c, baseUrl),
+                    OriginalUrl = ResolveCategoryOriginalUrl(c, baseUrl),
                     ItemCount = rollup.RolledUpCounts.GetValueOrDefault(c.CategoryId)
                 })
                 .ToList();
@@ -202,6 +207,11 @@ namespace KLS.Services
                         CategoryName = cat.CategoryName,
                         DisplayName = cat.DisplayName,
                         ImageUrl = cat.ImageUrl,
+                        ThumbnailUrl = cat.ThumbnailUrl,
+                        WebImageUrl = cat.WebImageUrl,
+                        NoBgThumbnailUrl = cat.NoBgThumbnailUrl,
+                        NoBgWebImageUrl = cat.NoBgWebImageUrl,
+                        OriginalUrl = cat.OriginalUrl,
                         ItemCount = cat.ItemCount,
                         Products = groupItems.Select(i => MapToHomeProduct(i, imageMap, null, baseUrl)).ToList()
                     };
@@ -305,6 +315,41 @@ namespace KLS.Services
             return imageUrl.StartsWith("/")
                 ? baseUrl + imageUrl
                 : $"{baseUrl}/{imageUrl}";
+        }
+
+        private static string? ResolveCategoryThumbnailUrl(ItemCategory category, string baseUrl)
+        {
+            return category.HasImage300
+                ? $"{baseUrl}/Images/category/{category.CategoryId}/1-300.png"
+                : null;
+        }
+
+        private static string? ResolveCategoryWebImageUrl(ItemCategory category, string baseUrl)
+        {
+            return category.HasImage1200
+                ? $"{baseUrl}/Images/category/{category.CategoryId}/1-1200.png"
+                : ResolveImageUrl(category.ImageUrl, baseUrl);
+        }
+
+        private static string? ResolveCategoryNoBgThumbnailUrl(ItemCategory category, string baseUrl)
+        {
+            return category.HasNoBg300
+                ? $"{baseUrl}/Images/category/{category.CategoryId}/1-300-nobg.png"
+                : null;
+        }
+
+        private static string? ResolveCategoryNoBgWebImageUrl(ItemCategory category, string baseUrl)
+        {
+            return category.HasNoBg1200
+                ? $"{baseUrl}/Images/category/{category.CategoryId}/1-1200-nobg.png"
+                : null;
+        }
+
+        private static string? ResolveCategoryOriginalUrl(ItemCategory category, string baseUrl)
+        {
+            return string.IsNullOrWhiteSpace(category.OriginalImageExtension)
+                ? null
+                : $"{baseUrl}/Images/category/{category.CategoryId}/1-org{category.OriginalImageExtension}";
         }
 
         private Dictionary<int, string?> BuildCategoryNameMap(IReadOnlyCollection<Item> items)
