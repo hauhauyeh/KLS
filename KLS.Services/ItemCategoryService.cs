@@ -35,7 +35,13 @@ namespace KLS.Services
 
             var category = qry.OrderBy(c => c.SortOrder).ThenBy(c => c.CategoryName).ToList();
 
-            return BuildTree(category, null);
+            var itemCounts = Uow.Items.Find(i => !i.Inactive && !i.IsDeleted)
+                .Where(i => i.CategoryId != null)
+                .GroupBy(i => i.CategoryId!.Value)
+                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.CategoryId, x => x.Count);
+
+            return BuildTree(category, null, itemCounts);
         }
 
         public ItemCategory GetById(int id)
@@ -43,7 +49,7 @@ namespace KLS.Services
             return Uow.ItemCategories.GetById(id);
         }
 
-        private IEnumerable<ItemCategory> BuildTree(IEnumerable<ItemCategory> itemCategories, int? parentId)
+        private IEnumerable<ItemCategory> BuildTree(IEnumerable<ItemCategory> itemCategories, int? parentId, Dictionary<int, int> itemCounts)
         {
             return itemCategories
                 .Where(x => x.ParentId == parentId)
@@ -51,9 +57,10 @@ namespace KLS.Services
                 {
                     var item = new ItemCategory();
                     item.InjectFrom(x); // Copies all matching properties
+                    item.ItemCount = itemCounts.GetValueOrDefault(x.CategoryId);
 
                     // Build child categories
-                    item.ChildCategories = BuildTree(itemCategories, x.CategoryId).ToList();
+                    item.ChildCategories = BuildTree(itemCategories, x.CategoryId, itemCounts).ToList();
 
                     return item;
                 });

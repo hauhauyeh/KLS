@@ -49,6 +49,9 @@ namespace KLS.Models
         [NotMapped]
         public ICollection<ItemCategory>? ChildCategories { get; set; }
 
+        [NotMapped]
+        public int ItemCount { get; set; }
+
         public bool HasChild => ChildCategories != null && ChildCategories.Any();
     }
 }
