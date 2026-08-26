@@ -180,6 +180,46 @@ namespace KLS.Data.Repositories
                 };
         }
 
+        public int ReserveCreditMemoRefund(ReserveCreditMemoRefundReq reserveReq)
+        {
+            var PayeeIdParam = new SqlParameter("@PayeeId", reserveReq.PayeeId);
+
+            var SalesIdsParam = new SqlParameter("@SalesIds", string.Join(",", reserveReq.SalesIds));
+
+            var PaymentDateParam = reserveReq.PaymentDate.HasValue
+                ? new SqlParameter("@PaymentDate", reserveReq.PaymentDate)
+                : new SqlParameter("@PaymentDate", DBNull.Value);
+
+            var NotesParam = string.IsNullOrWhiteSpace(reserveReq.Notes)
+                ? new SqlParameter("@Notes", DBNull.Value)
+                : new SqlParameter("@Notes", reserveReq.Notes);
+
+            var EmpIdParam = new SqlParameter("@EmpId", UserContext.EmpId);
+
+            var NewPaymentIdParam = new SqlParameter("@NewPaymentId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
+            var NewPaymentDetailIdParam = new SqlParameter("@NewPaymentDetailId", System.Data.SqlDbType.Int)
+            {
+                Direction = System.Data.ParameterDirection.Output
+            };
+
+            DbContext.Database.ExecuteSqlRaw(
+                "[dbo].[CustomerPayment_ReserveCreditMemoRefund] @PayeeId,@SalesIds,@PaymentDate,@Notes,@EmpId,@NewPaymentId OUTPUT,@NewPaymentDetailId OUTPUT",
+                PayeeIdParam,
+                SalesIdsParam,
+                PaymentDateParam,
+                NotesParam,
+                EmpIdParam,
+                NewPaymentIdParam,
+                NewPaymentDetailIdParam
+            );
+
+            return (NewPaymentDetailIdParam.Value == DBNull.Value) ? 0 : (int)NewPaymentDetailIdParam.Value;
+        }
+
         public int SaveGatewayPayment(CreateGatewayPaymentReq paymentReq)
         {
             var PayeeIdParam = new SqlParameter("@PayeeId", paymentReq.PayeeId);
