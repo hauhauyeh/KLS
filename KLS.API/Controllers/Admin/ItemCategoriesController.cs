@@ -85,6 +85,60 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        [HttpPost("{id}/Image")]
+        [DisplayName("Update Category Image")]
+        [PermissionKey("Product.ItemCategory.Update")]
+        public IActionResult UploadImage(int id, [FromForm] IFormFile file)
+        {
+            return Ok(_itemCategoryService.UploadImage(id, file, Request));
+        }
+
+        [HttpPost("{id}/Image/ReprocessOriginal")]
+        [DisplayName("Reprocess Category Image From Original")]
+        [PermissionKey("Product.ItemCategory.Update")]
+        public IActionResult ReprocessImageOriginal(int id)
+        {
+            _itemCategoryService.ReprocessImageOriginal(id);
+            return Ok();
+        }
+
+        [HttpPost("{id}/Image/ProcessBgLocal")]
+        [DisplayName("Process Category Background Removal (Local)")]
+        [PermissionKey("Product.ItemCategory.Update")]
+        public async Task<IActionResult> ProcessImageBgLocal(int id)
+        {
+            var result = await _itemCategoryService.ProcessImageBgLocal(id);
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/Image/ProcessBgApi")]
+        [DisplayName("Process Category Background Removal (API)")]
+        [PermissionKey("Product.ItemCategory.Update")]
+        public async Task<IActionResult> ProcessImageBgApi(int id)
+        {
+            var result = await _itemCategoryService.ProcessImageBgApi(id);
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/Image/Finalize")]
+        [DisplayName("Finalize Category Image Version")]
+        [PermissionKey("Product.ItemCategory.Update")]
+        public async Task<IActionResult> FinalizeImage(int id, [FromBody] CategoryImageFinalizeReq req)
+        {
+            req.CategoryId = id;
+            await _itemCategoryService.FinalizeImage(req);
+            return Ok();
+        }
+
+        [HttpDelete("{id}/Image")]
+        [DisplayName("Remove Category Image")]
+        [PermissionKey("Product.ItemCategory.Update")]
+        public IActionResult DeleteImage(int id)
+        {
+            _itemCategoryService.DeleteImage(id);
+            return Ok();
+        }
+
 
         [HttpDelete("{id}")]
         [DisplayName("Delete Category")]

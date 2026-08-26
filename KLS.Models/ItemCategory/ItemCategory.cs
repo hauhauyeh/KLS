@@ -35,6 +35,20 @@ namespace KLS.Models
 
         public string? ImageUrl { get; set; }
 
+        public string? OriginalImageExtension { get; set; }
+
+        public bool IsImageProcessed { get; set; }
+
+        public bool IsImageProcessing { get; set; }
+
+        public bool HasImage300 { get; set; }
+
+        public bool HasImage1200 { get; set; }
+
+        public bool HasNoBg300 { get; set; }
+
+        public bool HasNoBg1200 { get; set; }
+
         public bool Inactive { get; set; }
 
         public int SortOrder { get; set; }
@@ -48,6 +62,24 @@ namespace KLS.Models
 
         [NotMapped]
         public ICollection<ItemCategory>? ChildCategories { get; set; }
+
+        [NotMapped]
+        public int ItemCount { get; set; }
+
+        [NotMapped]
+        public string? ThumbnailUrl { get; set; }
+
+        [NotMapped]
+        public string? WebImageUrl { get; set; }
+
+        [NotMapped]
+        public string? NoBgThumbnailUrl { get; set; }
+
+        [NotMapped]
+        public string? NoBgWebImageUrl { get; set; }
+
+        [NotMapped]
+        public string? OriginalUrl { get; set; }
 
         public bool HasChild => ChildCategories != null && ChildCategories.Any();
     }

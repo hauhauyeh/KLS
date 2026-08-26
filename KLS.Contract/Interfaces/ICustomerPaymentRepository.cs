@@ -25,6 +25,8 @@ namespace KLS.Contract.Interfaces
 
         CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId);
 
+        int ReserveCreditMemoRefund(ReserveCreditMemoRefundReq reserveReq);
+
         int SaveGatewayPayment(CreateGatewayPaymentReq paymentReq);
     }
 }

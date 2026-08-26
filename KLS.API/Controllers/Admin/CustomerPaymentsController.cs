@@ -125,6 +125,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_customerPaymentService.GetRefundQueue());
         }
 
+        [HttpPost("ReserveCreditMemoRefund")]
+        [DisplayName("Reserve Credit Memo Refund")]
+        [PermissionKey("Customer.CustomerPayment.Save")]
+        public IActionResult ReserveCreditMemoRefund([FromBody] ReserveCreditMemoRefundReq reserveReq)
+        {
+            return Ok(_customerPaymentService.ReserveCreditMemoRefund(reserveReq));
+        }
+
         [HttpPost("IssueRefund")]
         [DisplayName("Issue Refund")]
         [PermissionKey("Customer.CustomerPayment.Save")]

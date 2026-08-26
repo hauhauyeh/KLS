@@ -33,6 +33,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<RefundQueueRow> GetRefundQueue();
 
+        RefundQueueRow ReserveCreditMemoRefund(ReserveCreditMemoRefundReq reserveReq);
+
         CustomerPaymentList IssueRefund(IssueRefundReq issueRefundReq);
 
         CustomerPaymentEditEligibility GetEditEligibility(int customerPaymentId);

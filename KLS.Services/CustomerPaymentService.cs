@@ -272,6 +272,41 @@ namespace KLS.Services
                 .ToList();
         }
 
+        public RefundQueueRow ReserveCreditMemoRefund(ReserveCreditMemoRefundReq reserveReq)
+        {
+            if (reserveReq.PayeeId <= 0)
+                throw new ValidationException("Customer is required.");
+
+            if (!reserveReq.PaymentDate.HasValue)
+                throw new ValidationException("Refund reserve date is required.");
+
+            var salesIds = reserveReq.SalesIds?
+                .Where(x => x > 0)
+                .Distinct()
+                .ToList() ?? new List<int>();
+
+            if (salesIds.Count == 0)
+                throw new ValidationException("Select at least one credit memo to refund.");
+
+            EnsureVisibleCustomer(reserveReq.PayeeId);
+
+            foreach (var salesId in salesIds)
+            {
+                EnsureVisibleSales(salesId);
+            }
+
+            reserveReq.SalesIds = salesIds;
+            var paymentDetailId = Uow.CustomerPayments.ReserveCreditMemoRefund(reserveReq);
+
+            var refundRow = GetRefundQueue()
+                .FirstOrDefault(x => x.PaymentDetailId == paymentDetailId);
+
+            if (refundRow == null)
+                throw new ValidationException("Refund reserve was created but could not be loaded.");
+
+            return refundRow;
+        }
+
         public CustomerPaymentList IssueRefund(IssueRefundReq issueRefundReq)
         {
             if (issueRefundReq.PaymentDetailId <= 0)

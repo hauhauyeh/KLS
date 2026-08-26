@@ -23,6 +23,11 @@ namespace KLS.Models
         public string? CategoryName { get; set; }
         public string? DisplayName { get; set; }
         public string? ImageUrl { get; set; }
+        public string? ThumbnailUrl { get; set; }
+        public string? WebImageUrl { get; set; }
+        public string? NoBgThumbnailUrl { get; set; }
+        public string? NoBgWebImageUrl { get; set; }
+        public string? OriginalUrl { get; set; }
         public int ItemCount { get; set; }
     }
 
@@ -45,6 +50,11 @@ namespace KLS.Models
         public string? CategoryName { get; set; }
         public string? DisplayName { get; set; }
         public string? ImageUrl { get; set; }
+        public string? ThumbnailUrl { get; set; }
+        public string? WebImageUrl { get; set; }
+        public string? NoBgThumbnailUrl { get; set; }
+        public string? NoBgWebImageUrl { get; set; }
+        public string? OriginalUrl { get; set; }
         public int ItemCount { get; set; }
         public string? Subtitle { get; set; }
         public IEnumerable<HomeProduct>? Products { get; set; }

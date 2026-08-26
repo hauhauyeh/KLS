@@ -21,6 +21,20 @@ namespace KLS.Models
 
         public string? ImageUrl { get; set; }
 
+        public bool IsImageProcessed { get; set; }
+
+        public bool IsImageProcessing { get; set; }
+
+        public string? ThumbnailUrl { get; set; }
+
+        public string? WebImageUrl { get; set; }
+
+        public string? NoBgThumbnailUrl { get; set; }
+
+        public string? NoBgWebImageUrl { get; set; }
+
+        public string? OriginalUrl { get; set; }
+
         public IEnumerable<ItemCategoryTree>? ChildCategories { get; set; }
         
         public bool HasChild { get { return ChildCategories != null && ChildCategories.Any(); } }
