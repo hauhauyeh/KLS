@@ -163,42 +163,46 @@ namespace KLS.Services
 
         public CustomerDto Create(CustomerDto dto)
         {
-            var newPayeeId = GetMaxCustomerId();
-
-            var payee = new Payee();
-            payee.InjectFrom(dto);
-            NormalizePayeeContactFields(payee);
-            payee.PayeeId = newPayeeId;
-            payee.PayeeType = EnumHelper.PayeeType.C.ToString();
-
             var mapAPIKey = _systemSettingService.GetByKey<string>(GlobalKey.GOOGLEMAPS_APIKEY);
-            var latlong = GetMapLatLong(payee.FullAddress, mapAPIKey);
+            var latlong = GetMapLatLong(dto.FullAddress, mapAPIKey);
             var distance = GetDistance(dto.FullAddress, mapAPIKey);
 
-            if (latlong != null)
+            var newPayeeId = 0;
+
+            Uow.ExecuteInTransaction(() =>
             {
-                payee.GoogleLat = latlong.Latitude;
-                payee.GoogleLong = latlong.Longitude;
-                payee.GooglePlaceId = latlong.PlaceId;
-                payee.FormatAddress = latlong.FormatAddress;
-                payee.Distance = distance;
-            }
+                newPayeeId = GetMaxCustomerId();
 
-            Uow.Payees.Add(payee);
-            Uow.Commit();
+                var payee = new Payee();
+                payee.InjectFrom(dto);
+                NormalizePayeeContactFields(payee);
+                payee.PayeeId = newPayeeId;
+                payee.PayeeType = EnumHelper.PayeeType.C.ToString();
 
-            var customer = new Customer();
-            customer.InjectFrom(dto);
-            customer.PayeeId = newPayeeId;
+                if (latlong != null)
+                {
+                    payee.GoogleLat = latlong.Latitude;
+                    payee.GoogleLong = latlong.Longitude;
+                    payee.GooglePlaceId = latlong.PlaceId;
+                    payee.FormatAddress = latlong.FormatAddress;
+                    payee.Distance = distance;
+                }
 
-            customer.SalesRepId = UserContext.IsSalesRole
-                ? UserContext.EmpId
-                : dto.SalesRepId ?? (UserContext.EmpId == 0 ? null : UserContext.EmpId);
-            customer.BillId = dto.BillId ?? newPayeeId;
+                Uow.Payees.Add(payee);
 
-            Uow.Customers.Add(customer);
-            SyncDeliverSchedule(newPayeeId, dto);
-            Uow.Commit();
+                var customer = new Customer();
+                customer.InjectFrom(dto);
+                customer.PayeeId = newPayeeId;
+
+                customer.SalesRepId = UserContext.IsSalesRole
+                    ? UserContext.EmpId
+                    : dto.SalesRepId ?? (UserContext.EmpId == 0 ? null : UserContext.EmpId);
+                customer.BillId = dto.BillId ?? newPayeeId;
+
+                Uow.Customers.Add(customer);
+                SyncDeliverSchedule(newPayeeId, dto);
+                Uow.Commit();
+            });
 
             return GetById(newPayeeId);
         }
@@ -447,8 +451,13 @@ namespace KLS.Services
 
         public int GetMaxCustomerId()
         {
-            var maxId = Uow.Customers.GetAll().Select(p => (int?)p.PayeeId).Max();
-            return (maxId ?? 300000) + 1;
+            var maxCustomerId = Uow.Customers.GetAll().Select(c => (int?)c.PayeeId).Max();
+            var maxCustomerPayeeId = Uow.Payees.GetAll()
+                .Where(p => p.PayeeType == EnumHelper.PayeeType.C.ToString())
+                .Select(p => (int?)p.PayeeId)
+                .Max();
+
+            return (new[] { maxCustomerId, maxCustomerPayeeId }.Max() ?? 300000) + 1;
         }
 
         public ICollection<PayeeSearch>? Search(PayeeSearchReq searchReq)
