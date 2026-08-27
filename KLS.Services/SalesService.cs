@@ -281,16 +281,28 @@ namespace KLS.Services
             if (currentStageId == stageId)
                 return Uow.SalesStages.GetById(stageId);
 
-            if (!IsAllowedManualStageTransition(sales.IsDropShip, currentStageId, stageId))
+            var isCreditMemo = IsCreditMemo(sales);
+
+            if (!IsAllowedManualStageTransition(sales.IsDropShip, isCreditMemo, currentStageId, stageId))
                 throw new InvalidOperationException("Manual stage change is not allowed.");
 
             return Uow.Sales.UpdateStage(salesId, stageId);
         }
 
-        private static bool IsAllowedManualStageTransition(bool isDropShip, int currentStageId, int targetStageId)
+        private static bool IsAllowedManualStageTransition(bool isDropShip, bool isCreditMemo, int currentStageId, int targetStageId)
         {
             if (isDropShip)
                 return (currentStageId == 3 && targetStageId == 4)
+                    || (currentStageId == 4 && targetStageId == 3);
+
+            if (isCreditMemo)
+                return (currentStageId == 0 && targetStageId == 4)
+                    || (currentStageId == 4 && targetStageId == 0)
+                    || (currentStageId == 0 && targetStageId == 2)
+                    || (currentStageId == 2 && targetStageId == 0)
+                    || (currentStageId == 2 && targetStageId == 3)
+                    || (currentStageId == 3 && targetStageId == 2)
+                    || (currentStageId == 3 && targetStageId == 4)
                     || (currentStageId == 4 && targetStageId == 3);
 
             return (currentStageId == 0 && targetStageId == 2)
@@ -299,6 +311,12 @@ namespace KLS.Services
                 || (currentStageId == 3 && targetStageId == 2)
                 || (currentStageId == 3 && targetStageId == 4)
                 || (currentStageId == 4 && targetStageId == 3);
+        }
+
+        private static bool IsCreditMemo(Sales sales)
+        {
+            var docType = sales.DocType?.Trim().ToUpperInvariant();
+            return docType == "CM" || (docType == "SO" && (sales.SalesTotal ?? 0) < 0);
         }
 
         public SalesStage EnterEditMode(int salesId)
