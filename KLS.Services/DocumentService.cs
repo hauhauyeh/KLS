@@ -958,6 +958,7 @@ namespace KLS.Services
                     2 => "~/Views/Pdf/Invoice-2.cshtml",
                     3 => "~/Views/Pdf/Invoice-3.cshtml",
                     4 => "~/Views/Pdf/Invoice-4.cshtml",
+                    5 => "~/Views/Pdf/Invoice-5.cshtml",
                     _ => "~/Views/Pdf/Invoice.cshtml"
                 };
 
