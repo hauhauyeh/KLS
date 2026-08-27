@@ -159,6 +159,7 @@ namespace KLS.Services
             existing.IsFixed = req.IsFixed;
             existing.MarkupPercent = req.IsFixed ? null : req.MarkupPercent;
             existing.TargetPrice = req.IsFixed ? req.TargetPrice : null;
+            existing.NewPrice = req.NewPrice;
 
             Uow.TempItemQuotes.Update(existing);
             Uow.Commit();

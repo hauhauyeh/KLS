@@ -43,6 +43,21 @@ namespace KLS.Models
         public decimal? P1 { get; set; }
 
         [Column(TypeName = "decimal(18,4)")]
+        public decimal? NewPrice { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? TCost1 { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? TCost2 { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? NCost1 { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? NCost2 { get; set; }
+
+        [Column(TypeName = "decimal(18,4)")]
         public decimal? BaseMarkup { get; set; }
 
         public bool IsBaseToRecentCost { get; set; }
