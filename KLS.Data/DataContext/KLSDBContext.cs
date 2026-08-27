@@ -173,6 +173,9 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ImportPayNowExcelRow>().HasNoKey();
             modelBuilder.Entity<OpenBalanceExcelRow>().HasNoKey();
             modelBuilder.Entity<OpenBalanceCardRow>().HasNoKey();
+            modelBuilder.Entity<ItemCostImportRow>().HasNoKey();
+            modelBuilder.Entity<ItemCostPendingStatus>().HasNoKey();
+            modelBuilder.Entity<ItemCostPendingImportRow>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
@@ -460,6 +463,12 @@ namespace KLS.Data.DataContext
         public virtual DbSet<OpenBalanceExcelRow> OpenBalanceExcelRow { get; set; }
 
         public virtual DbSet<OpenBalanceCardRow> OpenBalanceCardRow { get; set; }
+
+        public virtual DbSet<ItemCostImportRow> ItemCostImportRow { get; set; }
+
+        public virtual DbSet<ItemCostPendingStatus> ItemCostPendingStatus { get; set; }
+
+        public virtual DbSet<ItemCostPendingImportRow> ItemCostPendingImportRow { get; set; }
 
         public virtual DbSet<DropShipmentBackorderSeedRes> DropShipmentBackorderSeedRes { get; set; }
 

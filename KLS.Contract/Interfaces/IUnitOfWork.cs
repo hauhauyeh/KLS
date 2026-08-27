@@ -239,6 +239,8 @@ namespace KLS.Contract.Interfaces
 
         IOpenBalanceRepository OpenBalances { get; }
 
+        IItemCostImportRepository ItemCostImports { get; }
+
         ISalesQuoteRepository SalesQuotes { get; }
         ITempSalesQuoteRepository TempSalesQuotes { get; }
 

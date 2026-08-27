@@ -42,6 +42,14 @@ namespace KLS.Models
         // Written by ItemUnit_UpdateRecentCost; NULL until the item has purchase history.
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? RecentBaseCost { get; set; }
+        // 2026-08-27 Import Cost: live tier-2 (reference) vendor cost; display/compare only.
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? RecentBaseCost2 { get; set; }
+        // 2026-08-27 Import Cost: staged costs awaiting Item_ApplyPendingCost on the schedule day.
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? PendingBaseCost { get; set; }
+        [Column(TypeName = "decimal(18, 4)")]
+        public decimal? PendingBaseCost2 { get; set; }
         [Column(TypeName = "decimal(18, 4)")]
         public decimal? P1 { get; set; }
         [Column(TypeName = "decimal(18, 4)")]

@@ -18,16 +18,62 @@ namespace KLS.API.Controllers.Admin
         private readonly IItemService _itemService;
         private readonly IItemQuoteService _itemQuoteService;
         private readonly IItemUnitService _itemUnitService;
+        private readonly IItemCostImportService _itemCostImportService;
 
         #endregion
 
         #region --- Constructor(s) ---
 
-        public ItemsController(IItemService itemService, IItemQuoteService itemQuoteService, IItemUnitService itemUnitService)
+        public ItemsController(
+            IItemService itemService,
+            IItemQuoteService itemQuoteService,
+            IItemUnitService itemUnitService,
+            IItemCostImportService itemCostImportService)
         {
             _itemService = itemService;
             _itemQuoteService = itemQuoteService;
             _itemUnitService = itemUnitService;
+            _itemCostImportService = itemCostImportService;
+        }
+
+        #endregion
+
+        #region --- Import Cost ---
+
+        /// <summary>Step 1. Upload a vendor price file (.csv / .xlsx); rows are matched by unit barcode. Writes nothing.</summary>
+        [HttpPost("ImportCostPreview")]
+        [DisplayName("Import Cost")]
+        [PermissionKey("Product.Item.ImportCost")]
+        public IActionResult ImportCostPreview([FromForm] ItemCostImportPreviewReq req)
+        {
+            return Ok(_itemCostImportService.Preview(req));
+        }
+
+        /// <summary>Step 2. Stage pending costs from the file on disk. Live prices change only on apply.</summary>
+        [HttpPost("ImportCost")]
+        [DisplayName("Import Cost")]
+        [PermissionKey("Product.Item.ImportCost")]
+        public IActionResult ImportCost([FromBody] ItemCostImportTokenReq req)
+        {
+            return Ok(_itemCostImportService.Import(req));
+        }
+
+        /// <summary>The Pending / Apply card: counts, schedule, last apply, CanApply + reason.</summary>
+        [HttpGet("PendingCostStatus")]
+        [DisplayName("Import Cost")]
+        [PermissionKey("Product.Item.ImportCost")]
+        public IActionResult PendingCostStatus()
+        {
+            return Ok(_itemCostImportService.GetPendingStatus());
+        }
+
+        /// <summary>Apply Now. The SP enforces schedule day / once per week / something pending.</summary>
+        [HttpPost("ApplyPendingCost")]
+        [DisplayName("Apply Pending Cost")]
+        [PermissionKey("Product.Item.ApplyCost")]
+        public IActionResult ApplyPendingCost()
+        {
+            return Ok(_itemCostImportService.ApplyPending());
         }
 
         #endregion
