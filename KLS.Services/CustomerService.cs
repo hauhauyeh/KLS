@@ -189,6 +189,7 @@ namespace KLS.Services
                 }
 
                 Uow.Payees.Add(payee);
+                Uow.Commit();
 
                 var customer = new Customer();
                 customer.InjectFrom(dto);
