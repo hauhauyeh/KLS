@@ -282,6 +282,8 @@ namespace KLS.Data.Repositories
 
         public IOpenBalanceRepository OpenBalances { get { return new OpenBalanceRepository(DbContext); } }
 
+        public IItemCostImportRepository ItemCostImports { get { return new ItemCostImportRepository(DbContext); } }
+
         public ISalesQuoteRepository SalesQuotes { get { return new SalesQuoteRepository(DbContext); } }
         public ITempSalesQuoteRepository TempSalesQuotes { get { return new TempSalesQuoteRepository(DbContext); } }
 
