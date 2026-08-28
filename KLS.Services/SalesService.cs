@@ -631,7 +631,7 @@ namespace KLS.Services
             Uow.Sales.SingleAllocation(salesId);
         }
 
-        public SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null)
+        public SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null, string source = EmailAudit.Source.Manual)
         {
             EnsureVisible(salesId);
 
@@ -670,8 +670,9 @@ namespace KLS.Services
                     DocumentType = EmailAudit.DocumentType.Invoice,
                     DocumentId = salesId,
                     DocumentNumber = salesDisplayNumber,
-                    Source = EmailAudit.Source.Manual,
-                    RequestedBy = UserContext.SystemUserId
+                    // 2026-08-28: scheduler passes Source.Scheduler; no user on that request.
+                    Source = source,
+                    RequestedBy = source == EmailAudit.Source.Scheduler ? null : UserContext.SystemUserId
                 });
 
                 var sent = string.IsNullOrEmpty(error);
