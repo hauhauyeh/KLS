@@ -66,6 +66,15 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
+        [HttpPost("{imageId}/crop")]
+        [DisplayName("Update Product Image Crop")]
+        [PermissionKey("Product.ItemImage.Upload")]
+        public IActionResult UpdateCrop(int imageId, [FromForm] ImageCropUpdateReq req)
+        {
+            _itemImageService.UpdateCrop(imageId, req);
+            return Ok();
+        }
+
 
         [HttpPost("{imageId}/process-bg-local")]
         [DisplayName("Process Background Removal (Local)")]

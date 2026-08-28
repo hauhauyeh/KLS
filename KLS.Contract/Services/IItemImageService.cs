@@ -18,6 +18,8 @@ namespace KLS.Contract.Services
 
         void ReprocessOriginal(int imageId);
 
+        void UpdateCrop(int imageId, ImageCropUpdateReq req);
+
         Task<ImageProcessResult> ProcessBgLocal(int imageId);
 
         Task<ImageProcessResult> ProcessBgApi(int imageId);
