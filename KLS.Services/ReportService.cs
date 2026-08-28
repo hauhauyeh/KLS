@@ -50,9 +50,9 @@ namespace KLS.Services
 
             return new RptInvoice
             {
-                Invoice = Uow.Reports.Invoice(salesId),
+                Invoice = invoice,
                 InvoiceDetails = Uow.Reports.InvoiceDetail(salesId)?.ToList(),
-                Statement = CustStmt(invoice.ShipId),
+                Statement = Uow.Reports.InvoiceStatement(invoice.ShipId, invoice.SalesId, invoice.ShipDate),
                 Company = _companyService.GetDefault(),
                 HasDiscount = _systemSettingService.GetByKey<Boolean>(GlobalKey.SYSTEM_HAS_DISCOUNT),
                 UseSalesDocNumber = _systemSettingService.GetByKey<Boolean>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),

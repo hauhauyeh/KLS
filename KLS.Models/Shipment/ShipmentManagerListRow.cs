@@ -52,6 +52,10 @@ namespace KLS.Models
 
         public int AssignedBillCount { get; set; }
 
+        public int ChargeBillCount { get; set; }
+
+        public int GeneratedApBillCount { get; set; }
+
         public bool IsLocked { get; set; }
     }
 }
