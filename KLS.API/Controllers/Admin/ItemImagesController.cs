@@ -37,6 +37,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemImageService.GetList(itemId));
         }
 
+        [HttpGet("{imageId}/original")]
+        [DisplayName("Get Product Image Original")]
+        [PermissionKey("Product.ItemImage.List")]
+        public IActionResult Original(int imageId)
+        {
+            var file = _itemImageService.GetOriginalFile(imageId);
+            return PhysicalFile(file.FilePath, file.ContentType, file.FileName);
+        }
+
 
         [HttpPost]
         [DisplayName("Upload Image")]

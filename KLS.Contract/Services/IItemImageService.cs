@@ -8,6 +8,8 @@ namespace KLS.Contract.Services
 
         ItemImageList? GetPrimary(int itemId);
 
+        ImageFileResult GetOriginalFile(int imageId);
+
         void Upload(ImageUploadReq uploadReq);
 
         void ValidateCloneImages(int sourceItemId);

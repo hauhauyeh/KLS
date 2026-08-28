@@ -301,6 +301,37 @@ namespace KLS.Services
             return Uow.ItemImages.GetById(imageId);
         }
 
+        public ImageFileResult GetOriginalFile(int imageId)
+        {
+            var entity = Uow.ItemImages.GetById(imageId);
+            if (entity == null) throw new Exception("Image not found.");
+            if (string.IsNullOrWhiteSpace(entity.OriginalExtension))
+                throw new Exception("Original image extension is missing.");
+
+            var fileName = $"{entity.ImageIndex}-org{entity.OriginalExtension}";
+            var filePath = Path.Combine(GetItemFolderPath(entity.ItemId), fileName);
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"Original image not found: {fileName}");
+
+            return new ImageFileResult
+            {
+                FilePath = filePath,
+                FileName = fileName,
+                ContentType = GetImageContentType(entity.OriginalExtension)
+            };
+        }
+
+        private static string GetImageContentType(string extension)
+        {
+            return extension.ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
+        }
+
         public void ValidateCloneImages(int sourceItemId)
         {
             var sourceImages = GetSourceCloneImages(sourceItemId);
