@@ -64,8 +64,6 @@ namespace KLS.API.Controllers.Admin
 
             var newcat = _itemCategoryService.Create(itemCategory);
 
-            _itemCategoryService.SaveImage(newcat, Request);
-
             return Ok(newcat);
         }
 
@@ -78,16 +76,14 @@ namespace KLS.API.Controllers.Admin
             if (_itemCategoryService.NameExists(itemCategory))
                 return Conflict("Category already exists");
 
-            var newcat = _itemCategoryService.Update(itemCategory);
-
-            _itemCategoryService.SaveImage(newcat, Request);
+            _itemCategoryService.Update(itemCategory);
 
             return Ok();
         }
 
         [HttpPost("{id}/Image")]
         [DisplayName("Update Category Image")]
-        [PermissionKey("Product.ItemCategory.Update")]
+        [PermissionKey("Product.ItemCategory.ImageManage")]
         public IActionResult UploadImage(int id, [FromForm] IFormFile file)
         {
             return Ok(_itemCategoryService.UploadImage(id, file, Request));
@@ -95,7 +91,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("{id}/Image/ReprocessOriginal")]
         [DisplayName("Reprocess Category Image From Original")]
-        [PermissionKey("Product.ItemCategory.Update")]
+        [PermissionKey("Product.ItemCategory.ImageManage")]
         public IActionResult ReprocessImageOriginal(int id)
         {
             _itemCategoryService.ReprocessImageOriginal(id);
@@ -104,7 +100,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("{id}/Image/ProcessBgLocal")]
         [DisplayName("Process Category Background Removal (Local)")]
-        [PermissionKey("Product.ItemCategory.Update")]
+        [PermissionKey("Product.ItemCategory.ImageManage")]
         public async Task<IActionResult> ProcessImageBgLocal(int id)
         {
             var result = await _itemCategoryService.ProcessImageBgLocal(id);
@@ -113,7 +109,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("{id}/Image/ProcessBgApi")]
         [DisplayName("Process Category Background Removal (API)")]
-        [PermissionKey("Product.ItemCategory.Update")]
+        [PermissionKey("Product.ItemCategory.ImageManage")]
         public async Task<IActionResult> ProcessImageBgApi(int id)
         {
             var result = await _itemCategoryService.ProcessImageBgApi(id);
@@ -122,7 +118,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpPost("{id}/Image/Finalize")]
         [DisplayName("Finalize Category Image Version")]
-        [PermissionKey("Product.ItemCategory.Update")]
+        [PermissionKey("Product.ItemCategory.ImageManage")]
         public async Task<IActionResult> FinalizeImage(int id, [FromBody] CategoryImageFinalizeReq req)
         {
             req.CategoryId = id;
@@ -132,7 +128,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpDelete("{id}/Image")]
         [DisplayName("Remove Category Image")]
-        [PermissionKey("Product.ItemCategory.Update")]
+        [PermissionKey("Product.ItemCategory.ImageManage")]
         public IActionResult DeleteImage(int id)
         {
             _itemCategoryService.DeleteImage(id);
@@ -167,13 +163,6 @@ namespace KLS.API.Controllers.Admin
             }
         }
 
-
-        [HttpDelete("DeleteImg/{id}")]
-        public IActionResult DeleteImg(int id)
-        {
-            _itemCategoryService.DeleteImage(id);
-            return Ok();
-        }
 
         #endregion
     }

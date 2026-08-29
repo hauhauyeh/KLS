@@ -1,4 +1,3 @@
-﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -56,9 +55,6 @@ namespace KLS.Models
         public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
-
-        [NotMapped]
-        public IFormFile? CatFormFile { get; set; }
 
         [NotMapped]
         public ICollection<ItemCategory>? ChildCategories { get; set; }

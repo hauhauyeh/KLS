@@ -26,8 +26,6 @@ namespace KLS.Contract.Services
 
         void Delete(int categoryId);
 
-        void SaveImage(ItemCategory category, HttpRequest request);
-
         ItemCategory UploadImage(int categoryId, IFormFile file, HttpRequest request);
 
         void DeleteImage(int catId);
