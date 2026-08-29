@@ -44,6 +44,9 @@ namespace KLS.Models
 
         public bool IsLocked { get; set; }
 
+        /// <summary>2026-08-29: order posted on the price-update day before the cost apply; re-priced by Sales_RepriceOpenOrders.</summary>
+        public bool IsPricePending { get; set; }
+
         public bool IsLoadSeparate { get; set; }
 
         public string? TruckNumber { get; set; }

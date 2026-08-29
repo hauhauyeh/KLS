@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.Common;
+using KLS.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,9 +26,9 @@ namespace KLS.Contract.Services
 
         ICollection<PayeeSearch>? Search(PayeeSearchReq searchReq);
 
-        void EmailPricesheet(int payeeId);
+        void EmailPricesheet(int payeeId, string source = EmailAudit.Source.Manual);
 
-        CustomerStatementEmailResult EmailStatement(int payeeId, CustomerStatementEmailReq? req = null);
+        CustomerStatementEmailResult EmailStatement(int payeeId, CustomerStatementEmailReq? req = null, string source = EmailAudit.Source.Manual);
 
         byte[] Export();
 

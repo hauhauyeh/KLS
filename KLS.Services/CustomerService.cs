@@ -466,19 +466,19 @@ namespace KLS.Services
             return Uow.Customers.Search(searchReq)?.ToList();
         }
 
-        public void EmailPricesheet(int payeeId)
+        public void EmailPricesheet(int payeeId, string source = EmailAudit.Source.Manual)
         {
             var customer = GetById(payeeId);
 
             string? toEmails = FirstEmail(customer?.EmailPricesheet, customer?.Email);
 
             if (string.IsNullOrEmpty(toEmails))
-                throw new Exception("Email address not found");
+                throw new InvalidOperationException("Email address not found");
 
             var pricesheets = Uow.Reports.Pricesheet(payeeId).ToList();
 
             if (pricesheets.Count == 0)
-                throw new Exception("Pricesheet not found");
+                throw new InvalidOperationException("Pricesheet not found");
 
             var pricesheet = new EmailPricesheet
             {
@@ -501,12 +501,13 @@ namespace KLS.Services
                 DocumentType = EmailAudit.DocumentType.PriceSheet,
                 RelatedEntityType = EmailAudit.RelatedEntity.Payee,
                 RelatedEntityId = customer?.PayeeId,
-                Source = EmailAudit.Source.Manual,
-                RequestedBy = UserContext.SystemUserId
+                // 2026-08-28: scheduler passes Source.Scheduler; no user on that request.
+                Source = source,
+                RequestedBy = source == EmailAudit.Source.Scheduler ? null : UserContext.SystemUserId
             });
         }
 
-        public CustomerStatementEmailResult EmailStatement(int payeeId, CustomerStatementEmailReq? req = null)
+        public CustomerStatementEmailResult EmailStatement(int payeeId, CustomerStatementEmailReq? req = null, string source = EmailAudit.Source.Manual)
         {
             var customer = GetById(payeeId);
 
@@ -549,8 +550,9 @@ namespace KLS.Services
                     DocumentType = EmailAudit.DocumentType.Statement,
                     RelatedEntityType = EmailAudit.RelatedEntity.Payee,
                     RelatedEntityId = customer?.PayeeId,
-                    Source = EmailAudit.Source.Manual,
-                    RequestedBy = UserContext.SystemUserId
+                    // 2026-08-28: scheduler passes Source.Scheduler; no user on that request.
+                    Source = source,
+                    RequestedBy = source == EmailAudit.Source.Scheduler ? null : UserContext.SystemUserId
                 });
 
                 var sent = string.IsNullOrEmpty(error);

@@ -19,5 +19,11 @@ namespace KLS.Contract.Interfaces
 
         /// <summary>Move pending -> live for every unit with a pending value. Guards are enforced by the SP.</summary>
         (int ApplyId, int UnitCount) ApplyPending(int empId);
+
+        /// <summary>Re-price orders flagged IsPricePending through Sales_Inject -> Sales_PartialUpdate. Returns counts + skipped list.</summary>
+        SalesRepriceResult RepriceOpenOrders(string triggeredBy, int? empId, int? applyId);
+
+        /// <summary>Read-only. Flagged order count + last reprice run.</summary>
+        SalesRepriceStatus GetRepriceStatus();
     }
 }

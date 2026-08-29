@@ -76,6 +76,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemCostImportService.ApplyPending());
         }
 
+        /// <summary>Reprice Open Orders. Re-prices orders flagged at posting on the price-update day; skipped orders are returned with a reason.</summary>
+        [HttpPost("RepriceOpenOrders")]
+        [DisplayName("Reprice Open Orders")]
+        [PermissionKey("Product.Item.ApplyCost")]
+        public IActionResult RepriceOpenOrders()
+        {
+            return Ok(_itemCostImportService.RepriceOpenOrders());
+        }
+
         #endregion
 
         #region --- Method(s) ---

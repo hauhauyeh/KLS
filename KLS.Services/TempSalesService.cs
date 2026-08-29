@@ -106,7 +106,23 @@ namespace KLS.Services
                     tempItem.UnitPrice = itemPrice?.DefaultPrice;
                 }
 
+                // 2026-08-29 plan-reprice-open-orders-v1 (D5): track rep price overrides.
+                // "O" button (IsDefaultPrice) resets to the system price -> not manual.
+                // Unit change refreshes the price from pricing when none was typed -> not manual.
+                // Otherwise a changed UnitPrice on an item line is a manual override.
+                var priceBefore = existing.UnitPrice;
+                var systemPriced = tempItem.IsDefaultPrice
+                    || (tempItem.IsUnitChange && (!tempItem.UnitPrice.HasValue || tempItem.UnitPrice.Value == 0));
+
                 existing.ApplyEdits(tempItem.OrdQty, tempItem.IsFree, tempItem.IsOut, tempItem.IsCRCG, tempItem.UnitPrice, tempItem.Notes);
+
+                if (existing.LineType == EnumHelper.LineType.I.ToString() && existing.CartLineType == "MAIN" && !existing.IsSystemManaged)
+                {
+                    if (systemPriced)
+                        existing.IsManualPrice = false;
+                    else if (existing.UnitPrice != priceBefore)
+                        existing.IsManualPrice = true;
+                }
 
                 if (existing.SalesDetailId.HasValue)
                     existing.ChangeStatus = EnumHelper.ChangeStatus.U.ToString();

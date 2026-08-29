@@ -8,6 +8,8 @@ namespace KLS.Contract.Services
 
         ItemImageList? GetPrimary(int itemId);
 
+        ImageFileResult GetOriginalFile(int imageId);
+
         void Upload(ImageUploadReq uploadReq);
 
         void ValidateCloneImages(int sourceItemId);
@@ -17,6 +19,8 @@ namespace KLS.Contract.Services
         void Delete(int imageId);
 
         void ReprocessOriginal(int imageId);
+
+        void UpdateCrop(int imageId, ImageCropUpdateReq req);
 
         Task<ImageProcessResult> ProcessBgLocal(int imageId);
 

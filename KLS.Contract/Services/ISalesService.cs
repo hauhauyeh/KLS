@@ -1,4 +1,5 @@
-﻿using KLS.Models;
+﻿using KLS.Common;
+using KLS.Models;
 using System;
 using KLS.Models.Reports;
 using System.Collections.Generic;
@@ -66,7 +67,7 @@ namespace KLS.Contract.Services
 
         SalesEmailInvoiceRecipientResult GetEmailInvoiceRecipient(int salesId);
 
-        SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null);
+        SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null, string source = EmailAudit.Source.Manual);
 
         SalesEmailInvoiceResult EmailDocument(int salesId, SalesEmailDocumentReq req);
 

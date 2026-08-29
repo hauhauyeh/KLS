@@ -631,7 +631,7 @@ namespace KLS.Services
             Uow.Sales.SingleAllocation(salesId);
         }
 
-        public SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null)
+        public SalesEmailInvoiceResult EmailPdf(int salesId, SalesEmailInvoiceReq? req = null, string source = EmailAudit.Source.Manual)
         {
             EnsureVisible(salesId);
 
@@ -670,8 +670,9 @@ namespace KLS.Services
                     DocumentType = EmailAudit.DocumentType.Invoice,
                     DocumentId = salesId,
                     DocumentNumber = salesDisplayNumber,
-                    Source = EmailAudit.Source.Manual,
-                    RequestedBy = UserContext.SystemUserId
+                    // 2026-08-28: scheduler passes Source.Scheduler; no user on that request.
+                    Source = source,
+                    RequestedBy = source == EmailAudit.Source.Scheduler ? null : UserContext.SystemUserId
                 });
 
                 var sent = string.IsNullOrEmpty(error);
@@ -1657,8 +1658,13 @@ namespace KLS.Services
             {
                 Sales = sales,
                 SalesDisplayNumber = SalesDisplayNumber(sales),
-                SalesDetails = Uow.Sales.GetSalesDetails(salesId)?.ToList()
+                SalesDetails = Uow.Sales.GetSalesDetails(salesId)?.ToList(),
+                // 2026-08-29 plan-reprice-open-orders-v1 slice 6: banner when the order waits for the price update
+                IsPricePending = sales.IsPricePending
             };
+
+            if (salesEmail.IsPricePending)
+                salesEmail.PriceUpdateDayName = Uow.ItemCostImports.GetPendingStatus().ScheduleDayName;
 
             var payee = Uow.Payees.GetById(UserContext.EmpId);
 

@@ -89,6 +89,30 @@ namespace KLS.Models
         public ItemCostPendingStatus Status { get; set; } = new();
 
         public List<ItemCostPendingImportRow> PendingImports { get; set; } = new();
+
+        /// <summary>2026-08-29: orders waiting for reprice + last reprice run (plan-reprice-open-orders-v1 slice 5).</summary>
+        public SalesRepriceStatus Reprice { get; set; } = new();
+    }
+
+    /// <summary>Single row from a plain SELECT (unmapped EF8 SqlQueryRaw type).</summary>
+    public class SalesRepriceStatus
+    {
+        /// <summary>Sales.IsPricePending = 1 right now (includes skipped orders still flagged).</summary>
+        public int PendingOrderCount { get; set; }
+
+        public int? LastRepriceId { get; set; }
+
+        public DateTime? LastRunAt { get; set; }
+
+        public string? LastTriggeredBy { get; set; }
+
+        public int? LastOrderCount { get; set; }
+
+        public int? LastLineCount { get; set; }
+
+        public int? LastSkippedCount { get; set; }
+
+        public int? LastErrorCount { get; set; }
     }
 
     public class ItemCostApplyResult
@@ -96,5 +120,35 @@ namespace KLS.Models
         public int ApplyId { get; set; }
 
         public int UnitCount { get; set; }
+
+        /// <summary>2026-08-29: open orders re-priced right after the apply (plan-reprice-open-orders-v1 slice 4).</summary>
+        public SalesRepriceResult? Reprice { get; set; }
+    }
+
+    /// <summary>One skipped / errored order from Sales_RepriceOpenOrders (Q4 list for the office).</summary>
+    public class SalesRepriceSkippedRow
+    {
+        public int SalesId { get; set; }
+
+        public int SalesNumber { get; set; }
+
+        public int StageId { get; set; }
+
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    public class SalesRepriceResult
+    {
+        public int RepriceId { get; set; }
+
+        public int OrderCount { get; set; }
+
+        public int LineCount { get; set; }
+
+        public int SkippedCount { get; set; }
+
+        public int ErrorCount { get; set; }
+
+        public List<SalesRepriceSkippedRow> Skipped { get; set; } = new();
     }
 }

@@ -15,5 +15,8 @@ namespace KLS.Contract.Services
 
         /// <summary>Apply Now. Guards (schedule day, once per week, something pending) are enforced by the SP.</summary>
         ItemCostApplyResult ApplyPending();
+
+        /// <summary>Reprice Open Orders button: re-price orders flagged IsPricePending (manual retry of the post-apply reprice).</summary>
+        SalesRepriceResult RepriceOpenOrders();
     }
 }

@@ -167,10 +167,10 @@
                     </p>
                 </div>
 
-                @if (Model.IsPriceZero)
+                @if (Model.IsPricePending)
                 {
                     <div class="alert-box">
-                        Item price will be corrected after system updating price.
+                        Prices shown are current as of order entry. This order will be updated automatically after our scheduled price update@(string.IsNullOrEmpty(Model.PriceUpdateDayName) ? "" : " on " + Model.PriceUpdateDayName); your invoice will reflect the updated prices.
                     </div>
                 }
 

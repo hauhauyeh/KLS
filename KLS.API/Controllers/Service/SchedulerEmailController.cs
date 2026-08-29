@@ -1,3 +1,4 @@
+using KLS.Common;
 using KLS.Contract.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,21 +29,27 @@ namespace KLS.API.Controllers.Service
         [HttpPost("pricesheet/{payeeId}")]
         public IActionResult EmailPricesheet(int payeeId)
         {
-            _customerService.EmailPricesheet(payeeId);
+            _customerService.EmailPricesheet(payeeId, EmailAudit.Source.Scheduler);
             return Ok();
         }
 
         [HttpPost("statement/{payeeId}")]
         public IActionResult EmailStatement(int payeeId)
         {
-            _customerService.EmailStatement(payeeId);
+            // 2026-08-28: surface send failure as non-2xx so the scheduler logs it per row.
+            var result = _customerService.EmailStatement(payeeId, source: EmailAudit.Source.Scheduler);
+            if (!result.Sent)
+                throw new InvalidOperationException(result.Error ?? "Statement email failed.");
             return Ok();
         }
 
         [HttpPost("invoice/{salesId}")]
         public IActionResult EmailInvoice(int salesId)
         {
-            _salesService.EmailPdf(salesId);
+            // 2026-08-28: surface send failure as non-2xx so the scheduler logs it per row.
+            var result = _salesService.EmailPdf(salesId, source: EmailAudit.Source.Scheduler);
+            if (result.DeliveryStatus != EmailAudit.DeliveryStatus.Sent)
+                throw new InvalidOperationException(result.ErrorMessage ?? "Invoice email failed.");
             return Ok();
         }
 

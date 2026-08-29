@@ -194,6 +194,7 @@ INSERT INTO Permission (PermissionId, PermissionKey, DisplayName, [Module], [Res
 (5153, 'Product.ItemCategory.Update', 'Edit Product Category', 'Product', 'ItemCategory', 'Update', 'button', 5150, 5153, 'ItemCategories-Update'),
 (5154, 'Product.ItemCategory.Delete', 'Delete Product Category', 'Product', 'ItemCategory', 'Delete', 'button', 5150, 5154, 'ItemCategories-Delete'),
 (5155, 'Product.ItemCategory.Reorder', 'Reorder Product Category', 'Product', 'ItemCategory', 'Reorder', 'button', 5150, 5155, 'ItemCategories-ReorderNode'),
+(5156, 'Product.ItemCategory.ImageManage', 'Manage Product Category Images', 'Product', 'ItemCategory', 'ImageManage', 'button', 5150, 5156, NULL),
 (5200, 'Product.ItemHistory', 'Product History', 'Product', 'ItemHistory', '', 'resource', 5000, 5200, NULL),
 (5201, 'Product.ItemHistory.Sales', 'View Sales History', 'Product', 'ItemHistory', 'Sales', 'page', 5200, 5201, 'ItemHistories-Sales'),
 (5202, 'Product.ItemHistory.Purchase', 'View Cost History', 'Product', 'ItemHistory', 'Purchase', 'button', 5200, 5202, 'ItemHistories-Purchase'),

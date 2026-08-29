@@ -85,6 +85,10 @@ namespace KLS.Models
         public bool IsSystemManaged { get; set; }
         public int? DisplaySort { get; set; }
 
+        // 2026-08-29 plan-reprice-open-orders-v1: rep typed/changed the unit price.
+        // Carried into SalesDetail; Sales_RepriceOpenOrders skips lines with this set.
+        public bool IsManualPrice { get; set; }
+
         private void ApplyFlagRules()
         {
             if (IsFree)
