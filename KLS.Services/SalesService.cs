@@ -1658,8 +1658,13 @@ namespace KLS.Services
             {
                 Sales = sales,
                 SalesDisplayNumber = SalesDisplayNumber(sales),
-                SalesDetails = Uow.Sales.GetSalesDetails(salesId)?.ToList()
+                SalesDetails = Uow.Sales.GetSalesDetails(salesId)?.ToList(),
+                // 2026-08-29 plan-reprice-open-orders-v1 slice 6: banner when the order waits for the price update
+                IsPricePending = sales.IsPricePending
             };
+
+            if (salesEmail.IsPricePending)
+                salesEmail.PriceUpdateDayName = Uow.ItemCostImports.GetPendingStatus().ScheduleDayName;
 
             var payee = Uow.Payees.GetById(UserContext.EmpId);
 

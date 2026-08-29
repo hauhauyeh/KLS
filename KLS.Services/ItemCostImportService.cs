@@ -143,18 +143,30 @@ namespace KLS.Services
             return new ItemCostPendingStatusRes
             {
                 Status = Uow.ItemCostImports.GetPendingStatus(),
-                PendingImports = Uow.ItemCostImports.GetPendingImports()
+                PendingImports = Uow.ItemCostImports.GetPendingImports(),
+                Reprice = Uow.ItemCostImports.GetRepriceStatus()
             };
+        }
+
+        public SalesRepriceResult RepriceOpenOrders()
+        {
+            return Uow.ItemCostImports.RepriceOpenOrders("MANUAL", UserContext.EmpId, applyId: null);
         }
 
         public ItemCostApplyResult ApplyPending()
         {
             var (applyId, unitCount) = Uow.ItemCostImports.ApplyPending(UserContext.EmpId);
 
+            // 2026-08-29 (D6): cost roll is committed above; re-price flagged open orders now.
+            // Per-order failures are reported in the result, never thrown - the Reprice Open
+            // Orders button is the retry.
+            var reprice = Uow.ItemCostImports.RepriceOpenOrders("MANUAL", UserContext.EmpId, applyId);
+
             return new ItemCostApplyResult
             {
                 ApplyId = applyId,
-                UnitCount = unitCount
+                UnitCount = unitCount,
+                Reprice = reprice
             };
         }
 

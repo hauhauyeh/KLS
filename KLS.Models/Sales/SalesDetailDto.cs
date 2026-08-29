@@ -16,6 +16,10 @@ namespace KLS.Models
 
         public ICollection<SalesDetailList>? SalesDetails { get; set; }
 
-        public bool IsPriceZero { get; set; }
+        /// <summary>2026-08-29: was IsPriceZero (MGP zero-price flag, never set). Order waits for the scheduled price update.</summary>
+        public bool IsPricePending { get; set; }
+
+        /// <summary>Day name of the scheduled price update (SchedulerConfig), for the confirmation banner.</summary>
+        public string? PriceUpdateDayName { get; set; }
     }
 }

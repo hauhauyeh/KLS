@@ -119,6 +119,102 @@ namespace KLS.Data.Repositories
             return (Convert.ToInt32(applyIdParam.Value), Convert.ToInt32(unitCountParam.Value));
         }
 
+        // 2026-08-29 plan-reprice-open-orders-v1 slice 4. Plain ADO reader (same pattern as
+        // OpenBalanceRepository): the SP returns the skipped/errored orders as a result set and
+        // the counts as OUTPUT params; output values are valid only after the reader is closed.
+        public SalesRepriceResult RepriceOpenOrders(string triggeredBy, int? empId, int? applyId)
+        {
+            var connection = DbContext.Database.GetDbConnection();
+            var closeConnection = connection.State != ConnectionState.Open;
+
+            using var command = connection.CreateCommand();
+            command.CommandText = "[dbo].[Sales_RepriceOpenOrders]";
+            command.CommandType = CommandType.StoredProcedure;
+
+            var repriceIdParam = OutInt("@RepriceId");
+            var orderCountParam = OutInt("@OrderCount");
+            var lineCountParam = OutInt("@LineCount");
+            var skippedCountParam = OutInt("@SkippedCount");
+
+            command.Parameters.Add(new SqlParameter("@TriggeredBy", triggeredBy));
+            command.Parameters.Add(new SqlParameter("@EmpId", (object?)empId ?? DBNull.Value));
+            command.Parameters.Add(new SqlParameter("@ApplyId", (object?)applyId ?? DBNull.Value));
+            command.Parameters.Add(new SqlParameter("@SalesId", DBNull.Value));
+            command.Parameters.Add(repriceIdParam);
+            command.Parameters.Add(orderCountParam);
+            command.Parameters.Add(lineCountParam);
+            command.Parameters.Add(skippedCountParam);
+
+            if (closeConnection)
+                connection.Open();
+
+            var skipped = new List<SalesRepriceSkippedRow>();
+
+            try
+            {
+                Translate(() =>
+                {
+                    using var reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        skipped.Add(new SalesRepriceSkippedRow
+                        {
+                            SalesId = reader.GetInt32(reader.GetOrdinal("SalesId")),
+                            SalesNumber = reader.GetInt32(reader.GetOrdinal("SalesNumber")),
+                            StageId = reader.GetInt32(reader.GetOrdinal("StageId")),
+                            Reason = reader.GetString(reader.GetOrdinal("Reason"))
+                        });
+                    }
+                    return 0;
+                });
+            }
+            finally
+            {
+                if (closeConnection)
+                    connection.Close();
+            }
+
+            return new SalesRepriceResult
+            {
+                RepriceId = Convert.ToInt32(repriceIdParam.Value),
+                OrderCount = Convert.ToInt32(orderCountParam.Value),
+                LineCount = Convert.ToInt32(lineCountParam.Value),
+                SkippedCount = Convert.ToInt32(skippedCountParam.Value),
+                ErrorCount = skipped.Count(r => r.Reason.StartsWith("Error:", StringComparison.Ordinal)),
+                Skipped = skipped
+            };
+        }
+
+        // 2026-08-29 slice 5. Plain composable SELECT -> SqlQueryRaw on an unmapped type is safe here
+        // (no EXEC). Not added to SalesList or any FromSqlRaw entity (plan R3).
+        public SalesRepriceStatus GetRepriceStatus()
+        {
+            return DbContext.Database
+                .SqlQueryRaw<SalesRepriceStatus>(
+                    """
+                    SELECT
+                        (SELECT COUNT(*) FROM dbo.Sales WHERE IsPricePending = 1) AS PendingOrderCount,
+                        r.RepriceId    AS LastRepriceId,
+                        r.RunAt        AS LastRunAt,
+                        r.TriggeredBy  AS LastTriggeredBy,
+                        r.OrderCount   AS LastOrderCount,
+                        r.LineCount    AS LastLineCount,
+                        r.SkippedCount AS LastSkippedCount,
+                        r.ErrorCount   AS LastErrorCount
+                    FROM (SELECT 1 AS One) x
+                    LEFT JOIN (SELECT TOP (1) * FROM dbo.SalesReprice ORDER BY RepriceId DESC) r ON 1 = 1
+                    """)
+                .AsEnumerable()
+                .First();
+        }
+
+        private static SqlParameter OutInt(string name) => new SqlParameter
+        {
+            ParameterName = name,
+            Direction = ParameterDirection.Output,
+            SqlDbType = SqlDbType.Int
+        };
+
         /// <summary>
         /// The procs reject bad input and guard violations with THROW 51xxx and a
         /// plain-English message meant for the user. ExceptionMiddleware maps
