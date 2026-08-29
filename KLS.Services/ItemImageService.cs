@@ -301,6 +301,37 @@ namespace KLS.Services
             return Uow.ItemImages.GetById(imageId);
         }
 
+        public ImageFileResult GetOriginalFile(int imageId)
+        {
+            var entity = Uow.ItemImages.GetById(imageId);
+            if (entity == null) throw new Exception("Image not found.");
+            if (string.IsNullOrWhiteSpace(entity.OriginalExtension))
+                throw new Exception("Original image extension is missing.");
+
+            var fileName = $"{entity.ImageIndex}-org{entity.OriginalExtension}";
+            var filePath = Path.Combine(GetItemFolderPath(entity.ItemId), fileName);
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"Original image not found: {fileName}");
+
+            return new ImageFileResult
+            {
+                FilePath = filePath,
+                FileName = fileName,
+                ContentType = GetImageContentType(entity.OriginalExtension)
+            };
+        }
+
+        private static string GetImageContentType(string extension)
+        {
+            return extension.ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
+        }
+
         public void ValidateCloneImages(int sourceItemId)
         {
             var sourceImages = GetSourceCloneImages(sourceItemId);
@@ -580,6 +611,63 @@ namespace KLS.Services
 
                 using (var original = Image.Load(orgPath))
                 using (var cropped = CropMaxCenteredSquare(original))
+                {
+                    cropped.Save(cropTemp, new PngEncoder());
+                    SaveResized(cropped, size300Temp, 300);
+                    SaveResized(cropped, size1200Temp, 1200);
+                    SaveResized(cropped, size2000Temp, 2000);
+                }
+
+                File.Move(cropTemp, Path.Combine(itemFolder, $"{idx}-crop.png"), overwrite: true);
+                File.Move(size300Temp, Path.Combine(itemFolder, $"{idx}-300.png"), overwrite: true);
+                File.Move(size1200Temp, Path.Combine(itemFolder, $"{idx}-1200.png"), overwrite: true);
+                File.Move(size2000Temp, Path.Combine(itemFolder, $"{idx}-2000.png"), overwrite: true);
+
+                entity.Has300 = true;
+                entity.Has1200 = true;
+                entity.Has2000 = true;
+                Uow.ItemImages.Update(entity);
+                Uow.Commit();
+            }
+            finally
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                if (entity != null)
+                {
+                    CleanupTempFiles(GetItemFolder(entity.ItemId), entity.ImageIndex);
+                }
+
+                ReleaseProcessingLock(imageId);
+            }
+        }
+
+        public void UpdateCrop(int imageId, ImageCropUpdateReq req)
+        {
+            if (req.CroppedFile == null || req.CroppedFile.Length == 0)
+                throw new ArgumentException("Cropped image is required.");
+
+            var cropExt = Path.GetExtension(req.CroppedFile.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(cropExt) || !AllowedExtensions.Contains(cropExt))
+                throw new ArgumentException($"Unsupported cropped file format '{cropExt}'. Allowed: {string.Join(", ", AllowedExtensions)}");
+
+            AcquireProcessingLock(imageId);
+
+            try
+            {
+                var entity = Uow.ItemImages.GetById(imageId);
+                if (entity == null) throw new Exception("Image not found.");
+
+                var itemFolder = GetItemFolder(entity.ItemId);
+                var idx = entity.ImageIndex;
+                var cropTemp = Path.Combine(itemFolder, $"{idx}-crop-temp.png");
+                var size300Temp = Path.Combine(itemFolder, $"{idx}-300-temp.png");
+                var size1200Temp = Path.Combine(itemFolder, $"{idx}-1200-temp.png");
+                var size2000Temp = Path.Combine(itemFolder, $"{idx}-2000-temp.png");
+
+                CleanupTempFiles(itemFolder, idx);
+
+                using (var cropStream = req.CroppedFile.OpenReadStream())
+                using (var cropped = Image.Load(cropStream))
                 {
                     cropped.Save(cropTemp, new PngEncoder());
                     SaveResized(cropped, size300Temp, 300);

@@ -37,6 +37,15 @@ namespace KLS.API.Controllers.Admin
             return Ok(_itemImageService.GetList(itemId));
         }
 
+        [HttpGet("{imageId}/original")]
+        [DisplayName("Get Product Image Original")]
+        [PermissionKey("Product.ItemImage.List")]
+        public IActionResult Original(int imageId)
+        {
+            var file = _itemImageService.GetOriginalFile(imageId);
+            return PhysicalFile(file.FilePath, file.ContentType, file.FileName);
+        }
+
 
         [HttpPost]
         [DisplayName("Upload Image")]
@@ -63,6 +72,15 @@ namespace KLS.API.Controllers.Admin
         public IActionResult ReprocessOriginal(int imageId)
         {
             _itemImageService.ReprocessOriginal(imageId);
+            return Ok();
+        }
+
+        [HttpPost("{imageId}/crop")]
+        [DisplayName("Update Product Image Crop")]
+        [PermissionKey("Product.ItemImage.Upload")]
+        public IActionResult UpdateCrop(int imageId, [FromForm] ImageCropUpdateReq req)
+        {
+            _itemImageService.UpdateCrop(imageId, req);
             return Ok();
         }
 

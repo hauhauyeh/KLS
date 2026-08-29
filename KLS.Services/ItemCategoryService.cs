@@ -199,7 +199,6 @@ namespace KLS.Services
                 //existing.ImageUrl = itemCategory.ImageUrl;
                 existing.Inactive = itemCategory.Inactive;
                 existing.SortOrder = itemCategory.SortOrder;
-                existing.CatFormFile = itemCategory.CatFormFile;
                 existing.Slug = SlugHelper.GenerateSlug(itemCategory.DisplayName);
                 existing.UpdatedAt = DateTime.UtcNow;
 
@@ -214,23 +213,6 @@ namespace KLS.Services
         {
             Uow.ItemCategories.RemoveById(categoryId);
             Uow.Commit();
-        }
-
-        public void SaveImage(ItemCategory category, HttpRequest request)
-        {
-            if (category.CatFormFile != null)
-            {
-                var oldcat = GetById(category.CategoryId);
-
-                if (oldcat != null)
-                {
-                    SaveCategoryImageVersions(oldcat, category.CatFormFile, request);
-                    ApplyCategoryImageUrls(oldcat);
-                    CopyCategoryImageState(oldcat, category);
-                    Uow.ItemCategories.Update(oldcat);
-                    Uow.Commit();
-                }
-            }
         }
 
         public ItemCategory UploadImage(int categoryId, IFormFile file, HttpRequest request)
