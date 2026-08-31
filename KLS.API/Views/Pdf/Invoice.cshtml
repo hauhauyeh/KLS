@@ -384,6 +384,10 @@
             white-space: nowrap;
         }
 
+    .statement-current-row td {
+        font-weight: 700;
+    }
+
     .promo-header {
         background-color: black;
         color: white;
@@ -692,7 +696,8 @@
                 {
                     foreach (var s in sd.Sales)
                     {
-                        <tr>
+                        var currentRowClass = s.SalesId == Model.Invoice.SalesId ? "statement-current-row" : null;
+                        <tr class="@currentRowClass">
                             <td>@string.Format("{0:d}", s.ShipDate)</td>
                             <td>@Model.GetSalesDisplayNumber(s)</td>
                             <td class="text-right">

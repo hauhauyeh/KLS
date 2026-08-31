@@ -52,7 +52,7 @@ namespace KLS.Services
             {
                 Invoice = invoice,
                 InvoiceDetails = Uow.Reports.InvoiceDetail(salesId)?.ToList(),
-                Statement = Uow.Reports.InvoiceStatement(invoice.ShipId, invoice.SalesId, invoice.ShipDate),
+                Statement = CustStmt(invoice.ShipId),
                 Company = _companyService.GetDefault(),
                 HasDiscount = _systemSettingService.GetByKey<Boolean>(GlobalKey.SYSTEM_HAS_DISCOUNT),
                 UseSalesDocNumber = _systemSettingService.GetByKey<Boolean>(GlobalKey.SALES_DOC_NUMBER_DISPLAY_ENABLED),

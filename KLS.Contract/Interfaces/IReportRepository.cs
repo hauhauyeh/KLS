@@ -16,8 +16,6 @@ namespace KLS.Contract.Interfaces
 
         RptCustStmt CustStmt(int payeeId, StatementScope scope = StatementScope.ShipTo);
 
-        RptCustStmt InvoiceStatement(int shipId, int currentSalesId, DateOnly? currentShipDate);
-
         RptVendStmt VendStmt(int payeeId);
 
         IQueryable<RptDescDollar>? VendorDescDollar(ReportRequest reportReq);

@@ -126,57 +126,6 @@ namespace KLS.Data.Repositories
             };
         }
 
-        public RptCustStmt InvoiceStatement(int shipId, int currentSalesId, DateOnly? currentShipDate)
-        {
-            var customer = DbContext.Customers.Find(shipId);
-            var payee = DbContext.Payees.Find(shipId);
-            var availableCredit = DbContext.CustomerPayments
-                .Where(c => c.PayeeId == shipId && c.UnappliedAmount != 0 && c.IsReturned == false)
-                .ToList();
-
-            var salesList = currentShipDate.HasValue
-                ? DbContext.Sales
-                    .Where(s => s.ShipId == shipId
-                        && s.AmountDue != 0
-                        && s.StageId >= 3
-                        && s.SalesId != currentSalesId
-                        && s.ShipDate.HasValue
-                        && s.ShipDate < currentShipDate.Value)
-                    .ToList()
-                : new List<Sales>();
-
-            var details = salesList
-                .GroupBy(s => new { s.ShipDate.Value.Year, s.ShipDate.Value.Month })
-                .Select(g => new RptCustStmtDetail
-                {
-                    ShipMonth = new DateTimeFormatInfo().GetMonthName(g.Key.Month) + " - " + g.Key.Year.ToString(),
-                    Sales = g.OrderBy(s => s.ShipDate).ToList()
-                }).ToList();
-
-            var statementTotalDue = salesList.Sum(s => s.AmountDue ?? 0);
-            var availableCreditTotal = availableCredit.Sum(c => c.UnappliedAmount ?? 0);
-
-            return new RptCustStmt
-            {
-                StatementScope = StatementScope.ShipTo.ToString(),
-                SelectedPayeeId = shipId,
-                EffectiveBillToId = shipId,
-                EffectiveBillToName = payee?.PayeeName,
-                CanUseBillToStatement = false,
-                StatementCurrent = SumByDueAge(salesList, age => age <= 0),
-                Statement30 = SumByDueAge(salesList, age => age >= 1 && age <= 30),
-                Statement60 = SumByDueAge(salesList, age => age >= 31 && age <= 60),
-                Statement90 = SumByDueAge(salesList, age => age >= 61 && age <= 90),
-                StatementOver90 = SumByDueAge(salesList, age => age > 90),
-                StatementTotalDue = statementTotalDue,
-                AccountBalance = statementTotalDue - availableCreditTotal,
-                Details = details,
-                Payee = payee,
-                IsPromotionEnabled = customer?.IsPromotionEnabled ?? false,
-                AvailableCredit = availableCredit
-            };
-        }
-
         private static decimal SumByDueAge(IEnumerable<Sales> sales, Func<int, bool> predicate)
         {
             return sales
