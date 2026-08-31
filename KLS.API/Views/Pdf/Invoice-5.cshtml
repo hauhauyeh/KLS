@@ -244,6 +244,10 @@
         white-space: nowrap;
     }
 
+    .statement-current-row td {
+        font-weight: 900;
+    }
+
     .statement-date {
         width: 0.65in;
     }
@@ -353,7 +357,8 @@
                         {
                             foreach (var sale in month.Sales)
                             {
-                                <tr>
+                                var currentRowClass = sale.SalesId == invoice?.SalesId ? "statement-current-row" : null;
+                                <tr class="@currentRowClass">
                                     <td class="statement-date">@DateText(sale.ShipDate)</td>
                                     <td class="statement-number">@Model.GetSalesDisplayNumber(sale)</td>
                                     <td class="statement-amount">@Money(sale.AmountDue)</td>
