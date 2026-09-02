@@ -225,11 +225,13 @@
         text-align: right;
     }
 
+    /* Width must keep the left edge (8.5 - right - width) past the items-area
+       right edge at 6.02in, or the statement overlaps the item amounts. */
     .statement-area {
         position: absolute;
         top: 3.28in;
         right: 0.36in;
-        width: 2.18in;
+        width: 1.90in;
     }
 
     .statement-table {
@@ -237,7 +239,7 @@
     }
 
     .statement-table td {
-        font-size: 9px;
+        font-size: 11px;
         line-height: 1.05;
         padding: 0.006in 0;
         white-space: nowrap;
@@ -248,16 +250,16 @@
     }
 
     .statement-date {
-        width: 0.65in;
+        width: 0.60in;
     }
 
     .statement-number {
-        width: 0.72in;
+        width: 0.60in;
         text-align: right;
     }
 
     .statement-amount {
-        width: 0.78in;
+        width: 0.70in;
         text-align: right;
     }
 
