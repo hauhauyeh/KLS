@@ -279,6 +279,142 @@ namespace KLS.Services
             }
         }
 
+        public IntercompanyLookupSyncRunDto SyncCategories(string targetCode)
+        {
+            var sourceConnectionString = _configuration.GetConnectionString("Default");
+            var target = ResolveTarget(targetCode);
+
+            if (string.IsNullOrWhiteSpace(sourceConnectionString))
+                throw new ArgumentException("ConnectionStrings:Default is required.");
+
+            using var sourceConnection = new SqlConnection(sourceConnectionString);
+            using var targetConnection = new SqlConnection(target.ConnectionString);
+            sourceConnection.Open();
+            targetConnection.Open();
+            EnsureExpectedSyncDatabases(sourceConnection.Database, targetConnection.Database);
+
+            var sourceCategories = LoadCategorySnapshots(sourceConnection);
+            var targetCategories = LoadCategorySnapshots(targetConnection);
+
+            using var transaction = targetConnection.BeginTransaction();
+            var identityInsertOn = false;
+
+            try
+            {
+                ExecuteNonQuery(targetConnection, transaction, "SET XACT_ABORT ON");
+
+                var result = new IntercompanyLookupSyncRunDto
+                {
+                    TargetCode = target.TargetCode,
+                    SourceDatabaseName = sourceConnection.Database,
+                    TargetDatabaseName = targetConnection.Database
+                };
+
+                var missingCategories = sourceCategories.Values
+                    .Where(s => !targetCategories.ContainsKey(s.CategoryId))
+                    .OrderBy(s => s.CategoryId)
+                    .ToList();
+
+                if (missingCategories.Count > 0)
+                {
+                    ExecuteNonQuery(targetConnection, transaction, "SET IDENTITY_INSERT dbo.ItemCategory ON");
+                    identityInsertOn = true;
+
+                    foreach (var category in missingCategories)
+                    {
+                        result.InsertedCount += InsertCategory(targetConnection, transaction, category);
+                    }
+
+                    ExecuteNonQuery(targetConnection, transaction, "SET IDENTITY_INSERT dbo.ItemCategory OFF");
+                    identityInsertOn = false;
+                }
+
+                foreach (var category in sourceCategories.Values.OrderBy(s => s.CategoryId))
+                {
+                    result.UpdatedCount += UpdateCategory(targetConnection, transaction, category);
+                }
+
+                transaction.Commit();
+                return result;
+            }
+            catch
+            {
+                if (identityInsertOn)
+                    TryExecuteNonQuery(targetConnection, transaction, "SET IDENTITY_INSERT dbo.ItemCategory OFF");
+
+                TryRollback(transaction);
+                throw;
+            }
+        }
+
+        public IntercompanyLookupSyncRunDto SyncStorages(string targetCode)
+        {
+            var sourceConnectionString = _configuration.GetConnectionString("Default");
+            var target = ResolveTarget(targetCode);
+
+            if (string.IsNullOrWhiteSpace(sourceConnectionString))
+                throw new ArgumentException("ConnectionStrings:Default is required.");
+
+            using var sourceConnection = new SqlConnection(sourceConnectionString);
+            using var targetConnection = new SqlConnection(target.ConnectionString);
+            sourceConnection.Open();
+            targetConnection.Open();
+            EnsureExpectedSyncDatabases(sourceConnection.Database, targetConnection.Database);
+
+            var sourceStorages = LoadStorageSnapshots(sourceConnection);
+            var targetStorages = LoadStorageSnapshots(targetConnection);
+
+            using var transaction = targetConnection.BeginTransaction();
+            var identityInsertOn = false;
+
+            try
+            {
+                ExecuteNonQuery(targetConnection, transaction, "SET XACT_ABORT ON");
+
+                var result = new IntercompanyLookupSyncRunDto
+                {
+                    TargetCode = target.TargetCode,
+                    SourceDatabaseName = sourceConnection.Database,
+                    TargetDatabaseName = targetConnection.Database
+                };
+
+                var missingStorages = sourceStorages.Values
+                    .Where(s => !targetStorages.ContainsKey(s.StorageId))
+                    .OrderBy(s => s.StorageId)
+                    .ToList();
+
+                if (missingStorages.Count > 0)
+                {
+                    ExecuteNonQuery(targetConnection, transaction, "SET IDENTITY_INSERT dbo.ItemStorage ON");
+                    identityInsertOn = true;
+
+                    foreach (var storage in missingStorages)
+                    {
+                        result.InsertedCount += InsertStorage(targetConnection, transaction, storage);
+                    }
+
+                    ExecuteNonQuery(targetConnection, transaction, "SET IDENTITY_INSERT dbo.ItemStorage OFF");
+                    identityInsertOn = false;
+                }
+
+                foreach (var storage in sourceStorages.Values.Where(s => targetStorages.ContainsKey(s.StorageId)).OrderBy(s => s.StorageId))
+                {
+                    result.UpdatedCount += UpdateStorage(targetConnection, transaction, storage);
+                }
+
+                transaction.Commit();
+                return result;
+            }
+            catch
+            {
+                if (identityInsertOn)
+                    TryExecuteNonQuery(targetConnection, transaction, "SET IDENTITY_INSERT dbo.ItemStorage OFF");
+
+                TryRollback(transaction);
+                throw;
+            }
+        }
+
         private static Dictionary<int, ItemSnapshot> LoadItems(SqlConnection connection)
         {
             const string sql = @"
@@ -413,6 +549,67 @@ SELECT StorageId, DisplayName
 FROM dbo.ItemStorage";
 
             return LoadLookup(connection, sql, "StorageId", "DisplayName");
+        }
+
+        private static Dictionary<int, CategorySnapshot> LoadCategorySnapshots(SqlConnection connection)
+        {
+            const string sql = @"
+SELECT CategoryId, ParentId, CategoryName, DisplayName, ForeignName, InvoiceName, Description, Slug, Inactive, SortOrder, CreatedAt
+FROM dbo.ItemCategory";
+
+            using var command = new SqlCommand(sql, connection);
+            using var reader = command.ExecuteReader();
+            var rows = new Dictionary<int, CategorySnapshot>();
+
+            while (reader.Read())
+            {
+                var row = new CategorySnapshot(
+                    GetInt32(reader, "CategoryId"),
+                    GetNullableInt32(reader, "ParentId"),
+                    GetNullableString(reader, "CategoryName"),
+                    GetNullableString(reader, "DisplayName"),
+                    GetNullableString(reader, "ForeignName"),
+                    GetNullableString(reader, "InvoiceName"),
+                    GetNullableString(reader, "Description"),
+                    GetNullableString(reader, "Slug"),
+                    GetBoolean(reader, "Inactive"),
+                    GetNullableInt32(reader, "SortOrder"),
+                    GetDateTime(reader, "CreatedAt"));
+
+                rows[row.CategoryId] = row;
+            }
+
+            return rows;
+        }
+
+        private static Dictionary<int, StorageSnapshot> LoadStorageSnapshots(SqlConnection connection)
+        {
+            const string sql = @"
+SELECT StorageId, DisplayName, SortOrder, Zone, Section, Aisle, Bay, Bin, Inactive, CreatedAt
+FROM dbo.ItemStorage";
+
+            using var command = new SqlCommand(sql, connection);
+            using var reader = command.ExecuteReader();
+            var rows = new Dictionary<int, StorageSnapshot>();
+
+            while (reader.Read())
+            {
+                var row = new StorageSnapshot(
+                    GetInt32(reader, "StorageId"),
+                    GetNullableString(reader, "DisplayName"),
+                    GetNullableInt32(reader, "SortOrder"),
+                    GetNullableString(reader, "Zone"),
+                    GetNullableString(reader, "Section"),
+                    GetNullableString(reader, "Aisle"),
+                    GetNullableString(reader, "Bay"),
+                    GetNullableString(reader, "Bin"),
+                    GetBoolean(reader, "Inactive"),
+                    GetDateTime(reader, "CreatedAt"));
+
+                rows[row.StorageId] = row;
+            }
+
+            return rows;
         }
 
         private static Dictionary<int, string?> LoadLookup(SqlConnection connection, string sql, string idColumn, string nameColumn)
@@ -604,6 +801,102 @@ WHERE ItemUnitId = @ItemUnitId
             return command.ExecuteNonQuery();
         }
 
+        private static int InsertCategory(SqlConnection connection, SqlTransaction transaction, CategorySnapshot category)
+        {
+            const string sql = @"
+INSERT INTO dbo.ItemCategory (
+    CategoryId, ParentId, CategoryName, DisplayName, ForeignName, InvoiceName, Description, Slug, Inactive, SortOrder, CreatedAt
+) VALUES (
+    @CategoryId, NULL, @CategoryName, @DisplayName, @ForeignName, @InvoiceName, @Description, @Slug, @Inactive, @SortOrder, @CreatedAt
+)";
+
+            using var command = CreateCategoryCommand(connection, transaction, sql, category);
+            return command.ExecuteNonQuery();
+        }
+
+        private static int UpdateCategory(SqlConnection connection, SqlTransaction transaction, CategorySnapshot category)
+        {
+            const string sql = @"
+UPDATE dbo.ItemCategory
+SET
+    ParentId = @ParentId,
+    CategoryName = @CategoryName,
+    DisplayName = @DisplayName,
+    ForeignName = @ForeignName,
+    InvoiceName = @InvoiceName,
+    Description = @Description,
+    Slug = @Slug,
+    Inactive = @Inactive,
+    SortOrder = @SortOrder,
+    UpdatedAt = GETUTCDATE()
+WHERE CategoryId = @CategoryId
+  AND (
+      ISNULL(ParentId, -1) <> ISNULL(@ParentId, -1)
+      OR ISNULL(CategoryName, '') <> ISNULL(@CategoryName, '')
+      OR ISNULL(DisplayName, '') <> ISNULL(@DisplayName, '')
+      OR ISNULL(ForeignName, '') <> ISNULL(@ForeignName, '')
+      OR ISNULL(InvoiceName, '') <> ISNULL(@InvoiceName, '')
+      OR ISNULL(Description, '') <> ISNULL(@Description, '')
+      OR ISNULL(Slug, '') <> ISNULL(@Slug, '')
+      OR Inactive <> @Inactive
+      OR ISNULL(SortOrder, -1) <> ISNULL(@SortOrder, -1)
+  )
+  AND (
+      @ParentId IS NULL
+      OR EXISTS (
+          SELECT 1
+          FROM dbo.ItemCategory parent
+          WHERE parent.CategoryId = @ParentId
+      )
+  )";
+
+            using var command = CreateCategoryCommand(connection, transaction, sql, category);
+            return command.ExecuteNonQuery();
+        }
+
+        private static int InsertStorage(SqlConnection connection, SqlTransaction transaction, StorageSnapshot storage)
+        {
+            const string sql = @"
+INSERT INTO dbo.ItemStorage (
+    StorageId, DisplayName, SortOrder, Zone, Section, Aisle, Bay, Bin, Inactive, CreatedAt
+) VALUES (
+    @StorageId, @DisplayName, @SortOrder, @Zone, @Section, @Aisle, @Bay, @Bin, @Inactive, @CreatedAt
+)";
+
+            using var command = CreateStorageCommand(connection, transaction, sql, storage);
+            return command.ExecuteNonQuery();
+        }
+
+        private static int UpdateStorage(SqlConnection connection, SqlTransaction transaction, StorageSnapshot storage)
+        {
+            const string sql = @"
+UPDATE dbo.ItemStorage
+SET
+    DisplayName = @DisplayName,
+    SortOrder = @SortOrder,
+    Zone = @Zone,
+    Section = @Section,
+    Aisle = @Aisle,
+    Bay = @Bay,
+    Bin = @Bin,
+    Inactive = @Inactive,
+    UpdatedAt = GETUTCDATE()
+WHERE StorageId = @StorageId
+  AND (
+      ISNULL(DisplayName, '') <> ISNULL(@DisplayName, '')
+      OR ISNULL(SortOrder, -1) <> ISNULL(@SortOrder, -1)
+      OR ISNULL(Zone, '') <> ISNULL(@Zone, '')
+      OR ISNULL(Section, '') <> ISNULL(@Section, '')
+      OR ISNULL(Aisle, '') <> ISNULL(@Aisle, '')
+      OR ISNULL(Bay, '') <> ISNULL(@Bay, '')
+      OR ISNULL(Bin, '') <> ISNULL(@Bin, '')
+      OR Inactive <> @Inactive
+  )";
+
+            using var command = CreateStorageCommand(connection, transaction, sql, storage);
+            return command.ExecuteNonQuery();
+        }
+
         private static bool IsItemIdentityConflict(ItemSnapshot source, ItemSnapshot target)
         {
             return !TextEquals(source.ItemType, target.ItemType);
@@ -669,6 +962,39 @@ WHERE ItemUnitId = @ItemUnitId
             AddParameter(command, "@Barcode", unit.Barcode);
             AddParameter(command, "@Inactive", unit.Inactive);
             AddParameter(command, "@MultipleToBase", unit.MultipleToBase);
+            return command;
+        }
+
+        private static SqlCommand CreateCategoryCommand(SqlConnection connection, SqlTransaction transaction, string sql, CategorySnapshot category)
+        {
+            var command = new SqlCommand(sql, connection, transaction);
+            AddParameter(command, "@CategoryId", category.CategoryId);
+            AddParameter(command, "@ParentId", category.ParentId);
+            AddParameter(command, "@CategoryName", category.CategoryName);
+            AddParameter(command, "@DisplayName", category.DisplayName);
+            AddParameter(command, "@ForeignName", category.ForeignName);
+            AddParameter(command, "@InvoiceName", category.InvoiceName);
+            AddParameter(command, "@Description", category.Description);
+            AddParameter(command, "@Slug", category.Slug);
+            AddParameter(command, "@Inactive", category.Inactive);
+            AddParameter(command, "@SortOrder", category.SortOrder);
+            AddParameter(command, "@CreatedAt", category.CreatedAt);
+            return command;
+        }
+
+        private static SqlCommand CreateStorageCommand(SqlConnection connection, SqlTransaction transaction, string sql, StorageSnapshot storage)
+        {
+            var command = new SqlCommand(sql, connection, transaction);
+            AddParameter(command, "@StorageId", storage.StorageId);
+            AddParameter(command, "@DisplayName", storage.DisplayName);
+            AddParameter(command, "@SortOrder", storage.SortOrder);
+            AddParameter(command, "@Zone", storage.Zone);
+            AddParameter(command, "@Section", storage.Section);
+            AddParameter(command, "@Aisle", storage.Aisle);
+            AddParameter(command, "@Bay", storage.Bay);
+            AddParameter(command, "@Bin", storage.Bin);
+            AddParameter(command, "@Inactive", storage.Inactive);
+            AddParameter(command, "@CreatedAt", storage.CreatedAt);
             return command;
         }
 
@@ -786,12 +1112,14 @@ WHERE ItemUnitId = @ItemUnitId
             return name switch
             {
                 "@ItemId" or "@ItemUnitId" or "@CategoryId" or "@StorageId" or "@BaseUnitId" or "@MultipleToBase" => SqlDbType.Int,
+                "@ParentId" or "@SortOrder" => SqlDbType.Int,
                 "@FactorToBase" or "@PricePercentToBase" or "@PaletteFactor" or "@SaftyInventory" or "@ActualSaftyInventory"
                     or "@RefillInventory" or "@CaseWeight" or "@CaseLength" or "@CaseWidth" or "@CaseHeight"
                     or "@CaseVolumeInCubicFeet" or "@CaseVolumeInCubicMeter" => SqlDbType.Decimal,
                 "@IsBaseUnit" or "@IsDefaultSalesUnit" or "@Inactive" or "@IsDeleted" or "@IsTaxable" or "@IsHRTaxable"
                     or "@IsHighlighted" or "@IsImport" or "@IsWeightItem" or "@IsMetricWeight" or "@IsMetricDimension"
                     or "@IsVolumeManual" => SqlDbType.Bit,
+                "@CreatedAt" or "@UpdatedAt" => SqlDbType.DateTime,
                 _ => SqlDbType.NVarChar
             };
         }
@@ -987,6 +1315,11 @@ WHERE ItemUnitId = @ItemUnitId
             return reader.GetBoolean(reader.GetOrdinal(columnName));
         }
 
+        private static DateTime GetDateTime(SqlDataReader reader, string columnName)
+        {
+            return reader.GetDateTime(reader.GetOrdinal(columnName));
+        }
+
         private record ItemSnapshot(
             int ItemId,
             string? ItemType,
@@ -1034,6 +1367,31 @@ WHERE ItemUnitId = @ItemUnitId
             bool IsDefaultSalesUnit,
             string? Barcode,
             bool Inactive);
+
+        private record CategorySnapshot(
+            int CategoryId,
+            int? ParentId,
+            string? CategoryName,
+            string? DisplayName,
+            string? ForeignName,
+            string? InvoiceName,
+            string? Description,
+            string? Slug,
+            bool Inactive,
+            int? SortOrder,
+            DateTime CreatedAt);
+
+        private record StorageSnapshot(
+            int StorageId,
+            string? DisplayName,
+            int? SortOrder,
+            string? Zone,
+            string? Section,
+            string? Aisle,
+            string? Bay,
+            string? Bin,
+            bool Inactive,
+            DateTime CreatedAt);
 
         private record BaseUnitIssue(string DbRole, int ItemId, int? BaseUnitId);
 

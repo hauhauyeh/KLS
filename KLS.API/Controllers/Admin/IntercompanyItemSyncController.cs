@@ -41,5 +41,21 @@ namespace KLS.API.Controllers.Admin
         {
             return Ok(_intercompanyItemSyncService.Sync(req?.TargetCode ?? string.Empty));
         }
+
+        [HttpPost("SyncCategories")]
+        [DisplayName("Sync Intercompany Item Categories")]
+        [PermissionKey("Product.Item.Save")]
+        public IActionResult SyncCategories([FromBody] IntercompanyItemSyncRunReq? req)
+        {
+            return Ok(_intercompanyItemSyncService.SyncCategories(req?.TargetCode ?? string.Empty));
+        }
+
+        [HttpPost("SyncStorages")]
+        [DisplayName("Sync Intercompany Item Storages")]
+        [PermissionKey("Product.Item.Save")]
+        public IActionResult SyncStorages([FromBody] IntercompanyItemSyncRunReq? req)
+        {
+            return Ok(_intercompanyItemSyncService.SyncStorages(req?.TargetCode ?? string.Empty));
+        }
     }
 }

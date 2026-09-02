@@ -38,6 +38,19 @@ namespace KLS.Models.Intercompany
         public int UpdatedBaseUnitCount { get; set; }
     }
 
+    public class IntercompanyLookupSyncRunDto
+    {
+        public string TargetCode { get; set; } = string.Empty;
+
+        public string SourceDatabaseName { get; set; } = string.Empty;
+
+        public string TargetDatabaseName { get; set; } = string.Empty;
+
+        public int InsertedCount { get; set; }
+
+        public int UpdatedCount { get; set; }
+    }
+
     public class IntercompanyItemSyncTargetDto
     {
         public string TargetCode { get; set; } = string.Empty;
