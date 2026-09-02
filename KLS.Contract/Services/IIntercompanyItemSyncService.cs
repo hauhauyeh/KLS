@@ -13,5 +13,9 @@ namespace KLS.Contract.Services
         IntercompanyLookupSyncRunDto SyncCategories(string targetCode);
 
         IntercompanyLookupSyncRunDto SyncStorages(string targetCode);
+
+        IntercompanyItemImageSyncPreviewDto PreviewImages(string targetCode);
+
+        IntercompanyItemImageSyncRunDto SyncImages(string targetCode);
     }
 }

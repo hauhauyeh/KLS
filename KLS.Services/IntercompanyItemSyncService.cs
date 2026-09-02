@@ -1,6 +1,7 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models.Intercompany;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System.Data;
@@ -11,14 +12,14 @@ namespace KLS.Services
     {
         private const int LocalOnlyStartId = 100000;
         private const int MaxBlockerRows = 50;
-        private const string LegacyTargetCode = "ASA";
-        private const string LegacyTargetConnectionStringName = "IntercompanyTarget";
 
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _env;
 
-        public IntercompanyItemSyncService(IUnitOfWork uow, IConfiguration configuration) : base(uow)
+        public IntercompanyItemSyncService(IUnitOfWork uow, IConfiguration configuration, IWebHostEnvironment env) : base(uow)
         {
             _configuration = configuration;
+            _env = env;
         }
 
         public List<IntercompanyItemSyncTargetDto> Targets()
@@ -415,6 +416,239 @@ namespace KLS.Services
             }
         }
 
+        public IntercompanyItemImageSyncPreviewDto PreviewImages(string targetCode)
+        {
+            var sourceConnectionString = _configuration.GetConnectionString("Default");
+            var target = ResolveTarget(targetCode);
+
+            if (string.IsNullOrWhiteSpace(sourceConnectionString))
+                throw new ArgumentException("ConnectionStrings:Default is required.");
+
+            using var sourceConnection = new SqlConnection(sourceConnectionString);
+            using var targetConnection = new SqlConnection(target.ConnectionString);
+            sourceConnection.Open();
+            targetConnection.Open();
+            EnsureExpectedSyncDatabases(sourceConnection.Database, targetConnection.Database);
+
+            var sourceImageRoot = GetSourceItemImageRoot();
+            var targetImageRoot = GetTargetItemImageRoot(target.TargetCode);
+            var sourceItems = LoadItems(sourceConnection);
+            var targetItems = LoadItems(targetConnection);
+            var sourceImages = LoadItemImages(sourceConnection);
+            var targetImages = LoadItemImages(targetConnection);
+
+            var preview = new IntercompanyItemImageSyncPreviewDto
+            {
+                TargetCode = target.TargetCode,
+                SourceDatabaseName = sourceConnection.Database,
+                TargetDatabaseName = targetConnection.Database,
+                SourceImageRoot = sourceImageRoot,
+                TargetImageRoot = targetImageRoot ?? string.Empty
+            };
+
+            AddImageCheck(preview, "SourceImageRowCount", sourceImages.Count, false);
+            AddImageCheck(preview, "TargetImageRowCount", targetImages.Count, false);
+
+            var targetImageRootMissing = string.IsNullOrWhiteSpace(targetImageRoot) ? 1 : 0;
+            AddImageCheck(preview, "TargetImageRootMissingCount", targetImageRootMissing, true);
+            if (targetImageRootMissing > 0)
+            {
+                preview.Rows.Add(new IntercompanyItemImageSyncPreviewRowDto
+                {
+                    RowType = "TargetImageRootMissing",
+                    IsBlocker = true,
+                    SourceValue = $"InterCompany:ItemImageRoots:{target.TargetCode}",
+                    Message = "Target item image root config is required before image sync."
+                });
+            }
+
+            var targetImageRootDirectoryMissing = !string.IsNullOrWhiteSpace(targetImageRoot) && !Directory.Exists(targetImageRoot) ? 1 : 0;
+            AddImageCheck(preview, "TargetImageRootDirectoryMissingCount", targetImageRootDirectoryMissing, true);
+            if (targetImageRootDirectoryMissing > 0)
+            {
+                preview.Rows.Add(new IntercompanyItemImageSyncPreviewRowDto
+                {
+                    RowType = "TargetImageRootDirectoryMissing",
+                    IsBlocker = true,
+                    SourceValue = targetImageRoot,
+                    Message = "Configured target item image root folder does not exist."
+                });
+            }
+
+            var targetImageRootSameAsSource = !string.IsNullOrWhiteSpace(targetImageRoot)
+                && PathsEqual(sourceImageRoot, targetImageRoot) ? 1 : 0;
+            AddImageCheck(preview, "TargetImageRootSameAsSourceCount", targetImageRootSameAsSource, true);
+            if (targetImageRootSameAsSource > 0)
+            {
+                preview.Rows.Add(new IntercompanyItemImageSyncPreviewRowDto
+                {
+                    RowType = "TargetImageRootSameAsSource",
+                    IsBlocker = true,
+                    SourceValue = sourceImageRoot,
+                    TargetValue = targetImageRoot,
+                    Message = "Target image root must be different from the source image root."
+                });
+            }
+
+            var sourceItemMissing = sourceImages
+                .Where(i => !sourceItems.ContainsKey(i.ItemId))
+                .ToList();
+            AddImageCheck(preview, "SourceItemMissingCount", sourceItemMissing.Count, true);
+            AddImageSamples(preview, "SourceItemMissing", sourceItemMissing, true, i => FormatImageKey(i), null, "Source image points to a missing source item.");
+
+            var targetItemMissing = sourceImages
+                .Where(i => !targetItems.ContainsKey(i.ItemId))
+                .ToList();
+            AddImageCheck(preview, "TargetItemMissingCount", targetItemMissing.Count, true);
+            AddImageSamples(preview, "TargetItemMissing", targetItemMissing, true, i => FormatImageKey(i), null, "Target item must exist before syncing this image.");
+
+            var sourceDuplicateKeys = sourceImages
+                .GroupBy(i => new { i.ItemId, i.ImageIndex })
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g)
+                .ToList();
+            AddImageCheck(preview, "SourceDuplicateImageKeyCount", sourceDuplicateKeys.Count, true);
+            AddImageSamples(preview, "SourceDuplicateImageKey", sourceDuplicateKeys, true, i => FormatImageKey(i), null, "Source has duplicate ItemId + ImageIndex rows.");
+
+            var targetDuplicateKeys = targetImages
+                .GroupBy(i => new { i.ItemId, i.ImageIndex })
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g)
+                .ToList();
+            AddImageCheck(preview, "TargetDuplicateImageKeyCount", targetDuplicateKeys.Count, true);
+            AddImageSamples(preview, "TargetDuplicateImageKey", targetDuplicateKeys, true, null, i => FormatImageKey(i), "Target has duplicate ItemId + ImageIndex rows.");
+
+            var sourceByKey = sourceImages
+                .GroupBy(i => new ImageKey(i.ItemId, i.ImageIndex))
+                .Where(g => g.Count() == 1)
+                .ToDictionary(g => g.Key, g => g.Single());
+            var targetByKey = targetImages
+                .GroupBy(i => new ImageKey(i.ItemId, i.ImageIndex))
+                .Where(g => g.Count() == 1)
+                .ToDictionary(g => g.Key, g => g.Single());
+
+            var missingTargetRows = sourceByKey.Values
+                .Where(i => !targetByKey.ContainsKey(new ImageKey(i.ItemId, i.ImageIndex)))
+                .ToList();
+            AddImageCheck(preview, "MissingTargetImageRowCount", missingTargetRows.Count, false);
+            AddImageSamples(preview, "MissingTargetImageRow", missingTargetRows, false, i => FormatImageKey(i), null, "Target image row would be inserted.");
+
+            var rowsToUpdate = sourceByKey.Values
+                .Where(i => targetByKey.ContainsKey(new ImageKey(i.ItemId, i.ImageIndex)))
+                .ToList();
+            AddImageCheck(preview, "RowsToUpdateCount", rowsToUpdate.Count, false);
+
+            var targetOnlyRows = targetByKey.Values
+                .Where(i => !sourceByKey.ContainsKey(new ImageKey(i.ItemId, i.ImageIndex)))
+                .ToList();
+            AddImageCheck(preview, "TargetOnlyImageRowCount", targetOnlyRows.Count, false);
+            AddImageSamples(preview, "TargetOnlyImageRow", targetOnlyRows, false, null, i => FormatImageKey(i), "Target-only image row will not be deleted.");
+
+            var missingSourceFiles = sourceImages
+                .SelectMany(image => GetRequiredImageFileNames(image)
+                    .Select(fileName => new ImageFileIssue(image, fileName)))
+                .Where(issue => !File.Exists(GetImageFilePath(sourceImageRoot, issue.Image.ItemId, issue.FileName)))
+                .ToList();
+            AddImageCheck(preview, "MissingSourceFileCount", missingSourceFiles.Count, true);
+            AddImageFileSamples(preview, "MissingSourceFile", missingSourceFiles, true, "Source image file is required by ItemImage flags but is missing.");
+
+            var filesToCopy = sourceImages
+                .Sum(image => GetImageFileNamesToCopy(sourceImageRoot, image).Count());
+            AddImageCheck(preview, "FilesToCopyCount", filesToCopy, false);
+
+            return preview;
+        }
+
+        public IntercompanyItemImageSyncRunDto SyncImages(string targetCode)
+        {
+            var preview = PreviewImages(targetCode);
+            if (preview.HasBlockers)
+                throw new ArgumentException("Intercompany item image sync has blockers. Run preview and resolve blockers before sync.");
+
+            var sourceConnectionString = _configuration.GetConnectionString("Default");
+            var target = ResolveTarget(targetCode);
+
+            if (string.IsNullOrWhiteSpace(sourceConnectionString))
+                throw new ArgumentException("ConnectionStrings:Default is required.");
+
+            var sourceImageRoot = GetSourceItemImageRoot();
+            var targetImageRoot = GetTargetItemImageRoot(target.TargetCode);
+            if (string.IsNullOrWhiteSpace(targetImageRoot))
+                throw new ArgumentException($"InterCompany:ItemImageRoots:{target.TargetCode} is required for item image sync.");
+
+            using var sourceConnection = new SqlConnection(sourceConnectionString);
+            using var targetConnection = new SqlConnection(target.ConnectionString);
+            sourceConnection.Open();
+            targetConnection.Open();
+            EnsureExpectedSyncDatabases(sourceConnection.Database, targetConnection.Database);
+
+            var sourceImages = LoadItemImages(sourceConnection)
+                .OrderBy(i => i.ItemId)
+                .ThenBy(i => i.ImageIndex)
+                .ToList();
+            var targetImages = LoadItemImages(targetConnection);
+            var targetByKey = targetImages
+                .GroupBy(i => new ImageKey(i.ItemId, i.ImageIndex))
+                .Where(g => g.Count() == 1)
+                .ToDictionary(g => g.Key, g => g.Single());
+            var copyFiles = sourceImages
+                .SelectMany(image => GetImageFileNamesToCopy(sourceImageRoot, image)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Select(fileName => new ImageCopyFile(image.ItemId, fileName)))
+                .ToList();
+            var stagedRoot = Path.Combine(Path.GetTempPath(), "kls-item-image-sync", Guid.NewGuid().ToString("N"));
+            var copiedTargetFiles = new List<string>();
+            var backedUpTargetFiles = new List<ImageFileBackup>();
+
+            try
+            {
+                StageImageFiles(sourceImageRoot, stagedRoot, copyFiles);
+
+                using var transaction = targetConnection.BeginTransaction();
+                try
+                {
+                    ExecuteNonQuery(targetConnection, transaction, "SET XACT_ABORT ON");
+
+                    var sourceKeys = sourceImages
+                        .Select(i => new ImageKey(i.ItemId, i.ImageIndex))
+                        .ToHashSet();
+                    var result = new IntercompanyItemImageSyncRunDto
+                    {
+                        TargetCode = target.TargetCode,
+                        SourceDatabaseName = sourceConnection.Database,
+                        TargetDatabaseName = targetConnection.Database,
+                        TargetOnlyImageCount = targetImages.Count(i => !sourceKeys.Contains(new ImageKey(i.ItemId, i.ImageIndex)))
+                    };
+
+                    foreach (var image in sourceImages)
+                    {
+                        var key = new ImageKey(image.ItemId, image.ImageIndex);
+                        if (targetByKey.ContainsKey(key))
+                            result.UpdatedImageCount += UpdateItemImage(targetConnection, transaction, image);
+                        else
+                            result.InsertedImageCount += InsertItemImage(targetConnection, transaction, image);
+                    }
+
+                    CopyStagedImageFiles(stagedRoot, targetImageRoot, copyFiles, copiedTargetFiles, backedUpTargetFiles);
+                    result.CopiedFileCount = copiedTargetFiles.Count;
+
+                    transaction.Commit();
+                    return result;
+                }
+                catch
+                {
+                    TryRollback(transaction);
+                    RestoreCopiedTargetFiles(copiedTargetFiles, backedUpTargetFiles);
+                    throw;
+                }
+            }
+            finally
+            {
+                TryDeleteDirectory(stagedRoot);
+                TryDeleteBackupFiles(backedUpTargetFiles);
+            }
+        }
+
         private static Dictionary<int, ItemSnapshot> LoadItems(SqlConnection connection)
         {
             const string sql = @"
@@ -577,6 +811,38 @@ FROM dbo.ItemCategory";
                     GetDateTime(reader, "CreatedAt"));
 
                 rows[row.CategoryId] = row;
+            }
+
+            return rows;
+        }
+
+        private static List<ItemImageSnapshot> LoadItemImages(SqlConnection connection)
+        {
+            const string sql = @"
+SELECT ImageId, ItemId, SortOrder, IsPrimary, ImageIndex, OriginalExtension, IsProcessed, IsProcessing, Has300, Has1200, Has2000, HasNoBg300, HasNoBg1200, CreatedAt
+FROM dbo.ItemImage";
+
+            using var command = new SqlCommand(sql, connection);
+            using var reader = command.ExecuteReader();
+            var rows = new List<ItemImageSnapshot>();
+
+            while (reader.Read())
+            {
+                rows.Add(new ItemImageSnapshot(
+                    GetInt32(reader, "ImageId"),
+                    GetInt32(reader, "ItemId"),
+                    GetInt32(reader, "SortOrder"),
+                    GetBoolean(reader, "IsPrimary"),
+                    GetInt32(reader, "ImageIndex"),
+                    GetNullableString(reader, "OriginalExtension"),
+                    GetBoolean(reader, "IsProcessed"),
+                    GetBoolean(reader, "IsProcessing"),
+                    GetBoolean(reader, "Has300"),
+                    GetBoolean(reader, "Has1200"),
+                    GetBoolean(reader, "Has2000"),
+                    GetBoolean(reader, "HasNoBg300"),
+                    GetBoolean(reader, "HasNoBg1200"),
+                    GetDateTime(reader, "CreatedAt")));
             }
 
             return rows;
@@ -897,6 +1163,55 @@ WHERE StorageId = @StorageId
             return command.ExecuteNonQuery();
         }
 
+        private static int InsertItemImage(SqlConnection connection, SqlTransaction transaction, ItemImageSnapshot image)
+        {
+            const string sql = @"
+INSERT INTO dbo.ItemImage (
+    ItemId, SortOrder, IsPrimary, ImageIndex, OriginalExtension, IsProcessed, IsProcessing,
+    Has300, Has1200, Has2000, HasNoBg300, HasNoBg1200, CreatedAt
+) VALUES (
+    @ItemId, @SortOrder, @IsPrimary, @ImageIndex, @OriginalExtension, @IsProcessed, 0,
+    @Has300, @Has1200, @Has2000, @HasNoBg300, @HasNoBg1200, @CreatedAt
+)";
+
+            using var command = CreateItemImageCommand(connection, transaction, sql, image);
+            return command.ExecuteNonQuery();
+        }
+
+        private static int UpdateItemImage(SqlConnection connection, SqlTransaction transaction, ItemImageSnapshot image)
+        {
+            const string sql = @"
+UPDATE dbo.ItemImage
+SET
+    SortOrder = @SortOrder,
+    IsPrimary = @IsPrimary,
+    OriginalExtension = @OriginalExtension,
+    IsProcessed = @IsProcessed,
+    IsProcessing = 0,
+    Has300 = @Has300,
+    Has1200 = @Has1200,
+    Has2000 = @Has2000,
+    HasNoBg300 = @HasNoBg300,
+    HasNoBg1200 = @HasNoBg1200
+WHERE ItemId = @ItemId
+  AND ImageIndex = @ImageIndex
+  AND (
+      SortOrder <> @SortOrder
+      OR IsPrimary <> @IsPrimary
+      OR ISNULL(OriginalExtension, '') <> ISNULL(@OriginalExtension, '')
+      OR IsProcessed <> @IsProcessed
+      OR IsProcessing <> 0
+      OR Has300 <> @Has300
+      OR Has1200 <> @Has1200
+      OR Has2000 <> @Has2000
+      OR HasNoBg300 <> @HasNoBg300
+      OR HasNoBg1200 <> @HasNoBg1200
+  )";
+
+            using var command = CreateItemImageCommand(connection, transaction, sql, image);
+            return command.ExecuteNonQuery();
+        }
+
         private static bool IsItemIdentityConflict(ItemSnapshot source, ItemSnapshot target)
         {
             return !TextEquals(source.ItemType, target.ItemType);
@@ -998,6 +1313,112 @@ WHERE StorageId = @StorageId
             return command;
         }
 
+        private static SqlCommand CreateItemImageCommand(SqlConnection connection, SqlTransaction transaction, string sql, ItemImageSnapshot image)
+        {
+            var command = new SqlCommand(sql, connection, transaction);
+            AddParameter(command, "@ItemId", image.ItemId);
+            AddParameter(command, "@SortOrder", image.SortOrder);
+            AddParameter(command, "@IsPrimary", image.IsPrimary);
+            AddParameter(command, "@ImageIndex", image.ImageIndex);
+            AddParameter(command, "@OriginalExtension", image.OriginalExtension);
+            AddParameter(command, "@IsProcessed", image.IsProcessed);
+            AddParameter(command, "@Has300", image.Has300);
+            AddParameter(command, "@Has1200", image.Has1200);
+            AddParameter(command, "@Has2000", image.Has2000);
+            AddParameter(command, "@HasNoBg300", image.HasNoBg300);
+            AddParameter(command, "@HasNoBg1200", image.HasNoBg1200);
+            AddParameter(command, "@CreatedAt", image.CreatedAt);
+            return command;
+        }
+
+        private static void StageImageFiles(string sourceImageRoot, string stagedRoot, IEnumerable<ImageCopyFile> files)
+        {
+            foreach (var file in files)
+            {
+                var sourcePath = GetImageFilePath(sourceImageRoot, file.ItemId, file.FileName);
+                var stagedPath = GetImageFilePath(stagedRoot, file.ItemId, file.FileName);
+                Directory.CreateDirectory(Path.GetDirectoryName(stagedPath)!);
+                File.Copy(sourcePath, stagedPath, overwrite: true);
+            }
+        }
+
+        private static void CopyStagedImageFiles(
+            string stagedRoot,
+            string targetImageRoot,
+            IEnumerable<ImageCopyFile> files,
+            List<string> copiedTargetFiles,
+            List<ImageFileBackup> backedUpTargetFiles)
+        {
+            foreach (var file in files)
+            {
+                var stagedPath = GetImageFilePath(stagedRoot, file.ItemId, file.FileName);
+                var targetPath = GetImageFilePath(targetImageRoot, file.ItemId, file.FileName);
+                var targetFolder = Path.GetDirectoryName(targetPath)!;
+                Directory.CreateDirectory(targetFolder);
+
+                if (File.Exists(targetPath))
+                {
+                    var backupPath = Path.Combine(Path.GetTempPath(), "kls-item-image-sync-backup", Guid.NewGuid().ToString("N"), file.ItemId.ToString(), file.FileName);
+                    Directory.CreateDirectory(Path.GetDirectoryName(backupPath)!);
+                    File.Copy(targetPath, backupPath, overwrite: true);
+                    backedUpTargetFiles.Add(new ImageFileBackup(targetPath, backupPath));
+                }
+
+                File.Copy(stagedPath, targetPath, overwrite: true);
+                copiedTargetFiles.Add(targetPath);
+            }
+        }
+
+        private static void RestoreCopiedTargetFiles(List<string> copiedTargetFiles, List<ImageFileBackup> backedUpTargetFiles)
+        {
+            var backupsByTarget = backedUpTargetFiles.ToDictionary(b => b.TargetPath, b => b.BackupPath, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var targetPath in copiedTargetFiles.AsEnumerable().Reverse())
+            {
+                if (backupsByTarget.TryGetValue(targetPath, out var backupPath) && File.Exists(backupPath))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+                    File.Copy(backupPath, targetPath, overwrite: true);
+                }
+                else
+                {
+                    TryDeleteFile(targetPath);
+                }
+            }
+        }
+
+        private static void TryDeleteFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
+                // Preserve the original sync failure.
+            }
+        }
+
+        private static void TryDeleteDirectory(string path)
+        {
+            try
+            {
+                if (Directory.Exists(path))
+                    Directory.Delete(path, recursive: true);
+            }
+            catch
+            {
+                // Preserve the original sync failure.
+            }
+        }
+
+        private static void TryDeleteBackupFiles(IEnumerable<ImageFileBackup> backups)
+        {
+            foreach (var backup in backups)
+                TryDeleteDirectory(Path.GetDirectoryName(backup.BackupPath) ?? string.Empty);
+        }
+
         private static int ExecuteNonQuery(SqlConnection connection, SqlTransaction transaction, string sql)
         {
             using var command = new SqlCommand(sql, connection, transaction);
@@ -1048,11 +1469,8 @@ WHERE StorageId = @StorageId
             if (!string.Equals(sourceDatabaseName, "GUS_2026", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Intercompany item sync V1 must run from source database GUS_2026.");
 
-            if (!string.Equals(targetDatabaseName, "ASAG_2026", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(targetDatabaseName, "ASA_2026", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("Intercompany item sync V1 target database must be ASAG_2026 or ASA_2026.");
-            }
+            if (!string.Equals(targetDatabaseName, "ASA_2026", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Intercompany item sync V1 target database must be ASA_2026.");
 
             if (string.Equals(sourceDatabaseName, targetDatabaseName, StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Intercompany item sync source and target databases must be different.");
@@ -1068,11 +1486,8 @@ WHERE StorageId = @StorageId
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            if (targetCodes.Count == 0 && !string.IsNullOrWhiteSpace(_configuration.GetConnectionString(LegacyTargetConnectionStringName)))
-                targetCodes.Add(LegacyTargetCode);
-
             if (targetCodes.Count == 0)
-                throw new ArgumentException("InterCompany:ItemSyncTargets is required, or configure legacy ConnectionStrings:IntercompanyTarget for ASA.");
+                throw new ArgumentException("InterCompany:ItemSyncTargets is required for intercompany item sync.");
 
             return targetCodes;
         }
@@ -1101,24 +1516,33 @@ WHERE StorageId = @StorageId
             if (!string.IsNullOrWhiteSpace(connectionString))
                 return connectionString;
 
-            if (string.Equals(targetCode, LegacyTargetCode, StringComparison.OrdinalIgnoreCase))
-                return _configuration.GetConnectionString(LegacyTargetConnectionStringName);
-
             return null;
+        }
+
+        private string GetSourceItemImageRoot()
+        {
+            return Path.Combine(_env.WebRootPath, "Images", "items");
+        }
+
+        private string? GetTargetItemImageRoot(string targetCode)
+        {
+            return _configuration[$"InterCompany:ItemImageRoots:{targetCode}"]?.Trim();
         }
 
         private static SqlDbType GetSqlDbType(string name)
         {
             return name switch
             {
-                "@ItemId" or "@ItemUnitId" or "@CategoryId" or "@StorageId" or "@BaseUnitId" or "@MultipleToBase" => SqlDbType.Int,
-                "@ParentId" or "@SortOrder" => SqlDbType.Int,
+                "@ItemId" or "@ItemUnitId" or "@CategoryId" or "@StorageId" or "@BaseUnitId" or "@MultipleToBase"
+                    or "@ImageIndex" or "@SortOrder" => SqlDbType.Int,
+                "@ParentId" => SqlDbType.Int,
                 "@FactorToBase" or "@PricePercentToBase" or "@PaletteFactor" or "@SaftyInventory" or "@ActualSaftyInventory"
                     or "@RefillInventory" or "@CaseWeight" or "@CaseLength" or "@CaseWidth" or "@CaseHeight"
                     or "@CaseVolumeInCubicFeet" or "@CaseVolumeInCubicMeter" => SqlDbType.Decimal,
                 "@IsBaseUnit" or "@IsDefaultSalesUnit" or "@Inactive" or "@IsDeleted" or "@IsTaxable" or "@IsHRTaxable"
                     or "@IsHighlighted" or "@IsImport" or "@IsWeightItem" or "@IsMetricWeight" or "@IsMetricDimension"
-                    or "@IsVolumeManual" => SqlDbType.Bit,
+                    or "@IsVolumeManual" or "@IsPrimary" or "@IsProcessed" or "@Has300" or "@Has1200" or "@Has2000"
+                    or "@HasNoBg300" or "@HasNoBg1200" => SqlDbType.Bit,
                 "@CreatedAt" or "@UpdatedAt" => SqlDbType.DateTime,
                 _ => SqlDbType.NVarChar
             };
@@ -1164,6 +1588,91 @@ WHERE StorageId = @StorageId
                 CountValue = countValue,
                 IsBlocker = isBlocker
             });
+        }
+
+        private static void AddImageCheck(IntercompanyItemImageSyncPreviewDto preview, string checkName, int countValue, bool isBlocker)
+        {
+            preview.Checks.Add(new IntercompanyItemSyncCheckDto
+            {
+                CheckName = checkName,
+                CountValue = countValue,
+                IsBlocker = isBlocker
+            });
+        }
+
+        private static void AddImageSamples(
+            IntercompanyItemImageSyncPreviewDto preview,
+            string rowType,
+            IEnumerable<ItemImageSnapshot> rows,
+            bool isBlocker,
+            Func<ItemImageSnapshot, string?>? sourceValue,
+            Func<ItemImageSnapshot, string?>? targetValue,
+            string message)
+        {
+            preview.Rows.AddRange(rows.Take(MaxBlockerRows).Select(row => new IntercompanyItemImageSyncPreviewRowDto
+            {
+                RowType = rowType,
+                ItemId = row.ItemId,
+                ImageIndex = row.ImageIndex,
+                SourceValue = sourceValue?.Invoke(row),
+                TargetValue = targetValue?.Invoke(row),
+                IsBlocker = isBlocker,
+                Message = message
+            }));
+        }
+
+        private static void AddImageFileSamples(IntercompanyItemImageSyncPreviewDto preview, string rowType, IEnumerable<ImageFileIssue> rows, bool isBlocker, string message)
+        {
+            preview.Rows.AddRange(rows.Take(MaxBlockerRows).Select(row => new IntercompanyItemImageSyncPreviewRowDto
+            {
+                RowType = rowType,
+                ItemId = row.Image.ItemId,
+                ImageIndex = row.Image.ImageIndex,
+                SourceValue = row.FileName,
+                IsBlocker = isBlocker,
+                Message = message
+            }));
+        }
+
+        private static IEnumerable<string> GetRequiredImageFileNames(ItemImageSnapshot image)
+        {
+            var index = image.ImageIndex;
+
+            if (image.Has300) yield return $"{index}-300.png";
+            if (image.Has1200) yield return $"{index}-1200.png";
+            if (image.Has2000) yield return $"{index}-2000.png";
+            if (image.HasNoBg300) yield return $"{index}-300-nobg.png";
+            if (image.HasNoBg1200) yield return $"{index}-1200-nobg.png";
+            if (!string.IsNullOrWhiteSpace(image.OriginalExtension))
+                yield return $"{index}-org{image.OriginalExtension}";
+        }
+
+        private static IEnumerable<string> GetImageFileNamesToCopy(string imageRoot, ItemImageSnapshot image)
+        {
+            foreach (var fileName in GetRequiredImageFileNames(image))
+                yield return fileName;
+
+            var cropFileName = $"{image.ImageIndex}-crop.png";
+            if (File.Exists(GetImageFilePath(imageRoot, image.ItemId, cropFileName)))
+                yield return cropFileName;
+        }
+
+        private static string GetImageFilePath(string imageRoot, int itemId, string fileName)
+        {
+            return Path.Combine(imageRoot, itemId.ToString(), fileName);
+        }
+
+        private static string FormatImageKey(ItemImageSnapshot image)
+        {
+            return $"Item:{image.ItemId}|Index:{image.ImageIndex}";
+        }
+
+        private static bool PathsEqual(string left, string right)
+        {
+            return string.Equals(
+                Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                StringComparison.OrdinalIgnoreCase);
         }
 
         private static void AddSamples<T>(
@@ -1392,6 +1901,30 @@ WHERE StorageId = @StorageId
             string? Bin,
             bool Inactive,
             DateTime CreatedAt);
+
+        private record ItemImageSnapshot(
+            int ImageId,
+            int ItemId,
+            int SortOrder,
+            bool IsPrimary,
+            int ImageIndex,
+            string? OriginalExtension,
+            bool IsProcessed,
+            bool IsProcessing,
+            bool Has300,
+            bool Has1200,
+            bool Has2000,
+            bool HasNoBg300,
+            bool HasNoBg1200,
+            DateTime CreatedAt);
+
+        private record ImageKey(int ItemId, int ImageIndex);
+
+        private record ImageFileIssue(ItemImageSnapshot Image, string FileName);
+
+        private record ImageCopyFile(int ItemId, string FileName);
+
+        private record ImageFileBackup(string TargetPath, string BackupPath);
 
         private record BaseUnitIssue(string DbRole, int ItemId, int? BaseUnitId);
 
