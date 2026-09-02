@@ -1469,8 +1469,8 @@ WHERE ItemId = @ItemId
             if (!string.Equals(sourceDatabaseName, "GUS_2026", StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Intercompany item sync V1 must run from source database GUS_2026.");
 
-            if (!string.Equals(targetDatabaseName, "ASA_2026", StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("Intercompany item sync V1 target database must be ASA_2026.");
+            if (!string.Equals(targetDatabaseName, "ASAG_2026", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Intercompany item sync V1 target database must be ASAG_2026.");
 
             if (string.Equals(sourceDatabaseName, targetDatabaseName, StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Intercompany item sync source and target databases must be different.");
