@@ -81,6 +81,20 @@ namespace KLS.API.Controllers.Admin
             return File(fileStream, "application/pdf");
         }
 
+        [HttpPost("PickTicketByRoute")]
+        [DisplayName("Gen Pick Ticket By Route")]
+        [PermissionKey("Customer.Sale.PickTicket")]
+        public IActionResult PickTicketByRoute([FromBody] DocumentReq documentReq)
+        {
+            var filePath = _documentService.PickTicketByRoute(documentReq);
+
+            if (filePath == null || !System.IO.File.Exists(filePath))
+                return NotFound("File not found.");
+
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return File(fileStream, "application/pdf");
+        }
+
 
         [HttpPost("Invoice")]
         [DisplayName("Gen Invoice")]

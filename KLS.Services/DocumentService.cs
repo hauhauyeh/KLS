@@ -121,6 +121,65 @@ namespace KLS.Services
             }
         }
 
+        public string? PickTicketByRoute(DocumentReq req)
+        {
+            if (req is null)
+                throw new ArgumentException("Document request is required.", nameof(req));
+
+            if (!req.ShipDate.HasValue)
+                throw new ArgumentException("ShipDate is required.", nameof(req));
+
+            if (string.IsNullOrWhiteSpace(req.ShipRoute))
+                throw new ArgumentException("ShipRoute is required.", nameof(req));
+
+            var shipDate = req.ShipDate.Value;
+            var shipRoute = req.ShipRoute.Trim();
+            List<PdfDocument> pdfs = [];
+
+            try
+            {
+                var orders = Uow.Sales.GetByDateRoute(shipDate, shipRoute)?
+                    .Where(c => c.ShipRoute == shipRoute)
+                    .OrderBy(c => c.RouteOrder)
+                    .ThenBy(c => c.SalesNumber)
+                    .ToList() ?? [];
+
+                foreach (var order in orders)
+                {
+                    var pdfResult = GeneratePickTicket(order.SalesId, req.IsPrint, false);
+                    pdfs.Add(pdfResult.Pdf);
+                }
+
+                if (pdfs.Count == 0)
+                    return null;
+
+                var fileName = $"PickTicket-{shipDate:MMddyyyy}-{shipRoute}.pdf";
+                var relativePath = Path.Combine("Pdf", fileName);
+                var fullPath = Path.Combine(_env.WebRootPath, relativePath);
+
+                using var merged = PdfDocument.Merge(pdfs);
+                merged.SaveAs(fullPath);
+
+                if (req.IsPrint && merged.PageCount > 0)
+                {
+                    _printLogService.Create(new PrintLog
+                    {
+                        DocType = "PickTicket-ByRoute",
+                        PrintMode = "B",
+                        DocPath = relativePath,
+                        PageCount = merged.PageCount,
+                    });
+                }
+
+                return fullPath;
+            }
+            finally
+            {
+                foreach (var pdf in pdfs)
+                    pdf?.Dispose();
+            }
+        }
+
         public string Invoice(DocumentReq req)
         {
             List<PdfDocument> pdfs = [];
