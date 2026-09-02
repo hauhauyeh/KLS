@@ -228,24 +228,23 @@
     .statement-area {
         position: absolute;
         top: 3.28in;
-        right: 0.51in;
+        right: 0.36in;
         width: 2.18in;
-        font-size: 9px;
-        font-style: italic;
-        font-weight: 700;
     }
 
-    .statement-area table {
+    .statement-table {
         table-layout: fixed;
     }
 
-    .statement-area td {
+    .statement-table td {
+        font-size: 9px;
+        line-height: 1.05;
         padding: 0.006in 0;
         white-space: nowrap;
     }
 
     .statement-current-row td {
-        font-weight: 900;
+        font-weight: 700;
     }
 
     .statement-date {
@@ -348,7 +347,7 @@
     <div class="statement-area">
         @if (statementDetails.Count > 0)
         {
-            <table>
+            <table class="statement-table">
                 <tbody>
                     @foreach (var month in statementDetails)
                     {
