@@ -38,6 +38,76 @@ namespace KLS.Models.Intercompany
         public int UpdatedBaseUnitCount { get; set; }
     }
 
+    public class IntercompanyLookupSyncRunDto
+    {
+        public string TargetCode { get; set; } = string.Empty;
+
+        public string SourceDatabaseName { get; set; } = string.Empty;
+
+        public string TargetDatabaseName { get; set; } = string.Empty;
+
+        public int InsertedCount { get; set; }
+
+        public int UpdatedCount { get; set; }
+    }
+
+    public class IntercompanyItemImageSyncPreviewDto
+    {
+        public string TargetCode { get; set; } = string.Empty;
+
+        public string SourceDatabaseName { get; set; } = string.Empty;
+
+        public string TargetDatabaseName { get; set; } = string.Empty;
+
+        public string SourceImageRoot { get; set; } = string.Empty;
+
+        public string TargetImageRoot { get; set; } = string.Empty;
+
+        public bool HasBlockers => Checks.Any(c => c.IsBlocker && c.CountValue > 0);
+
+        public int BlockerCount => Checks.Where(c => c.IsBlocker).Sum(c => c.CountValue);
+
+        public List<IntercompanyItemSyncCheckDto> Checks { get; set; } = new();
+
+        public List<IntercompanyItemImageSyncPreviewRowDto> Rows { get; set; } = new();
+    }
+
+    public class IntercompanyItemImageSyncRunDto
+    {
+        public string TargetCode { get; set; } = string.Empty;
+
+        public string SourceDatabaseName { get; set; } = string.Empty;
+
+        public string TargetDatabaseName { get; set; } = string.Empty;
+
+        public int InsertedImageCount { get; set; }
+
+        public int UpdatedImageCount { get; set; }
+
+        public int CopiedFileCount { get; set; }
+
+        public int SkippedFileCount { get; set; }
+
+        public int TargetOnlyImageCount { get; set; }
+    }
+
+    public class IntercompanyItemImageSyncPreviewRowDto
+    {
+        public string RowType { get; set; } = string.Empty;
+
+        public int? ItemId { get; set; }
+
+        public int? ImageIndex { get; set; }
+
+        public string? SourceValue { get; set; }
+
+        public string? TargetValue { get; set; }
+
+        public bool IsBlocker { get; set; }
+
+        public string? Message { get; set; }
+    }
+
     public class IntercompanyItemSyncTargetDto
     {
         public string TargetCode { get; set; } = string.Empty;
