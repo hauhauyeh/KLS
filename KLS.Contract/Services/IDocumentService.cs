@@ -15,6 +15,8 @@ namespace KLS.Contract.Services
 
         string PickTicket(DocumentReq documentReq);
 
+        string? PickTicketByRoute(DocumentReq documentReq);
+
         string Invoice(DocumentReq documentReq);
 
         string? PackingList(DocumentReq documentReq);

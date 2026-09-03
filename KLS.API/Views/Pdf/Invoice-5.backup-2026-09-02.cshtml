@@ -79,11 +79,11 @@
     .barcode {
         position: absolute;
         top: 0.18in;
-        right: 0.24in;
+        right: 0.74in;
         width: 1.86in;
         height: 0.28in;
-        font-family: 'Free 3 of 9' !important;
-        font-size: 45px;
+        font-family: 'IDAutomationUPCEANXXS' !important;
+        font-size: 30px;
         line-height: 1;
         text-align: center;
         white-space: nowrap;
@@ -92,7 +92,7 @@
     .route-box {
         position: absolute;
         top: 0.66in;
-        right: 0.08in;
+        right: 0.58in;
         width: 0.42in;
         height: 0.34in;
         border: 1px solid #c8c8c8;
@@ -139,44 +139,24 @@
     .meta-row {
         position: absolute;
         top: 2.63in;
+        left: 0.52in;
+        right: 0.72in;
+        display: grid;
+        grid-template-columns: 1.2in 1.35in 1.15in 1.0in 1.18in 1.08in;
+        column-gap: 0.24in;
+        align-items: center;
         font-size: 15px;
     }
 
     .meta-row div {
-        position: absolute;
         white-space: nowrap;
-    }
-
-    .meta-customer {
-        left: 0.27in;
-        width: 1.2in;
-    }
-
-    .meta-terms {
-        left: 3.55in;
-        width: 1.15in;
-    }
-
-    .meta-route {
-        left: 5.94in;
-        width: 1.0in;
-    }
-
-    .meta-date {
-        left: 6.68in;
-        width: 1.18in;
-    }
-
-    .meta-invoice {
-        left: 7.80in;
-        width: 1.08in;
     }
 
     .items-area {
         position: absolute;
         top: 3.13in;
-        left: 0.04in;
-        width: 5.98in;
+        left: 0.29in;
+        width: 5.73in;
         min-height: 2.15in;
     }
 
@@ -245,21 +225,23 @@
         text-align: right;
     }
 
+    /* Width must keep the left edge (8.5 - right - width) past the items-area
+       right edge at 6.02in, or the statement overlaps the item amounts. */
     .statement-area {
         position: absolute;
         top: 3.28in;
-        left: 6.24in;
-        width: 2.12in;
-        font-family: Calibri, Arial, sans-serif;
+        right: 0.36in;
+        width: 1.90in;
     }
 
     .statement-table {
-        table-layout: auto !important;
+        table-layout: fixed;
     }
 
     .statement-table td {
-        font-size: 10px;
-        padding: 1px 3px;
+        font-size: 11px;
+        line-height: 1.05;
+        padding: 0.006in 0;
         white-space: nowrap;
     }
 
@@ -267,44 +249,29 @@
         font-weight: 700;
     }
 
-    .text-right {
+    .statement-date {
+        width: 0.60in;
+    }
+
+    .statement-number {
+        width: 0.60in;
         text-align: right;
     }
 
-    .statement-money {
+    .statement-amount {
+        width: 0.70in;
         text-align: right;
     }
 
-    .statement-money-value {
-        display: inline-block;
-        min-width: 0.58in;
+    .statement-total-label {
+        padding-top: 0.05in !important;
         text-align: right;
-    }
-
-    .statement-past-due {
-        display: inline-block;
-        width: 0.08in;
-        text-align: left;
-    }
-
-    .statement-month-total td {
-        padding-top: 3px;
-        padding-bottom: 2px;
-        font-style: italic;
-        font-weight: 700;
-    }
-
-    .statement-grand-total td {
-        padding-top: 5px;
-        font-size: 11px;
-        font-style: italic;
-        font-weight: 700;
     }
 
     .invoice-total {
         position: absolute;
         left: 5.25in;
-        bottom: 0.49in;
+        bottom: 0.74in;
         width: 0.95in;
         font-size: 20px;
         text-align: center;
@@ -327,11 +294,12 @@
     <div class="instruction-block">@invoice?.Instruction</div>
 
     <div class="meta-row">
-        <div class="meta-customer">@invoice?.ShipId</div>
-        <div class="meta-terms">@invoice?.TermName</div>
-        <div class="meta-route">@invoice?.ShipRoute</div>
-        <div class="meta-date">@DateText(invoice?.ShipDate)</div>
-        <div class="meta-invoice">@salesNumber</div>
+        <div>@invoice?.ShipId</div>
+        <div></div>
+        <div>@invoice?.TermName</div>
+        <div>@invoice?.ShipRoute</div>
+        <div>@DateText(invoice?.ShipDate)</div>
+        <div>@salesNumber</div>
     </div>
 
     <div class="items-area">
@@ -386,35 +354,26 @@
                     @foreach (var month in statementDetails)
                     {
                         var monthName = month.ShipMonth?.Split(' ').FirstOrDefault();
-                        monthName = string.IsNullOrWhiteSpace(monthName)
-                            ? string.Empty
-                            : monthName.Substring(0, Math.Min(3, monthName.Length));
                         if (month.Sales != null)
                         {
                             foreach (var sale in month.Sales)
                             {
                                 var currentRowClass = sale.SalesId == invoice?.SalesId ? "statement-current-row" : null;
                                 <tr class="@currentRowClass">
-                                    <td>@DateText(sale.ShipDate)</td>
-                                    <td>@Model.GetSalesDisplayNumber(sale)</td>
-                                    <td class="statement-money">
-                                        <span class="statement-money-value">@Money(sale.AmountDue)</span><span class="statement-past-due">@(sale.IsPastDue ? "*" : "")</span>
-                                    </td>
+                                    <td class="statement-date">@DateText(sale.ShipDate)</td>
+                                    <td class="statement-number">@Model.GetSalesDisplayNumber(sale)</td>
+                                    <td class="statement-amount">@Money(sale.AmountDue)</td>
                                 </tr>
                             }
                         }
-                        <tr class="statement-month-total">
-                            <td colspan="2" class="text-right">Total of @monthName</td>
-                            <td class="statement-money">
-                                <span class="statement-money-value">@Money(month.MonthTotal)</span><span class="statement-past-due"></span>
-                            </td>
+                        <tr>
+                            <td colspan="2" class="statement-total-label">Total of @monthName</td>
+                            <td class="statement-amount">@Money(month.MonthTotal)</td>
                         </tr>
                     }
-                    <tr class="statement-grand-total">
-                        <td colspan="2" class="text-right">Grand Total:</td>
-                        <td class="statement-money">
-                            <span class="statement-money-value">@Money(Model.Statement?.StatementTotalDue)</span><span class="statement-past-due"></span>
-                        </td>
+                    <tr>
+                        <td colspan="2" class="statement-total-label">Grand Total:</td>
+                        <td class="statement-amount">@Money(Model.Statement?.StatementTotalDue)</td>
                     </tr>
                 </tbody>
             </table>
