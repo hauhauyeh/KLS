@@ -450,27 +450,8 @@ namespace KLS.Services
             if (order.Any(id => id > 0 && !validIds.Contains(id)))
                 throw new Exception("Invalid image id found in order list for this item.");
 
-            // Decide primary index
-            int primaryIndex;
-            if (uploadReq.PrimaryOrderIndex.HasValue &&
-                uploadReq.PrimaryOrderIndex.Value >= 0 &&
-                uploadReq.PrimaryOrderIndex.Value < order.Count)
-            {
-                primaryIndex = uploadReq.PrimaryOrderIndex.Value;
-            }
-            else
-            {
-                var existingPrimary = dbImages.FirstOrDefault(x => x.IsPrimary);
-                if (existingPrimary != null)
-                {
-                    int idx = order.FindIndex(x => x == existingPrimary.ImageId);
-                    primaryIndex = idx >= 0 ? idx : 0;
-                }
-                else
-                {
-                    primaryIndex = 0;
-                }
-            }
+            // First image is the primary/default image.
+            int primaryIndex = 0;
 
             // Clear primary for all existing images
             foreach (var img in dbImages.Where(x => x.IsPrimary))
