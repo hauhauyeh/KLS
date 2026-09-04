@@ -432,6 +432,7 @@
                     }
                     else
                     {
+                        var showListPriceDiscount = itmdetail.ListPrice > 0 && itmdetail.UnitPrice < itmdetail.ListPrice;
                         <tr>
                             <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
                             <td><span>@itmdetail.ItemCode</span></td>
@@ -447,8 +448,18 @@
                                 }
                             </td>
 
-                            <td class="text-center"><span>@Utilities.FormatPrice(itmdetail.ListPrice, Model.PriceDecimals)</span></td>
-                            <td class="text-center"><span>@string.Format("{0:0.##%}", itmdetail.Discount)</span></td>
+                            <td class="text-center">
+                                @if (showListPriceDiscount)
+                                {
+                                    <span>@Utilities.FormatPrice(itmdetail.ListPrice, Model.PriceDecimals)</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (showListPriceDiscount)
+                                {
+                                    <span>@string.Format("{0:0.##%}", itmdetail.Discount)</span>
+                                }
+                            </td>
                             <td class="text-center"><span>@Utilities.FormatPrice(itmdetail.UnitPrice, Model.PriceDecimals)</span></td>
                             <td class="text-right"><span>@string.Format("{0:c}", itmdetail.ExtTotal)</span></td>
                         </tr>
