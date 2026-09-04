@@ -387,6 +387,9 @@ namespace KLS.Services
                 if (rule.Action == null)
                     throw new ArgumentException("Bank feed rule action is missing.");
 
+                if (DirectionActionError(rule.Direction, rule.Action.ActionType) != null)
+                    throw new ArgumentException("Bank feed rule action is not valid for its direction.");
+
                 var transaction = Uow.BankFeedTransactions.GetByLongId(suggestion.BankFeedTransactionId)
                     ?? throw new ArgumentException("Bank feed transaction was not found.");
 
@@ -807,6 +810,9 @@ namespace KLS.Services
             if (action == null)
                 return "MissingSetup";
 
+            if (DirectionActionError(rule.Direction, action.ActionType) != null)
+                return "MissingSetup";
+
             if (action.AccountId.HasValue && !Uow.Accounts.Exists(c => c.AccountId == action.AccountId.Value && !c.Inactive))
                 return "MissingSetup";
 
@@ -910,6 +916,22 @@ namespace KLS.Services
             return allowedValues.Single(c => string.Equals(c, value.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
+        private static string? DirectionActionError(string? direction, string? actionType)
+        {
+            if (string.IsNullOrWhiteSpace(direction) || string.IsNullOrWhiteSpace(actionType))
+                return "Rule direction and action type are required.";
+
+            if (actionType.Equals("CreateMoneyOutExpense", StringComparison.OrdinalIgnoreCase)
+                && !direction.Equals("MoneyOut", StringComparison.OrdinalIgnoreCase))
+                return "Create Expense is only valid for Money Out rules.";
+
+            if (actionType.Equals("CreateMoneyInDeposit", StringComparison.OrdinalIgnoreCase)
+                && !direction.Equals("MoneyIn", StringComparison.OrdinalIgnoreCase))
+                return "Create Deposit is only valid for Money In rules.";
+
+            return null;
+        }
+
         private void Validate(BankFeedRuleSaveReq req)
         {
             if (string.IsNullOrWhiteSpace(req.RuleName))
@@ -958,6 +980,10 @@ namespace KLS.Services
                 throw new ArgumentException("Rule action type is invalid.");
 
             var actionType = Canonical(ActionTypes, req.Action.ActionType);
+
+            var directionActionError = DirectionActionError(direction, actionType);
+            if (directionActionError != null)
+                throw new ArgumentException(directionActionError);
 
             if ((actionType == "CreateMoneyOutExpense" || actionType == "CreateMoneyInDeposit")
                 && !req.Action.AccountId.HasValue)
