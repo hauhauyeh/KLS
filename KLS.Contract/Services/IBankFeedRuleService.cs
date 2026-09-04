@@ -10,6 +10,10 @@ namespace KLS.Contract.Services
 
         BankFeedRuleDto Save(BankFeedRuleSaveReq req);
 
+        BankFeedRuleNextOrderRes GetNextOrder(BankFeedRuleNextOrderReq req);
+
+        void Reorder(BankFeedRuleReorderReq req);
+
         void Deactivate(int bankFeedRuleId);
 
         void Delete(int bankFeedRuleId);

@@ -154,6 +154,71 @@ namespace KLS.Services
             return GetById(savedRule!.BankFeedRuleId)!;
         }
 
+        public BankFeedRuleNextOrderRes GetNextOrder(BankFeedRuleNextOrderReq req)
+        {
+            req ??= new BankFeedRuleNextOrderReq();
+
+            if (!Directions.Contains(req.Direction))
+                throw new ArgumentException("Rule direction is invalid.");
+
+            var direction = Canonical(Directions, req.Direction);
+            var maxPriority = Uow.BankFeedRules.GetRulesWithChildren()
+                .Where(c => c.IsActive && c.Direction == direction)
+                .Select(c => (int?)c.Priority)
+                .Max() ?? 0;
+
+            return new BankFeedRuleNextOrderRes
+            {
+                Priority = maxPriority + 1
+            };
+        }
+
+        public void Reorder(BankFeedRuleReorderReq req)
+        {
+            req ??= new BankFeedRuleReorderReq();
+
+            if (!Directions.Contains(req.Direction))
+                throw new ArgumentException("Rule direction is invalid.");
+
+            if (req.RuleIds == null)
+                throw new ArgumentException("Rule order is required.");
+
+            var direction = Canonical(Directions, req.Direction);
+            var submittedIds = req.RuleIds.ToList();
+            var distinctSubmittedIds = submittedIds.Distinct().ToList();
+
+            if (submittedIds.Count != distinctSubmittedIds.Count)
+                throw new ArgumentException("Duplicate rules are not allowed in reorder.");
+
+            Uow.ExecuteInTransaction(() =>
+            {
+                var activeRules = Uow.BankFeedRules.Find(c => c.IsActive && c.Direction == direction)
+                    .ToList();
+                var activeIds = activeRules
+                    .Select(c => c.BankFeedRuleId)
+                    .OrderBy(c => c)
+                    .ToList();
+                var submittedSetIds = distinctSubmittedIds
+                    .OrderBy(c => c)
+                    .ToList();
+
+                if (activeIds.Count != submittedSetIds.Count || !activeIds.SequenceEqual(submittedSetIds))
+                    throw new ArgumentException("Submitted rule order must match all active rules for this direction.");
+
+                var ruleMap = activeRules.ToDictionary(c => c.BankFeedRuleId);
+                var updatedAt = DateTime.UtcNow;
+
+                for (var index = 0; index < submittedIds.Count; index++)
+                {
+                    var rule = ruleMap[submittedIds[index]];
+                    rule.Priority = index + 1;
+                    rule.UpdatedAt = updatedAt;
+                }
+
+                Uow.Commit();
+            });
+        }
+
         public void Deactivate(int bankFeedRuleId)
         {
             var rule = Uow.BankFeedRules.GetRuleWithChildren(bankFeedRuleId)
@@ -855,6 +920,16 @@ namespace KLS.Services
 
             if (!MatchModes.Contains(req.MatchMode))
                 throw new ArgumentException("Rule match mode is invalid.");
+
+            if (req.Priority <= 0)
+                throw new ArgumentException("Rule order must be greater than 0.");
+
+            var direction = Canonical(Directions, req.Direction);
+            if (req.IsActive && Uow.BankFeedRules.Exists(c => c.IsActive
+                && c.Direction == direction
+                && c.Priority == req.Priority
+                && c.BankFeedRuleId != req.BankFeedRuleId))
+                throw new ArgumentException("Active rule order already exists for this direction.");
 
             if (req.BankFeedAccountId.HasValue && !Uow.BankFeedAccounts.Exists(c => c.BankFeedAccountId == req.BankFeedAccountId.Value))
                 throw new ArgumentException("Bank feed account was not found.");
