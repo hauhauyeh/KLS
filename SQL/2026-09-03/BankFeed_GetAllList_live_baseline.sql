@@ -1,16 +1,5 @@
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 -- ============================================================
 -- BankFeed_GetAllList
--- 2026-09-03 bank-feed-status-rule-mark-flow: keep stored bank-feed statuses
---   limited to Pending/Matched/Excluded while adding derived filter support for
---   AllOpen, RuleSuggested, and RuleApplied. MatchFound remains the backend
---   filter alias for "Pending rows with match candidates"; UI may label it
---   Review Match. Active suggestions and applied suggestions use separate
---   OUTER APPLY blocks so Applied history does not hide open suggestion state.
--- ============================================================
 -- 2026-08-20 bank-feed-rule-safe-apply: add nullable rule suggestion summary fields
 --   to the non-count list projection only. The count branch stays unchanged.
 --   Suggestion status is display-only here; apply is revalidated by the backend.
@@ -51,7 +40,7 @@ GO
 -- ============================================================
 
 
-CREATE OR ALTER PROCEDURE [dbo].[BankFeed_GetAllList]
+CREATE   PROCEDURE [dbo].[BankFeed_GetAllList]
     @Pageno INT,
     @Pagesize INT,
     @Search NVARCHAR(200),
@@ -86,7 +75,7 @@ BEGIN
         [PaymentMethod] NVARCHAR(255) NULL
     );
 
-    IF @AccountId IS NOT NULL AND (@IsCount = 0 OR @Status IN ('Pending', 'MatchFound'))
+    IF @AccountId IS NOT NULL AND (@IsCount = 0 OR @Status = 'MatchFound')
         INSERT INTO #MatchTx EXEC dbo.Bank_TxDetail @AccountId;
 
     DECLARE @Qry NVARCHAR(MAX);
@@ -125,14 +114,14 @@ BEGIN
         WHERE bfs.BankFeedTransactionId = bft.BankFeedTransactionId
           AND bfs.Status = ''Active''
     ) THEN 1 ELSE 0 END AS BIT) AS IsGenerated,
-    COALESCE(rs.BankFeedRuleSuggestionId, ars.BankFeedRuleSuggestionId) AS BankFeedRuleSuggestionId,
-    COALESCE(rs.SuggestionStatus, ars.SuggestionStatus) AS RuleSuggestionStatus,
-    ISNULL(rs.RuleSuggestionCount, CASE WHEN ars.BankFeedRuleSuggestionId IS NULL THEN 0 ELSE 1 END) AS RuleSuggestionCount,
-    COALESCE(rs.RuleName, ars.RuleName) AS RuleSuggestionName,
-    COALESCE(rs.ActionType, ars.ActionType) AS RuleSuggestionActionType,
-    COALESCE(rs.PayeeName, ars.PayeeName) AS RuleSuggestionPayeeName,
-    COALESCE(rs.AccountName, ars.AccountName) AS RuleSuggestionAccountName,
-    COALESCE(rs.TargetAccountName, ars.TargetAccountName) AS RuleSuggestionTargetAccountName,
+    rs.BankFeedRuleSuggestionId,
+    rs.SuggestionStatus AS RuleSuggestionStatus,
+    ISNULL(rs.RuleSuggestionCount, 0) AS RuleSuggestionCount,
+    rs.RuleName AS RuleSuggestionName,
+    rs.ActionType AS RuleSuggestionActionType,
+    rs.PayeeName AS RuleSuggestionPayeeName,
+    rs.AccountName AS RuleSuggestionAccountName,
+    rs.TargetAccountName AS RuleSuggestionTargetAccountName,
     CAST(CASE
         WHEN rs.SuggestionStatus = ''Suggested''
              AND (
@@ -169,7 +158,7 @@ BEGIN
         ORDER BY bfm.BankFeedMatchId
     ) mdet'
 
-    IF @IsCount = 0 OR @Status IN ('Pending', 'MatchFound')
+    IF @IsCount = 0 OR @Status = 'MatchFound'
         SET @Qry += '
     OUTER APPLY (
         SELECT
@@ -230,7 +219,7 @@ BEGIN
         ) ranked
     ) tm'
 
-    IF @IsCount = 0 OR @Status IN ('Pending', 'RuleSuggested')
+    IF @IsCount = 0
         SET @Qry += '
     OUTER APPLY (
         SELECT TOP 1
@@ -266,51 +255,15 @@ BEGIN
             s.BankFeedRuleSuggestionId
     ) rs'
 
-    IF @IsCount = 0 OR @Status IN ('Matched', 'RuleApplied')
-        SET @Qry += '
-    OUTER APPLY (
-        SELECT TOP 1
-            s.BankFeedRuleSuggestionId,
-            s.SuggestionStatus,
-            r.RuleName,
-            a.ActionType,
-            p.PayeeName,
-            actionAcct.AccountName,
-            targetAcct.AccountName AS TargetAccountName
-        FROM BankFeedRuleSuggestion s
-        JOIN BankFeedRule r ON r.BankFeedRuleId = s.BankFeedRuleId
-        LEFT JOIN BankFeedRuleAction a ON a.BankFeedRuleId = r.BankFeedRuleId
-        LEFT JOIN Payee p ON p.PayeeId = a.PayeeId
-        LEFT JOIN Account actionAcct ON actionAcct.AccountId = a.AccountId
-        LEFT JOIN Account targetAcct ON targetAcct.AccountId = a.TargetAccountId
-        WHERE s.BankFeedTransactionId = bft.BankFeedTransactionId
-          AND s.SuggestionStatus = ''Applied''
-        ORDER BY
-            s.AppliedAt DESC,
-            s.BankFeedRuleSuggestionId DESC
-    ) ars'
-
     SET @Qry += ' WHERE 1=1'
 
     IF @AccountId IS NOT NULL
         SET @Qry += ' AND bfa.AccountId = ' + CAST(@AccountId AS VARCHAR)
 
-    IF @Status = 'AllOpen'
-        SET @Qry += ' AND bft.Status = ''Pending'''
-    ELSE IF @Status = 'Pending'
-        SET @Qry += ' AND bft.Status = ''Pending'' AND ISNULL(tm.MatchCount, 0) = 0 AND rs.BankFeedRuleSuggestionId IS NULL'
-    ELSE IF @Status = 'MatchFound'
+    IF @Status = 'MatchFound'
         SET @Qry += ' AND bft.Status = ''Pending'' AND tm.MatchCount > 0'
-    ELSE IF @Status = 'RuleSuggested'
-        SET @Qry += ' AND rs.SuggestionStatus = ''Suggested'''
-    ELSE IF @Status = 'RuleApplied'
-        SET @Qry += ' AND ars.BankFeedRuleSuggestionId IS NOT NULL'
-    ELSE IF @Status = 'Matched'
-        SET @Qry += ' AND bft.Status = ''Matched'' AND ars.BankFeedRuleSuggestionId IS NULL'
-    ELSE IF @Status = 'Excluded'
-        SET @Qry += ' AND bft.Status = ''Excluded'''
     ELSE IF @Status IS NOT NULL AND @Status != 'All'
-        SET @Qry += ' AND 1 = 0'
+        SET @Qry += ' AND bft.Status = ''' + @Status + ''''
 
     IF @AmountDirection = 'MoneyIn'
         SET @Qry += ' AND bft.Amount > 0'

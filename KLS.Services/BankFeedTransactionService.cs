@@ -468,8 +468,30 @@ namespace KLS.Services
                 Uow.BankFeedTransactions.Update(tx);
             }
 
+            DismissAppliedExcludeRuleSuggestions(transactions.Select(t => t.BankFeedTransactionId).ToList());
+
             Uow.Commit();
             return transactions.Count;
+        }
+
+        private void DismissAppliedExcludeRuleSuggestions(List<long> bankFeedTransactionIds)
+        {
+            var suggestions = Uow.BankFeedRuleSuggestions
+                .Find(s => bankFeedTransactionIds.Contains(s.BankFeedTransactionId)
+                           && s.SuggestionStatus == "Applied")
+                .ToList();
+
+            foreach (var suggestion in suggestions)
+            {
+                var rule = Uow.BankFeedRules.GetRuleWithChildren(suggestion.BankFeedRuleId);
+                if (rule?.Action?.ActionType != "Exclude")
+                    continue;
+
+                suggestion.SuggestionStatus = "Dismissed";
+                suggestion.DismissedAt = DateTime.UtcNow;
+                suggestion.DismissedBy = UserContext.EmpId;
+                Uow.BankFeedRuleSuggestions.Update(suggestion);
+            }
         }
 
         public int Delete(BankFeedBulkActionReq req)
