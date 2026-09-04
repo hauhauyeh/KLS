@@ -56,12 +56,5 @@ namespace KLS.API.Controllers.Admin
             return Ok();
         }
 
-        [HttpPost("Generate/{shipmentId}")]
-        [DisplayName("Generate Shipment Charge Bills")]
-        [PermissionKey("Vendor.Shipment.GenerateBill")]
-        public IActionResult Generate(int shipmentId)
-        {
-            return Ok(_shipmentChargeBillService.Generate(shipmentId));
-        }
     }
 }

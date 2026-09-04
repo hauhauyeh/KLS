@@ -7,8 +7,6 @@ namespace KLS.Services
 {
     public class ShipmentChargeBillService : BaseService, IShipmentChargeBillService
     {
-        private readonly IShipmentService _shipmentService;
-
         private static readonly Dictionary<string, string> ChargeTypes = new(StringComparer.OrdinalIgnoreCase)
         {
             ["Freight"] = "Freight",
@@ -22,9 +20,8 @@ namespace KLS.Services
             ["Other"] = "Other"
         };
 
-        public ShipmentChargeBillService(IUnitOfWork uow, IShipmentService shipmentService) : base(uow)
+        public ShipmentChargeBillService(IUnitOfWork uow) : base(uow)
         {
-            _shipmentService = shipmentService;
         }
 
         public IEnumerable<ShipmentChargeBillDto> GetByShipmentId(int shipmentId)
@@ -199,16 +196,6 @@ namespace KLS.Services
             });
         }
 
-        public IEnumerable<ShipmentChargeBillDto> Generate(int shipmentId)
-        {
-            EnsureShipmentExists(shipmentId);
-            EnsureCanGenerate(shipmentId);
-
-            _shipmentService.GenerateBill(shipmentId);
-
-            return GetByShipmentId(shipmentId);
-        }
-
         private void EnsureShipmentExists(int shipmentId)
         {
             if (!Uow.Shipments.Exists(s => s.ShipmentId == shipmentId))
@@ -323,27 +310,6 @@ namespace KLS.Services
                 if (Math.Abs(proposedTotal - splitTotal.Value) > 0.01m)
                     throw new InvalidOperationException($"{splitTotal.Key} total changed after split. Re-split {splitTotal.Key} before {action} this charge bill.");
             }
-        }
-
-        private void EnsureCanGenerate(int shipmentId)
-        {
-            var hasBills = Uow.ShipmentChargeBills.Exists(b => b.ShipmentId == shipmentId);
-            if (!hasBills)
-                throw new ArgumentException("Add at least one charge bill before generating AP bills.");
-
-            var billIds = Uow.ShipmentChargeBills
-                .Find(b => b.ShipmentId == shipmentId)
-                .Select(b => b.ShipmentChargeBillId)
-                .ToList();
-
-            var hasFreight = Uow.ShipmentChargeBillLines
-                .Find(l => billIds.Contains(l.ShipmentChargeBillId)
-                        && l.ChargeType == "Freight"
-                        && l.ChargeAmount > 0m)
-                .Any();
-
-            if (!hasFreight)
-                throw new ArgumentException("At least one Freight line greater than zero is required before generating AP bills.");
         }
 
         private void EnsureLinkedBillIsEditable(int? purchaseId, string message)

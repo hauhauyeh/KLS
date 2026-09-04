@@ -328,15 +328,6 @@ namespace KLS.Services
             return shipment;
         }
 
-        public Shipment? GenerateBill(int shipmentId)
-        {
-            // Backward-compatible endpoint wrapper. Final AP charge-bill generation
-            // belongs to the explicit confirmation operation.
-            ConfirmChargesComplete(shipmentId);
-
-            return GetById(shipmentId);
-        }
-
         public ShipmentConfirmChargesCompleteResult ConfirmChargesComplete(int shipmentId)
         {
             if (!Uow.Shipments.Exists(s => s.ShipmentId == shipmentId))
