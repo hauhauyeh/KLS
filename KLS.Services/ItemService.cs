@@ -3,6 +3,7 @@ using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
 using KLS.Services.Items;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -19,17 +20,20 @@ namespace KLS.Services
         private readonly ITwilioService _twilioService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IItemImageService _itemImageService;
+        private readonly IWebHostEnvironment _env;
 
         public ItemService(IUnitOfWork uow,
             ISystemSettingService systemSettingService,
             ITwilioService twilioService,
             IHttpContextAccessor httpContextAccessor,
-            IItemImageService itemImageService) : base(uow)
+            IItemImageService itemImageService,
+            IWebHostEnvironment env) : base(uow)
         {
             _systemSettingService = systemSettingService;
             _twilioService = twilioService;
             _httpContextAccessor = httpContextAccessor;
             _itemImageService = itemImageService;
+            _env = env;
         }
 
         public PagingResponse<ItemList> GetPagedList(ItemListReq itemListReq)
@@ -493,13 +497,17 @@ namespace KLS.Services
                 .OrderBy(c => c.SortOrder)
                 .ToList();
             var imagesByItem = allImages.GroupBy(c => c.ItemId);
+            var itemImageRoot = ItemImageFileContract.ResolveItemImageRoot(
+                _env,
+                _systemSettingService.GetByKey<string>(ItemImageFileContract.ItemImageRootSettingKey));
 
             foreach (var group in imagesByItem)
             {
                 if (dict.TryGetValue(group.Key, out var item))
                 {
                     var imageCount = group.Count();
-                    item.Images = group.Select(c => ItemImageService.BuildImageDto(c, baseUrl, imageCount)).ToList();
+                    var itemFolderPath = ItemImageFileContract.GetItemFolderPath(itemImageRoot, group.Key);
+                    item.Images = group.Select(c => ItemImageService.BuildImageDto(c, baseUrl, imageCount, itemFolderPath)).ToList();
                 }
             }
 

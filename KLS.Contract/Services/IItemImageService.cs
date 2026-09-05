@@ -31,5 +31,7 @@ namespace KLS.Contract.Services
         MigrationResult MigrateLegacyImages(string sourceFolder, bool dryRun = false, int limit = 0);
 
         MigrationResult BackfillVersionFlags();
+
+        MigrationResult GenerateMissingMarketplaceVersions(ItemImageVersionMigrationReq req);
     }
 }

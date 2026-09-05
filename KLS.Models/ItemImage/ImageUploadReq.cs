@@ -17,6 +17,12 @@ namespace KLS.Models
 
         public List<IFormFile>? CroppedFiles { get; set; }
 
+        public List<decimal>? CropXRatios { get; set; }
+
+        public List<decimal>? CropYRatios { get; set; }
+
+        public List<decimal>? CropSizeRatios { get; set; }
+
         // Mixed order: existing IDs + 0 placeholders for NEW files
         // Example: [12, 0, 15, 0, 9]
         public List<int>? Order { get; set; }

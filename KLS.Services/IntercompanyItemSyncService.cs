@@ -819,7 +819,9 @@ FROM dbo.ItemCategory";
         private static List<ItemImageSnapshot> LoadItemImages(SqlConnection connection)
         {
             const string sql = @"
-SELECT ImageId, ItemId, SortOrder, IsPrimary, ImageIndex, OriginalExtension, IsProcessed, IsProcessing, Has300, Has1200, Has2000, HasNoBg300, HasNoBg1200, CreatedAt
+SELECT ImageId, ItemId, SortOrder, IsPrimary, ImageIndex, OriginalExtension, IsProcessed, IsProcessing,
+       OriginalWidth, OriginalHeight, EffectiveSourceWidth, EffectiveSourceHeight, CropXRatio, CropYRatio, CropSizeRatio,
+       Has300, Has900, Has1200, Has1600, Has2000, Has2200, HasNoBg300, HasNoBg900, HasNoBg1200, CreatedAt
 FROM dbo.ItemImage";
 
             using var command = new SqlCommand(sql, connection);
@@ -837,10 +839,21 @@ FROM dbo.ItemImage";
                     GetNullableString(reader, "OriginalExtension"),
                     GetBoolean(reader, "IsProcessed"),
                     GetBoolean(reader, "IsProcessing"),
+                    GetNullableInt32(reader, "OriginalWidth"),
+                    GetNullableInt32(reader, "OriginalHeight"),
+                    GetNullableInt32(reader, "EffectiveSourceWidth"),
+                    GetNullableInt32(reader, "EffectiveSourceHeight"),
+                    GetNullableDecimal(reader, "CropXRatio"),
+                    GetNullableDecimal(reader, "CropYRatio"),
+                    GetNullableDecimal(reader, "CropSizeRatio"),
                     GetBoolean(reader, "Has300"),
+                    GetBoolean(reader, "Has900"),
                     GetBoolean(reader, "Has1200"),
+                    GetBoolean(reader, "Has1600"),
                     GetBoolean(reader, "Has2000"),
+                    GetBoolean(reader, "Has2200"),
                     GetBoolean(reader, "HasNoBg300"),
+                    GetBoolean(reader, "HasNoBg900"),
                     GetBoolean(reader, "HasNoBg1200"),
                     GetDateTime(reader, "CreatedAt")));
             }
@@ -1168,10 +1181,12 @@ WHERE StorageId = @StorageId
             const string sql = @"
 INSERT INTO dbo.ItemImage (
     ItemId, SortOrder, IsPrimary, ImageIndex, OriginalExtension, IsProcessed, IsProcessing,
-    Has300, Has1200, Has2000, HasNoBg300, HasNoBg1200, CreatedAt
+    OriginalWidth, OriginalHeight, EffectiveSourceWidth, EffectiveSourceHeight, CropXRatio, CropYRatio, CropSizeRatio,
+    Has300, Has900, Has1200, Has1600, Has2000, Has2200, HasNoBg300, HasNoBg900, HasNoBg1200, CreatedAt
 ) VALUES (
     @ItemId, @SortOrder, @IsPrimary, @ImageIndex, @OriginalExtension, @IsProcessed, 0,
-    @Has300, @Has1200, @Has2000, @HasNoBg300, @HasNoBg1200, @CreatedAt
+    @OriginalWidth, @OriginalHeight, @EffectiveSourceWidth, @EffectiveSourceHeight, @CropXRatio, @CropYRatio, @CropSizeRatio,
+    @Has300, @Has900, @Has1200, @Has1600, @Has2000, @Has2200, @HasNoBg300, @HasNoBg900, @HasNoBg1200, @CreatedAt
 )";
 
             using var command = CreateItemImageCommand(connection, transaction, sql, image);
@@ -1188,10 +1203,21 @@ SET
     OriginalExtension = @OriginalExtension,
     IsProcessed = @IsProcessed,
     IsProcessing = 0,
+    OriginalWidth = @OriginalWidth,
+    OriginalHeight = @OriginalHeight,
+    EffectiveSourceWidth = @EffectiveSourceWidth,
+    EffectiveSourceHeight = @EffectiveSourceHeight,
+    CropXRatio = @CropXRatio,
+    CropYRatio = @CropYRatio,
+    CropSizeRatio = @CropSizeRatio,
     Has300 = @Has300,
+    Has900 = @Has900,
     Has1200 = @Has1200,
+    Has1600 = @Has1600,
     Has2000 = @Has2000,
+    Has2200 = @Has2200,
     HasNoBg300 = @HasNoBg300,
+    HasNoBg900 = @HasNoBg900,
     HasNoBg1200 = @HasNoBg1200
 WHERE ItemId = @ItemId
   AND ImageIndex = @ImageIndex
@@ -1201,10 +1227,21 @@ WHERE ItemId = @ItemId
       OR ISNULL(OriginalExtension, '') <> ISNULL(@OriginalExtension, '')
       OR IsProcessed <> @IsProcessed
       OR IsProcessing <> 0
+      OR ISNULL(OriginalWidth, -1) <> ISNULL(@OriginalWidth, -1)
+      OR ISNULL(OriginalHeight, -1) <> ISNULL(@OriginalHeight, -1)
+      OR ISNULL(EffectiveSourceWidth, -1) <> ISNULL(@EffectiveSourceWidth, -1)
+      OR ISNULL(EffectiveSourceHeight, -1) <> ISNULL(@EffectiveSourceHeight, -1)
+      OR ISNULL(CropXRatio, -1) <> ISNULL(@CropXRatio, -1)
+      OR ISNULL(CropYRatio, -1) <> ISNULL(@CropYRatio, -1)
+      OR ISNULL(CropSizeRatio, -1) <> ISNULL(@CropSizeRatio, -1)
       OR Has300 <> @Has300
+      OR Has900 <> @Has900
       OR Has1200 <> @Has1200
+      OR Has1600 <> @Has1600
       OR Has2000 <> @Has2000
+      OR Has2200 <> @Has2200
       OR HasNoBg300 <> @HasNoBg300
+      OR HasNoBg900 <> @HasNoBg900
       OR HasNoBg1200 <> @HasNoBg1200
   )";
 
@@ -1322,10 +1359,21 @@ WHERE ItemId = @ItemId
             AddParameter(command, "@ImageIndex", image.ImageIndex);
             AddParameter(command, "@OriginalExtension", image.OriginalExtension);
             AddParameter(command, "@IsProcessed", image.IsProcessed);
+            AddParameter(command, "@OriginalWidth", image.OriginalWidth);
+            AddParameter(command, "@OriginalHeight", image.OriginalHeight);
+            AddParameter(command, "@EffectiveSourceWidth", image.EffectiveSourceWidth);
+            AddParameter(command, "@EffectiveSourceHeight", image.EffectiveSourceHeight);
+            AddParameter(command, "@CropXRatio", image.CropXRatio);
+            AddParameter(command, "@CropYRatio", image.CropYRatio);
+            AddParameter(command, "@CropSizeRatio", image.CropSizeRatio);
             AddParameter(command, "@Has300", image.Has300);
+            AddParameter(command, "@Has900", image.Has900);
             AddParameter(command, "@Has1200", image.Has1200);
+            AddParameter(command, "@Has1600", image.Has1600);
             AddParameter(command, "@Has2000", image.Has2000);
+            AddParameter(command, "@Has2200", image.Has2200);
             AddParameter(command, "@HasNoBg300", image.HasNoBg300);
+            AddParameter(command, "@HasNoBg900", image.HasNoBg900);
             AddParameter(command, "@HasNoBg1200", image.HasNoBg1200);
             AddParameter(command, "@CreatedAt", image.CreatedAt);
             return command;
@@ -1521,7 +1569,12 @@ WHERE ItemId = @ItemId
 
         private string GetSourceItemImageRoot()
         {
-            return Path.Combine(_env.WebRootPath, "Images", "items");
+            var configuredRoot = Uow.SystemSettings
+                .Find(s => s.SettingKey == ItemImageFileContract.ItemImageRootSettingKey)
+                .Select(s => s.SettingValue)
+                .FirstOrDefault();
+
+            return ItemImageFileContract.ResolveItemImageRoot(_env, configuredRoot);
         }
 
         private string? GetTargetItemImageRoot(string targetCode)
@@ -1534,15 +1587,18 @@ WHERE ItemId = @ItemId
             return name switch
             {
                 "@ItemId" or "@ItemUnitId" or "@CategoryId" or "@StorageId" or "@BaseUnitId" or "@MultipleToBase"
-                    or "@ImageIndex" or "@SortOrder" => SqlDbType.Int,
+                    or "@ImageIndex" or "@SortOrder" or "@OriginalWidth" or "@OriginalHeight"
+                    or "@EffectiveSourceWidth" or "@EffectiveSourceHeight" => SqlDbType.Int,
                 "@ParentId" => SqlDbType.Int,
                 "@FactorToBase" or "@PricePercentToBase" or "@PaletteFactor" or "@SaftyInventory" or "@ActualSaftyInventory"
                     or "@RefillInventory" or "@CaseWeight" or "@CaseLength" or "@CaseWidth" or "@CaseHeight"
-                    or "@CaseVolumeInCubicFeet" or "@CaseVolumeInCubicMeter" => SqlDbType.Decimal,
+                    or "@CaseVolumeInCubicFeet" or "@CaseVolumeInCubicMeter" or "@CropXRatio" or "@CropYRatio"
+                    or "@CropSizeRatio" => SqlDbType.Decimal,
                 "@IsBaseUnit" or "@IsDefaultSalesUnit" or "@Inactive" or "@IsDeleted" or "@IsTaxable" or "@IsHRTaxable"
                     or "@IsHighlighted" or "@IsImport" or "@IsWeightItem" or "@IsMetricWeight" or "@IsMetricDimension"
-                    or "@IsVolumeManual" or "@IsPrimary" or "@IsProcessed" or "@Has300" or "@Has1200" or "@Has2000"
-                    or "@HasNoBg300" or "@HasNoBg1200" => SqlDbType.Bit,
+                    or "@IsVolumeManual" or "@IsPrimary" or "@IsProcessed" or "@Has300" or "@Has900"
+                    or "@Has1200" or "@Has1600" or "@Has2000" or "@Has2200" or "@HasNoBg300"
+                    or "@HasNoBg900" or "@HasNoBg1200" => SqlDbType.Bit,
                 "@CreatedAt" or "@UpdatedAt" => SqlDbType.DateTime,
                 _ => SqlDbType.NVarChar
             };
@@ -1636,15 +1692,10 @@ WHERE ItemId = @ItemId
 
         private static IEnumerable<string> GetRequiredImageFileNames(ItemImageSnapshot image)
         {
-            var index = image.ImageIndex;
-
-            if (image.Has300) yield return $"{index}-300.png";
-            if (image.Has1200) yield return $"{index}-1200.png";
-            if (image.Has2000) yield return $"{index}-2000.png";
-            if (image.HasNoBg300) yield return $"{index}-300-nobg.png";
-            if (image.HasNoBg1200) yield return $"{index}-1200-nobg.png";
-            if (!string.IsNullOrWhiteSpace(image.OriginalExtension))
-                yield return $"{index}-org{image.OriginalExtension}";
+            return ItemImageFileContract.GetRequiredFileNames(
+                image.ImageIndex,
+                image.OriginalExtension,
+                ToFileFlags(image));
         }
 
         private static IEnumerable<string> GetImageFileNamesToCopy(string imageRoot, ItemImageSnapshot image)
@@ -1652,14 +1703,33 @@ WHERE ItemId = @ItemId
             foreach (var fileName in GetRequiredImageFileNames(image))
                 yield return fileName;
 
-            var cropFileName = $"{image.ImageIndex}-crop.png";
+            var cropFileName = ItemImageFileContract.GetCropFileName(image.ImageIndex);
             if (File.Exists(GetImageFilePath(imageRoot, image.ItemId, cropFileName)))
                 yield return cropFileName;
+
+            foreach (var fileName in ItemImageFileContract.GetOptimizedDisplaySidecarFileNames(image.ImageIndex))
+            {
+                if (File.Exists(GetImageFilePath(imageRoot, image.ItemId, fileName)))
+                    yield return fileName;
+            }
         }
 
         private static string GetImageFilePath(string imageRoot, int itemId, string fileName)
         {
             return Path.Combine(imageRoot, itemId.ToString(), fileName);
+        }
+
+        private static ItemImageFileFlags ToFileFlags(ItemImageSnapshot image)
+        {
+            return new ItemImageFileFlags(
+                image.Has300,
+                image.Has900,
+                image.Has1200,
+                image.Has1600,
+                image.Has2000,
+                image.HasNoBg300,
+                image.HasNoBg900,
+                image.HasNoBg1200);
         }
 
         private static string FormatImageKey(ItemImageSnapshot image)
@@ -1911,10 +1981,21 @@ WHERE ItemId = @ItemId
             string? OriginalExtension,
             bool IsProcessed,
             bool IsProcessing,
+            int? OriginalWidth,
+            int? OriginalHeight,
+            int? EffectiveSourceWidth,
+            int? EffectiveSourceHeight,
+            decimal? CropXRatio,
+            decimal? CropYRatio,
+            decimal? CropSizeRatio,
             bool Has300,
+            bool Has900,
             bool Has1200,
+            bool Has1600,
             bool Has2000,
+            bool Has2200,
             bool HasNoBg300,
+            bool HasNoBg900,
             bool HasNoBg1200,
             DateTime CreatedAt);
 
