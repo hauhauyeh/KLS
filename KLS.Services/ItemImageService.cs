@@ -200,6 +200,39 @@ namespace KLS.Services
             return padded.Clone(ctx => ctx.Crop(new Rectangle(x, y, cropSize, cropSize)));
         }
 
+        private static int CalculateEffectiveOriginalPixelCropSize(
+            int originalWidth,
+            int originalHeight,
+            decimal? cropXRatio,
+            decimal? cropYRatio,
+            decimal? cropSizeRatio)
+        {
+            if (!cropXRatio.HasValue || !cropYRatio.HasValue || !cropSizeRatio.HasValue)
+                return Math.Min(originalWidth, originalHeight);
+
+            var paddedSize = (int)Math.Ceiling(Math.Max(originalWidth, originalHeight) * 1.10);
+            paddedSize = Math.Max(1, paddedSize);
+            var offsetX = (paddedSize - originalWidth) / 2;
+            var offsetY = (paddedSize - originalHeight) / 2;
+
+            var cropSize = Math.Max(1, (int)Math.Round(paddedSize * (double)cropSizeRatio.Value));
+            cropSize = Math.Min(cropSize, paddedSize);
+            var cropX = (int)Math.Round(paddedSize * (double)cropXRatio.Value);
+            var cropY = (int)Math.Round(paddedSize * (double)cropYRatio.Value);
+            cropX = Math.Clamp(cropX, 0, Math.Max(0, paddedSize - cropSize));
+            cropY = Math.Clamp(cropY, 0, Math.Max(0, paddedSize - cropSize));
+
+            var originalRight = offsetX + originalWidth;
+            var originalBottom = offsetY + originalHeight;
+            var cropRight = cropX + cropSize;
+            var cropBottom = cropY + cropSize;
+
+            var overlapWidth = Math.Max(0, Math.Min(cropRight, originalRight) - Math.Max(cropX, offsetX));
+            var overlapHeight = Math.Max(0, Math.Min(cropBottom, originalBottom) - Math.Max(cropY, offsetY));
+
+            return Math.Min(overlapWidth, overlapHeight);
+        }
+
         private static GeneratedImageVersions GenerateWithBackgroundVersions(
             Image original,
             string itemFolder,
@@ -210,7 +243,12 @@ namespace KLS.Services
             bool writeFiles = true)
         {
             using var effectiveSource = CreateEffectiveSquareSource(original, cropXRatio, cropYRatio, cropSizeRatio);
-            var effectiveSize = Math.Min(effectiveSource.Width, effectiveSource.Height);
+            var effectiveSize = CalculateEffectiveOriginalPixelCropSize(
+                original.Width,
+                original.Height,
+                cropXRatio,
+                cropYRatio,
+                cropSizeRatio);
             var generatedSizes = new HashSet<int> { ItemImageFileContract.ThumbnailSize };
 
             foreach (var size in ItemImageFileContract.ActiveWithBackgroundSizes
@@ -238,8 +276,8 @@ namespace KLS.Services
             return new GeneratedImageVersions(
                 original.Width,
                 original.Height,
-                effectiveSource.Width,
-                effectiveSource.Height,
+                effectiveSize,
+                effectiveSize,
                 generatedSizes.Contains(ItemImageFileContract.ThumbnailSize),
                 generatedSizes.Contains(ItemImageFileContract.WebSize),
                 generatedSizes.Contains(ItemImageFileContract.LegacyWebSize),
