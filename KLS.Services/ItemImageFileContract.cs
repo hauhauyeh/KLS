@@ -202,6 +202,7 @@ namespace KLS.Services
         bool Has1200,
         bool Has1600,
         bool Has2000,
+        bool Has2200,
         bool HasNoBg300,
         bool HasNoBg900,
         bool HasNoBg1200);

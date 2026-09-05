@@ -1727,6 +1727,7 @@ WHERE ItemId = @ItemId
                 image.Has1200,
                 image.Has1600,
                 image.Has2000,
+                image.Has2200,
                 image.HasNoBg300,
                 image.HasNoBg900,
                 image.HasNoBg1200);
