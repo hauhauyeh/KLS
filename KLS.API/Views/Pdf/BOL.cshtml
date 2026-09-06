@@ -2,13 +2,21 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
+    var company = Model.Company;
+    var invoice = Model.Invoice;
+    var carrier = Model.ShippingCarrier;
+    var companyName = company?.CompanyName ?? "";
+    var companyAddressLine1 = company?.AddressLine1 ?? "";
+    var companyCity = company?.City ?? "";
+    var companyState = company?.State ?? "";
+    var companyZipCode = company?.ZipCode ?? "";
+    var companyPhone = company?.Phone ?? "";
+    var companyWebsite = company?.Website ?? "";
     var itemsize = 15;
-    var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails.Count, itemsize);
+    var totalpage = Utilities.GetTotalPages(Model.InvoiceDetails?.Count ?? 0, itemsize);
 
     if (totalpage == 0)
         totalpage = 1;
-
-    var colSpan = 6;
 }
 
 <style>
@@ -61,35 +69,35 @@
 </style>
 
 <h2>BILL OF LANDING</h2>
-<h3>@Model.Company.CompanyName</h3>
+<h3>@companyName</h3>
 <p style="text-align: center;">
-    @Model.Company.AddressLine1<br />
-    @Model.Company.City @Model.Company.State
-    @Model.Company.ZipCode<br />
-    @Model.Company.Phone<br />
-    <strong>@Model.Company.Website</strong>
+    @companyAddressLine1<br />
+    @companyCity @companyState
+    @companyZipCode<br />
+    @companyPhone<br />
+    <strong>@companyWebsite</strong>
 </p>
 
 <div class="section">
     <strong>1. SHIPPER (Seller) INFORMATION</strong><br>
-    <strong>Company:</strong> @Model.Company.CompanyName <br>
-    <strong>Address:</strong> @Model.Company.AddressLine1, @Model.Company.City, @Model.Company.State @Model.Company.ZipCode <br>
-    <strong>Phone:</strong> @Model.Company.Phone
+    <strong>Company:</strong> @companyName <br>
+    <strong>Address:</strong> @companyAddressLine1, @companyCity, @companyState @companyZipCode <br>
+    <strong>Phone:</strong> @companyPhone
 </div>
 
 <div class="section">
     <strong>2. CONSIGNEE (Buyer) INFORMATION</strong><br>
-    <strong>Company:</strong> @Model.Invoice.ShipName<br>
-    <strong>Address:</strong> @Model.Invoice.ShipAddress <br />
-    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
-    <strong>Phone:</strong> @Model.Invoice.ShipPhone1
+    <strong>Company:</strong> @invoice?.ShipName<br>
+    <strong>Address:</strong> @invoice?.ShipAddress <br />
+    @invoice?.ShipCity @invoice?.ShipState @invoice?.ShipZipCode<br />
+    <strong>Phone:</strong> @invoice?.ShipPhone1
 </div>
 
 <div class="section">
     <strong>3. CARRIER INFORMATION</strong><br>
-    <strong>Carrier Name:</strong> @Model.ShippingCarrier.PayeeName<br>
-    <strong>Address:</strong> @Model.ShippingCarrier.Address<br />
-    @Model.ShippingCarrier.City @Model.ShippingCarrier.State @Model.ShippingCarrier.ZipCode<br />
+    <strong>Carrier Name:</strong> @carrier?.PayeeName<br>
+    <strong>Address:</strong> @carrier?.Address<br />
+    @carrier?.City @carrier?.State @carrier?.ZipCode<br />
     <strong>Truck/Trailer #:</strong> <br>
     <strong>Driver’s Name:</strong>
 </div>
@@ -97,8 +105,8 @@
 <div class="section">
     <strong>4. SHIPPING DETAILS</strong><br>
     <strong>BOL Number:</strong> @Model.SalesDisplayNumber <br>
-    <strong>Pickup Date:</strong> @string.Format("{0:d}", Model.Invoice.ShipDate) <br>
-    <strong>Delivery Date:</strong> @string.Format("{0:d}", Model.Invoice.ShipDate) <br>
+    <strong>Pickup Date:</strong> @string.Format("{0:d}", invoice?.ShipDate) <br>
+    <strong>Delivery Date:</strong> @string.Format("{0:d}", invoice?.ShipDate) <br>
     <strong>Freight Terms:</strong> ☐ Prepaid ☐ Collect ☐ Third-Party
 </div>
 
@@ -138,7 +146,7 @@
 
 <div class="section">
     <strong>8. DECLARED VALUE</strong><br>
-    <strong>Total Invoice Value:</strong> @string.Format("{0:c}", Model.Invoice.SalesTotal)<br>
+    <strong>Total Invoice Value:</strong> @string.Format("{0:c}", invoice?.SalesTotal)<br>
     ☐ Insurance Required (Amount: $__________)
 </div>
 

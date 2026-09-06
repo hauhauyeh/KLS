@@ -1,5 +1,9 @@
 ﻿@model KLS.Models.Reports.RptPackingList
 
+@{
+    var storages = Model.Storages ?? new List<KLS.Models.Reports.PackingListStorage>();
+}
+
 <style>
     .pack {
         font-size: 35px;
@@ -250,10 +254,12 @@
     </div>
 
     <div id="mc4a">
-        @if (Model.Storages.Count > 0)
+        @if (storages.Count > 0)
         {
-            foreach (var storage in Model.Storages)
+            foreach (var storage in storages)
             {
+                var products = storage.Products ?? new List<KLS.Models.Reports.PackingListProduct>();
+
                 if (!string.IsNullOrEmpty(storage.StorageName))
                 {
                     <h6 class="pack-grp-header">
@@ -265,7 +271,7 @@
                     <h6 class="pack-grp-subheader"></h6>
                 }
 
-                foreach (var product in storage.Products)
+                foreach (var product in products)
                 {
                     <div class="div-item">
                         @if (!string.IsNullOrEmpty(product.ItemName))

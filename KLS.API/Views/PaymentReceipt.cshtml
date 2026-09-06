@@ -1,5 +1,10 @@
 @model KLS.Models.EmailReceipt
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    var payment = Model.Payment;
+    var payee = Model.Payee;
+    var paymentDetails = payment?.PaymentDetails;
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -153,7 +158,7 @@
                             <div class="summary-box">
                                 <div class="summary-label">Amount Received</div>
                                 <p class="summary-value">
-                                    @string.Format("{0:c}", Model.Payment.PaymentAmount)
+                                    @string.Format("{0:c}", payment?.PaymentAmount)
                                 </p>
                                @*  <div class="summary-note">
                                     Thank you for your payment. Your receipt details are listed below.
@@ -166,10 +171,10 @@
 
             <div class="content">
                 <div class="greeting-box">
-                    <p class="customer">Dear @Model.Payee.PayeeName,</p>
+                    <p class="customer">Dear @(payee?.PayeeName ?? ""),</p>
                     <p class="greeting-text">
                         Thank you for your recent payment of
-                        <strong>@string.Format("{0:c}", Model.Payment.PaymentAmount)</strong>.
+                        <strong>@string.Format("{0:c}", payment?.PaymentAmount)</strong>.
                         Please find below the payment information and the invoices to which your payment has been applied.
                     </p>
                 </div>
@@ -179,20 +184,20 @@
                         <td style="width:33.33%;" class="meta-cell-left">
                             <div class="meta-card">
                                 <div class="meta-label">Payment Type</div>
-                                <div class="meta-value">@Model.Payment.PaymentMethod</div>
+                                <div class="meta-value">@payment?.PaymentMethod</div>
                             </div>
                         </td>
                         <td style="width:33.33%;" class="meta-cell-center">
                             <div class="meta-card">
                                 <div class="meta-label">Payment Number</div>
-                                <div class="meta-value">@Model.Payment.PaymentNumber</div>
+                                <div class="meta-value">@payment?.PaymentNumber</div>
                             </div>
                         </td>
                         <td style="width:33.33%;" class="meta-cell-right">
                             <div class="meta-card">
                                 <div class="meta-label">Payment Date</div>
                                 <div class="meta-value">
-                                    @(Model.Payment.PaymentDate.HasValue? Model.Payment.PaymentDate.Value.ToString("D") : "")
+                                    @(payment?.PaymentDate.HasValue == true ? payment.PaymentDate.Value.ToString("D") : "")
                                 </div>
                             </div>
                         </td>
@@ -201,7 +206,7 @@
                         <td colspan="3" style="width:100%; padding-top:15px;">
                             <div class="meta-card">
                                 <div class="meta-label">Reference Number</div>
-                                <div class="meta-value">@Model.Payment.ReferenceId</div>
+                                <div class="meta-value">@payment?.ReferenceId</div>
                             </div>
                         </td>
                     </tr>
@@ -218,9 +223,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.Payment.PaymentDetails != null && Model.Payment.PaymentDetails.Any())
+                            @if (paymentDetails != null && paymentDetails.Any())
                             {
-                                foreach (var item in Model.Payment.PaymentDetails)
+                                foreach (var item in paymentDetails)
                                 {
                                     <tr>
                                         <td class="invoice-no">@item.Sales?.SalesNumber</td>
@@ -252,7 +257,7 @@
                             <tr>
                                 <td colspan="3" class="total-label">Total Payment</td>
                                 <td class="total-value" style="text-align:right;">
-                                    @string.Format("{0:c}", Model.Payment.PaymentAmount)
+                                    @string.Format("{0:c}", payment?.PaymentAmount)
                                 </td>
                             </tr>
                         </tfoot>
