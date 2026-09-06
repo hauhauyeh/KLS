@@ -2,9 +2,11 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -336,7 +338,41 @@ namespace KLS.Services
             if (UserContext.EmpId <= 0)
                 throw new UnauthorizedAccessException("Employee context is required.");
 
-            return Uow.Shipments.ConfirmChargesComplete(shipmentId, UserContext.EmpId);
+            try
+            {
+                return Uow.Shipments.ConfirmChargesComplete(shipmentId, UserContext.EmpId);
+            }
+            catch (SqlException ex) when (IsFinalizeDuplicateVendorDocError(ex))
+            {
+                throw new DuplicateNameException(ex.Message, ex);
+            }
+            catch (SqlException ex) when (IsFinalizeBusinessError(ex))
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        private static bool IsFinalizeDuplicateVendorDocError(SqlException ex)
+        {
+            foreach (SqlError error in ex.Errors)
+            {
+                if (error.Number == 50106)
+                    return true;
+            }
+
+            return ex.Message.Contains("Vendor DocNum already exists", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsFinalizeBusinessError(SqlException ex)
+        {
+            foreach (SqlError error in ex.Errors)
+            {
+                if ((error.Number >= 50101 && error.Number <= 50108)
+                    || (error.Number >= 50401 && error.Number <= 50406))
+                    return true;
+            }
+
+            return false;
         }
 
         public void UnAllocation(int shipmentPurchaseId)
