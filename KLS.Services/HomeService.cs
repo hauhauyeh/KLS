@@ -1,6 +1,7 @@
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -21,10 +22,12 @@ namespace KLS.Services
         private const int ProductCandidateMultiplier = 4;
 
         private readonly ICategoryRollupHelper _categoryRollup;
+        private readonly IWebHostEnvironment _env;
 
-        public HomeService(IUnitOfWork uow, ICategoryRollupHelper categoryRollup) : base(uow)
+        public HomeService(IUnitOfWork uow, ICategoryRollupHelper categoryRollup, IWebHostEnvironment env) : base(uow)
         {
             _categoryRollup = categoryRollup;
+            _env = env;
         }
 
         public HomePageData GetHomePageData(string baseUrl)
@@ -224,11 +227,28 @@ namespace KLS.Services
             if (items.Count == 0) return new Dictionary<int, string>();
 
             var itemIds = items.Select(i => i.ItemId).ToList();
+            var itemImageRoot = GetItemImageRoot();
 
             return Uow.ItemImages
                 .Find(img => itemIds.Contains(img.ItemId) && img.IsPrimary && img.Has300)
                 .AsNoTracking()
-                .ToDictionary(img => img.ItemId, img => $"{baseUrl}/Images/items/{img.ItemId}/{img.ImageIndex}-300.png");
+                .ToDictionary(
+                    img => img.ItemId,
+                    img => ItemImageService.ResolveProcessedDisplayUrl(
+                        ItemImageFileContract.GetItemFolderPath(itemImageRoot, img.ItemId),
+                        ItemImageFileContract.GetItemFolderUrl(baseUrl, img.ItemId),
+                        img.ImageIndex,
+                        ItemImageFileContract.ThumbnailSize));
+        }
+
+        private string GetItemImageRoot()
+        {
+            var configuredRoot = Uow.SystemSettings
+                .Find(s => s.SettingKey == ItemImageFileContract.ItemImageRootSettingKey)
+                .Select(s => s.SettingValue)
+                .FirstOrDefault();
+
+            return ItemImageFileContract.ResolveItemImageRoot(_env, configuredRoot);
         }
 
         private Dictionary<int, string> BuildCategoryImageFallbackMap(

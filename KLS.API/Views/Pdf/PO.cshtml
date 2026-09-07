@@ -2,6 +2,21 @@
 @using KLS.Models.Reports
 @model RptPOView
 
+@{
+    var po = Model.RptPO;
+    var company = Model.Company;
+    var poDetails = Model.RptPODetail ?? new List<RptPODetail>();
+    var companyName = company?.CompanyName ?? "";
+    var companyLogoUrl = company?.LogoUrl ?? "";
+    var companyHasLogo = company?.HasLogo == true;
+    var companyAddressLine1 = company?.AddressLine1 ?? "";
+    var companyCity = company?.City ?? "";
+    var companyState = company?.State ?? "";
+    var companyZipCode = company?.ZipCode ?? "";
+    var companyPhone = company?.Phone ?? "";
+    var companyWebsite = company?.Website ?? "";
+}
+
 <style>
     @@media print {
         @@page {
@@ -349,9 +364,9 @@
             </tr>
         </thead>
         <tbody>
-            @for (int i = 0; i < Model.RptPODetail.Count; i++)
+            @for (int i = 0; i < poDetails.Count; i++)
             {
-                var itm = Model.RptPODetail[i];
+                var itm = poDetails[i];
 
                 <tr>
                     <td class="no-overflow"><strong>@string.Format("{0:0.##}", itm.OrdQty0)</strong> @itm.Unit</td>
@@ -390,22 +405,22 @@
         <div class="comp-logo-grid">
             <div class="comp-name">
                 <div>
-                    @if (Model.Company.HasLogo)
+                    @if (companyHasLogo)
                     {
-                        <img src="@Model.Company.LogoUrl" class="img-fluid img-logo" alt="Company logo" />
+                        <img src="@companyLogoUrl" class="img-fluid img-logo" alt="Company logo" />
                     }
                     else
                     {
-                        <span class="company-name-text">@Model.Company.CompanyName</span>
+                        <span class="company-name-text">@companyName</span>
                     }
                 </div>
             </div>
             <div class="comp-address">
-                @Model.Company.AddressLine1<br />
-                @Model.Company.City @Model.Company.State
-                @Model.Company.ZipCode<br />
-                @Model.Company.Phone<br />
-                <strong>@Model.Company.Website</strong>
+                @companyAddressLine1<br />
+                @companyCity @companyState
+                @companyZipCode<br />
+                @companyPhone<br />
+                <strong>@companyWebsite</strong>
             </div>
         </div>
 
@@ -413,7 +428,7 @@
             <div class="d-flex justify-content-between">
                 <div class="invoice-label">Purchase Order</div>
                 <div class="invoice-barcode">
-                    *@Model.RptPO.PurchaseNumber*
+                    *@po?.PurchaseNumber*
                 </div>
             </div>
             <table>
@@ -423,15 +438,15 @@
                 </colgroup>
                 <tr>
                     <td class="invoice-info-label">Doc #</td>
-                    <td class="invoice-info">@Model.RptPO.VendorDocNumber</td>
+                    <td class="invoice-info">@po?.VendorDocNumber</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">Order Date</td>
-                    <td class="invoice-info">@string.Format("{0:d}", Model.RptPO.PurchaseDate)</td>
+                    <td class="invoice-info">@string.Format("{0:d}", po?.PurchaseDate)</td>
                 </tr>
                 <tr>
                     <td class="invoice-info-label">Estimate Arrival Date</td>
-                    <td class="invoice-info">@string.Format("{0:d}", Model.RptPO.ArrivalDate)</td>
+                    <td class="invoice-info">@string.Format("{0:d}", po?.ArrivalDate)</td>
                 </tr>
             </table>
         </div>
@@ -439,12 +454,12 @@
         <div class="ship-to-grid">
             <div class="ship-to-label highlight-dark">Vendor Information</div>
             <div class="cust-name">
-                @Model.RptPO.PayeeName
+                @po?.PayeeName
             </div>
             <div class="cust-address">
-                @Model.RptPO.Address<br />
-                @Model.RptPO.City @Model.RptPO.State @Model.RptPO.ZipCode @Model.RptPO.Country<br />
-                @Model.RptPO.Phone1
+                @po?.Address<br />
+                @po?.City @po?.State @po?.ZipCode @po?.Country<br />
+                @po?.Phone1
             </div>
         </div>
     </div>
@@ -477,7 +492,7 @@
                     <td class="text-right">
                         @string.Format("{0:0.00}", Model.TotalVolume) cbm
                     </td>
-                    <td class="text-right">@string.Format("{0:c}", Model.RptPODetail.Sum(c => c.BillTotal))</td>
+                    <td class="text-right">@string.Format("{0:c}", poDetails.Sum(c => c.BillTotal))</td>
                 </tr>
             </table>
         </div>

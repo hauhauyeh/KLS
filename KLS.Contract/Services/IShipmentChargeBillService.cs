@@ -11,7 +11,5 @@ namespace KLS.Contract.Services
         ShipmentChargeBillDto Save(ShipmentChargeBillSaveReq req);
 
         void Delete(int shipmentChargeBillId);
-
-        IEnumerable<ShipmentChargeBillDto> Generate(int shipmentId);
     }
 }

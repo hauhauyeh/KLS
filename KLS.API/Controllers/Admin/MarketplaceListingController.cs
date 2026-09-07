@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
+    [ClientFeature("Marketplace")]
     [Route("api/admin/[controller]")]
     [Display(Name = "Marketplace Listing Management", GroupName = "Marketplace")]
     public class MarketplaceListingController : MarketplaceBaseController

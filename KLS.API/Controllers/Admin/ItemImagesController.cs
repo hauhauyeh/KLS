@@ -141,6 +141,20 @@ namespace KLS.API.Controllers.Admin
             return Ok(result);
         }
 
+        [HttpPost("migrate-marketplace-versions")]
+        [DisplayName("Generate Missing Marketplace Image Versions")]
+        public IActionResult MigrateMarketplaceVersions(
+            [FromBody] ItemImageVersionMigrationReq req,
+            [FromQuery] bool confirm = false)
+        {
+            req ??= new ItemImageVersionMigrationReq();
+            if (!req.DryRun && !confirm)
+                return BadRequest("Add &confirm=true to execute, or set DryRun=true to preview.");
+
+            var result = _itemImageService.GenerateMissingMarketplaceVersions(req);
+            return Ok(result);
+        }
+
         #endregion
     }
 }

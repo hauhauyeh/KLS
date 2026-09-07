@@ -31,8 +31,6 @@ namespace KLS.Contract.Services
 
         Shipment? Reopen(int shipmentId);
 
-        Shipment? GenerateBill(int shipmentId);
-
         ShipmentConfirmChargesCompleteResult ConfirmChargesComplete(int shipmentId);
 
         void UnAllocation(int shipmentPurchaseId);

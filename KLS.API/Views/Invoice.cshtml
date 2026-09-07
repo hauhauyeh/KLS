@@ -1,5 +1,9 @@
 @model KLS.Models.SalesDetailDto
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    var sales = Model.Sales;
+    var salesDetails = Model.SalesDetails;
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -149,7 +153,7 @@
                         <td style="width:35%;">
                             <div class="summary-box">
                                 <div class="summary-label">Order Total</div>
-                                <p class="summary-value">@string.Format("{0:c}", Model.Sales.SalesTotal)</p>
+                                <p class="summary-value">@string.Format("{0:c}", sales?.SalesTotal)</p>
                                 <div class="summary-note">
                                     Thank you for your order. Please review the details below.
                                 </div>
@@ -179,14 +183,14 @@
                         <td style="width:20%; padding-right:10px;">
                             <div class="detail-card">
                                 <div class="detail-label">Order #</div>
-                                <div class="detail-value">@(Model.SalesDisplayNumber ?? Model.Sales.SalesNumber.ToString())</div>
+                                <div class="detail-value">@(Model.SalesDisplayNumber ?? sales?.SalesNumber.ToString() ?? "")</div>
                             </div>
                         </td>
                         <td style="width:30%; padding-left:5px; padding-right:5px;">
                             <div class="detail-card">
                                 <div class="detail-label">Order Date</div>
                                 <div class="detail-value">
-                                    @(Model.Sales.SalesDate.HasValue? Model.Sales.SalesDate.Value.ToString("F") : "")
+                                    @(sales?.SalesDate.HasValue == true ? sales.SalesDate.Value.ToString("F") : "")
                                 </div>
                             </div>
                         </td>
@@ -194,14 +198,14 @@
                             <div class="detail-card">
                                 <div class="detail-label">Shipping Date</div>
                                 <div class="detail-value">
-                                    @(Model.Sales.ShipDate.HasValue? Model.Sales.ShipDate.Value.ToString("D") : "")
+                                    @(sales?.ShipDate.HasValue == true ? sales.ShipDate.Value.ToString("D") : "")
                                 </div>
                             </div>
                         </td>
                         <td style="width:25%; padding-left:10px;">
                             <div class="detail-card">
                                 <div class="detail-label">Ship Route</div>
-                                <div class="detail-value">@Model.Sales.ShipRoute</div>
+                                <div class="detail-value">@sales?.ShipRoute</div>
                             </div>
                         </td>
                     </tr>
@@ -219,9 +223,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model.SalesDetails != null && Model.SalesDetails.Any())
+                            @if (salesDetails != null && salesDetails.Any())
                             {
-                                foreach (var item in Model.SalesDetails)
+                                foreach (var item in salesDetails)
                                 {
                                     <tr>
                                         <td class="item-name">@item.ItemName</td>
@@ -239,19 +243,19 @@
                             <tr>
                                 <td colspan="4" class="total-label">Subtotal</td>
                                 <td class="total-value" style="text-align:right;">
-                                    @string.Format("{0:c}", Model.Sales.SubTotal)
+                                    @string.Format("{0:c}", sales?.SubTotal)
                                 </td>
                             </tr>
                             <tr>
                                 <td colspan="4" class="total-label">Tax Total</td>
                                 <td class="total-value" style="text-align:right;">
-                                    @string.Format("{0:c}", Model.Sales.TaxTotal)
+                                    @string.Format("{0:c}", sales?.TaxTotal)
                                 </td>
                             </tr>
                             <tr>
                                 <td colspan="4" class="total-label">Sales Total</td>
                                 <td class="total-value grand-total" style="text-align:right;">
-                                    @string.Format("{0:c}", Model.Sales.SalesTotal)
+                                    @string.Format("{0:c}", sales?.SalesTotal)
                                 </td>
                             </tr>
                         </tfoot>
