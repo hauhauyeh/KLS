@@ -263,16 +263,17 @@
                             {
                                 foreach (var grpMonth in Model.Details)
                                 {
+                                    var salesRows = grpMonth.Sales ?? Enumerable.Empty<KLS.Models.Sales>();
                                     <tr class="month-row">
                                         <td colspan="3">
                                             <span class="month-pill">@grpMonth.ShipMonth</span>
                                         </td>
                                         <td style="text-align:right;" class="amount-due">
-                                            @string.Format("{0:c}", grpMonth.Sales.Sum(c => c.AmountDue))
+                                            @string.Format("{0:c}", salesRows.Sum(c => c.AmountDue))
                                         </td>
                                     </tr>
 
-                                    foreach (var item in grpMonth.Sales)
+                                    foreach (var item in salesRows)
                                     {
                                         <tr>
                                             <td>

@@ -33,11 +33,29 @@ namespace KLS.Models
 
         public bool IsProcessing { get; set; }
 
+        public int? OriginalWidth { get; set; }
+
+        public int? OriginalHeight { get; set; }
+
+        public int? EffectiveSourceWidth { get; set; }
+
+        public int? EffectiveSourceHeight { get; set; }
+
+        public decimal? CropXRatio { get; set; }
+
+        public decimal? CropYRatio { get; set; }
+
+        public decimal? CropSizeRatio { get; set; }
+
         // Per-version file existence flags
         public bool Has300 { get; set; }
+        public bool Has900 { get; set; }
+        public bool Has1600 { get; set; }
+        public bool Has2200 { get; set; }
         public bool Has1200 { get; set; }
         public bool Has2000 { get; set; }
         public bool HasNoBg300 { get; set; }
+        public bool HasNoBg900 { get; set; }
         public bool HasNoBg1200 { get; set; }
 
         public DateTime CreatedAt { get; set; }

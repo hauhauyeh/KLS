@@ -95,6 +95,7 @@ namespace KLS.API.Helpers
             services.AddScoped<ILiabilityService, LiabilityService>();
             services.AddScoped<IOpenBalanceService, OpenBalanceService>();
             services.AddScoped<IItemCostImportService, ItemCostImportService>();
+            services.AddScoped<IMgpPricingService, MgpPricingService>();
             services.AddScoped<ICheckTrackerService, CheckTrackerService>();
             services.AddScoped<IPaymentMethodService, PaymentMethodService>();
             services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();

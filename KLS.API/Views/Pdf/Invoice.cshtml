@@ -2,8 +2,22 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
+    var invoice = Model.Invoice;
+    var company = Model.Company;
+    var invoiceDetails = Model.InvoiceDetails ?? new List<InvoiceDetail>();
+    var statement = Model.Statement;
+    var statementDetails = statement?.Details ?? new List<RptCustStmtDetail>();
+    var companyName = company?.CompanyName ?? "";
+    var companyName2 = company?.CompanyName2 ?? "";
+    var companyAddressLine1 = company?.AddressLine1 ?? "";
+    var companyCity = company?.City ?? "";
+    var companyState = company?.State ?? "";
+    var companyZipCode = company?.ZipCode ?? "";
+    var companyPhone = company?.Phone ?? "";
+    var companyWebsite = company?.Website ?? "";
+    var invoiceFinePrint = company?.InvoiceFinePrint ?? "";
     var colSpan = 4;
-    var isCreditMemo = Model.Invoice?.DocType == "CM";
+    var isCreditMemo = invoice?.DocType == "CM";
     var docLabel = isCreditMemo ? "CREDIT MEMO" : "INVOICE";
     var docNumberLabel = isCreditMemo ? "Credit Memo #" : "Invoice #";
     var docDateLabel = isCreditMemo ? "Date" : "Invoice Date";
@@ -13,9 +27,9 @@
 
     int rows = 0;
 
-    foreach (var sd in Model.Statement.Details)
+    foreach (var sd in statementDetails)
     {
-        rows += sd.Sales.Count(); // individual invoices
+        rows += sd.Sales?.Count() ?? 0; // individual invoices
         rows += 1;              // month total row
     }
 
@@ -457,7 +471,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var itmdetail in Model.InvoiceDetails)
+                    @foreach (var itmdetail in invoiceDetails)
                     {
                         if (itmdetail.IsGroup)
                         {
@@ -522,7 +536,7 @@
                     @if (Model.HasDiscount)
                     {
                         <div>
-                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bold;">@Model.Company.CompanyName</span>
+                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bold;">@companyName</span>
                         </div>
                     }
                     else
@@ -533,14 +547,14 @@
                         </div>
                     }
 
-                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                    <div style="font-size: 12px; margin-top: 2px;">@companyName2</div>
                 </div>
                 <div class="comp-address">
-                    @Model.Company.AddressLine1<br />
-                    @Model.Company.City @Model.Company.State
-                    @Model.Company.ZipCode<br />
-                    @Model.Company.Phone<br />
-                    <strong>@Model.Company.Website</strong>
+                    @companyAddressLine1<br />
+                    @companyCity @companyState
+                    @companyZipCode<br />
+                    @companyPhone<br />
+                    <strong>@companyWebsite</strong>
                 </div>
             </div>
             <div class="inv-info-grid">
@@ -558,12 +572,12 @@
                     </tr>
                     <tr>
                         <td class="invoice-info-label">@docDateLabel</td>
-                        <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
+                        <td class="invoice-info">@string.Format("{0:d}", invoice?.ShipDate)</td>
                     </tr>
                     <tr>
                         <td class="invoice-info-label">Terms</td>
                         <td class="invoice-info" style="white-space:nowrap;">
-                            @Model.Invoice.TermName
+                            @invoice?.TermName
                         </td>
                     </tr>
                     <tr>
@@ -575,26 +589,26 @@
             <div class="ship-to-grid">
                 <div class="ship-to-label highlight-dark">Ship To</div>
                 <div class="cust-name">
-                    @Model.Invoice.ShipName
+                    @invoice?.ShipName
                 </div>
                 <div class="cust-address">
-                    @Model.Invoice.ShipAddress<br />
-                    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
-                    @Model.Invoice.ShipPhone1
+                    @invoice?.ShipAddress<br />
+                    @invoice?.ShipCity @invoice?.ShipState @invoice?.ShipZipCode<br />
+                    @invoice?.ShipPhone1
                 </div>
             </div>
             <div class="instruction-grid">
                 <div class="instruction-label highlight-dark">Instruction</div>
-                <div class="instruction">@Model.Invoice.Instruction</div>
+                <div class="instruction">@invoice?.Instruction</div>
             </div>
         </div>
 
         <div class="main-table-footer-grid left-width footer-height">
             <!-- your footer content remains unchanged -->
             <div class="driver-note-grid">
-                @if (Model.Invoice.IsPastDue)
+                @if (invoice?.IsPastDue == true)
                 {
-                    <strong>Driver please pick up @string.Format("{0:c}", Model.Invoice.PayeePastDue)</strong>
+                    <strong>Driver please pick up @string.Format("{0:c}", invoice?.PayeePastDue)</strong>
                 }
             </div>
             <div class="payment-grid">
@@ -628,20 +642,20 @@
                     </colgroup>
                     <tr>
                         <td class="text-right">Subtotal</td>
-                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.SubTotal)</td>
+                        <td class="text-right">@string.Format("{0:c}", invoice?.SubTotal)</td>
                     </tr>
                     <tr>
                         <td class="text-right">Tax</td>
-                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.TaxTotal)</td>
+                        <td class="text-right">@string.Format("{0:c}", invoice?.TaxTotal)</td>
                     </tr>
                     <tr>
                         <td class="text-right">Total</td>
-                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.SalesTotal)</td>
+                        <td class="text-right">@string.Format("{0:c}", invoice?.SalesTotal)</td>
                     </tr>
                 </table>
             </div>
             <div class="fineprint-grid">
-                @Model.Company.InvoiceFinePrint
+                @invoiceFinePrint
             </div>
         </div>
     </div>
@@ -651,8 +665,8 @@
     <div class="right-width right-panel-fixed">
         <!-- Sidebar content remains unchanged -->
         <div class="invoice-barcode">
-            @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
-            *@Model.Invoice.SalesNumber*
+            @* Old scanner payload: *S-@invoice?.SalesId* *@
+            *@invoice?.SalesNumber*
         </div>
         <table class="route-info-table">
             <colgroup>
@@ -662,41 +676,41 @@
             <tr>
                 <td class="route-info-label">Route</td>
                 <td class="route-info">
-                    @if (Model.Invoice.IsLoadSeparate)
+                    @if (invoice?.IsLoadSeparate == true)
                     {
-                        <strong class="load-separate">@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder Of @Model.Invoice.RouteDrops</strong>
+                        <strong class="load-separate">@invoice?.ShipRoute - @invoice?.RouteOrder Of @invoice?.RouteDrops</strong>
                     }
                     else
                     {
-                        <strong>@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder Of @Model.Invoice.RouteDrops</strong>
+                        <strong>@invoice?.ShipRoute - @invoice?.RouteOrder Of @invoice?.RouteDrops</strong>
                     }
                 </td>
             </tr>
             <tr>
                 <td class="route-info-label">Sales Rep</td>
-                <td class="route-info">@Model.Invoice.SalesRepName</td>
+                <td class="route-info">@invoice?.SalesRepName</td>
             </tr>
             <tr>
                 <td class="route-info-label">Truck #</td>
-                <td class="route-info">#@Model.Invoice.TruckNumber</td>
+                <td class="route-info">#@invoice?.TruckNumber</td>
             </tr>
             <tr>
                 <td class="route-info-label">Driver</td>
-                <td class="route-info">@Model.Invoice.DriverName</td>
+                <td class="route-info">@invoice?.DriverName</td>
             </tr>
         </table>
 
-        @if (Model.Statement.Details.Count > 0)
+        @if (statementDetails.Count > 0)
         {
             <div class="statement-label highlight-dark">
                 <span>Statement</span>
             </div>
             <table class="statement-table">
-                @foreach (var sd in Model.Statement.Details)
+                @foreach (var sd in statementDetails)
                 {
-                    foreach (var s in sd.Sales)
+                    foreach (var s in sd.Sales ?? Enumerable.Empty<KLS.Models.Sales>())
                     {
-                        var currentRowClass = s.SalesId == Model.Invoice.SalesId ? "statement-current-row" : null;
+                        var currentRowClass = s.SalesId == invoice?.SalesId ? "statement-current-row" : null;
                         <tr class="@currentRowClass">
                             <td>@string.Format("{0:d}", s.ShipDate)</td>
                             <td>@Model.GetSalesDisplayNumber(s)</td>
@@ -716,7 +730,7 @@
 
                 <tr>
                     <td colspan="3" class="text-right">
-                        <strong>@string.Format("{0:c}", Model.Statement.StatementTotalDue)</strong>
+                        <strong>@string.Format("{0:c}", statement?.StatementTotalDue)</strong>
                     </td>
                 </tr>
             </table>

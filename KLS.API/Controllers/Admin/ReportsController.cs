@@ -586,6 +586,7 @@ namespace KLS.API.Controllers.Admin
 
         [HttpGet("MarketOrder")]
         [DisplayName("Marketplace -> Order Report")]
+        [ClientFeature("Marketplace")]
         [PermissionKey("Report.Marketplace.OrderReport")]
         public IActionResult MarketOrder([FromQuery] ReportRequest reportReq)
         {

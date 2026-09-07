@@ -52,6 +52,23 @@ namespace KLS.API.Controllers.Admin
             return Ok(_bankFeedRuleService.Save(req));
         }
 
+        [HttpPost("NextOrder")]
+        [DisplayName("Get Next Bank Feed Rule Order")]
+        [PermissionKey("Accounting.BankFeed.Rule.Manage")]
+        public IActionResult NextOrder([FromBody] BankFeedRuleNextOrderReq req)
+        {
+            return Ok(_bankFeedRuleService.GetNextOrder(req));
+        }
+
+        [HttpPost("Reorder")]
+        [DisplayName("Reorder Bank Feed Rules")]
+        [PermissionKey("Accounting.BankFeed.Rule.Manage")]
+        public IActionResult Reorder([FromBody] BankFeedRuleReorderReq req)
+        {
+            _bankFeedRuleService.Reorder(req);
+            return Ok();
+        }
+
         [HttpPost("{id}/Deactivate")]
         [DisplayName("Deactivate Bank Feed Rule")]
         [PermissionKey("Accounting.BankFeed.Rule.Manage")]

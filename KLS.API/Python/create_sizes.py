@@ -7,7 +7,7 @@ With-bg sizes are handled by ImageSharp in C# during Upload (not here).
 crop_center_margin only works correctly on transparent PNGs — it uses
 getbbox() which finds non-transparent pixel bounds.
 
-Outputs: {index}-300-nobg.png, {index}-1200-nobg.png
+Outputs: {index}-300-nobg.png, {index}-900-nobg.png, {index}-1200-nobg.png
 
 Usage: python create_sizes.py <nobg_input> <output_dir> <image_index>
 """
@@ -58,7 +58,7 @@ def process(nobg_path, output_dir, image_index):
     nobg_img = Image.open(nobg_path)
     nobg_prepared = crop_center_margin(nobg_img)
 
-    sizes = [300, 1200]
+    sizes = [300, 900, 1200]
     for size in sizes:
         out_file = os.path.join(output_dir, f"{idx}-{size}-nobg.png")
         save_resized(nobg_prepared, out_file, size)

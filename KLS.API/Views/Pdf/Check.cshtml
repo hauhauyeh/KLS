@@ -1,5 +1,10 @@
 ﻿@model KLS.Models.Reports.RptCheckPayment
 
+@{
+    var vendorInfo = Model.VendorInfo;
+    var billDetails = Model.BillDetails ?? new List<KLS.Models.Reports.RptCheckPrintDetail>();
+}
+
 <style>
     /* @@font-face {
             font-family: 'IDAutomationMICR';
@@ -276,19 +281,19 @@
                 <span>ORLANDO, FL 32837</span>
             </div>
             <div class="float-left w-33 text-end">
-                <strong class="ref-num">@Model.VendorInfo.ReferenceId</strong>
+                <strong class="ref-num">@vendorInfo?.ReferenceId</strong>
             </div>
         </div>
         <div class="date-section">
             <div class="date-label label">Date</div>
             <div class="date-wrap">
-                <div class="pmt-date">@string.Format("{0:d}", Model.VendorInfo.PaymentDate)</div>
+                <div class="pmt-date">@string.Format("{0:d}", vendorInfo?.PaymentDate)</div>
             </div>
         </div>
         <div class="pay-section">
             <div class="pay-label label">Pay</div>
             <div class="amt-word">@Model.AmtInWords</div>
-            <div class="amt">@string.Format("{0:c}", Model.VendorInfo.PaymentAmount)</div>
+            <div class="amt">@string.Format("{0:c}", vendorInfo?.PaymentAmount)</div>
         </div>
         <div class="void-section">
             <div class="float-left" style="width:80%">&nbsp;</div>
@@ -297,15 +302,15 @@
         <div class="payee-section">
             <div class="label">To the order of</div>
             <div class="payee-wrap">
-                <strong>@Model.VendorInfo.CompanyName</strong><br />
-                <span>@Model.VendorInfo.PaymentAddress</span><br />
-                <span>@Model.VendorInfo.PaymentCity, @Model.VendorInfo.PaymentState @Model.VendorInfo.PaymentZipCode</span>
+                <strong>@vendorInfo?.CompanyName</strong><br />
+                <span>@vendorInfo?.PaymentAddress</span><br />
+                <span>@vendorInfo?.PaymentCity, @vendorInfo?.PaymentState @vendorInfo?.PaymentZipCode</span>
             </div>
         </div>
         <div class="routing-section">
-            <div class="check-num">@string.Concat("c", Model.VendorInfo.ReferenceId, "c")</div>
-            <div class="routing-num">@Model.VendorInfo.RoutingNumber</div>
-            <div class="account-num">@Model.VendorInfo.AccountNumber</div>
+            <div class="check-num">@string.Concat("c", vendorInfo?.ReferenceId, "c")</div>
+            <div class="routing-num">@vendorInfo?.RoutingNumber</div>
+            <div class="account-num">@vendorInfo?.AccountNumber</div>
         </div>
     </div>
     @for (var i = 0; i < 2; i++)
@@ -322,9 +327,9 @@
             <div class="check-detail">
                 <div class="float-left" style="width:55%">&nbsp;</div>
                 <div class="d-flex justify-content-between" style="width:45%">
-                    <strong>@string.Format("{0:d}", Model.VendorInfo.PaymentDate)</strong>
-                    <strong>CHECK # &nbsp;@Model.VendorInfo.ReferenceId</strong>
-                    <strong>@string.Format("{0:c}", Model.VendorInfo.PaymentAmount)</strong>
+                    <strong>@string.Format("{0:d}", vendorInfo?.PaymentDate)</strong>
+                    <strong>CHECK # &nbsp;@vendorInfo?.ReferenceId</strong>
+                    <strong>@string.Format("{0:c}", vendorInfo?.PaymentAmount)</strong>
                 </div>
             </div>
             <div class="cmp-section">
@@ -337,15 +342,15 @@
                 <div class="payee-detail">
                     <div class="label to-label">To</div>
                     <div>
-                        <strong>@Model.VendorInfo.CompanyName</strong><br />
-                        <span>@Model.VendorInfo.PaymentAddress</span><br />
-                        <span>@Model.VendorInfo.PaymentCity, @Model.VendorInfo.PaymentState @Model.VendorInfo.PaymentZipCode</span>
+                        <strong>@vendorInfo?.CompanyName</strong><br />
+                        <span>@vendorInfo?.PaymentAddress</span><br />
+                        <span>@vendorInfo?.PaymentCity, @vendorInfo?.PaymentState @vendorInfo?.PaymentZipCode</span>
                     </div>
                 </div>
             </div>
             <div class="bill-section">
                 <div class="bill-detail-wrapper">
-                    @foreach (var itm in Model.BillDetails)
+                    @foreach (var itm in billDetails)
                     {
                         <div class="bill-detail">
                             <div class="billdate">@string.Format("{0:d}", itm.ArrivalDate)</div>

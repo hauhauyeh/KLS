@@ -57,6 +57,23 @@ namespace KLS.Models
         public BankFeedRuleActionDto? Action { get; set; }
     }
 
+    public class BankFeedRuleNextOrderReq
+    {
+        public string Direction { get; set; } = string.Empty;
+    }
+
+    public class BankFeedRuleNextOrderRes
+    {
+        public int Priority { get; set; }
+    }
+
+    public class BankFeedRuleReorderReq
+    {
+        public string Direction { get; set; } = string.Empty;
+
+        public List<int> RuleIds { get; set; } = new();
+    }
+
     public class BankFeedRuleRecalculateReq
     {
         public List<long> BankFeedTransactionIds { get; set; } = new();

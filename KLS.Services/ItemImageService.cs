@@ -4,6 +4,7 @@ using KLS.Contract.Services;
 using KLS.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
@@ -37,16 +38,29 @@ namespace KLS.Services
 
         #region --- Helpers ---
 
+        private string GetItemImageRoot()
+        {
+            return ItemImageFileContract.ResolveItemImageRoot(_env, GetConfiguredItemImageRoot());
+        }
+
+        private string? GetConfiguredItemImageRoot()
+        {
+            return Uow.SystemSettings
+                .Find(s => s.SettingKey == ItemImageFileContract.ItemImageRootSettingKey)
+                .Select(s => s.SettingValue)
+                .FirstOrDefault();
+        }
+
         private string GetItemFolder(int itemId)
         {
-            var folder = Path.Combine(_env.WebRootPath, "Images", "items", itemId.ToString());
+            var folder = ItemImageFileContract.GetItemFolderPath(GetItemImageRoot(), itemId);
             Directory.CreateDirectory(folder);
             return folder;
         }
 
         private string GetItemFolderPath(int itemId)
         {
-            return Path.Combine(_env.WebRootPath, "Images", "items", itemId.ToString());
+            return ItemImageFileContract.GetItemFolderPath(GetItemImageRoot(), itemId);
         }
 
         private string GetScriptPath(string scriptName)
@@ -61,11 +75,11 @@ namespace KLS.Services
             return $"{request.Scheme}://{request.Host}";
         }
 
-        internal static ItemImageList BuildImageDto(ItemImage entity, string baseUrl, int imageCount)
+        internal static ItemImageList BuildImageDto(ItemImage entity, string baseUrl, int imageCount, string? itemFolderPath = null)
         {
             var itemId = entity.ItemId;
             var idx = entity.ImageIndex;
-            var folderUrl = $"{baseUrl}/Images/items/{itemId}";
+            var folderUrl = ItemImageFileContract.GetItemFolderUrl(baseUrl, itemId);
 
             var dto = new ItemImageList
             {
@@ -76,18 +90,62 @@ namespace KLS.Services
                 IsPrimary = entity.IsPrimary,
                 IsProcessed = entity.IsProcessed,
                 ImageCount = imageCount,
+                OriginalWidth = entity.OriginalWidth,
+                OriginalHeight = entity.OriginalHeight,
+                EffectiveSourceWidth = entity.EffectiveSourceWidth,
+                EffectiveSourceHeight = entity.EffectiveSourceHeight,
             };
 
             // URLs populated only when the actual file exists (flag-based, no inference)
-            if (entity.Has300) dto.ThumbnailUrl = $"{folderUrl}/{idx}-300.png";
-            if (entity.Has1200) dto.Url1200 = $"{folderUrl}/{idx}-1200.png";
-            if (entity.Has2000) dto.Url2000 = $"{folderUrl}/{idx}-2000.png";
-            if (entity.HasNoBg300) dto.NoBgThumbnailUrl = $"{folderUrl}/{idx}-300-nobg.png";
-            if (entity.HasNoBg1200) dto.NoBg1200Url = $"{folderUrl}/{idx}-1200-nobg.png";
+            if (entity.Has300) dto.ThumbnailUrl = ResolveProcessedDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.ThumbnailSize);
+            if (entity.Has900) dto.Url900 = ResolveProcessedDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.WebSize);
+            if (entity.Has1600) dto.Url1600 = ResolveProcessedDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.HighResolutionSize);
+            if (entity.Has2200) dto.Url2200 = ResolveProcessedDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.MarketplaceSize);
+            if (entity.Has1200) dto.Url1200 = ResolveProcessedDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.LegacyWebSize);
+            if (entity.Has2000) dto.Url2000 = ResolveProcessedDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.LegacyLargeSize);
+            if (entity.HasNoBg300) dto.NoBgThumbnailUrl = ResolveNoBackgroundDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.ThumbnailSize);
+            if (entity.HasNoBg900) dto.NoBg900Url = ResolveNoBackgroundDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.WebSize);
+            if (entity.HasNoBg1200) dto.NoBg1200Url = ResolveNoBackgroundDisplayUrl(itemFolderPath, folderUrl, idx, ItemImageFileContract.LegacyWebSize);
             if (!string.IsNullOrEmpty(entity.OriginalExtension))
-                dto.OriginalUrl = $"{folderUrl}/{idx}-org{entity.OriginalExtension}";
+                dto.OriginalUrl = $"{folderUrl}/{ItemImageFileContract.GetOriginalFileName(idx, entity.OriginalExtension)}";
 
             return dto;
+        }
+
+        internal static string ResolveProcessedDisplayUrl(string? itemFolderPath, string folderUrl, int imageIndex, int size)
+        {
+            return ResolveDisplayUrl(
+                itemFolderPath,
+                folderUrl,
+                ItemImageFileContract.GetProcessedDisplayFileNames(imageIndex, size),
+                ItemImageFileContract.GetProcessedFileName(imageIndex, size));
+        }
+
+        private static string ResolveNoBackgroundDisplayUrl(string? itemFolderPath, string folderUrl, int imageIndex, int size)
+        {
+            return ResolveDisplayUrl(
+                itemFolderPath,
+                folderUrl,
+                ItemImageFileContract.GetNoBackgroundDisplayFileNames(imageIndex, size),
+                ItemImageFileContract.GetNoBackgroundFileName(imageIndex, size));
+        }
+
+        private static string ResolveDisplayUrl(
+            string? itemFolderPath,
+            string folderUrl,
+            IEnumerable<string> candidateFileNames,
+            string fallbackFileName)
+        {
+            if (!string.IsNullOrWhiteSpace(itemFolderPath))
+            {
+                foreach (var fileName in candidateFileNames)
+                {
+                    if (File.Exists(Path.Combine(itemFolderPath, fileName)))
+                        return $"{folderUrl}/{fileName}";
+                }
+            }
+
+            return $"{folderUrl}/{fallbackFileName}";
         }
 
         private static void SaveResized(Image source, string outputPath, int targetSize)
@@ -112,6 +170,196 @@ namespace KLS.Services
             var y = (source.Height - size) / 2;
 
             return source.Clone(ctx => ctx.Crop(new Rectangle(x, y, size, size)));
+        }
+
+        private static Image CreateEffectiveSquareSource(
+            Image original,
+            decimal? cropXRatio,
+            decimal? cropYRatio,
+            decimal? cropSizeRatio)
+        {
+            if (!cropXRatio.HasValue || !cropYRatio.HasValue || !cropSizeRatio.HasValue)
+                return CropMaxCenteredSquare(original);
+
+            var paddedSize = (int)Math.Ceiling(Math.Max(original.Width, original.Height) * 1.10);
+            paddedSize = Math.Max(1, paddedSize);
+            var offsetX = (paddedSize - original.Width) / 2;
+            var offsetY = (paddedSize - original.Height) / 2;
+
+            using var padded = new Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(paddedSize, paddedSize);
+            using var rgba = original.CloneAs<SixLabors.ImageSharp.PixelFormats.Rgba32>();
+            padded.Mutate(ctx => ctx.DrawImage(rgba, new Point(offsetX, offsetY), 1f));
+
+            var cropSize = Math.Max(1, (int)Math.Round(paddedSize * (double)cropSizeRatio.Value));
+            cropSize = Math.Min(cropSize, paddedSize);
+            var x = (int)Math.Round(paddedSize * (double)cropXRatio.Value);
+            var y = (int)Math.Round(paddedSize * (double)cropYRatio.Value);
+            x = Math.Clamp(x, 0, Math.Max(0, paddedSize - cropSize));
+            y = Math.Clamp(y, 0, Math.Max(0, paddedSize - cropSize));
+
+            return padded.Clone(ctx => ctx.Crop(new Rectangle(x, y, cropSize, cropSize)));
+        }
+
+        private static int CalculateEffectiveOriginalPixelCropSize(
+            int originalWidth,
+            int originalHeight,
+            decimal? cropXRatio,
+            decimal? cropYRatio,
+            decimal? cropSizeRatio)
+        {
+            if (!cropXRatio.HasValue || !cropYRatio.HasValue || !cropSizeRatio.HasValue)
+                return Math.Min(originalWidth, originalHeight);
+
+            var paddedSize = (int)Math.Ceiling(Math.Max(originalWidth, originalHeight) * 1.10);
+            paddedSize = Math.Max(1, paddedSize);
+            var offsetX = (paddedSize - originalWidth) / 2;
+            var offsetY = (paddedSize - originalHeight) / 2;
+
+            var cropSize = Math.Max(1, (int)Math.Round(paddedSize * (double)cropSizeRatio.Value));
+            cropSize = Math.Min(cropSize, paddedSize);
+            var cropX = (int)Math.Round(paddedSize * (double)cropXRatio.Value);
+            var cropY = (int)Math.Round(paddedSize * (double)cropYRatio.Value);
+            cropX = Math.Clamp(cropX, 0, Math.Max(0, paddedSize - cropSize));
+            cropY = Math.Clamp(cropY, 0, Math.Max(0, paddedSize - cropSize));
+
+            var originalRight = offsetX + originalWidth;
+            var originalBottom = offsetY + originalHeight;
+            var cropRight = cropX + cropSize;
+            var cropBottom = cropY + cropSize;
+
+            var overlapWidth = Math.Max(0, Math.Min(cropRight, originalRight) - Math.Max(cropX, offsetX));
+            var overlapHeight = Math.Max(0, Math.Min(cropBottom, originalBottom) - Math.Max(cropY, offsetY));
+
+            return Math.Min(overlapWidth, overlapHeight);
+        }
+
+        private static GeneratedImageVersions GenerateWithBackgroundVersions(
+            Image original,
+            string itemFolder,
+            int imageIndex,
+            decimal? cropXRatio,
+            decimal? cropYRatio,
+            decimal? cropSizeRatio,
+            bool writeFiles = true)
+        {
+            using var effectiveSource = CreateEffectiveSquareSource(original, cropXRatio, cropYRatio, cropSizeRatio);
+            var effectiveSize = CalculateEffectiveOriginalPixelCropSize(
+                original.Width,
+                original.Height,
+                cropXRatio,
+                cropYRatio,
+                cropSizeRatio);
+            var generatedSizes = new HashSet<int> { ItemImageFileContract.ThumbnailSize };
+
+            foreach (var size in ItemImageFileContract.ActiveWithBackgroundSizes
+                         .Concat(ItemImageFileContract.LegacyWithBackgroundSizes)
+                         .Distinct()
+                         .Where(size => size != ItemImageFileContract.ThumbnailSize))
+            {
+                if (ItemImageFileContract.CanGenerateSize(effectiveSize, size))
+                    generatedSizes.Add(size);
+            }
+
+            if (writeFiles)
+            {
+                effectiveSource.Save(Path.Combine(itemFolder, ItemImageFileContract.GetTempCropFileName(imageIndex)), new PngEncoder());
+
+                foreach (var size in generatedSizes)
+                {
+                    SaveResized(
+                        effectiveSource,
+                        Path.Combine(itemFolder, ItemImageFileContract.GetTempProcessedFileName(imageIndex, size)),
+                        size);
+                }
+            }
+
+            return new GeneratedImageVersions(
+                original.Width,
+                original.Height,
+                effectiveSize,
+                effectiveSize,
+                generatedSizes.Contains(ItemImageFileContract.ThumbnailSize),
+                generatedSizes.Contains(ItemImageFileContract.WebSize),
+                generatedSizes.Contains(ItemImageFileContract.LegacyWebSize),
+                generatedSizes.Contains(ItemImageFileContract.HighResolutionSize),
+                generatedSizes.Contains(ItemImageFileContract.LegacyLargeSize),
+                generatedSizes.Contains(ItemImageFileContract.MarketplaceSize));
+        }
+
+        private static void PublishWithBackgroundVersions(string itemFolder, int imageIndex, GeneratedImageVersions generated)
+        {
+            var generatedSizes = generated.GetGeneratedSizes().ToHashSet();
+
+            CleanupOptimizedDisplaySidecars(itemFolder, imageIndex);
+            File.Move(
+                Path.Combine(itemFolder, ItemImageFileContract.GetTempCropFileName(imageIndex)),
+                Path.Combine(itemFolder, ItemImageFileContract.GetCropFileName(imageIndex)),
+                overwrite: true);
+
+            foreach (var size in ItemImageFileContract.ActiveWithBackgroundSizes
+                         .Concat(ItemImageFileContract.LegacyWithBackgroundSizes)
+                         .Distinct())
+            {
+                var targetPath = Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, size));
+                if (generatedSizes.Contains(size))
+                {
+                    File.Move(
+                        Path.Combine(itemFolder, ItemImageFileContract.GetTempProcessedFileName(imageIndex, size)),
+                        targetPath,
+                        overwrite: true);
+                }
+                else
+                {
+                    TryDeleteFile(targetPath);
+                }
+            }
+        }
+
+        private static void ApplyGeneratedVersionFlags(ItemImage entity, GeneratedImageVersions generated)
+        {
+            entity.OriginalWidth = generated.OriginalWidth;
+            entity.OriginalHeight = generated.OriginalHeight;
+            entity.EffectiveSourceWidth = generated.EffectiveSourceWidth;
+            entity.EffectiveSourceHeight = generated.EffectiveSourceHeight;
+            entity.Has300 = generated.Has300;
+            entity.Has900 = generated.Has900;
+            entity.Has1200 = generated.Has1200;
+            entity.Has1600 = generated.Has1600;
+            entity.Has2000 = generated.Has2000;
+            entity.Has2200 = generated.Has2200;
+        }
+
+        private static void ValidateCropRatios(decimal? cropXRatio, decimal? cropYRatio, decimal? cropSizeRatio)
+        {
+            var suppliedCount =
+                (cropXRatio.HasValue ? 1 : 0)
+                + (cropYRatio.HasValue ? 1 : 0)
+                + (cropSizeRatio.HasValue ? 1 : 0);
+
+            if (suppliedCount == 0) return;
+            if (suppliedCount != 3)
+                throw new ArgumentException("Crop ratios must include CropXRatio, CropYRatio, and CropSizeRatio.");
+
+            var x = cropXRatio.Value;
+            var y = cropYRatio.Value;
+            var size = cropSizeRatio.Value;
+
+            if (x < 0 || x > 1)
+                throw new ArgumentException("CropXRatio must be between 0 and 1.");
+            if (y < 0 || y > 1)
+                throw new ArgumentException("CropYRatio must be between 0 and 1.");
+            if (size <= 0 || size > 1)
+                throw new ArgumentException("CropSizeRatio must be greater than 0 and no more than 1.");
+            const decimal ratioTolerance = 0.000001m;
+            if (x + size > 1 + ratioTolerance)
+                throw new ArgumentException("Crop ratios exceed source width.");
+            if (y + size > 1 + ratioTolerance)
+                throw new ArgumentException("Crop ratios exceed source height.");
+        }
+
+        private static decimal? GetOptionalRatio(IReadOnlyList<decimal>? ratios, int index)
+        {
+            return ratios != null && ratios.Count > 0 ? ratios[index] : null;
         }
 
         private void AcquireProcessingLock(int imageId)
@@ -217,31 +465,99 @@ namespace KLS.Services
 
         private static void CleanupTempFiles(string itemFolder, int imageIndex)
         {
-            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-temp-python.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-temp-api.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-crop-temp.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-300-temp.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-1200-temp.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-2000-temp.png"));
+            foreach (var fileName in ItemImageFileContract.GetTempFileNames(imageIndex))
+                TryDeleteFile(Path.Combine(itemFolder, fileName));
+        }
+
+        private static void CleanupOptimizedDisplaySidecars(string itemFolder, int imageIndex)
+        {
+            foreach (var fileName in ItemImageFileContract.GetOptimizedDisplaySidecarFileNames(imageIndex))
+                TryDeleteFile(Path.Combine(itemFolder, fileName));
+        }
+
+        private static void CleanupOptimizedNoBackgroundDisplaySidecars(string itemFolder, int imageIndex)
+        {
+            foreach (var fileName in ItemImageFileContract.GetOptimizedNoBackgroundDisplaySidecarFileNames(imageIndex))
+                TryDeleteFile(Path.Combine(itemFolder, fileName));
+        }
+
+        private static void CleanupNoBackgroundFiles(string itemFolder, int imageIndex)
+        {
+            foreach (var size in ItemImageFileContract.ActiveNoBackgroundSizes
+                         .Concat(ItemImageFileContract.LegacyNoBackgroundSizes)
+                         .Distinct())
+            {
+                TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(imageIndex, size)));
+            }
+
+            CleanupOptimizedNoBackgroundDisplaySidecars(itemFolder, imageIndex);
+        }
+
+        private static void ClearNoBackgroundState(ItemImage entity)
+        {
+            entity.IsProcessed = false;
+            entity.HasNoBg300 = false;
+            entity.HasNoBg900 = false;
+            entity.HasNoBg1200 = false;
         }
 
         private static IEnumerable<string> GetFlaggedFileNames(ItemImage image)
         {
-            var idx = image.ImageIndex;
-
-            if (image.Has300) yield return $"{idx}-300.png";
-            if (image.Has1200) yield return $"{idx}-1200.png";
-            if (image.Has2000) yield return $"{idx}-2000.png";
-            if (image.HasNoBg300) yield return $"{idx}-300-nobg.png";
-            if (image.HasNoBg1200) yield return $"{idx}-1200-nobg.png";
-            if (!string.IsNullOrWhiteSpace(image.OriginalExtension))
-                yield return $"{idx}-org{image.OriginalExtension}";
+            return ItemImageFileContract.GetRequiredFileNames(
+                image.ImageIndex,
+                image.OriginalExtension,
+                ToFileFlags(image));
         }
 
         private static IEnumerable<string> GetOptionalCloneFileNames(ItemImage image)
         {
-            yield return $"{image.ImageIndex}-crop.png";
+            yield return ItemImageFileContract.GetCropFileName(image.ImageIndex);
+
+            foreach (var fileName in ItemImageFileContract.GetOptimizedDisplaySidecarFileNames(image.ImageIndex))
+                yield return fileName;
         }
+
+        private static ItemImageFileFlags ToFileFlags(ItemImage image)
+        {
+            return new ItemImageFileFlags(
+                image.Has300,
+                image.Has900,
+                image.Has1200,
+                image.Has1600,
+                image.Has2000,
+                image.Has2200,
+                image.HasNoBg300,
+                image.HasNoBg900,
+                image.HasNoBg1200);
+        }
+
+        private readonly record struct GeneratedImageVersions(
+            int OriginalWidth,
+            int OriginalHeight,
+            int EffectiveSourceWidth,
+            int EffectiveSourceHeight,
+            bool Has300,
+            bool Has900,
+            bool Has1200,
+            bool Has1600,
+            bool Has2000,
+            bool Has2200)
+        {
+            public IEnumerable<int> GetGeneratedSizes()
+            {
+                if (Has300) yield return ItemImageFileContract.ThumbnailSize;
+                if (Has900) yield return ItemImageFileContract.WebSize;
+                if (Has1200) yield return ItemImageFileContract.LegacyWebSize;
+                if (Has1600) yield return ItemImageFileContract.HighResolutionSize;
+                if (Has2000) yield return ItemImageFileContract.LegacyLargeSize;
+                if (Has2200) yield return ItemImageFileContract.MarketplaceSize;
+            }
+        }
+
+        private readonly record struct MarketplaceMigrationSource(
+            string FilePath,
+            string SourceType,
+            bool AllowCropRatios);
 
         private List<ItemImage> GetSourceCloneImages(int sourceItemId)
         {
@@ -287,8 +603,9 @@ namespace KLS.Services
             if (!records.Any()) return new List<ItemImageList>();
 
             var imageCount = records.Count;
+            var itemFolderPath = GetItemFolderPath(itemId);
 
-            return records.Select(c => BuildImageDto(c, baseUrl, imageCount)).ToList();
+            return records.Select(c => BuildImageDto(c, baseUrl, imageCount, itemFolderPath)).ToList();
         }
 
         public ItemImageList? GetPrimary(int itemId)
@@ -308,7 +625,7 @@ namespace KLS.Services
             if (string.IsNullOrWhiteSpace(entity.OriginalExtension))
                 throw new Exception("Original image extension is missing.");
 
-            var fileName = $"{entity.ImageIndex}-org{entity.OriginalExtension}";
+            var fileName = ItemImageFileContract.GetOriginalFileName(entity.ImageIndex, entity.OriginalExtension);
             var filePath = Path.Combine(GetItemFolderPath(entity.ItemId), fileName);
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"Original image not found: {fileName}");
@@ -370,10 +687,21 @@ namespace KLS.Services
                         IsPrimary = source.IsPrimary,
                         IsProcessed = source.IsProcessed,
                         IsProcessing = false,
+                        OriginalWidth = source.OriginalWidth,
+                        OriginalHeight = source.OriginalHeight,
+                        EffectiveSourceWidth = source.EffectiveSourceWidth,
+                        EffectiveSourceHeight = source.EffectiveSourceHeight,
+                        CropXRatio = source.CropXRatio,
+                        CropYRatio = source.CropYRatio,
+                        CropSizeRatio = source.CropSizeRatio,
                         Has300 = source.Has300,
+                        Has900 = source.Has900,
+                        Has1600 = source.Has1600,
+                        Has2200 = source.Has2200,
                         Has1200 = source.Has1200,
                         Has2000 = source.Has2000,
                         HasNoBg300 = source.HasNoBg300,
+                        HasNoBg900 = source.HasNoBg900,
                         HasNoBg1200 = source.HasNoBg1200
                     };
 
@@ -445,32 +773,20 @@ namespace KLS.Services
             if (originalFiles.Count > 0 && originalFiles.Count != zeroCount)
                 throw new Exception("Original files count must match new image count.");
 
+            if (uploadReq.CropXRatios?.Count > 0 && uploadReq.CropXRatios.Count != zeroCount)
+                throw new ArgumentException("Crop X ratio count must match new image count.");
+            if (uploadReq.CropYRatios?.Count > 0 && uploadReq.CropYRatios.Count != zeroCount)
+                throw new ArgumentException("Crop Y ratio count must match new image count.");
+            if (uploadReq.CropSizeRatios?.Count > 0 && uploadReq.CropSizeRatios.Count != zeroCount)
+                throw new ArgumentException("Crop size ratio count must match new image count.");
+
             // Validate all IDs belong to this item
             var validIds = dbImages.Select(x => x.ImageId).ToHashSet();
             if (order.Any(id => id > 0 && !validIds.Contains(id)))
                 throw new Exception("Invalid image id found in order list for this item.");
 
-            // Decide primary index
-            int primaryIndex;
-            if (uploadReq.PrimaryOrderIndex.HasValue &&
-                uploadReq.PrimaryOrderIndex.Value >= 0 &&
-                uploadReq.PrimaryOrderIndex.Value < order.Count)
-            {
-                primaryIndex = uploadReq.PrimaryOrderIndex.Value;
-            }
-            else
-            {
-                var existingPrimary = dbImages.FirstOrDefault(x => x.IsPrimary);
-                if (existingPrimary != null)
-                {
-                    int idx = order.FindIndex(x => x == existingPrimary.ImageId);
-                    primaryIndex = idx >= 0 ? idx : 0;
-                }
-                else
-                {
-                    primaryIndex = 0;
-                }
-            }
+            // First image is the primary/default image.
+            int primaryIndex = 0;
 
             // Clear primary for all existing images
             foreach (var img in dbImages.Where(x => x.IsPrimary))
@@ -506,8 +822,13 @@ namespace KLS.Services
                 }
 
                 // New file
+                var newFileIndex = fileCursor;
                 var file = files[fileCursor++];
                 var originalFile = originalFiles.Count > 0 ? originalFiles[originalFileCursor++] : file;
+                var cropXRatio = GetOptionalRatio(uploadReq.CropXRatios, newFileIndex);
+                var cropYRatio = GetOptionalRatio(uploadReq.CropYRatios, newFileIndex);
+                var cropSizeRatio = GetOptionalRatio(uploadReq.CropSizeRatios, newFileIndex);
+                ValidateCropRatios(cropXRatio, cropYRatio, cropSizeRatio);
 
                 // Extension validation
                 var ext = Path.GetExtension(originalFile.FileName).ToLowerInvariant();
@@ -528,6 +849,9 @@ namespace KLS.Services
                     IsPrimary = isPrimary,
                     IsProcessed = false,
                     IsProcessing = false,
+                    CropXRatio = cropXRatio,
+                    CropYRatio = cropYRatio,
+                    CropSizeRatio = cropSizeRatio,
                 };
 
                 Uow.ItemImages.Add(entityNew);
@@ -536,34 +860,26 @@ namespace KLS.Services
                 try
                 {
                     // Save untouched original separately from the cropped display source.
-                    var orgPath = Path.Combine(itemFolder, $"{imageIndex}-org{ext}");
+                    var orgPath = Path.Combine(itemFolder, ItemImageFileContract.GetOriginalFileName(imageIndex, ext));
                     using (var stream = new FileStream(orgPath, FileMode.Create))
                     {
                         originalFile.CopyTo(stream);
                     }
 
-                    var hasSeparateCropSource = originalFiles.Count > 0;
-                    var cropPath = Path.Combine(itemFolder, $"{imageIndex}-crop.png");
-                    if (hasSeparateCropSource)
+                    GeneratedImageVersions generated;
+                    using (var image = Image.Load(orgPath))
                     {
-                        using var croppedStream = file.OpenReadStream();
-                        using var croppedImage = Image.Load(croppedStream);
-                        croppedImage.Save(cropPath, new PngEncoder());
+                        generated = GenerateWithBackgroundVersions(
+                            image,
+                            itemFolder,
+                            imageIndex,
+                            cropXRatio,
+                            cropYRatio,
+                            cropSizeRatio);
                     }
 
-                    // Generate with-bg sizes using ImageSharp
-                    var resizeSourcePath = hasSeparateCropSource ? cropPath : orgPath;
-                    using (var image = Image.Load(resizeSourcePath))
-                    {
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-1200.png"), 1200);
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-2000.png"), 2000);
-                    }
-
-                    // Set version flags based on actual files created
-                    entityNew.Has300 = true;
-                    entityNew.Has1200 = true;
-                    entityNew.Has2000 = true;
+                    PublishWithBackgroundVersions(itemFolder, imageIndex, generated);
+                    ApplyGeneratedVersionFlags(entityNew, generated);
                     Uow.ItemImages.Update(entityNew);
                 }
                 catch
@@ -572,11 +888,15 @@ namespace KLS.Services
                     Uow.ItemImages.Remove(entityNew);
                     Uow.Commit();
 
-                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-org{ext}"));
-                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-crop.png"));
-                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-300.png"));
-                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-1200.png"));
-                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-2000.png"));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetOriginalFileName(imageIndex, ext)));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetCropFileName(imageIndex)));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.ThumbnailSize)));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.WebSize)));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.LegacyWebSize)));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.HighResolutionSize)));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.LegacyLargeSize)));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.MarketplaceSize)));
+                    CleanupTempFiles(itemFolder, imageIndex);
 
                     throw;
                 }
@@ -598,34 +918,29 @@ namespace KLS.Services
 
                 var itemFolder = GetItemFolder(entity.ItemId);
                 var idx = entity.ImageIndex;
-                var orgPath = Path.Combine(itemFolder, $"{idx}-org{entity.OriginalExtension}");
+                var orgFileName = ItemImageFileContract.GetOriginalFileName(idx, entity.OriginalExtension);
+                var orgPath = Path.Combine(itemFolder, orgFileName);
                 if (!File.Exists(orgPath))
-                    throw new FileNotFoundException($"Original image not found: {idx}-org{entity.OriginalExtension}");
-
-                var cropTemp = Path.Combine(itemFolder, $"{idx}-crop-temp.png");
-                var size300Temp = Path.Combine(itemFolder, $"{idx}-300-temp.png");
-                var size1200Temp = Path.Combine(itemFolder, $"{idx}-1200-temp.png");
-                var size2000Temp = Path.Combine(itemFolder, $"{idx}-2000-temp.png");
+                    throw new FileNotFoundException($"Original image not found: {orgFileName}");
 
                 CleanupTempFiles(itemFolder, idx);
 
+                GeneratedImageVersions generated;
                 using (var original = Image.Load(orgPath))
-                using (var cropped = CropMaxCenteredSquare(original))
                 {
-                    cropped.Save(cropTemp, new PngEncoder());
-                    SaveResized(cropped, size300Temp, 300);
-                    SaveResized(cropped, size1200Temp, 1200);
-                    SaveResized(cropped, size2000Temp, 2000);
+                    generated = GenerateWithBackgroundVersions(
+                        original,
+                        itemFolder,
+                        idx,
+                        entity.CropXRatio,
+                        entity.CropYRatio,
+                        entity.CropSizeRatio);
                 }
 
-                File.Move(cropTemp, Path.Combine(itemFolder, $"{idx}-crop.png"), overwrite: true);
-                File.Move(size300Temp, Path.Combine(itemFolder, $"{idx}-300.png"), overwrite: true);
-                File.Move(size1200Temp, Path.Combine(itemFolder, $"{idx}-1200.png"), overwrite: true);
-                File.Move(size2000Temp, Path.Combine(itemFolder, $"{idx}-2000.png"), overwrite: true);
-
-                entity.Has300 = true;
-                entity.Has1200 = true;
-                entity.Has2000 = true;
+                PublishWithBackgroundVersions(itemFolder, idx, generated);
+                ApplyGeneratedVersionFlags(entity, generated);
+                CleanupNoBackgroundFiles(itemFolder, idx);
+                ClearNoBackgroundState(entity);
                 Uow.ItemImages.Update(entity);
                 Uow.Commit();
             }
@@ -649,6 +964,7 @@ namespace KLS.Services
             var cropExt = Path.GetExtension(req.CroppedFile.FileName).ToLowerInvariant();
             if (string.IsNullOrEmpty(cropExt) || !AllowedExtensions.Contains(cropExt))
                 throw new ArgumentException($"Unsupported cropped file format '{cropExt}'. Allowed: {string.Join(", ", AllowedExtensions)}");
+            ValidateCropRatios(req.CropXRatio, req.CropYRatio, req.CropSizeRatio);
 
             AcquireProcessingLock(imageId);
 
@@ -659,30 +975,38 @@ namespace KLS.Services
 
                 var itemFolder = GetItemFolder(entity.ItemId);
                 var idx = entity.ImageIndex;
-                var cropTemp = Path.Combine(itemFolder, $"{idx}-crop-temp.png");
-                var size300Temp = Path.Combine(itemFolder, $"{idx}-300-temp.png");
-                var size1200Temp = Path.Combine(itemFolder, $"{idx}-1200-temp.png");
-                var size2000Temp = Path.Combine(itemFolder, $"{idx}-2000-temp.png");
+                var originalPath = string.IsNullOrWhiteSpace(entity.OriginalExtension)
+                    ? null
+                    : Path.Combine(itemFolder, ItemImageFileContract.GetOriginalFileName(idx, entity.OriginalExtension));
 
                 CleanupTempFiles(itemFolder, idx);
 
-                using (var cropStream = req.CroppedFile.OpenReadStream())
-                using (var cropped = Image.Load(cropStream))
+                GeneratedImageVersions generated;
+                if (!string.IsNullOrWhiteSpace(originalPath) && File.Exists(originalPath))
                 {
-                    cropped.Save(cropTemp, new PngEncoder());
-                    SaveResized(cropped, size300Temp, 300);
-                    SaveResized(cropped, size1200Temp, 1200);
-                    SaveResized(cropped, size2000Temp, 2000);
+                    using var original = Image.Load(originalPath);
+                    generated = GenerateWithBackgroundVersions(
+                        original,
+                        itemFolder,
+                        idx,
+                        req.CropXRatio,
+                        req.CropYRatio,
+                        req.CropSizeRatio);
+                }
+                else
+                {
+                    using var cropStream = req.CroppedFile.OpenReadStream();
+                    using var cropped = Image.Load(cropStream);
+                    generated = GenerateWithBackgroundVersions(cropped, itemFolder, idx, null, null, null);
                 }
 
-                File.Move(cropTemp, Path.Combine(itemFolder, $"{idx}-crop.png"), overwrite: true);
-                File.Move(size300Temp, Path.Combine(itemFolder, $"{idx}-300.png"), overwrite: true);
-                File.Move(size1200Temp, Path.Combine(itemFolder, $"{idx}-1200.png"), overwrite: true);
-                File.Move(size2000Temp, Path.Combine(itemFolder, $"{idx}-2000.png"), overwrite: true);
-
-                entity.Has300 = true;
-                entity.Has1200 = true;
-                entity.Has2000 = true;
+                PublishWithBackgroundVersions(itemFolder, idx, generated);
+                ApplyGeneratedVersionFlags(entity, generated);
+                CleanupNoBackgroundFiles(itemFolder, idx);
+                ClearNoBackgroundState(entity);
+                entity.CropXRatio = req.CropXRatio;
+                entity.CropYRatio = req.CropYRatio;
+                entity.CropSizeRatio = req.CropSizeRatio;
                 Uow.ItemImages.Update(entity);
                 Uow.Commit();
             }
@@ -706,16 +1030,20 @@ namespace KLS.Services
             var itemId = image.ItemId;
             var idx = image.ImageIndex;
             var ext = image.OriginalExtension ?? ".png";
-            var itemFolder = Path.Combine(_env.WebRootPath, "Images", "items", itemId.ToString());
+            var itemFolder = GetItemFolderPath(itemId);
 
             // Delete all files for this image (tolerant — ignore missing)
-            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-org{ext}"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-crop.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-300.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-1200.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-2000.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-300-nobg.png"));
-            TryDeleteFile(Path.Combine(itemFolder, $"{idx}-1200-nobg.png"));
+            TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetOriginalFileName(idx, ext)));
+            TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetCropFileName(idx)));
+
+            foreach (var size in ItemImageFileContract.ActiveWithBackgroundSizes.Concat(ItemImageFileContract.LegacyWithBackgroundSizes))
+                TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, size)));
+
+            foreach (var size in ItemImageFileContract.ActiveNoBackgroundSizes.Concat(ItemImageFileContract.LegacyNoBackgroundSizes))
+                TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, size)));
+
+            CleanupOptimizedDisplaySidecars(itemFolder, idx);
+
             CleanupTempFiles(itemFolder, idx);
 
             // Remove DB record
@@ -756,11 +1084,13 @@ namespace KLS.Services
                 var idx = entity.ImageIndex;
                 var ext = entity.OriginalExtension ?? ".png";
 
-                var orgPath = Path.Combine(itemFolder, $"{idx}-org{ext}");
+                var orgFileName = ItemImageFileContract.GetOriginalFileName(idx, ext);
+                var orgPath = Path.Combine(itemFolder, orgFileName);
                 if (!File.Exists(orgPath))
-                    throw new FileNotFoundException($"Original image not found: {idx}-org{ext}");
+                    throw new FileNotFoundException($"Original image not found: {orgFileName}");
 
-                var tempOutput = Path.Combine(itemFolder, $"{idx}-temp-python.png");
+                var tempFileName = ItemImageFileContract.GetTempPythonFileName(idx);
+                var tempOutput = Path.Combine(itemFolder, tempFileName);
 
                 await RunPythonAsync(
                     GetScriptPath("remove_bg_local.py"),
@@ -771,15 +1101,15 @@ namespace KLS.Services
                     throw new Exception("Python background removal did not produce an output file.");
 
                 var baseUrl = GetBaseUrl();
-                var folderUrl = $"{baseUrl}/Images/items/{entity.ItemId}";
+                var folderUrl = ItemImageFileContract.GetItemFolderUrl(baseUrl, entity.ItemId);
 
                 return new ImageProcessResult
                 {
                     ImageId = imageId,
                     ItemId = entity.ItemId,
                     ImageIndex = idx,
-                    OriginalUrl = $"{folderUrl}/{idx}-org{ext}",
-                    PythonProcessedUrl = $"{folderUrl}/{idx}-temp-python.png"
+                    OriginalUrl = $"{folderUrl}/{orgFileName}",
+                    PythonProcessedUrl = $"{folderUrl}/{tempFileName}"
                 };
             }
             catch
@@ -788,8 +1118,8 @@ namespace KLS.Services
                 var entity = Uow.ItemImages.GetById(imageId);
                 if (entity != null)
                 {
-                    var folder = Path.Combine(_env.WebRootPath, "Images", "items", entity.ItemId.ToString());
-                    TryDeleteFile(Path.Combine(folder, $"{entity.ImageIndex}-temp-python.png"));
+                    var folder = GetItemFolderPath(entity.ItemId);
+                    TryDeleteFile(Path.Combine(folder, ItemImageFileContract.GetTempPythonFileName(entity.ImageIndex)));
                 }
                 throw;
             }
@@ -810,11 +1140,13 @@ namespace KLS.Services
                 var idx = entity.ImageIndex;
                 var ext = entity.OriginalExtension ?? ".png";
 
-                var orgPath = Path.Combine(itemFolder, $"{idx}-org{ext}");
+                var orgFileName = ItemImageFileContract.GetOriginalFileName(idx, ext);
+                var orgPath = Path.Combine(itemFolder, orgFileName);
                 if (!File.Exists(orgPath))
-                    throw new FileNotFoundException($"Original image not found: {idx}-org{ext}");
+                    throw new FileNotFoundException($"Original image not found: {orgFileName}");
 
-                var tempOutput = Path.Combine(itemFolder, $"{idx}-temp-api.png");
+                var tempFileName = ItemImageFileContract.GetTempApiFileName(idx);
+                var tempOutput = Path.Combine(itemFolder, tempFileName);
 
                 var apiKey = _appSettings.RemoveBgApiKey
                     ?? throw new Exception("RemoveBgApiKey not configured in appsettings.");
@@ -828,15 +1160,15 @@ namespace KLS.Services
                     throw new Exception("API background removal did not produce an output file.");
 
                 var baseUrl = GetBaseUrl();
-                var folderUrl = $"{baseUrl}/Images/items/{entity.ItemId}";
+                var folderUrl = ItemImageFileContract.GetItemFolderUrl(baseUrl, entity.ItemId);
 
                 return new ImageProcessResult
                 {
                     ImageId = imageId,
                     ItemId = entity.ItemId,
                     ImageIndex = idx,
-                    OriginalUrl = $"{folderUrl}/{idx}-org{ext}",
-                    ApiProcessedUrl = $"{folderUrl}/{idx}-temp-api.png"
+                    OriginalUrl = $"{folderUrl}/{orgFileName}",
+                    ApiProcessedUrl = $"{folderUrl}/{tempFileName}"
                 };
             }
             catch
@@ -844,8 +1176,8 @@ namespace KLS.Services
                 var entity = Uow.ItemImages.GetById(imageId);
                 if (entity != null)
                 {
-                    var folder = Path.Combine(_env.WebRootPath, "Images", "items", entity.ItemId.ToString());
-                    TryDeleteFile(Path.Combine(folder, $"{entity.ImageIndex}-temp-api.png"));
+                    var folder = GetItemFolderPath(entity.ItemId);
+                    TryDeleteFile(Path.Combine(folder, ItemImageFileContract.GetTempApiFileName(entity.ImageIndex)));
                 }
                 throw;
             }
@@ -870,7 +1202,7 @@ namespace KLS.Services
                 if (req.SelectedVersion == 1)
                 {
                     // User chose Original — no BG removal, no no-bg files
-                    entity.IsProcessed = false;
+                    ClearNoBackgroundState(entity);
                     Uow.ItemImages.Update(entity);
                     Uow.Commit();
                     return;
@@ -879,8 +1211,8 @@ namespace KLS.Services
                 // Determine no-bg source
                 string nobgSource = req.SelectedVersion switch
                 {
-                    2 => Path.Combine(itemFolder, $"{idx}-temp-python.png"),
-                    3 => Path.Combine(itemFolder, $"{idx}-temp-api.png"),
+                    2 => Path.Combine(itemFolder, ItemImageFileContract.GetTempPythonFileName(idx)),
+                    3 => Path.Combine(itemFolder, ItemImageFileContract.GetTempApiFileName(idx)),
                     _ => throw new Exception($"Invalid SelectedVersion: {req.SelectedVersion}")
                 };
 
@@ -894,14 +1226,17 @@ namespace KLS.Services
                 );
 
                 // Verify outputs
-                var nobg300 = Path.Combine(itemFolder, $"{idx}-300-nobg.png");
-                var nobg1200 = Path.Combine(itemFolder, $"{idx}-1200-nobg.png");
+                var nobg300 = Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.ThumbnailSize));
+                var nobg900 = Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.WebSize));
+                var nobg1200 = Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.LegacyWebSize));
 
-                if (!File.Exists(nobg300) || !File.Exists(nobg1200))
+                if (!File.Exists(nobg300) || !File.Exists(nobg900) || !File.Exists(nobg1200))
                     throw new Exception("create_sizes.py did not produce expected no-bg output files.");
 
+                CleanupOptimizedNoBackgroundDisplaySidecars(itemFolder, idx);
                 entity.IsProcessed = true;
                 entity.HasNoBg300 = true;
+                entity.HasNoBg900 = true;
                 entity.HasNoBg1200 = true;
                 Uow.ItemImages.Update(entity);
                 Uow.Commit();
@@ -912,7 +1247,7 @@ namespace KLS.Services
                 var entity = Uow.ItemImages.GetById(req.ImageId);
                 if (entity != null)
                 {
-                    var folder = Path.Combine(_env.WebRootPath, "Images", "items", entity.ItemId.ToString());
+                    var folder = GetItemFolderPath(entity.ItemId);
                     CleanupTempFiles(folder, entity.ImageIndex);
                 }
 
@@ -1145,7 +1480,7 @@ namespace KLS.Services
 
                 // Copy the master as the canonical original (preserve its format).
                 var orgExt = Path.GetExtension(masterPath).ToLowerInvariant();
-                File.Copy(masterPath, Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"), overwrite: true);
+                File.Copy(masterPath, Path.Combine(itemFolder, ItemImageFileContract.GetOriginalFileName(imageIndex, orgExt)), overwrite: true);
 
                 // Generate sizes from the master: 300 always; 1200/2000 only when the master is
                 // natively big enough -- no upscaling above native resolution.
@@ -1153,16 +1488,16 @@ namespace KLS.Services
                 try
                 {
                     using var image = Image.Load(masterPath);
-                    SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-300.png"), 300);
+                    SaveResized(image, Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.ThumbnailSize)), ItemImageFileContract.ThumbnailSize);
                     has300 = true;
-                    if (masterMax >= 1200)
+                    if (ItemImageFileContract.CanGenerateSize(masterMax, ItemImageFileContract.LegacyWebSize))
                     {
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-1200.png"), 1200);
+                        SaveResized(image, Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.LegacyWebSize)), ItemImageFileContract.LegacyWebSize);
                         has1200 = true;
                     }
-                    if (masterMax >= 2000)
+                    if (ItemImageFileContract.CanGenerateSize(masterMax, ItemImageFileContract.LegacyLargeSize))
                     {
-                        SaveResized(image, Path.Combine(itemFolder, $"{imageIndex}-2000.png"), 2000);
+                        SaveResized(image, Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, ItemImageFileContract.LegacyLargeSize)), ItemImageFileContract.LegacyLargeSize);
                         has2000 = true;
                     }
                 }
@@ -1175,13 +1510,13 @@ namespace KLS.Services
                 if (file900.filePath != null)
                 {
                     var srcExt = Path.GetExtension(file900.filePath).ToLowerInvariant();
-                    File.Copy(file900.filePath, Path.Combine(itemFolder, $"{imageIndex}-900{srcExt}"), overwrite: true);
+                    File.Copy(file900.filePath, Path.Combine(itemFolder, ItemImageFileContract.GetRawImportedReferenceFileName(imageIndex, srcExt)), overwrite: true);
                 }
 
                 // No 300 produced (resize failed) -> clean up + skip the DB row.
                 if (!has300)
                 {
-                    TryDeleteFile(Path.Combine(itemFolder, $"{imageIndex}-org{orgExt}"));
+                    TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetOriginalFileName(imageIndex, orgExt)));
                     result.Warnings.Add($"ItemId {itemId} idx {imageIndex}: no 300px produced, skipped + cleaned up");
                     result.Skipped++;
                     continue;
@@ -1210,6 +1545,304 @@ namespace KLS.Services
                 Uow.Commit();
         }
 
+        public MigrationResult GenerateMissingMarketplaceVersions(ItemImageVersionMigrationReq req)
+        {
+            req ??= new ItemImageVersionMigrationReq();
+            if (req.Limit < 0)
+                throw new ArgumentException("Limit cannot be negative.", nameof(req.Limit));
+
+            var result = new MigrationResult { DryRun = req.DryRun };
+            var configuredRoot = GetConfiguredItemImageRoot();
+            var itemsRoot = ItemImageFileContract.ResolveItemImageRoot(_env, configuredRoot);
+            var rootExists = Directory.Exists(itemsRoot);
+
+            result.Details.Add($"Database: {GetConfiguredDatabaseName()}");
+            result.Details.Add($"Configured {ItemImageFileContract.ItemImageRootSettingKey}: {configuredRoot ?? "(blank)"}");
+            result.Details.Add($"Resolved item image root: {itemsRoot}");
+            result.Details.Add($"Root exists: {rootExists}");
+            result.Details.Add($"DryRun: {req.DryRun}; Limit: {req.Limit}; Force: {req.Force}");
+
+            if (!rootExists)
+            {
+                result.Success = false;
+                result.Warnings.Add("Items image root not found.");
+                return result;
+            }
+
+            var allRecords = Uow.ItemImages
+                .Find(_ => true)
+                .OrderBy(x => x.ItemId)
+                .ThenBy(x => x.ImageIndex)
+                .ToList();
+            result.TotalItemsFound = allRecords.Count;
+
+            var records = req.Limit > 0 ? allRecords.Take(req.Limit).ToList() : allRecords;
+            var can900 = 0;
+            var can1600 = 0;
+            var can2200 = 0;
+            var updatedRows = 0;
+
+            foreach (var entity in records)
+            {
+                result.ItemsProcessed++;
+                var itemFolder = ItemImageFileContract.GetItemFolderPath(itemsRoot, entity.ItemId);
+                if (!Directory.Exists(itemFolder))
+                {
+                    result.Skipped++;
+                    result.Warnings.Add($"ItemId {entity.ItemId} idx {entity.ImageIndex}: item image folder not found.");
+                    continue;
+                }
+
+                var source = FindMarketplaceMigrationSource(itemFolder, entity);
+                if (source == null)
+                {
+                    result.Skipped++;
+                    result.Warnings.Add($"ItemId {entity.ItemId} idx {entity.ImageIndex}: no usable source file found.");
+                    continue;
+                }
+
+                try
+                {
+                    GeneratedImageVersions generated;
+                    using (var image = Image.Load(source.Value.FilePath))
+                    {
+                        generated = GenerateWithBackgroundVersions(
+                            image,
+                            itemFolder,
+                            entity.ImageIndex,
+                            source.Value.AllowCropRatios ? entity.CropXRatio : null,
+                            source.Value.AllowCropRatios ? entity.CropYRatio : null,
+                            source.Value.AllowCropRatios ? entity.CropSizeRatio : null,
+                            !req.DryRun);
+                    }
+
+                    if (generated.Has900) can900++;
+                    if (generated.Has1600) can1600++;
+                    if (generated.Has2200) can2200++;
+
+                    result.Details.Add(
+                        $"ItemId {entity.ItemId} idx {entity.ImageIndex}: source={source.Value.SourceType} {generated.OriginalWidth}x{generated.OriginalHeight}; effective={generated.EffectiveSourceWidth}x{generated.EffectiveSourceHeight}; can 900={generated.Has900}, 1600={generated.Has1600}, 2200={generated.Has2200}");
+
+                    AddSizeWarnings(result, entity, generated);
+
+                    var publishCount = req.DryRun
+                        ? CountMissingActiveVersionFiles(itemFolder, entity.ImageIndex, generated, req.Force)
+                        : PublishMissingActiveVersionFiles(itemFolder, entity.ImageIndex, generated, req.Force);
+
+                    if (publishCount == 0)
+                    {
+                        result.AlreadyMigrated++;
+                    }
+                    else
+                    {
+                        result.Imported += publishCount;
+                    }
+
+                    if (!req.DryRun)
+                    {
+                        var changed = ApplyMarketplaceMigrationMetadata(entity, generated);
+                        changed = ApplyFilesystemVersionFlags(entity, itemFolder) || changed;
+                        if (changed)
+                        {
+                            Uow.ItemImages.Update(entity);
+                            updatedRows++;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.Failures++;
+                    result.Warnings.Add($"ItemId {entity.ItemId} idx {entity.ImageIndex}: generation failed: {ex.Message}");
+                }
+                finally
+                {
+                    CleanupTempFiles(itemFolder, entity.ImageIndex);
+                }
+            }
+
+            if (!req.DryRun && updatedRows > 0)
+                Uow.Commit();
+
+            result.Details.Add($"Can produce 900: {can900}");
+            result.Details.Add($"Can produce 1600: {can1600}");
+            result.Details.Add($"Can produce 2200: {can2200}");
+            result.Details.Add($"DB rows updated: {updatedRows}");
+            return result;
+        }
+
+        private static MarketplaceMigrationSource? FindMarketplaceMigrationSource(string itemFolder, ItemImage entity)
+        {
+            var idx = entity.ImageIndex;
+            var cropPath = Path.Combine(itemFolder, ItemImageFileContract.GetCropFileName(idx));
+            if (File.Exists(cropPath))
+                return new MarketplaceMigrationSource(cropPath, "crop", false);
+
+            var originalPath = FindOriginalFile(itemFolder, idx, entity.OriginalExtension);
+            if (originalPath != null)
+                return new MarketplaceMigrationSource(originalPath, "original", HasCompleteCropRatios(entity));
+
+            var size2000 = Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.LegacyLargeSize));
+            if (File.Exists(size2000))
+                return new MarketplaceMigrationSource(size2000, "2000", false);
+
+            var size1200 = Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.LegacyWebSize));
+            if (File.Exists(size1200))
+                return new MarketplaceMigrationSource(size1200, "1200", false);
+
+            var raw900 = FindRawImportedReferenceFile(itemFolder, idx);
+            if (raw900 != null)
+                return new MarketplaceMigrationSource(raw900, "raw-900", false);
+
+            return null;
+        }
+
+        private static string? FindOriginalFile(string itemFolder, int imageIndex, string? originalExtension)
+        {
+            if (!string.IsNullOrWhiteSpace(originalExtension))
+            {
+                var originalPath = Path.Combine(itemFolder, ItemImageFileContract.GetOriginalFileName(imageIndex, originalExtension));
+                if (File.Exists(originalPath))
+                    return originalPath;
+            }
+
+            if (!Directory.Exists(itemFolder))
+                return null;
+
+            return Directory
+                .EnumerateFiles(itemFolder, $"{imageIndex}-org.*")
+                .FirstOrDefault(path => AllowedExtensions.Contains(Path.GetExtension(path)));
+        }
+
+        private static string? FindRawImportedReferenceFile(string itemFolder, int imageIndex)
+        {
+            if (!Directory.Exists(itemFolder))
+                return null;
+
+            return Directory
+                .EnumerateFiles(itemFolder, $"{imageIndex}-900.*")
+                .FirstOrDefault(path =>
+                    !Path.GetFileName(path).Contains("-nobg", StringComparison.OrdinalIgnoreCase)
+                    && AllowedExtensions.Contains(Path.GetExtension(path)));
+        }
+
+        private static bool HasCompleteCropRatios(ItemImage entity)
+        {
+            return entity.CropXRatio.HasValue
+                && entity.CropYRatio.HasValue
+                && entity.CropSizeRatio.HasValue;
+        }
+
+        private static int CountMissingActiveVersionFiles(
+            string itemFolder,
+            int imageIndex,
+            GeneratedImageVersions generated,
+            bool force)
+        {
+            return GetPublishableActiveVersionSizes(generated)
+                .Count(size => force || !File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, size))));
+        }
+
+        private static int PublishMissingActiveVersionFiles(
+            string itemFolder,
+            int imageIndex,
+            GeneratedImageVersions generated,
+            bool force)
+        {
+            var count = 0;
+            foreach (var size in GetPublishableActiveVersionSizes(generated))
+            {
+                var tempPath = Path.Combine(itemFolder, ItemImageFileContract.GetTempProcessedFileName(imageIndex, size));
+                var targetPath = Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, size));
+                if (!File.Exists(tempPath))
+                    continue;
+
+                if (!force && File.Exists(targetPath))
+                    continue;
+
+                CleanupOptimizedProcessedDisplaySidecars(itemFolder, imageIndex, size);
+                File.Move(tempPath, targetPath, overwrite: force);
+                count++;
+            }
+
+            return count;
+        }
+
+        private static void CleanupOptimizedProcessedDisplaySidecars(string itemFolder, int imageIndex, int size)
+        {
+            foreach (var extension in ItemImageFileContract.NormalDisplayExtensions.Where(e => e != ".png"))
+                TryDeleteFile(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(imageIndex, size, extension)));
+        }
+
+        private static IEnumerable<int> GetPublishableActiveVersionSizes(GeneratedImageVersions generated)
+        {
+            var generatedSizes = generated.GetGeneratedSizes().ToHashSet();
+            foreach (var size in ItemImageFileContract.ActiveWithBackgroundSizes)
+            {
+                if (generatedSizes.Contains(size))
+                    yield return size;
+            }
+        }
+
+        private static void AddSizeWarnings(MigrationResult result, ItemImage entity, GeneratedImageVersions generated)
+        {
+            var effectiveSize = Math.Min(generated.EffectiveSourceWidth, generated.EffectiveSourceHeight);
+            if (!generated.Has900)
+                result.Warnings.Add($"ItemId {entity.ItemId} idx {entity.ImageIndex}: effective crop {effectiveSize}px is smaller than 900.");
+            if (!generated.Has1600)
+                result.Warnings.Add($"ItemId {entity.ItemId} idx {entity.ImageIndex}: effective crop {effectiveSize}px is smaller than 1600.");
+            if (!generated.Has2200)
+                result.Warnings.Add($"ItemId {entity.ItemId} idx {entity.ImageIndex}: effective crop {effectiveSize}px is smaller than 2200.");
+        }
+
+        private static bool ApplyMarketplaceMigrationMetadata(ItemImage entity, GeneratedImageVersions generated)
+        {
+            var changed = false;
+            changed = SetIfChanged(entity.OriginalWidth, generated.OriginalWidth, v => entity.OriginalWidth = v) || changed;
+            changed = SetIfChanged(entity.OriginalHeight, generated.OriginalHeight, v => entity.OriginalHeight = v) || changed;
+            changed = SetIfChanged(entity.EffectiveSourceWidth, generated.EffectiveSourceWidth, v => entity.EffectiveSourceWidth = v) || changed;
+            changed = SetIfChanged(entity.EffectiveSourceHeight, generated.EffectiveSourceHeight, v => entity.EffectiveSourceHeight = v) || changed;
+            return changed;
+        }
+
+        private static bool ApplyFilesystemVersionFlags(ItemImage entity, string itemFolder)
+        {
+            var idx = entity.ImageIndex;
+            var changed = false;
+
+            changed = SetIfChanged(entity.Has300, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.ThumbnailSize))), v => entity.Has300 = v) || changed;
+            changed = SetIfChanged(entity.Has900, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.WebSize))), v => entity.Has900 = v) || changed;
+            changed = SetIfChanged(entity.Has1200, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.LegacyWebSize))), v => entity.Has1200 = v) || changed;
+            changed = SetIfChanged(entity.Has1600, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.HighResolutionSize))), v => entity.Has1600 = v) || changed;
+            changed = SetIfChanged(entity.Has2000, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.LegacyLargeSize))), v => entity.Has2000 = v) || changed;
+            changed = SetIfChanged(entity.Has2200, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.MarketplaceSize))), v => entity.Has2200 = v) || changed;
+            changed = SetIfChanged(entity.HasNoBg300, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.ThumbnailSize))), v => entity.HasNoBg300 = v) || changed;
+            changed = SetIfChanged(entity.HasNoBg900, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.WebSize))), v => entity.HasNoBg900 = v) || changed;
+            changed = SetIfChanged(entity.HasNoBg1200, File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.LegacyWebSize))), v => entity.HasNoBg1200 = v) || changed;
+
+            return changed;
+        }
+
+        private static bool SetIfChanged<T>(T current, T next, Action<T> apply)
+        {
+            if (EqualityComparer<T>.Default.Equals(current, next))
+                return false;
+
+            apply(next);
+            return true;
+        }
+
+        private static string GetConfiguredDatabaseName()
+        {
+            try
+            {
+                return new SqlConnectionStringBuilder(Constants.ConnectionString).InitialCatalog;
+            }
+            catch
+            {
+                return "(unknown)";
+            }
+        }
+
         /// <summary>
         /// File-based backfill: scans item folders on disk and sets Has* flags
         /// based on actual file existence. No inference.
@@ -1217,7 +1850,7 @@ namespace KLS.Services
         public MigrationResult BackfillVersionFlags()
         {
             var result = new MigrationResult();
-            var itemsRoot = Path.Combine(_env.WebRootPath, "Images", "items");
+            var itemsRoot = GetItemImageRoot();
 
             if (!Directory.Exists(itemsRoot))
             {
@@ -1234,17 +1867,25 @@ namespace KLS.Services
                 var idx = entity.ImageIndex;
                 var ext = entity.OriginalExtension ?? ".png";
 
-                bool h300 = File.Exists(Path.Combine(itemFolder, $"{idx}-300.png"));
-                bool h1200 = File.Exists(Path.Combine(itemFolder, $"{idx}-1200.png"));
-                bool h2000 = File.Exists(Path.Combine(itemFolder, $"{idx}-2000.png"));
-                bool hNb300 = File.Exists(Path.Combine(itemFolder, $"{idx}-300-nobg.png"));
-                bool hNb1200 = File.Exists(Path.Combine(itemFolder, $"{idx}-1200-nobg.png"));
+                bool h300 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.ThumbnailSize)));
+                bool h900 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.WebSize)));
+                bool h1200 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.LegacyWebSize)));
+                bool h1600 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.HighResolutionSize)));
+                bool h2000 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.LegacyLargeSize)));
+                bool h2200 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetProcessedFileName(idx, ItemImageFileContract.MarketplaceSize)));
+                bool hNb300 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.ThumbnailSize)));
+                bool hNb900 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.WebSize)));
+                bool hNb1200 = File.Exists(Path.Combine(itemFolder, ItemImageFileContract.GetNoBackgroundFileName(idx, ItemImageFileContract.LegacyWebSize)));
 
                 bool changed = false;
                 if (entity.Has300 != h300) { entity.Has300 = h300; changed = true; }
+                if (entity.Has900 != h900) { entity.Has900 = h900; changed = true; }
                 if (entity.Has1200 != h1200) { entity.Has1200 = h1200; changed = true; }
+                if (entity.Has1600 != h1600) { entity.Has1600 = h1600; changed = true; }
                 if (entity.Has2000 != h2000) { entity.Has2000 = h2000; changed = true; }
+                if (entity.Has2200 != h2200) { entity.Has2200 = h2200; changed = true; }
                 if (entity.HasNoBg300 != hNb300) { entity.HasNoBg300 = hNb300; changed = true; }
+                if (entity.HasNoBg900 != hNb900) { entity.HasNoBg900 = hNb900; changed = true; }
                 if (entity.HasNoBg1200 != hNb1200) { entity.HasNoBg1200 = hNb1200; changed = true; }
 
                 if (changed)

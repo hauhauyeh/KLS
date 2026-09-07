@@ -2,12 +2,25 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
+    var invoice = Model.Invoice;
+    var company = Model.Company;
+    var invoiceDetails = Model.InvoiceDetails ?? new List<InvoiceDetail>();
+    var companyName = company?.CompanyName ?? "";
+    var companyName2 = company?.CompanyName2;
+    var companyLogoUrl = company?.LogoUrl ?? "";
+    var companyHasLogo = company?.HasLogo == true;
+    var companyAddressLine1 = company?.AddressLine1 ?? "";
+    var companyCity = company?.City ?? "";
+    var companyState = company?.State ?? "";
+    var companyZipCode = company?.ZipCode ?? "";
+    var companyPhone = company?.Phone ?? "";
+    var companyWebsite = company?.Website ?? "";
     var colSpan = 4;
-    var isDropShipPickTicket = Model.Invoice?.IsDropShip == true;
+    var isDropShipPickTicket = invoice?.IsDropShip == true;
     var routeInfoTruckLabel = isDropShipPickTicket ? "Container #" : "Truck #";
-    var routeInfoTruckValue = isDropShipPickTicket ? Model.Invoice?.DropShipPurchaseContainerNumber : Model.Invoice?.TruckNumber;
+    var routeInfoTruckValue = isDropShipPickTicket ? invoice?.DropShipPurchaseContainerNumber : invoice?.TruckNumber;
     var routeInfoDriverLabel = isDropShipPickTicket ? "" : "Driver";
-    var routeInfoDriverValue = isDropShipPickTicket ? "" : Model.Invoice?.DriverName;
+    var routeInfoDriverValue = isDropShipPickTicket ? "" : invoice?.DriverName;
 }
 
 <style>
@@ -446,7 +459,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var itmdetail in Model.InvoiceDetails)
+                @foreach (var itmdetail in invoiceDetails)
                 {
                     if (itmdetail.IsGroup)
                     {
@@ -488,32 +501,32 @@
         </table>
 
         <div class="main-table-header-grid left-width header-height">
-            <div class="company-display-title">@Model.Company.CompanyName</div>
+            <div class="company-display-title">@companyName</div>
 
             <div class="comp-logo-grid">
                 <div class="comp-name">
                     <div>
-                        @if (Model.Company.HasLogo)
+                        @if (companyHasLogo)
                         {
-                            <img src="@Model.Company.LogoUrl" class="img-fluid" />
+                            <img src="@companyLogoUrl" class="img-fluid" />
                         }
                         else
                         {
-                            <span>@Model.Company.CompanyName</span>
+                            <span>@companyName</span>
                         }
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.Company.CompanyName2))
+                    @if (!string.IsNullOrWhiteSpace(companyName2))
                     {
-                        <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                        <div style="font-size: 12px; margin-top: 2px;">@companyName2</div>
                     }
                 </div>
                 <div class="comp-address">
-                    @Model.Company.AddressLine1<br />
-                    @Model.Company.City @Model.Company.State
-                    @Model.Company.ZipCode<br />
-                    @Model.Company.Phone<br />
-                    <strong>@Model.Company.Website</strong>
+                    @companyAddressLine1<br />
+                    @companyCity @companyState
+                    @companyZipCode<br />
+                    @companyPhone<br />
+                    <strong>@companyWebsite</strong>
                 </div>
             </div>
             <div class="inv-info-grid">
@@ -531,23 +544,23 @@
                     </tr>
                     <tr>
                         <td class="invoice-info-label">Invoice Date</td>
-                        <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
+                        <td class="invoice-info">@string.Format("{0:d}", invoice?.ShipDate)</td>
                     </tr>
                     <tr>
                         <td class="invoice-info-label">Terms</td>
                         <td class="invoice-info" style="white-space:nowrap;">
-                            @Model.Invoice.TermName
+                            @invoice?.TermName
                         </td>
                     </tr>
                     <tr>
                         <td class="invoice-info-label">PO</td>
-                        @if (string.IsNullOrEmpty(Model.Invoice.CustPONumber))
+                        @if (string.IsNullOrEmpty(invoice?.CustPONumber))
                         {
                             <td class="invoice-info">&nbsp;</td>
                         }
                         else
                         {
-                            <td class="invoice-info">@Model.Invoice.CustPONumber</td>
+                            <td class="invoice-info">@invoice?.CustPONumber</td>
                         }
                     </tr>
                 </table>
@@ -555,8 +568,8 @@
             <div class="route-info-grid">
                 <div class="d-flex justify-content-end">
                     <div class="invoice-barcode">
-                        @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
-                        *@Model.Invoice.SalesNumber*
+                        @* Old scanner payload: *S-@invoice?.SalesId* *@
+                        *@invoice?.SalesNumber*
                     </div>
                 </div>
                 <table class="route-info-table">
@@ -567,19 +580,19 @@
                     <tr>
                         <td class="route-info-label">Route</td>
                         <td class="route-info">
-                            @if (Model.Invoice.IsLoadSeparate)
+                            @if (invoice?.IsLoadSeparate == true)
                             {
-                                <strong class="load-separate">@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder</strong>
+                                <strong class="load-separate">@invoice?.ShipRoute - @invoice?.RouteOrder</strong>
                             }
                             else
                             {
-                                <strong>@Model.Invoice.ShipRoute - @Model.Invoice.RouteOrder</strong>
+                                <strong>@invoice?.ShipRoute - @invoice?.RouteOrder</strong>
                             }
                         </td>
                     </tr>
                     <tr>
                         <td class="route-info-label">Sales Rep</td>
-                        <td class="route-info">@Model.Invoice.SalesRepName</td>
+                        <td class="route-info">@invoice?.SalesRepName</td>
                     </tr>
                     <tr>
                         <td class="route-info-label">@routeInfoTruckLabel</td>
@@ -609,17 +622,17 @@
             <div class="ship-to-grid">
                 <div class="ship-to-label highlight-dark">Ship To</div>
                 <div class="cust-name">
-                    @Model.Invoice.ShipName
+                    @invoice?.ShipName
                 </div>
                 <div class="cust-address">
-                    @Model.Invoice.ShipAddress<br />
-                    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
-                    @Model.Invoice.ShipPhone1
+                    @invoice?.ShipAddress<br />
+                    @invoice?.ShipCity @invoice?.ShipState @invoice?.ShipZipCode<br />
+                    @invoice?.ShipPhone1
                 </div>
             </div>
             <div class="instruction-grid">
                 <div class="instruction-label highlight-dark">Instruction</div>
-                <div class="instruction">@Model.Invoice.Instruction</div>
+                <div class="instruction">@invoice?.Instruction</div>
             </div>
         </div>
 

@@ -3,6 +3,18 @@
 @model RptSalesQuoteProformaInvoice
 @{
     var colSpan = 5;
+    var company = Model.Company;
+    var companyName = company?.CompanyName ?? "";
+    var companyName2 = company?.CompanyName2;
+    var companyLogoUrl = company?.LogoUrl ?? "";
+    var companyHasLogo = company?.HasLogo == true;
+    var companyAddressLine1 = company?.AddressLine1 ?? "";
+    var companyCity = company?.City ?? "";
+    var companyState = company?.State ?? "";
+    var companyZipCode = company?.ZipCode ?? "";
+    var companyPhone = company?.Phone ?? "";
+    var companyWebsite = company?.Website ?? "";
+    var quoteNotes = Model.Quote?.Notes ?? "";
     var quoteDateDisplay = Model.Quote?.QuoteDate?.ToString("MM/dd/yyyy") ?? "";
 }
 
@@ -357,30 +369,30 @@
 
     <!-- HEADER -->
     <div class="main-table-header-grid header-height">
-        <div class="company-display-title">@Model.Company.CompanyName</div>
+        <div class="company-display-title">@companyName</div>
 
         <div class="comp-logo-grid">
             <div class="comp-name">
                 <div>
-                    @if (Model.Company!.HasLogo)
+                    @if (companyHasLogo)
                     {
-                        <img src="@Model.Company.LogoUrl" class="img-fluid" />
+                        <img src="@companyLogoUrl" class="img-fluid" />
                     }
                     else
                     {
-                        <span>@Model.Company.CompanyName</span>
+                        <span>@companyName</span>
                     }
                 </div>
-                @if (!string.IsNullOrWhiteSpace(Model.Company.CompanyName2))
+                @if (!string.IsNullOrWhiteSpace(companyName2))
                 {
-                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                    <div style="font-size: 12px; margin-top: 2px;">@companyName2</div>
                 }
             </div>
             <div class="comp-address">
-                @Model.Company.AddressLine1<br />
-                @Model.Company.City @Model.Company.State @Model.Company.ZipCode<br />
-                @Model.Company.Phone<br />
-                <strong>@Model.Company.Website</strong>
+                @companyAddressLine1<br />
+                @companyCity @companyState @companyZipCode<br />
+                @companyPhone<br />
+                <strong>@companyWebsite</strong>
             </div>
         </div>
         <div class="inv-info-grid">
@@ -422,7 +434,7 @@
         </div>
         <div class="notes-grid">
             <div class="notes-label highlight-dark">Notes</div>
-            <div class="notes-content">@Model.Quote.Notes</div>
+            <div class="notes-content">@quoteNotes</div>
         </div>
     </div>
 

@@ -3,6 +3,7 @@
 @model RptSalesQuote
 @{
     var colSpan = 5;
+    var company = Model.Company;
     var expiryDisplay = Model.Quote?.ExpiryDate?.ToString("MM/dd/yyyy") ?? "";
     var quoteDateDisplay = Model.Quote?.QuoteDate?.ToString("MM/dd/yyyy") ?? "";
 }
@@ -356,30 +357,30 @@
 
     <!-- HEADER -->
     <div class="main-table-header-grid header-height">
-        <div class="company-display-title">@Model.Company.CompanyName</div>
+        <div class="company-display-title">@(company?.CompanyName ?? "")</div>
 
         <div class="comp-logo-grid">
             <div class="comp-name">
                 <div>
-                    @if (Model.Company!.HasLogo)
+                    @if (company?.HasLogo == true)
                     {
-                        <img src="@Model.Company.LogoUrl" class="img-fluid" />
+                        <img src="@company.LogoUrl" class="img-fluid" />
                     }
                     else
                     {
-                        <span>@Model.Company.CompanyName</span>
+                        <span>@(company?.CompanyName ?? "")</span>
                     }
                 </div>
-                @if (!string.IsNullOrWhiteSpace(Model.Company.CompanyName2))
+                @if (!string.IsNullOrWhiteSpace(company?.CompanyName2))
                 {
-                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                    <div style="font-size: 12px; margin-top: 2px;">@company.CompanyName2</div>
                 }
             </div>
             <div class="comp-address">
-                @Model.Company.AddressLine1<br />
-                @Model.Company.City @Model.Company.State @Model.Company.ZipCode<br />
-                @Model.Company.Phone<br />
-                <strong>@Model.Company.Website</strong>
+                @company?.AddressLine1<br />
+                @company?.City @company?.State @company?.ZipCode<br />
+                @company?.Phone<br />
+                <strong>@company?.Website</strong>
             </div>
         </div>
         <div class="inv-info-grid">
@@ -418,7 +419,7 @@
         </div>
         <div class="notes-grid">
             <div class="notes-label highlight-dark">Notes</div>
-            <div class="notes-content">@Model.Quote.Notes</div>
+            <div class="notes-content">@(Model.Quote?.Notes ?? "")</div>
         </div>
     </div>
 

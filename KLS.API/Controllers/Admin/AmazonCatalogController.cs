@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 namespace KLS.API.Controllers.Admin
 {
     [AuthorizeAdmin]
+    [ClientFeature("Marketplace")]
     [Route("api/admin/[controller]")]
     [Display(Name = "Amazon Catalog Search", GroupName = "Marketplace")]
     public class AmazonCatalogController : BaseController

@@ -2,6 +2,18 @@
 @using KLS.Models.Reports
 @model RptInvoice
 @{
+    var invoice = Model.Invoice;
+    var company = Model.Company;
+    var invoiceDetails = Model.InvoiceDetails ?? new List<InvoiceDetail>();
+    var companyName = company?.CompanyName ?? "";
+    var companyName2 = company?.CompanyName2 ?? "";
+    var companyAddressLine1 = company?.AddressLine1 ?? "";
+    var companyCity = company?.City ?? "";
+    var companyState = company?.State ?? "";
+    var companyZipCode = company?.ZipCode ?? "";
+    var companyPhone = company?.Phone ?? "";
+    var companyWebsite = company?.Website ?? "";
+    var invoiceFinePrint = company?.InvoiceFinePrint ?? "";
     var colSpan = 7;
 }
 
@@ -420,7 +432,7 @@
                     <td class="text-center">Rate</td>
                     <td class="text-right">Amount</td>
                 </tr>
-                @foreach (var itmdetail in Model.InvoiceDetails)
+                @foreach (var itmdetail in invoiceDetails)
                 {
                     if (itmdetail.IsGroup)
                     {
@@ -432,6 +444,7 @@
                     }
                     else
                     {
+                        var showListPriceDiscount = itmdetail.ListPrice > 0 && itmdetail.UnitPrice < itmdetail.ListPrice;
                         <tr>
                             <td class="no-overflow"><strong>@string.Format("{0:0.##}", itmdetail.ShipQty)</strong> @itmdetail.Unit</td>
                             <td><span>@itmdetail.ItemCode</span></td>
@@ -447,8 +460,18 @@
                                 }
                             </td>
 
-                            <td class="text-center"><span>@Utilities.FormatPrice(itmdetail.ListPrice, Model.PriceDecimals)</span></td>
-                            <td class="text-center"><span>@string.Format("{0:0.##%}", itmdetail.Discount)</span></td>
+                            <td class="text-center">
+                                @if (showListPriceDiscount)
+                                {
+                                    <span>@Utilities.FormatPrice(itmdetail.ListPrice, Model.PriceDecimals)</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (showListPriceDiscount)
+                                {
+                                    <span>@string.Format("{0:0.##%}", itmdetail.Discount)</span>
+                                }
+                            </td>
                             <td class="text-center"><span>@Utilities.FormatPrice(itmdetail.UnitPrice, Model.PriceDecimals)</span></td>
                             <td class="text-right"><span>@string.Format("{0:c}", itmdetail.ExtTotal)</span></td>
                         </tr>
@@ -468,7 +491,7 @@
                     @if (Model.HasDiscount)
                     {
                         <div>
-                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bold;">@Model.Company.CompanyName</span>
+                            <span style="font-family: 'Segoe UI'; font-size: 40px; font-weight:bold;">@companyName</span>
                         </div>
                     }
                     else
@@ -479,22 +502,22 @@
                         </div>
                     }
 
-                    <div style="font-size: 12px; margin-top: 2px;">@Model.Company.CompanyName2</div>
+                    <div style="font-size: 12px; margin-top: 2px;">@companyName2</div>
                 </div>
                 <div class="comp-address">
-                    @Model.Company.AddressLine1<br />
-                    @Model.Company.City @Model.Company.State
-                    @Model.Company.ZipCode<br />
-                    @Model.Company.Phone<br />
-                    <strong>@Model.Company.Website</strong>
+                    @companyAddressLine1<br />
+                    @companyCity @companyState
+                    @companyZipCode<br />
+                    @companyPhone<br />
+                    <strong>@companyWebsite</strong>
                 </div>
             </div>
             <div class="inv-info-grid">
                 <div class="d-flex justify-content-between">
                     <div class="invoice-label">INVOICE</div>
                     <div class="invoice-barcode">
-                        @* Old scanner payload: *S-@Model.Invoice.SalesId* *@
-                        *@Model.Invoice.SalesNumber*
+                        @* Old scanner payload: *S-@invoice?.SalesId* *@
+                        *@invoice?.SalesNumber*
                     </div>
                 </div>
                 <table>
@@ -508,12 +531,12 @@
                     </tr>
                     <tr>
                         <td class="invoice-info-label">Invoice Date</td>
-                        <td class="invoice-info">@string.Format("{0:d}", Model.Invoice.ShipDate)</td>
+                        <td class="invoice-info">@string.Format("{0:d}", invoice?.ShipDate)</td>
                     </tr>
                     <tr>
                         <td class="invoice-info-label">Terms</td>
                         <td class="invoice-info" style="white-space:nowrap;">
-                            @Model.Invoice.TermName
+                            @invoice?.TermName
                         </td>
                     </tr>
                     <tr>
@@ -525,18 +548,18 @@
             <div class="ship-to-grid">
                 <div class="ship-to-label highlight-dark">Ship To</div>
                 <div class="cust-name">
-                    @Model.Invoice.ShipName
+                    @invoice?.ShipName
                 </div>
                 <div class="cust-address">
-                    @Model.Invoice.ShipAddress<br />
-                    @Model.Invoice.ShipCity @Model.Invoice.ShipState @Model.Invoice.ShipZipCode<br />
-                    @Model.Invoice.ShipPhone1
+                    @invoice?.ShipAddress<br />
+                    @invoice?.ShipCity @invoice?.ShipState @invoice?.ShipZipCode<br />
+                    @invoice?.ShipPhone1
                 </div>
             </div>
             <div class="instruction-grid">
                 <div class="instruction-label highlight-dark">Instruction</div>
-                <div class="instruction">@Model.Invoice.Instruction</div>
-                <div class="po">PO: @Model.Invoice.CustPONumber</div>
+                <div class="instruction">@invoice?.Instruction</div>
+                <div class="po">PO: @invoice?.CustPONumber</div>
             </div>
         </div>
 
@@ -573,20 +596,20 @@
                     </colgroup>
                     <tr>
                         <td class="text-right">Subtotal</td>
-                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.SubTotal)</td>
+                        <td class="text-right">@string.Format("{0:c}", invoice?.SubTotal)</td>
                     </tr>
                     <tr>
                         <td class="text-right">Tax</td>
-                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.TaxTotal)</td>
+                        <td class="text-right">@string.Format("{0:c}", invoice?.TaxTotal)</td>
                     </tr>
                     <tr>
                         <td class="text-right">Total</td>
-                        <td class="text-right">@string.Format("{0:c}", Model.Invoice.SalesTotal)</td>
+                        <td class="text-right">@string.Format("{0:c}", invoice?.SalesTotal)</td>
                     </tr>
                 </table>
             </div>
             <div class="fineprint-grid">
-                @Model.Company.InvoiceFinePrint
+                @invoiceFinePrint
             </div>
         </div>
     </div>
