@@ -1,4 +1,5 @@
 ﻿using KLS.Common;
+using ClosedXML.Excel;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
@@ -490,21 +491,36 @@ namespace KLS.Services
             string subject = "Pricesheet";
             string mailBody = _pdfService.RenderTemplate("~/Views/Pricesheet.cshtml", pricesheet);
 
-            _emailAuditService.SendAndLog(new EmailAuditMessage
+            var tempFolder = CreateEmailAttachmentFolder();
+
+            try
             {
-                To = toEmails,
-                Subject = subject,
-                HtmlBody = mailBody,
-                EmailCategory = EmailAudit.Category.Document,
-                EmailType = EmailAudit.EmailType.PriceSheet,
-                PayeeId = customer?.PayeeId,
-                DocumentType = EmailAudit.DocumentType.PriceSheet,
-                RelatedEntityType = EmailAudit.RelatedEntity.Payee,
-                RelatedEntityId = customer?.PayeeId,
-                // 2026-08-28: scheduler passes Source.Scheduler; no user on that request.
-                Source = source,
-                RequestedBy = source == EmailAudit.Source.Scheduler ? null : UserContext.SystemUserId
-            });
+                var attachments = BuildPricesheetEmailAttachments(tempFolder, pricesheet, pricesheets, customer, payeeId);
+
+                var error = _emailAuditService.SendAndLogSync(new EmailAuditMessage
+                {
+                    To = toEmails,
+                    Subject = subject,
+                    HtmlBody = mailBody,
+                    Attachments = attachments,
+                    EmailCategory = EmailAudit.Category.Document,
+                    EmailType = EmailAudit.EmailType.PriceSheet,
+                    PayeeId = customer?.PayeeId,
+                    DocumentType = EmailAudit.DocumentType.PriceSheet,
+                    RelatedEntityType = EmailAudit.RelatedEntity.Payee,
+                    RelatedEntityId = customer?.PayeeId,
+                    // 2026-08-28: scheduler passes Source.Scheduler; no user on that request.
+                    Source = source,
+                    RequestedBy = source == EmailAudit.Source.Scheduler ? null : UserContext.SystemUserId
+                });
+
+                if (!string.IsNullOrEmpty(error))
+                    throw new InvalidOperationException($"Pricesheet email failed: {error}");
+            }
+            finally
+            {
+                DeleteEmailAttachmentFolder(tempFolder);
+            }
         }
 
         public CustomerStatementEmailResult EmailStatement(int payeeId, CustomerStatementEmailReq? req = null, string source = EmailAudit.Source.Manual)
@@ -591,6 +607,83 @@ namespace KLS.Services
                 throw new FileNotFoundException("Generated statement PDF was not found.", statementFile);
 
             return new[] { statementFile };
+        }
+
+        private string[] BuildPricesheetEmailAttachments(string tempFolder, EmailPricesheet pricesheet, IEnumerable<RptPricesheet> pricesheets, CustomerDto? customer, int payeeId)
+        {
+            var customerFilePart = SafeFilePart(customer?.PayeeName ?? payeeId.ToString());
+            var pdfFile = Path.Combine(tempFolder, $"Pricesheet_{customerFilePart}_{DateTime.Today:yyyyMMdd}.pdf");
+            var pricesheetHtml = _pdfService.RenderTemplate("~/Views/Pdf/Pricesheet.cshtml", pricesheet);
+
+            using (var pdf = _pdfService.HtmlToPDF(pricesheetHtml))
+            {
+                pdf.SaveAs(pdfFile);
+            }
+
+            if (!File.Exists(pdfFile))
+                throw new FileNotFoundException("Generated pricesheet PDF was not found.", pdfFile);
+
+            var excelFile = BuildPricesheetExcelAttachment(tempFolder, pricesheets, customer, payeeId);
+
+            return new[] { pdfFile, excelFile };
+        }
+
+        private static string BuildPricesheetExcelAttachment(string tempFolder, IEnumerable<RptPricesheet> pricesheets, CustomerDto? customer, int payeeId)
+        {
+            var customerFilePart = SafeFilePart(customer?.PayeeName ?? payeeId.ToString());
+            var pricesheetFile = Path.Combine(tempFolder, $"Pricesheet_{customerFilePart}_{DateTime.Today:yyyyMMdd}.xlsx");
+
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Pricesheet");
+            var headers = new[]
+            {
+                "Item Code",
+                "Item Name",
+                "Pack Size",
+                "Unit",
+                "Price",
+                "Type",
+                "Category",
+                "Subcategory"
+            };
+
+            for (var i = 0; i < headers.Length; i++)
+            {
+                ws.Cell(1, i + 1).Value = headers[i];
+            }
+
+            var row = 2;
+            foreach (var item in pricesheets)
+            {
+                ws.Cell(row, 1).Value = item.ItemCode ?? "";
+                ws.Cell(row, 2).Value = item.ItemName ?? "";
+                ws.Cell(row, 3).Value = item.PackSize ?? "";
+                ws.Cell(row, 4).Value = item.Unit ?? "";
+                ws.Cell(row, 5).Value = item.Price ?? 0m;
+                ws.Cell(row, 6).Value = item.IsShared ? "Suggested" : "Personalized";
+                ws.Cell(row, 7).Value = item.Cat0 ?? "";
+                ws.Cell(row, 8).Value = item.Cat1 ?? "";
+                row++;
+            }
+
+            var usedRange = ws.Range(1, 1, Math.Max(row - 1, 1), headers.Length);
+            usedRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            usedRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            usedRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+
+            var headerRange = ws.Range(1, 1, 1, headers.Length);
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+            ws.Column(5).Style.NumberFormat.Format = "$#,##0.00";
+            ws.Columns().AdjustToContents();
+            ws.SheetView.FreezeRows(1);
+            workbook.SaveAs(pricesheetFile);
+
+            if (!File.Exists(pricesheetFile))
+                throw new FileNotFoundException("Generated pricesheet Excel file was not found.", pricesheetFile);
+
+            return pricesheetFile;
         }
 
         private static decimal CalculateStatementTotalDue(RptCustStmt statement)
