@@ -71,6 +71,8 @@ namespace KLS.Models
 
         public string? ItemCode { get; set; }
 
+        public string? ItemType { get; set; }
+
         public string? PackSize { get; set; }
 
         public decimal? CaseWeight { get; set; }
