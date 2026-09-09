@@ -286,7 +286,10 @@ namespace KLS.Services
 
             var packing = _reportService.PackingList(req);
 
-            var template = "~/Views/Pdf/PackingList.cshtml";
+            var documentFormat = _systemSettingService.GetByKey<int>(GlobalKey.DOCUMENT_FORMAT);
+            var template = documentFormat == 5 && !req.SalesId.HasValue
+                ? "~/Views/Pdf/PackingList-5.cshtml"
+                : "~/Views/Pdf/PackingList.cshtml";
             var html = _pdfService.RenderTemplate(template, packing);
 
             var suffix = req.SalesId.HasValue ? req.SalesNumber.ToString()

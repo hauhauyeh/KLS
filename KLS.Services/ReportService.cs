@@ -450,7 +450,19 @@ namespace KLS.Services
         {
             var itemList = packingItems.ToList();
 
-            var packingStorage = itemList
+            var customerNames = itemList
+                .Where(IsPackingCustomerMarker)
+                .Select(x => x.ItemName?.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .GroupBy(x => x!, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First()!)
+                .ToList();
+
+            var productItems = itemList
+                .Where(x => !IsPackingCustomerMarker(x))
+                .ToList();
+
+            var packingStorage = productItems
                 .GroupBy(c => c.StorageName)
                 .OrderBy(g => PackingStorageOrder.GetSortOrder(g.Key))
                 .ThenBy(g => g.Key)
@@ -470,9 +482,13 @@ namespace KLS.Services
                 SalesId = salesId,
                 PayeeName = payeeName,
                 TruckNumber = truckNumber,
+                CustomerNames = customerNames,
                 Storages = packingStorage
             };
         }
+
+        private static bool IsPackingCustomerMarker(RptPackingItem item)
+            => string.Equals(item.StorageName, "Customer", StringComparison.OrdinalIgnoreCase);
 
         // Default standalone grouping is ItemName + Comment only.
         // When TotalSplit mode is enabled, Cooler lbs rows that would look identical

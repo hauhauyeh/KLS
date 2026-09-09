@@ -26,6 +26,8 @@ namespace KLS.Models.Reports
 
         public int DropCount { get; set; }
 
+        public List<string>? CustomerNames { get; set; }
+
         public List<PackingListStorage>? Storages { get; set; }
 
         public decimal? TotalWeight { get { return Storages?.Sum(c => c.WeightTotal); } }

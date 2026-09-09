@@ -1,0 +1,382 @@
+@model KLS.Models.Reports.RptPackingList
+
+@{
+    var storages = Model.Storages ?? new List<KLS.Models.Reports.PackingListStorage>();
+    var customerNames = Model.CustomerNames ?? new List<string>();
+}
+
+<style>
+    .pack {
+        font-size: 30px;
+        font-style: italic;
+        font-weight: bold;
+        font-family: segoe ui;
+    }
+
+    .div-item {
+        border: 1px solid grey;
+        padding: 0 2px;
+        page-break-inside: avoid;
+    }
+
+    .item-name {
+        font-size: 14px;
+    }
+
+    .item-subtitle {
+        font-family: "Calibri";
+        font-size: 11px;
+        color: #555;
+        margin-top: -2px;
+        margin-bottom: 2px;
+    }
+
+    .itemqty {
+        width: 55%;
+        float: left;
+        text-align: right;
+        font-size: 18px;
+        font-style: italic;
+    }
+
+    .itemunit {
+        width: 45%;
+        float: right;
+        font-size: 16px;
+    }
+
+    .route, .trucknum, .loadorder {
+        font-size: 24px;
+        font-weight: bold;
+        font-style: italic;
+        font-family: segoe ui;
+        background-color: black;
+        color: white;
+        padding: 0 20px;
+        border-radius: 5px;
+    }
+    .customer-list {
+        -webkit-column-count: 2;
+        -moz-column-count: 2;
+        column-count: 2;
+        -moz-column-gap: 24px;
+        column-gap: 24px;
+        font-family: "Segoe UI";
+        font-size: 11px;
+        margin: 0 0 10px 0;
+        min-height: 0.75in;
+    }
+
+    .customer-name {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        padding: 1px 0;
+    }
+
+
+    #mc4a {
+        -webkit-column-count: 4; /* Chrome, Safari, Opera */
+        -moz-column-count: 4;
+        column-count: 4;
+        -moz-column-gap: 10px;
+        column-fill: auto;
+        column-gap: 10px;
+        font-family: "Segoe UI";
+        font-size: 11px;
+    }
+
+    .comment {
+        background-color: black;
+        color: white;
+        padding: 0px 4px;
+        border-radius: 5px;
+    }
+
+    strong {
+        font-weight: bold;
+    }
+
+    .pack-header {
+        margin-bottom: 1rem !important;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .pack-grp-header {
+        background: black;
+        color: white;
+        border-width: 1px;
+        border-color: black;
+        border-style: solid;
+        padding: 2px;
+        margin-bottom: 0px;
+        margin-top: 0px;
+        font-family: "Franklin Gothic";
+        font-weight: bold;
+        text-align: center;
+        font-size: 15px;
+        font-style: italic;
+    }
+
+    .pack-grp-subheader {
+        background: black;
+        color: white;
+        border-width: 0px 0px 2px 0px;
+        border-color: black;
+        border-style: solid;
+        padding: 0px;
+        margin-bottom: 0px;
+        margin-top: 0px;
+        font-family: "Arial";
+        font-weight: bold;
+        text-align: left;
+        font-size: 13px;
+        font-style: italic;
+    }
+
+    .dateroute, .payee {
+        font-size: 20px;
+        font-weight: 700;
+        font-style: italic;
+        font-family: 'segoe ui';
+        color: black;
+    }
+
+    .name-date-route {
+        display: flex !important;
+        justify-content: space-between !important;
+        border-bottom: 1px solid black;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+    }
+
+    .single-row {
+        font-family: "Calibri";
+        font-size: 11px;
+    }
+
+    .split-row {
+        padding-left: 18px;
+        color: #444;
+    }
+
+    .split-detail-line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .split-detail-left {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .split-detail-right {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+
+    .split-detail-right .split-qty {
+        min-width: 44px;
+        text-align: right;
+        font-size: 16px;
+    }
+
+    .split-detail-right .split-unit {
+        min-width: 46px;
+        font-size: 15px;
+    }
+
+    .split-subtitle {
+        font-size: 11px;
+        font-style: italic;
+    }
+
+        .single-row::after {
+            content: "";
+            clear: both;
+            display: block;
+        }
+
+    .weight {
+        font-family: "Calibri";
+    }
+
+    @@media print {
+        @@page {
+            size: letter;
+            margin-top: 1in;
+        }
+    }
+
+</style>
+
+<div class="div-main">
+    <div>
+        @if (Model.SalesId.HasValue)
+        {
+            <div class="name-date-route">
+                <div class="payee">@Model.PayeeName</div>
+                <div class="dateroute">@string.Format("{0:d}", Model.ShipDate) - @Model.ShipRoute</div>
+            </div>
+        }
+        else
+        {
+            <div class="rpt-name pack-header">
+                <div class="pack">
+                    @if (!string.IsNullOrEmpty(Model.ReportTitle))
+                    {
+                        @Model.ReportTitle
+                        @if (Model.ShipDate.HasValue)
+                        {
+                            <span> - @string.Format("{0:d}", Model.ShipDate)</span>
+                        }
+                    }
+                    else if (Model.ShipDate.HasValue)
+                    {
+                        @string.Format("{0:d}", Model.ShipDate)
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(Model.ShipRoute))
+                {
+                    <div class="route">
+                        @Model.ShipRoute
+                    </div>
+                }
+                @if (Model.DropCount > 0)
+                {
+                    <div class="loadorder">
+                        [@Model.DropCount]
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.TruckNumber))
+                {
+                    <div class="trucknum">
+                        T#@Model.TruckNumber
+                    </div>
+                }
+                @if (Model.TotalWeight != 0)
+                {
+                    <div class="weight">
+                        <div><strong>Weight</strong></div>
+                        <div><strong>@string.Format("{0:0.00}", Model.TotalWeight) lbs</strong></div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @if (customerNames.Count > 0)
+    {
+        <div class="customer-list">
+            @foreach (var customerName in customerNames)
+            {
+                <div class="customer-name">@customerName</div>
+            }
+        </div>
+    }
+
+    <div id="mc4a">
+        @if (storages.Count > 0)
+        {
+            foreach (var storage in storages)
+            {
+                var products = storage.Products ?? new List<KLS.Models.Reports.PackingListProduct>();
+
+                if (!string.IsNullOrEmpty(storage.StorageName))
+                {
+                    <h6 class="pack-grp-header">
+                        <span>@storage.StorageName</span>
+                    </h6>
+                }
+                else
+                {
+                    <h6 class="pack-grp-subheader"></h6>
+                }
+
+                foreach (var product in products)
+                {
+                    <div class="div-item">
+                        @if (!string.IsNullOrEmpty(product.ItemName))
+                        {
+                            <strong class="item-name">
+                                @product.ItemName
+                                @if (!string.IsNullOrEmpty(product.Comment))
+                                {
+                                    <span class="comment">(@product.Comment)</span>
+                                }
+                            </strong>
+                            @* Subtitle is shown only for lbs-only split boxes from the shared
+                               TotalList / LoadingList route-packing builder. *@
+                            @if (!string.IsNullOrEmpty(product.Subtitle))
+                            {
+                                <div class="item-subtitle">@product.Subtitle</div>
+                            }
+                        }
+
+                        @* UnitLines are used when a report needs one item box with combined
+                           unit totals first, then indented customer split detail underneath
+                           the affected unit. Other packing reports stay on the older Items path. *@
+                        @if (product.UnitLines?.Count > 0)
+                        {
+                            foreach (var unitLine in product.UnitLines)
+                            {
+                                @* Prepack split-detail rows keep customer first, then aligned qty/unit
+                                   on one line so the nested customer breakdown stays readable. *@
+                                if (unitLine.IsSplitDetail)
+                                {
+                                    <div class="single-row split-row" style="padding:2px 0 4px 0">
+                                        <div class="split-detail-line">
+                                            <span class="split-subtitle split-detail-left">@unitLine.Subtitle</span>
+                                            <span class="split-detail-right">
+                                                <strong class="split-qty">@string.Format("{0:0.##}", unitLine.ShipQty)</strong>
+                                                <span class="split-unit">@unitLine.Unit</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="single-row" style="padding:2px 0 4px 0">
+                                        <div class="itemqty">
+                                            <strong>@string.Format("{0:0.##}", unitLine.ShipQty)</strong>
+                                        </div>
+                                        <div class="itemunit d-flex justify-content-between">
+                                            <span>&nbsp;@unitLine.Unit&nbsp;</span>
+                                            <span>&nbsp;</span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
+                        else if (product.Items?.Count > 0)
+                        {
+                            foreach (var itm in product.Items)
+                            {
+                                <div class="single-row" style="padding:2px 0 4px 0">
+                                    <div class="itemqty">
+                                        <strong>@string.Format("{0:0.##}", itm.ShipQty)</strong>
+                                    </div>
+                                    <div class="itemunit d-flex justify-content-between">
+                                        <span>&nbsp;@itm.Unit&nbsp;</span>
+                                        <strong>@itm.Aisle@itm.Bay</strong>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            }
+        }
+        else
+        {
+            <p class="alert alert-danger">Packing item not found.</p>
+        }
+    </div>
+</div>
