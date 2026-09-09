@@ -153,6 +153,11 @@
         width: 1.2in;
     }
 
+    .meta-customer-po {
+        left: 1.27in;
+        width: 1.6in;
+    }
+
     .meta-terms {
         left: 3.55in;
         width: 1.15in;
@@ -329,6 +334,7 @@
 
     <div class="meta-row">
         <div class="meta-customer">@invoice?.ShipId</div>
+        <div class="meta-customer-po">@invoice?.CustPONumber</div>
         <div class="meta-terms">@invoice?.TermName</div>
         <div class="meta-route">@invoice?.ShipRoute</div>
         <div class="meta-date">@DateText(invoice?.ShipDate)</div>
