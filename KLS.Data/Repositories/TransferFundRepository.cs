@@ -109,6 +109,13 @@ namespace KLS.Data.Repositories
             return DbContext.DepositList.FromSqlRaw("[dbo].[Deposit_GetAllList] @Pageno,@Pagesize,@Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@IsCount,@TotalCount OUTPUT,@Uncleared", param);
         }
 
+        public IQueryable<DepositExportDetailRow> ExportDepositDetails(DepositReq depositReq)
+        {
+            var param = BuildDepositExportParam(depositReq);
+
+            return DbContext.DepositExportDetailRows.FromSqlRaw("[dbo].[Deposit_ExportDetail] @Search,@StartDate,@EndDate,@ToAccountId,@Filterby,@SortField,@SortOrder,@Uncleared", param);
+        }
+
         public int CountDeposits(DepositReq depositReq)
         {
             depositReq.IsCount = true;
@@ -149,6 +156,29 @@ namespace KLS.Data.Repositories
                     Direction = System.Data.ParameterDirection.Output,
                     SqlDbType = System.Data.SqlDbType.Int
                 },
+
+                new SqlParameter("@Uncleared", depositReq.Uncleared)
+            };
+
+            return param;
+        }
+
+        private static object[] BuildDepositExportParam(DepositReq depositReq)
+        {
+            object[] param = {
+                (!string.IsNullOrEmpty(depositReq.Search)) ? new SqlParameter("@Search", depositReq.Search) : new SqlParameter("@Search", DBNull.Value),
+
+                depositReq.StartDate.HasValue ? new SqlParameter("@StartDate", depositReq.StartDate) : new SqlParameter("@StartDate", DBNull.Value),
+
+                depositReq.EndDate.HasValue ? new SqlParameter("@EndDate", depositReq.EndDate) : new SqlParameter("@EndDate", DBNull.Value),
+
+                depositReq.ToAccountId.HasValue ? new SqlParameter("@ToAccountId", depositReq.ToAccountId) : new SqlParameter("@ToAccountId", DBNull.Value),
+
+                (!string.IsNullOrEmpty(depositReq.Filterby)) ? new SqlParameter("@Filterby", depositReq.Filterby) : new SqlParameter("@Filterby", DBNull.Value),
+
+                string.IsNullOrEmpty(depositReq.SortField) ? new SqlParameter("@SortField", DBNull.Value) : new SqlParameter("@SortField", depositReq.SortField),
+
+                string.IsNullOrEmpty(depositReq.SortOrder) ? new SqlParameter("@SortOrder", DBNull.Value) : new SqlParameter("@SortOrder", depositReq.SortOrder),
 
                 new SqlParameter("@Uncleared", depositReq.Uncleared)
             };

@@ -18,6 +18,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<DepositList> GetPagedDeposits(DepositReq depositReq);
 
+        IQueryable<DepositExportDetailRow> ExportDepositDetails(DepositReq depositReq);
+
         int CountDeposits(DepositReq depositReq);
 
         int SaveDeposit(TransferFund transferFund);

@@ -1,14 +1,14 @@
-﻿using KLS.Common;
+using KLS.Common;
 using KLS.Contract.Interfaces;
 using KLS.Contract.Services;
 using KLS.Models;
+using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;
 using System;
+using System.IO;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace KLS.Services
@@ -88,21 +88,10 @@ namespace KLS.Services
 
         public byte[] ExportDeposits(DepositReq depositReq)
         {
-            var countReq = CloneDepositReq(depositReq);
-            var totalRecords = Uow.TransferFunds.CountDeposits(countReq);
+            var detailRows = Uow.TransferFunds.ExportDepositDetails(depositReq).AsEnumerable().ToList();
+            var summaryRows = BuildDepositExportSummaryRows(detailRows);
 
-            var rows = Enumerable.Empty<DepositList>();
-            if (totalRecords > 0)
-            {
-                var exportReq = CloneDepositReq(depositReq);
-                exportReq.Pageno = 1;
-                exportReq.Pagesize = totalRecords;
-                exportReq.IsCount = false;
-
-                rows = Uow.TransferFunds.GetPagedDeposits(exportReq).AsEnumerable();
-            }
-
-            return Encoding.UTF8.GetBytes(BuildDepositCsv(rows));
+            return BuildDepositExportWorkbook(summaryRows, detailRows);
         }
 
         public DepositList? GetDepositListById(int tfId)
@@ -127,60 +116,202 @@ namespace KLS.Services
             return Uow.TransferFunds.InjectDeposit(injectReq);
         }
 
-        private static DepositReq CloneDepositReq(DepositReq req)
+        private static List<DepositExportSummaryRow> BuildDepositExportSummaryRows(IEnumerable<DepositExportDetailRow> detailRows)
         {
-            return new DepositReq
-            {
-                Pageno = req.Pageno,
-                Pagesize = req.Pagesize,
-                Search = req.Search,
-                IsCount = req.IsCount,
-                StartDate = req.StartDate,
-                EndDate = req.EndDate,
-                Id = req.Id,
-                Filterby = req.Filterby,
-                SortField = req.SortField,
-                SortOrder = req.SortOrder,
-                ToAccountId = req.ToAccountId,
-                Uncleared = req.Uncleared
-            };
+            return detailRows
+                .GroupBy(x => new
+                {
+                    x.TFId,
+                    x.TFNumber,
+                    x.TFDate,
+                    x.ToAccount,
+                    x.TransferAmount,
+                    x.CashBackAccount,
+                    x.CashBackAmount,
+                    x.CCFeeAmount,
+                    x.IsLocked
+                })
+                .Select(g => new DepositExportSummaryRow
+                {
+                    TFId = g.Key.TFId,
+                    TFNumber = g.Key.TFNumber,
+                    TFDate = g.Key.TFDate,
+                    ToAccount = g.Key.ToAccount,
+                    TransferAmount = g.Key.TransferAmount,
+                    CashBackAccount = g.Key.CashBackAccount,
+                    CashBackAmount = g.Key.CashBackAmount,
+                    CCFeeAmount = g.Key.CCFeeAmount,
+                    IsLocked = g.Key.IsLocked,
+                    PaymentCount = g
+                        .Where(x => x.CustomerPaymentId.HasValue)
+                        .Select(x => x.CustomerPaymentId!.Value)
+                        .Distinct()
+                        .Count(),
+                    DetailLineCount = g.Count(x => x.PaymentDetailId.HasValue)
+                })
+                .ToList();
         }
 
-        private static string BuildDepositCsv(IEnumerable<DepositList> rows)
+        private static byte[] BuildDepositExportWorkbook(
+            IEnumerable<DepositExportSummaryRow> summaryRows,
+            IEnumerable<DepositExportDetailRow> detailRows)
         {
-            var csv = new StringBuilder();
-            csv.AppendLine("Deposit#,Date,To Account,Amount,Cash Back Account,Cash Back Amount,CC Fee,Locked");
+            using var workbook = new XLWorkbook();
 
+            var summarySheet = workbook.Worksheets.Add("Deposit Summary");
+            WriteDepositSummarySheet(summarySheet, summaryRows);
+
+            var detailSheet = workbook.Worksheets.Add("Payment Details");
+            WriteDepositDetailSheet(detailSheet, detailRows);
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+
+            return stream.ToArray();
+        }
+
+        private static void WriteDepositSummarySheet(IXLWorksheet sheet, IEnumerable<DepositExportSummaryRow> rows)
+        {
+            var headers = new[]
+            {
+                "Deposit #",
+                "Deposit Date",
+                "To Account",
+                "Deposit Amount",
+                "Cash Back Account",
+                "Cash Back Amount",
+                "CC Fee",
+                "Locked",
+                "Payment Count",
+                "Detail Line Count"
+            };
+
+            WriteHeaders(sheet, headers);
+
+            var rowNumber = 2;
             foreach (var row in rows)
             {
-                csv.AppendLine(string.Join(",", new[]
-                {
-                    CsvCell(row.TFNumber),
-                    CsvCell(row.TFDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
-                    CsvCell(row.ToAccount),
-                    CsvCell(FormatMoney(row.TransferAmount)),
-                    CsvCell(row.CashBackAccount),
-                    CsvCell(FormatMoney(row.CashBackAmount)),
-                    CsvCell(FormatMoney(row.CCFeeAmount)),
-                    CsvCell(row.IsLocked ? "Yes" : "No")
-                }));
+                sheet.Cell(rowNumber, 1).Value = row.TFNumber;
+                SetDateCell(sheet, rowNumber, 2, row.TFDate);
+                sheet.Cell(rowNumber, 3).Value = row.ToAccount ?? string.Empty;
+                SetDecimalCell(sheet, rowNumber, 4, row.TransferAmount);
+                sheet.Cell(rowNumber, 5).Value = row.CashBackAccount ?? string.Empty;
+                SetDecimalCell(sheet, rowNumber, 6, row.CashBackAmount);
+                SetDecimalCell(sheet, rowNumber, 7, row.CCFeeAmount);
+                sheet.Cell(rowNumber, 8).Value = row.IsLocked ? "Yes" : "No";
+                sheet.Cell(rowNumber, 9).Value = row.PaymentCount;
+                sheet.Cell(rowNumber, 10).Value = row.DetailLineCount;
+                rowNumber++;
             }
 
-            return csv.ToString();
+            FormatDepositExportSheet(sheet);
         }
 
-        private static string FormatMoney(decimal? value)
+        private static void WriteDepositDetailSheet(IXLWorksheet sheet, IEnumerable<DepositExportDetailRow> rows)
         {
-            return value.HasValue ? value.Value.ToString("0.00", CultureInfo.InvariantCulture) : string.Empty;
+            var headers = new[]
+            {
+                "Deposit #",
+                "Deposit Date",
+                "To Account",
+                "Payment #",
+                "Payment Date",
+                "Payment Method",
+                "Payment Reference",
+                "Customer",
+                "Payment Amount",
+                "Deposit Detail Amount",
+                "Invoice #",
+                "Invoice Date",
+                "Invoice Total",
+                "Payment Applied",
+                "Discount Applied",
+                "Payment Discount",
+                "Short Discount",
+                "Other Discount",
+                "Detail Role",
+                "Detail Notes"
+            };
+
+            WriteHeaders(sheet, headers);
+
+            var rowNumber = 2;
+            foreach (var row in rows)
+            {
+                sheet.Cell(rowNumber, 1).Value = row.TFNumber;
+                SetDateCell(sheet, rowNumber, 2, row.TFDate);
+                sheet.Cell(rowNumber, 3).Value = row.ToAccount ?? string.Empty;
+                SetIntCell(sheet, rowNumber, 4, row.PaymentNumber);
+                SetDateCell(sheet, rowNumber, 5, row.PaymentDate);
+                sheet.Cell(rowNumber, 6).Value = row.PaymentMethod ?? string.Empty;
+                sheet.Cell(rowNumber, 7).Value = row.PaymentReference ?? string.Empty;
+                sheet.Cell(rowNumber, 8).Value = row.Customer ?? string.Empty;
+                SetDecimalCell(sheet, rowNumber, 9, row.PaymentAmount);
+                SetDecimalCell(sheet, rowNumber, 10, row.DepositDetailAmount);
+                SetIntCell(sheet, rowNumber, 11, row.InvoiceNumber);
+                SetDateTimeCell(sheet, rowNumber, 12, row.InvoiceDate);
+                SetDecimalCell(sheet, rowNumber, 13, row.InvoiceTotal);
+                SetDecimalCell(sheet, rowNumber, 14, row.PaymentApplied);
+                SetDecimalCell(sheet, rowNumber, 15, row.DiscountApplied);
+                SetDecimalCell(sheet, rowNumber, 16, row.PaymentDiscount);
+                SetDecimalCell(sheet, rowNumber, 17, row.ShortDiscount);
+                SetDecimalCell(sheet, rowNumber, 18, row.OtherDiscount);
+                sheet.Cell(rowNumber, 19).Value = row.DetailRole ?? string.Empty;
+                sheet.Cell(rowNumber, 20).Value = row.DetailNotes ?? string.Empty;
+                rowNumber++;
+            }
+
+            FormatDepositExportSheet(sheet);
         }
 
-        private static string CsvCell(object? value)
+        private static void WriteHeaders(IXLWorksheet sheet, IReadOnlyList<string> headers)
         {
-            var text = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
-            if (!text.Contains(',') && !text.Contains('"') && !text.Contains('\r') && !text.Contains('\n'))
-                return text;
+            for (var i = 0; i < headers.Count; i++)
+            {
+                sheet.Cell(1, i + 1).Value = headers[i];
+            }
 
-            return $"\"{text.Replace("\"", "\"\"")}\"";
+            sheet.Row(1).Style.Font.Bold = true;
+        }
+
+        private static void SetDateCell(IXLWorksheet sheet, int row, int column, DateOnly? value)
+        {
+            if (!value.HasValue)
+                return;
+
+            sheet.Cell(row, column).Value = value.Value.ToDateTime(TimeOnly.MinValue);
+            sheet.Cell(row, column).Style.DateFormat.Format = "yyyy-mm-dd";
+        }
+
+        private static void SetDateTimeCell(IXLWorksheet sheet, int row, int column, DateTime? value)
+        {
+            if (!value.HasValue)
+                return;
+
+            sheet.Cell(row, column).Value = value.Value;
+            sheet.Cell(row, column).Style.DateFormat.Format = "yyyy-mm-dd";
+        }
+
+        private static void SetDecimalCell(IXLWorksheet sheet, int row, int column, decimal? value)
+        {
+            if (!value.HasValue)
+                return;
+
+            sheet.Cell(row, column).Value = value.Value;
+        }
+
+        private static void SetIntCell(IXLWorksheet sheet, int row, int column, int? value)
+        {
+            if (!value.HasValue)
+                return;
+
+            sheet.Cell(row, column).Value = value.Value;
+        }
+
+        private static void FormatDepositExportSheet(IXLWorksheet sheet)
+        {
+            sheet.Columns().AdjustToContents();
+            sheet.SheetView.FreezeRows(1);
         }
     }
 }

@@ -178,6 +178,7 @@ namespace KLS.Data.DataContext
             modelBuilder.Entity<ItemCostPendingImportRow>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderSeedRes>().HasNoKey();
             modelBuilder.Entity<DropShipmentBackorderCheckoutPrecheckRes>().HasNoKey();
+            modelBuilder.Entity<DepositExportDetailRow>().HasNoKey();
             modelBuilder.Entity<ShipmentReallocationCandidate>().HasNoKey();
             modelBuilder.Entity<ShipmentConfirmChargesCompleteResult>().HasNoKey();
             modelBuilder.Entity<ShipmentManagerListRow>().HasNoKey();
@@ -438,6 +439,8 @@ namespace KLS.Data.DataContext
         public virtual DbSet<TransferFundList> TransferFundList { get; set; }
 
         public virtual DbSet<DepositList> DepositList { get; set; }
+
+        public virtual DbSet<DepositExportDetailRow> DepositExportDetailRows { get; set; }
 
         public virtual DbSet<EmployeeList> EmployeeList { get; set; }
 

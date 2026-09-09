@@ -43,9 +43,9 @@ namespace KLS.API.Controllers.Admin
         public IActionResult Export([FromQuery] DepositReq depositReq)
         {
             var bytes = _transferFundService.ExportDeposits(depositReq);
-            var fileName = $"deposits-{DateTime.Today:yyyy-MM-dd}.csv";
+            var fileName = $"deposits-{DateTime.Now:yyyyMMddHHmmss}.xlsx";
 
-            return File(bytes, "text/csv; charset=utf-8", fileName);
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
         [HttpGet("{tfId}")]
