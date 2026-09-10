@@ -1294,6 +1294,23 @@ namespace KLS.Services
             return Uow.Reports.InventoryMovement(req).AsEnumerable();
         }
 
+        public IEnumerable<RptInventoryAuditRow> InventoryAudit(InventoryAuditReportRequest req)
+        {
+            if (!req.ItemId.HasValue || req.ItemId.Value <= 0)
+                throw new ArgumentException("Item is required.");
+
+            if (!req.StartDate.HasValue)
+                throw new ArgumentException("Start date is required.");
+
+            if (!req.EndDate.HasValue)
+                throw new ArgumentException("End date is required.");
+
+            if (req.EndDate.Value < req.StartDate.Value)
+                throw new ArgumentException("End date must be on or after start date.");
+
+            return Uow.Reports.InventoryAudit(req).AsEnumerable().ToList();
+        }
+
         public IEnumerable<RptInventoryIncomingRow> InventoryIncoming()
         {
             return Uow.Reports.InventoryIncoming().AsEnumerable();

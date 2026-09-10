@@ -562,6 +562,14 @@ namespace KLS.API.Controllers.Admin
             return Ok(_reportService.InventoryMovement(req));
         }
 
+        [HttpGet("InventoryAudit")]
+        [DisplayName("Inventory -> Inventory Audit")]
+        [PermissionKey("Report.Inventory.InventoryAudit")]
+        public IActionResult InventoryAudit([FromQuery] InventoryAuditReportRequest req)
+        {
+            return Ok(_reportService.InventoryAudit(req));
+        }
+
 
         [HttpGet("InventoryIncoming")]
         [DisplayName("Inventory -> Incoming Purchases")]

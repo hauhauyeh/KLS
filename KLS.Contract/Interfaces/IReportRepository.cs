@@ -144,6 +144,8 @@ namespace KLS.Contract.Interfaces
 
         IQueryable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req);
 
+        IQueryable<RptInventoryAuditRow> InventoryAudit(InventoryAuditReportRequest req);
+
         IQueryable<RptInventoryIncomingRow> InventoryIncoming();
 
         IQueryable<RptWorksheet> WorksheetPattern(WorksheetPatternReportRequest req);

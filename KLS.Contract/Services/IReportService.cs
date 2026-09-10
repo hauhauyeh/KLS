@@ -138,6 +138,8 @@ namespace KLS.Contract.Services
 
         IEnumerable<RptInventoryMovementRow> InventoryMovement(InventoryReportRequest req);
 
+        IEnumerable<RptInventoryAuditRow> InventoryAudit(InventoryAuditReportRequest req);
+
         IEnumerable<RptInventoryIncomingRow> InventoryIncoming();
 
         IEnumerable<RptWorksheetGroup> WorksheetPattern(WorksheetPatternReportRequest req);

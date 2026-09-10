@@ -768,6 +768,20 @@ namespace KLS.Data.Repositories
                 catParam, zoneParam, expiryParam, payeeParam);
         }
 
+        public IQueryable<RptInventoryAuditRow> InventoryAudit(InventoryAuditReportRequest req)
+        {
+            var itemIdParam = req.ItemId.HasValue ? new SqlParameter("@ItemId", req.ItemId) : new SqlParameter("@ItemId", DBNull.Value);
+            var startDateParam = req.StartDate.HasValue ? new SqlParameter("@StartDate", req.StartDate) : new SqlParameter("@StartDate", DBNull.Value);
+            var endDateParam = req.EndDate.HasValue ? new SqlParameter("@EndDate", req.EndDate) : new SqlParameter("@EndDate", DBNull.Value);
+            var payeeParam = req.PayeeId.HasValue ? new SqlParameter("@PayeeId", req.PayeeId) : new SqlParameter("@PayeeId", DBNull.Value);
+            var sourceDocTypeParam = !string.IsNullOrWhiteSpace(req.SourceDocType) ? new SqlParameter("@SourceDocType", req.SourceDocType) : new SqlParameter("@SourceDocType", DBNull.Value);
+            var sourceDocNumberParam = req.SourceDocNumber.HasValue ? new SqlParameter("@SourceDocNumber", req.SourceDocNumber) : new SqlParameter("@SourceDocNumber", DBNull.Value);
+
+            return DbContext.RptInventoryAuditRow.FromSqlRaw(
+                "[dbo].[Report_InventoryAudit] @ItemId,@StartDate,@EndDate,@PayeeId,@SourceDocType,@SourceDocNumber",
+                itemIdParam, startDateParam, endDateParam, payeeParam, sourceDocTypeParam, sourceDocNumberParam);
+        }
+
         public IQueryable<RptInventoryIncomingRow> InventoryIncoming()
         {
             return DbContext.RptInventoryIncomingRow.FromSqlRaw("[dbo].[Report_InventoryIncoming]");

@@ -729,6 +729,8 @@ namespace KLS.Data.DataContext
 
         public virtual DbSet<RptInventoryMovementRow> RptInventoryMovementRow { get; set; }
 
+        public virtual DbSet<RptInventoryAuditRow> RptInventoryAuditRow { get; set; }
+
         public virtual DbSet<RptInventoryIncomingRow> RptInventoryIncomingRow { get; set; }
 
         public virtual DbSet<RptWorksheet> RptWorksheet { get; set; }
