@@ -90,8 +90,9 @@ namespace KLS.Services
         {
             var detailRows = Uow.TransferFunds.ExportDepositDetails(depositReq).AsEnumerable().ToList();
             var summaryRows = BuildDepositExportSummaryRows(detailRows);
+            var toAccountName = ResolveDepositExportToAccountName(depositReq, detailRows);
 
-            return BuildDepositExportWorkbook(summaryRows, detailRows);
+            return BuildDepositExportWorkbook(depositReq, toAccountName, summaryRows, detailRows);
         }
 
         public DepositList? GetDepositListById(int tfId)
@@ -153,16 +154,18 @@ namespace KLS.Services
         }
 
         private static byte[] BuildDepositExportWorkbook(
+            DepositReq depositReq,
+            string toAccountName,
             IEnumerable<DepositExportSummaryRow> summaryRows,
             IEnumerable<DepositExportDetailRow> detailRows)
         {
             using var workbook = new XLWorkbook();
 
             var summarySheet = workbook.Worksheets.Add("Deposit Summary");
-            WriteDepositSummarySheet(summarySheet, summaryRows);
+            WriteDepositSummarySheet(summarySheet, depositReq, toAccountName, summaryRows);
 
             var detailSheet = workbook.Worksheets.Add("Payment Details");
-            WriteDepositDetailSheet(detailSheet, detailRows);
+            WriteDepositDetailSheet(detailSheet, depositReq, toAccountName, detailRows);
 
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
@@ -170,7 +173,25 @@ namespace KLS.Services
             return stream.ToArray();
         }
 
-        private static void WriteDepositSummarySheet(IXLWorksheet sheet, IEnumerable<DepositExportSummaryRow> rows)
+        private string ResolveDepositExportToAccountName(DepositReq depositReq, IEnumerable<DepositExportDetailRow> rows)
+        {
+            if (!depositReq.ToAccountId.HasValue)
+                return "All";
+
+            var rowAccountName = rows
+                .Select(x => x.ToAccount)
+                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x));
+
+            if (!string.IsNullOrWhiteSpace(rowAccountName))
+                return rowAccountName;
+
+            return Uow.Accounts
+                .Find(x => x.AccountId == depositReq.ToAccountId.Value)
+                .Select(x => x.AccountName)
+                .FirstOrDefault() ?? "Selected Account";
+        }
+
+        private static void WriteDepositSummarySheet(IXLWorksheet sheet, DepositReq depositReq, string toAccountName, IEnumerable<DepositExportSummaryRow> rows)
         {
             var headers = new[]
             {
@@ -186,9 +207,10 @@ namespace KLS.Services
                 "Detail Line Count"
             };
 
-            WriteHeaders(sheet, headers);
+            WriteReportHeader(sheet, depositReq, toAccountName);
+            WriteHeaders(sheet, headers, 5);
 
-            var rowNumber = 2;
+            var rowNumber = 6;
             foreach (var row in rows)
             {
                 sheet.Cell(rowNumber, 1).Value = row.TFNumber;
@@ -204,74 +226,97 @@ namespace KLS.Services
                 rowNumber++;
             }
 
-            FormatDepositExportSheet(sheet);
+            FormatDepositExportSheet(sheet, 5);
         }
 
-        private static void WriteDepositDetailSheet(IXLWorksheet sheet, IEnumerable<DepositExportDetailRow> rows)
+        private static void WriteDepositDetailSheet(IXLWorksheet sheet, DepositReq depositReq, string toAccountName, IEnumerable<DepositExportDetailRow> rows)
         {
             var headers = new[]
             {
-                "Deposit #",
-                "Deposit Date",
-                "To Account",
-                "Payment #",
                 "Payment Date",
                 "Payment Method",
                 "Payment Reference",
                 "Customer",
                 "Payment Amount",
-                "Deposit Detail Amount",
-                "Invoice #",
+                "Sales Doc #",
                 "Invoice Date",
                 "Invoice Total",
-                "Payment Applied",
-                "Discount Applied",
-                "Payment Discount",
-                "Short Discount",
-                "Other Discount",
-                "Detail Role",
-                "Detail Notes"
+                "Payment Applied"
             };
 
-            WriteHeaders(sheet, headers);
+            WriteReportHeader(sheet, depositReq, toAccountName);
+            WriteHeaders(sheet, headers, 5);
 
-            var rowNumber = 2;
+            var rowNumber = 6;
             foreach (var row in rows)
             {
-                sheet.Cell(rowNumber, 1).Value = row.TFNumber;
-                SetDateCell(sheet, rowNumber, 2, row.TFDate);
-                sheet.Cell(rowNumber, 3).Value = row.ToAccount ?? string.Empty;
-                SetIntCell(sheet, rowNumber, 4, row.PaymentNumber);
-                SetDateCell(sheet, rowNumber, 5, row.PaymentDate);
-                sheet.Cell(rowNumber, 6).Value = row.PaymentMethod ?? string.Empty;
-                sheet.Cell(rowNumber, 7).Value = row.PaymentReference ?? string.Empty;
-                sheet.Cell(rowNumber, 8).Value = row.Customer ?? string.Empty;
-                SetDecimalCell(sheet, rowNumber, 9, row.PaymentAmount);
-                SetDecimalCell(sheet, rowNumber, 10, row.DepositDetailAmount);
-                SetIntCell(sheet, rowNumber, 11, row.InvoiceNumber);
-                SetDateTimeCell(sheet, rowNumber, 12, row.InvoiceDate);
-                SetDecimalCell(sheet, rowNumber, 13, row.InvoiceTotal);
-                SetDecimalCell(sheet, rowNumber, 14, row.PaymentApplied);
-                SetDecimalCell(sheet, rowNumber, 15, row.DiscountApplied);
-                SetDecimalCell(sheet, rowNumber, 16, row.PaymentDiscount);
-                SetDecimalCell(sheet, rowNumber, 17, row.ShortDiscount);
-                SetDecimalCell(sheet, rowNumber, 18, row.OtherDiscount);
-                sheet.Cell(rowNumber, 19).Value = row.DetailRole ?? string.Empty;
-                sheet.Cell(rowNumber, 20).Value = row.DetailNotes ?? string.Empty;
+                SetDateCell(sheet, rowNumber, 1, row.PaymentDate);
+                sheet.Cell(rowNumber, 2).Value = row.PaymentMethod ?? string.Empty;
+                sheet.Cell(rowNumber, 3).Value = row.PaymentReference ?? string.Empty;
+                sheet.Cell(rowNumber, 4).Value = row.Customer ?? string.Empty;
+                SetDecimalCell(sheet, rowNumber, 5, row.PaymentAmount);
+                sheet.Cell(rowNumber, 6).Value = GetSalesDocDisplay(row);
+                SetDateTimeCell(sheet, rowNumber, 7, row.InvoiceDate);
+                SetDecimalCell(sheet, rowNumber, 8, row.InvoiceTotal);
+
+                if (ShouldShowPaymentApplied(row.PaymentApplied, row.InvoiceTotal))
+                    SetDecimalCell(sheet, rowNumber, 9, row.PaymentApplied);
+
                 rowNumber++;
             }
 
-            FormatDepositExportSheet(sheet);
+            FormatDepositExportSheet(sheet, 5);
         }
 
-        private static void WriteHeaders(IXLWorksheet sheet, IReadOnlyList<string> headers)
+        private static void WriteReportHeader(IXLWorksheet sheet, DepositReq depositReq, string toAccountName)
+        {
+            sheet.Cell(1, 1).Value = "Deposit Export";
+            sheet.Cell(1, 1).Style.Font.Bold = true;
+            sheet.Cell(2, 1).Value = FormatDepositExportDateRange(depositReq);
+            sheet.Cell(3, 1).Value = $"To Account: {toAccountName}";
+        }
+
+        private static string FormatDepositExportDateRange(DepositReq depositReq)
+        {
+            if (depositReq.StartDate.HasValue && depositReq.EndDate.HasValue)
+                return $"Date Range: {depositReq.StartDate.Value:yyyy-MM-dd} to {depositReq.EndDate.Value:yyyy-MM-dd}";
+
+            if (depositReq.StartDate.HasValue)
+                return $"Date Range: From {depositReq.StartDate.Value:yyyy-MM-dd}";
+
+            if (depositReq.EndDate.HasValue)
+                return $"Date Range: Through {depositReq.EndDate.Value:yyyy-MM-dd}";
+
+            return "Date Range: All";
+        }
+
+        private static string GetSalesDocDisplay(DepositExportDetailRow row)
+        {
+            if (!string.IsNullOrWhiteSpace(row.SalesDocNum))
+                return row.SalesDocNum;
+
+            return row.InvoiceNumber?.ToString() ?? string.Empty;
+        }
+
+        private static bool ShouldShowPaymentApplied(decimal? paymentApplied, decimal? invoiceTotal)
+        {
+            if (!paymentApplied.HasValue)
+                return false;
+
+            if (!invoiceTotal.HasValue)
+                return true;
+
+            return Math.Round(paymentApplied.Value, 2) != Math.Round(invoiceTotal.Value, 2);
+        }
+
+        private static void WriteHeaders(IXLWorksheet sheet, IReadOnlyList<string> headers, int rowNumber)
         {
             for (var i = 0; i < headers.Count; i++)
             {
-                sheet.Cell(1, i + 1).Value = headers[i];
+                sheet.Cell(rowNumber, i + 1).Value = headers[i];
             }
 
-            sheet.Row(1).Style.Font.Bold = true;
+            sheet.Row(rowNumber).Style.Font.Bold = true;
         }
 
         private static void SetDateCell(IXLWorksheet sheet, int row, int column, DateOnly? value)
@@ -308,10 +353,10 @@ namespace KLS.Services
             sheet.Cell(row, column).Value = value.Value;
         }
 
-        private static void FormatDepositExportSheet(IXLWorksheet sheet)
+        private static void FormatDepositExportSheet(IXLWorksheet sheet, int freezeRow)
         {
             sheet.Columns().AdjustToContents();
-            sheet.SheetView.FreezeRows(1);
+            sheet.SheetView.FreezeRows(freezeRow);
         }
     }
 }

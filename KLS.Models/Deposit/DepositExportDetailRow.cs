@@ -44,6 +44,8 @@ namespace KLS.Models
 
         public int? InvoiceNumber { get; set; }
 
+        public string? SalesDocNum { get; set; }
+
         public DateTime? InvoiceDate { get; set; }
 
         public decimal? InvoiceTotal { get; set; }
