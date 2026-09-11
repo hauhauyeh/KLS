@@ -25,5 +25,13 @@ namespace KLS.Models.Reports
         public int? CurrentTx { get; set; }
 
         public int? PriorTx { get; set; }
+
+        public decimal? OrderTotal { get; set; }
+
+        public decimal? TransitTotal { get; set; }
+
+        public int? OrderTx { get; set; }
+
+        public int? TransitTx { get; set; }
     }
 }
