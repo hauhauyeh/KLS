@@ -390,11 +390,26 @@ namespace KLS.Services
         {
             EnsureVisibleCustomer(checkoutReq.PayeeId);
 
+            if (IsNewCreditMemoCheckout(checkoutReq))
+                checkoutReq.StageId = GetCreditMemoDefaultStageId();
+
             var salesId = Uow.Sales.Checkout(checkoutReq);
             var sales = GetListById(salesId)!;
             AutoPrintPickTicket(sales.SalesId, sales.SalesNumber);
 
             return sales;
+        }
+
+        private bool IsNewCreditMemoCheckout(SalesCheckoutReq checkoutReq)
+        {
+            return checkoutReq.SalesId == 0
+                && string.Equals(checkoutReq.DocType?.Trim(), "CM", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private int GetCreditMemoDefaultStageId()
+        {
+            var setting = _systemSettingService.GetByKey<string>(GlobalKey.CREDIT_MEMO_DEFAULT_STAGE);
+            return setting?.Trim() == "0" ? 0 : 4;
         }
 
         public SalesList UpdatePartially(int salesId)
